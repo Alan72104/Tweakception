@@ -1,0 +1,16 @@
+[
+{
+  "modid": "tweakception",
+  "name": "Tewakception",
+  "description": "The Tweakception mod.",
+  "version": "${mod_version}",
+  "mcversion": "${minecraft_version}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["Alan72104"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]

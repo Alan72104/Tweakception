@@ -11,6 +11,11 @@
 - dungeon nofog - **Toggles no fog, for f5**
 - dungeon hidename - **Toggles hide non starred mobs name**
 - dungeon highlightstarredmobs - **Toggles highlight starred mobs**
+- dungeon blockrightclick set
+  - **Toggles right click block for the current hotbar item, for items like shadow fury**
+  - **Note that it only checks the item name**
+  - **Hold left alt to bypass**
+- dungeon blockrightclick list
 ### FairyTracker
 - fairy - **Toggles fairy scanner**
 - fairy trackonce  - **Scans loaded entities for fairy soul**

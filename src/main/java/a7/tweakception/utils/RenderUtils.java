@@ -256,7 +256,7 @@ public class RenderUtils
         GlStateManager.disableDepth();
         GlStateManager.disableCull();
         GlStateManager.disableTexture2D();
-        drawFilledBoundingBox(bb, 1f, getSpecialColor(0, 100, rgb));
+        drawFilledBoundingBox(bb, alphaMult, getSpecialColor(0, 100, rgb));
         GlStateManager.enableTexture2D();
         GlStateManager.enableCull();
         GlStateManager.enableDepth();
@@ -391,9 +391,9 @@ public class RenderUtils
         double distSq = x * x + y * y + z * z;
 
         if (distSq > 10 * 10) {
-            RenderUtils.renderBeaconBeam(x, y, z, rgb, 1.0f, partialTicks, true);
+            RenderUtils.renderBeaconBeam(x, y, z, rgb, alphaMult, partialTicks, true);
         } else {
-            RenderUtils.renderBoundingBox(x, y, z, rgb, 1.0f, partialTicks);
+            RenderUtils.renderBoundingBox(x, y, z, rgb, alphaMult, partialTicks);
         }
     }
 

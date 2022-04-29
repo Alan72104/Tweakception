@@ -3,6 +3,8 @@ package a7.tweakception;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -37,6 +39,7 @@ public class InGameEventDispatcher
 
         fairyTracker.onRenderLast(event);
         dungeonTweaks.onRenderLast(event);
+        crimsonTweaks.onRenderLast(event);
     }
 
     @SubscribeEvent
@@ -55,6 +58,21 @@ public class InGameEventDispatcher
         if (!isInSkyblock()) return;
 
         dungeonTweaks.onLivingSpecialRenderPre(event);
+    }
+
+    @SubscribeEvent
+    public void onInteract(PlayerInteractEvent event)
+    {
+        if (!isInSkyblock()) return;
+
+        dungeonTweaks.onInteract(event);
+    }
+
+    @SubscribeEvent
+    public void onChunkLoad(ChunkEvent.Load event)
+    {
+        if (!isInSkyblock()) return;
+
     }
 
     @SubscribeEvent(priority = EventPriority.LOW, receiveCanceled = true)
@@ -102,5 +120,7 @@ public class InGameEventDispatcher
         if (!isInSkyblock()) return;
 
         dungeonTweaks.onFogDensitySet(event);
+        if (event.isCanceled())
+            return;
     }
 }

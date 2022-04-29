@@ -23,7 +23,9 @@ public enum SkyblockIsland
         "Magma Chamber",
         "Mystic Marsh",
         "Odger's Hut",
+        "Plhlegblast Pool",
         "Ruins of Ashfang",
+        "Scarleton",
         "Stronghold",
         "The Wasteland"
     });

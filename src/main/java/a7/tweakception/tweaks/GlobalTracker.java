@@ -26,6 +26,7 @@ public class GlobalTracker
     private static HashMap<String, SkyblockIsland> subplaceToIslandMap = new HashMap<String, SkyblockIsland>();
     private static SkyblockIsland currentIsland = null;
     private static String currentLocationRaw = "";
+    private boolean useFallbackDetection = false;
 
     static
     {
@@ -77,19 +78,36 @@ public class GlobalTracker
                         Score score = scores.get(i);
                         ScorePlayerTeam scoreplayerteam = scoreboard.getPlayersTeam(score.getPlayerName());
                         String line = ScorePlayerTeam.formatPlayerName(scoreplayerteam, score.getPlayerName());
-                        if (line.contains("\u23e3")) // Location prefix (some circle symbol)
+
+                        // Need special detection for in dungeon
+//                        if (!useFallbackDetection)
+                        if (false)
                         {
-                            line = cleanColor(cleanDuplicateColorCodes(line)).replaceAll("[^A-Za-z0-9() ]", "").trim();
-                            currentLocationRaw = line;
-                            islandLoop:
-                            for (SkyblockIsland island : SkyblockIsland.values())
-                                for (String subPlace : island.places)
-                                    if (line.contains(subPlace))
-                                    {
-                                        currentIsland = island;
-                                        break islandLoop;
-                                    }
-                            break;
+                            if (line.startsWith(" ⏣"))
+                            {
+                                line = cleanColor(cleanDuplicateColorCodes(line)).replaceAll("[^A-Za-z0-9() ]", "").trim();
+                                currentLocationRaw = line;
+
+                                currentIsland = subplaceToIslandMap.get(line);
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            if (line.contains("⏣"))
+                            {
+                                line = cleanColor(cleanDuplicateColorCodes(line)).replaceAll("[^A-Za-z0-9() ]", "").trim();
+
+                                islandLoop:
+                                for (SkyblockIsland island : SkyblockIsland.values())
+                                    for (String subPlace : island.places)
+                                        if (line.contains(subPlace))
+                                        {
+                                            currentIsland = island;
+                                            break islandLoop;
+                                        }
+                                break;
+                            }
                         }
                     }
                 }
@@ -119,9 +137,10 @@ public class GlobalTracker
 
     public void forceSetIsland(String name)
     {
-        if (name.equals("") || name.equals("disable") || name.equals("off"))
+        if (name == null || name.equals("") || name.equals("disable") || name.equals("off"))
         {
             isIslandDetectionOverridden = false;
+            sendChat("GlobalTracker: toggle island override " + isIslandDetectionOverridden);
         }
         else
         {
@@ -141,5 +160,11 @@ public class GlobalTracker
         StringSelection s = new StringSelection(currentLocationRaw);
         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(s, s);
         sendChat("GlobalTracker: coipied raw current location to clipboard (" + currentLocationRaw + EnumChatFormatting.RESET + ")");
+    }
+
+    public void toggleFallbackDetection()
+    {
+        useFallbackDetection = !useFallbackDetection;
+        sendChat("GlobalTracker: toggled location fallback detection " + useFallbackDetection);
     }
 }

@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "package": "a7.tweakception.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "mixins.tweakception.refmap.json",
+  "minVersion": "0.6",
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

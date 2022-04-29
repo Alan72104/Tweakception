@@ -11,6 +11,8 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
+
 @Mod(modid = ProjectInfo.MOD_ID, version = ProjectInfo.MOD_VERSION, name = ProjectInfo.MOD_NAME,
     acceptedMinecraftVersions = "1.8.9")
 public class Tweakception
@@ -20,7 +22,7 @@ public class Tweakception
     @SidedProxy(clientSide = "a7.tweakception.proxies.ClientProxy", serverSide = "a7.tweakception.proxies.ServerProxy")
     public static IProxy proxy;
     public static Logger logger;
-    public static String configDirPath;
+    public static Configuration config;
     public static InGameEventDispatcher inGameEventDispatcher;
     public static GlobalTracker globalTracker;
     public static FairyTracker fairyTracker;
@@ -28,18 +30,20 @@ public class Tweakception
     public static CrimsonTweaks crimsonTweaks;
 
     @EventHandler
-    public void preInit(FMLPreInitializationEvent event)
+    public void preInit(FMLPreInitializationEvent event) throws IOException
     {
         instance = this;
         logger = event.getModLog();
-        configDirPath = event.getModConfigurationDirectory().getAbsolutePath().concat("/" + ProjectInfo.MOD_ID);
+        config = new Configuration(event.getModConfigurationDirectory().getAbsolutePath() + "/" + ProjectInfo.MOD_ID + "/");
+
         inGameEventDispatcher = new InGameEventDispatcher();
         globalTracker = new GlobalTracker();
         fairyTracker = new FairyTracker();
         dungeonTweaks = new DungeonTweaks();
         crimsonTweaks = new CrimsonTweaks();
-        MinecraftForge.EVENT_BUS.register(inGameEventDispatcher);
+
         proxy.registerClientCommands();
+        proxy.registerClientEventHandlers();
     }
 
     @EventHandler

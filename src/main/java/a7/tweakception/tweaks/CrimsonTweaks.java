@@ -1,12 +1,22 @@
 package a7.tweakception.tweaks;
 
 import a7.tweakception.utils.RenderUtils;
+import jdk.nashorn.internal.ir.Block;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.init.Blocks;
+import net.minecraft.util.BlockPos;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.Tuple;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraft.client.renderer.BlockRendererDispatcher;
 import org.lwjgl.opengl.GL11;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 
 import static a7.tweakception.tweaks.GlobalTracker.*;
 import static a7.tweakception.utils.McUtils.*;
@@ -35,10 +45,29 @@ public class CrimsonTweaks
     private float mapPosY = 50.0f;
     private float mapScale = 1.0f;
     private float mapMarkerScale = 1.0f;
+    private boolean isSpongeEnabled = false;
+//    private final LinkedHashMap<Tuple<Integer, Integer>, ArrayList<BlockPos>> sponges = new LinkedHashMap<>();
 
     public void onTick(TickEvent.ClientTickEvent event)
     {
         if (!isMapEnabled) return;
+    }
+
+    public void onRenderLast(RenderWorldLastEvent event)
+    {
+        if (getCurrentIsland() != SkyblockIsland.CRIMSON_ISLE) return;
+
+        if (isSpongeEnabled)
+        {
+            for (BlockPos pos : BlockPos.getAllInBox(new BlockPos(getPlayer().posX - 50, 70, getPlayer().posZ - 50),
+                    new BlockPos(getPlayer().posX + 50, 210, getPlayer().posZ + 50)))
+            {
+                if (getWorld().getBlockState(pos).getBlock() == Blocks.sponge)
+                {
+                    RenderUtils.renderBeaconBeamOrBoundingBox(pos, 0xa89d32, 0.5f, event.partialTicks);
+                }
+            }
+        }
     }
 
     public void onRenderGameOverlayPost(RenderGameOverlayEvent.Post event)
@@ -75,13 +104,13 @@ public class CrimsonTweaks
         }
     }
 
-    public void toggle()
+    public void toggleMap()
     {
         isMapEnabled = !isMapEnabled;
-        sendChat("CrimsonMap: toggled " + isMapEnabled);
+        sendChat("CrimsonTweaks => Map: toggled " + isMapEnabled);
     }
 
-    public void setPos(int x, int y)
+    public void setMapPos(int x, int y)
     {
         mapPosX = x;
         mapPosY = y;
@@ -95,5 +124,10 @@ public class CrimsonTweaks
     public void setMapMarkerScale(float scale)
     {
         this.mapMarkerScale = scale;
+    }
+
+    public void toggleSponge()
+    {
+        isSpongeEnabled = !isSpongeEnabled;
     }
 }

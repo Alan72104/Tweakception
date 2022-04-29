@@ -10,6 +10,7 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.regex.Pattern;
 
 public class McUtils
@@ -36,6 +37,10 @@ public class McUtils
 
     public static void sendChat(String s) {
         getPlayer().addChatMessage(new ChatComponentText(s));
+    }
+
+    public static void sendChatf(String s, Object... args) {
+        getPlayer().addChatMessage(new ChatComponentText(String.format(s, args)));
     }
 
     private static final Pattern color = Pattern.compile("(?i)\\u00A7.");
@@ -67,6 +72,19 @@ public class McUtils
             }
         }
         return sb.toString();
+    }
+
+    public static String f(String s, Object... args)
+    {
+        return String.format(s, args);
+    }
+
+    public static <T> T setAccessibleAndGetField(Object o, String name) throws NoSuchFieldException, IllegalAccessException
+    {
+        Field field = o.getClass().getDeclaredField(name);
+        field.setAccessible(true);
+        //noinspection unchecked
+        return (T)field.get(o);
     }
 
     public static void setClipboard(String s)

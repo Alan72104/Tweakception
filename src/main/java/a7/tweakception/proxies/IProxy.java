@@ -7,4 +7,11 @@ public interface IProxy
 
     // Registers server side commands
     void registerServerCommands();
+
+    // Registers client side event handlers
+    void registerClientEventHandlers();
+
+
+    // Registers server side event handlers
+    void registerServerEventHandlers();
 }

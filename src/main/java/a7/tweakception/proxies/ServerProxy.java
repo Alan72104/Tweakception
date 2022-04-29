@@ -12,4 +12,12 @@ public class ServerProxy implements IProxy
     public void registerServerCommands()
     {
     }
+
+    public void registerClientEventHandlers()
+    {
+    }
+
+    public void registerServerEventHandlers()
+    {
+    }
 }

@@ -1,5 +1,6 @@
 package a7.tweakception.tweaks;
 
+import a7.tweakception.config.Configuration;
 import a7.tweakception.utils.McUtils;
 import a7.tweakception.utils.RenderUtils;
 import net.minecraft.client.Minecraft;
@@ -7,8 +8,10 @@ import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityArmorStand;
+import net.minecraft.entity.passive.EntityBat;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.Timer;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
@@ -24,29 +27,41 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import static a7.tweakception.tweaks.GlobalTracker.*;
 import static a7.tweakception.tweaks.GlobalTracker.getCurrentLocationRaw;
 import static a7.tweakception.utils.McUtils.*;
 
-public class DungeonTweaks
+public class DungeonTweaks extends Tweak
 {
+    private final DungeonTweaksConfig c;
+    public static class DungeonTweaksConfig
+    {
+        public boolean enableNoFog = false;
+        public boolean enableNoFogAutoToggle = false;
+        public boolean hideNonStarredMobsName = true;
+        public boolean highlightStarredMobs = false;
+        public boolean highlightBats = true;
+        public List<String> blockRightClickItemNames = new ArrayList<String>();
+    }
     private static final String F5_BOSS_START = "Welcome, you arrive right on time. I am Livid, the Master of Shadows.";
     private static final String F5_BOSS_END = "Impossible! How did you figure out which one I was?";
     private static final HashMap<String, String> LIVID_PREFIX_TO_COLOR_MAP = new HashMap<String, String>();
-    private boolean isNoFogOn = false;
-    private boolean isNoFogAutoToggleOn = true;
     private boolean wasNoFogAutoToggled = false;
     private boolean isInF5Bossfight = false;
     private String realLividName;
     private Entity realLivid;
     private final HashSet<String> knownLivids = new HashSet<String>();
     private boolean lividFound = false;
-    private boolean hideName = true;
-    private boolean highlightStarredMobs = false;
-    private final ArrayList<String> blockRightClickItems = new ArrayList<String>();
     public boolean t = false;
+
+    public DungeonTweaks(Configuration configuration)
+    {
+        super(configuration);
+        c = configuration.config.dungeonTweaks;
+    }
 
     static
     {
@@ -67,14 +82,14 @@ public class DungeonTweaks
         {
             if (getTicks() % 20 == 0)
             {
-                if (isNoFogAutoToggleOn)
+                if (c.enableNoFogAutoToggle)
                 {
                     if (getCurrentIsland() == SkyblockIsland.DUNGEON &&
                             (getCurrentLocationRaw().contains("(F5)") || getCurrentLocationRaw().contains("(M5)")))
                     {
-                        if (!isNoFogOn)
+                        if (!c.enableNoFog)
                         {
-                            isNoFogOn = true;
+                            c.enableNoFog = true;
                             wasNoFogAutoToggled = true;
                             sendChat("DungeonTweaks => NoFog: dungeon floor 5 detected, auto toggled on");
                         }
@@ -83,9 +98,9 @@ public class DungeonTweaks
                     }
                     else
                     {
-                        if (isNoFogOn && wasNoFogAutoToggled)
+                        if (c.enableNoFog && wasNoFogAutoToggled)
                         {
-                            isNoFogOn = false;
+                            c.enableNoFog = false;
                             wasNoFogAutoToggled = false;
                             sendChat("DungeonTweaks => NoFog: auto toggled off");
                         }
@@ -130,7 +145,32 @@ public class DungeonTweaks
                     new Color(0, 255, 0, 192), event.partialTicks, false);
     }
 
-    private static final Pattern nums = Pattern.compile("\\d+");
+    public void onLivingRenderPost(RenderLivingEvent.Post event)
+    {
+        if (getCurrentIsland() != SkyblockIsland.DUNGEON) return;
+
+        if (c.highlightBats)
+        {
+            if (event.entity instanceof EntityBat)
+            {
+                try
+                {
+                    Timer timer = McUtils.setAccessibleAndGetField(getMc(), "field_71428_T" /* timer */);
+                    RenderUtils.drawHighlightBox(event.entity, AxisAlignedBB.fromBounds(-0.4, -0.6, -0.4, 0.4, 0.6, 0.4),
+                            new Color(255, 76, 76, 230), timer.renderPartialTicks, false);
+                }
+                catch (Exception e)
+                {
+                    if (!hasGetFieldExceptionNotified)
+                    {
+                        hasGetFieldExceptionNotified = true;
+                        sendChat("DungeonTweaks => HighlightBats: getField failed (" + e + ")");
+                    }
+                }
+            }
+        }
+    }
+
     private static boolean hasGetFieldExceptionNotified = false;
 
     // Called on RenderLivingEntity.renderName()
@@ -138,7 +178,7 @@ public class DungeonTweaks
     {
         if (getCurrentIsland() != SkyblockIsland.DUNGEON) return;
 
-        if (hideName || highlightStarredMobs)
+        if (c.hideNonStarredMobsName || c.highlightStarredMobs)
         {
             if (event.entity instanceof EntityArmorStand)
             {
@@ -147,7 +187,7 @@ public class DungeonTweaks
                 {
                     if (name.contains("✯"))
                     {
-                        if (highlightStarredMobs)
+                        if (c.highlightStarredMobs)
                         {
                             try
                             {
@@ -155,7 +195,7 @@ public class DungeonTweaks
                                 RenderUtils.drawHighlightBox(event.entity, AxisAlignedBB.fromBounds(-0.4, 0.0, -0.4, 0.4, -2.0, 0.4),
                                         new Color(0, 255, 0, 85), timer.renderPartialTicks, false);
                             }
-                            catch (NoSuchFieldException | IllegalAccessException e)
+                            catch (Exception e)
                             {
                                 if (!hasGetFieldExceptionNotified)
                                 {
@@ -167,7 +207,7 @@ public class DungeonTweaks
                     }
                     else
                     {
-                        if (hideName)
+                        if (c.hideNonStarredMobsName)
                             event.setCanceled(true);
                     }
                 }
@@ -180,13 +220,13 @@ public class DungeonTweaks
         if (event.action == PlayerInteractEvent.Action.RIGHT_CLICK_AIR ||
                 event.action == PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK)
         {
-            if (!blockRightClickItems.isEmpty())
+            if (!c.blockRightClickItemNames.isEmpty())
             {
                 ItemStack item = getPlayer().inventory.getCurrentItem();
                 if (item != null)
                 {
                     String name = item.getDisplayName();
-                    if (blockRightClickItems.contains(name))
+                    if (c.blockRightClickItemNames.contains(name))
                     {
                         if (Keyboard.isKeyDown(Keyboard.KEY_LMENU))
                         {
@@ -195,7 +235,7 @@ public class DungeonTweaks
                         else
                         {
                             event.setCanceled(true);
-                            sendChat("DungeonTweaks => BlockRightClick: blocked click for item (" + name + "), hold alt to override it");
+                            sendChat("DungeonTweaks => BlockRightClick: blocked click for item (" + name + EnumChatFormatting.RESET + "), hold alt to override it");
                         }
                     }
                 }
@@ -234,7 +274,7 @@ public class DungeonTweaks
 
     public void onFogDensitySet(EntityViewRenderEvent.FogDensity event)
     {
-        if (isNoFogOn)
+        if (c.enableNoFog)
         {
             event.density = 0.0f;
             event.setCanceled(true);
@@ -255,26 +295,32 @@ public class DungeonTweaks
 
     public void toggleNoFog()
     {
-        isNoFogOn = !isNoFogOn;
-        sendChat("DungeonTweaks => NoFog: toggled " + isNoFogOn);
+        c.enableNoFog = !c.enableNoFog;
+        sendChat("DungeonTweaks => NoFog: toggled " + c.enableNoFog);
     }
 
     public void toggleNoFogAutoToggle()
     {
-        isNoFogAutoToggleOn = !isNoFogAutoToggleOn;
-        sendChat("DungeonTweaks => NoFog: toggled auto toggle " + isNoFogAutoToggleOn);
+        c.enableNoFogAutoToggle = !c.enableNoFogAutoToggle;
+        sendChat("DungeonTweaks => NoFog: toggled auto toggle " + c.enableNoFogAutoToggle);
     }
 
     public void toggleHideName()
     {
-        hideName = !hideName;
-        sendChat("DungeonTweaks => HideName: toggled hide name " + hideName);
+        c.hideNonStarredMobsName = !c.hideNonStarredMobsName;
+        sendChat("DungeonTweaks => HideName: toggled hide name " + c.hideNonStarredMobsName);
     }
 
     public void toggleHighlightStarredMobs()
     {
-        highlightStarredMobs = !highlightStarredMobs;
-        sendChat("DungeonTweaks => HighlightStarredMobs: toggled " + highlightStarredMobs);
+        c.highlightStarredMobs = !c.highlightStarredMobs;
+        sendChat("DungeonTweaks => HighlightStarredMobs: toggled " + c.highlightStarredMobs);
+    }
+
+    public void toggleHighlightBats()
+    {
+        c.highlightBats = !c.highlightBats;
+        sendChat("DungeonTweaks => HighlightBats: toggled " + c.highlightBats);
     }
 
     public void blockRightClickSet()
@@ -286,27 +332,27 @@ public class DungeonTweaks
             return;
         }
         String name = item.getDisplayName();
-        if (blockRightClickItems.contains(name))
+        if (c.blockRightClickItemNames.contains(name))
         {
-            blockRightClickItems.remove(name);
+            c.blockRightClickItemNames.remove(name);
             sendChat("DungeonTweaks => BlockRightClick: removed item (" + name + ") from block list");
         }
         else
         {
-            blockRightClickItems.add(name);
+            c.blockRightClickItemNames.add(name);
             sendChat("DungeonTweaks => BlockRightClick: added item (" + name + ") to block list");
         }
     }
 
     public void blockRightClickList()
     {
-        if (blockRightClickItems.isEmpty())
+        if (c.blockRightClickItemNames.isEmpty())
         {
             sendChat("DungeonTweaks => BlockRightClick: list is empty");
             return;
         }
-        sendChat("DungeonTweaks => BlockRightClick: there are " + blockRightClickItems.size() + " items in the list");
-        for (String s : blockRightClickItems)
+        sendChat("DungeonTweaks => BlockRightClick: there are " + c.blockRightClickItemNames.size() + " items in the list");
+        for (String s : c.blockRightClickItemNames)
             sendChat("DungeonTweaks => BlockRightClick: " + s);
     }
 }

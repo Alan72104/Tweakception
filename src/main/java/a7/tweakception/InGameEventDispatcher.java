@@ -51,6 +51,14 @@ public class InGameEventDispatcher
         crimsonTweaks.onRenderGameOverlayPost(event);
     }
 
+    @SubscribeEvent
+    public void onLivingRenderPost(RenderLivingEvent.Post event)
+    {
+        if (!isInSkyblock()) return;
+
+        dungeonTweaks.onLivingRenderPost(event);
+    }
+
     // Called on RenderLivingEntity.renderName()
     @SubscribeEvent
     public void onLivingSpecialRenderPre(RenderLivingEvent.Specials.Pre event)

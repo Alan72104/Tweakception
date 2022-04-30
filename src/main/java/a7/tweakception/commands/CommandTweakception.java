@@ -38,6 +38,7 @@ public class CommandTweakception extends CommandBase
             dungeonTweaksSubCommands.add("nofog");
             dungeonTweaksSubCommands.add("hidename");
             dungeonTweaksSubCommands.add("highlightstarredmobs");
+            dungeonTweaksSubCommands.add("highlightbats");
             dungeonTweaksSubCommands.add("blockrightclick");
                 blockRightClickSubCommands.add("set");
                 blockRightClickSubCommands.add("list");
@@ -186,6 +187,9 @@ public class CommandTweakception extends CommandBase
                         case "highlightstarredmobs":
                             Tweakception.dungeonTweaks.toggleHighlightStarredMobs();
                             break;
+                        case "highlightbats":
+                            Tweakception.dungeonTweaks.toggleHighlightBats();
+                            break;
                         case "blockrightclick":
                             if (args.length >= 3)
                             {
@@ -247,7 +251,7 @@ public class CommandTweakception extends CommandBase
                                 sendCommandNotFound();
                             break;
                         case "sulfur":
-                            Tweakception.crimsonTweaks.toggleSponge();
+                            Tweakception.crimsonTweaks.toggleSulfurHighlight();
                             break;
                         default:
                             sendCommandNotFound();

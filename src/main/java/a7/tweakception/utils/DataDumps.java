@@ -138,7 +138,7 @@ public class DataDumps
 
             try
             {
-                File file = Tweakception.config.createWriteFileWithCurrentDateTimeSuffix("block_and_tileentity_data.txt", lines);
+                File file = Tweakception.configuration.createWriteFileWithCurrentDateTimeSuffix("block_and_tileentity_data.txt", lines);
 
                 IChatComponent name = new ChatComponentText(file.getName());
                 name.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, file.getAbsolutePath()));
@@ -198,7 +198,7 @@ public class DataDumps
 
             try
             {
-                File file = Tweakception.config.createWriteFileWithCurrentDateTimeSuffix("entity_data.txt", lines);
+                File file = Tweakception.configuration.createWriteFileWithCurrentDateTimeSuffix("entity_data.txt", lines);
 
                 IChatComponent name = new ChatComponentText(file.getName());
                 name.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, file.getAbsolutePath()));

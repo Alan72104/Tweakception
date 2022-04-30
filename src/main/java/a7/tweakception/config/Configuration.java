@@ -1,6 +1,9 @@
-package a7.tweakception;
+package a7.tweakception.config;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -14,26 +17,63 @@ public class Configuration
     private String fileName;
     private File dirFile;
     private File file;
+    private final Gson gson;
+    public TweakceptionConfig config;
 
-    public Configuration(String folderPath) throws IOException
+    public Configuration(String folderPath) throws Exception
     {
         path = folderPath;
         fileName = "config.json";
         dirFile = new File(path);
         if (!dirFile.exists())
-            dirFile.mkdirs();
+        {
+            boolean ignored = dirFile.mkdirs();
+        }
         file = createFile(fileName);
-//        try
-//        {
-//            BufferedReader reader = new BufferedReader(new InputStreamReader(
-//                    Files.newInputStream(file.toPath()),
-//                    StandardCharsets.UTF_8));
-//            gson.fromJson(reader);
-//        }
-//        catch (IOException e)
-//        {
-//            throw new IOException(e);
-//        }
+        gson = new GsonBuilder().setPrettyPrinting().create();
+
+        if (!file.exists())
+        {
+            boolean ignored = file.createNewFile();
+            config = new TweakceptionConfig();
+            writeConfig();
+        }
+        else
+        {
+            loadConfig();
+        }
+    }
+
+    public void loadConfig() throws Exception
+    {
+        BufferedReader reader = createReaderFor(file);
+        config = gson.fromJson(reader, TweakceptionConfig.class);
+        if (config == null)
+            config = new TweakceptionConfig();
+        reader.close();
+    }
+
+    public void writeConfig() throws Exception
+    {
+        BufferedWriter writer = createWriterFor(file);
+        writer.write(gson.toJson(config));
+        writer.close();
+    }
+
+    public BufferedReader createReaderFor(File file) throws IOException
+    {
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(
+                Files.newInputStream(file.toPath().toAbsolutePath()),
+                StandardCharsets.UTF_8));
+        return bufferedReader;
+    }
+
+    public BufferedWriter createWriterFor(File file) throws IOException
+    {
+        BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(
+                Files.newOutputStream(file.toPath().toAbsolutePath()),
+                StandardCharsets.UTF_8));
+        return bufferedWriter;
     }
 
     public File createWriteFileWithCurrentDateTimeSuffix(String name, List<String> lines) throws IOException

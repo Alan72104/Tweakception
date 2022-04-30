@@ -11,6 +11,7 @@
 - dungeon nofog - **Toggles no fog, for f5**
 - dungeon hidename - **Toggles hide non starred mobs name**
 - dungeon highlightstarredmobs - **Toggles highlight starred mobs**
+- dungeon highlightbats - **Toggles highlight bats (*all bats*)**
 - dungeon blockrightclick set
   - **Toggles right click block for the current hotbar item, for items like shadow fury**
   - **Note that it only checks the item name**

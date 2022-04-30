@@ -1,6 +1,7 @@
 package a7.tweakception.tweaks;
 
 import a7.tweakception.Tweakception;
+import a7.tweakception.config.Configuration;
 import a7.tweakception.utils.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
@@ -27,14 +28,24 @@ import java.util.TreeSet;
 import static a7.tweakception.tweaks.GlobalTracker.*;
 import static a7.tweakception.utils.McUtils.*;
 
-public class FairyTracker
+public class FairyTracker extends Tweak
 {
-    public boolean isTracking = false;
-    public boolean isAutoTracking = false;
+    private final FairyTrackerConfig c;
+    public static class FairyTrackerConfig
+    {
+        public boolean tracking = false;
+        public boolean autoTracking = false;
+        public int autoTrackingDelayTicks = 20;
+    }
     private final TreeSet<FairyPos> set = new TreeSet<FairyPos>();
-    private int delay = 20;
     private long lastSneakTime = 0;
     private boolean wasSneaking = false;
+
+    public FairyTracker(Configuration configuration)
+    {
+        super(configuration);
+        c = configuration.config.fairyTracker;
+    }
 
     public void onEntityJoinWorld(EntityJoinWorldEvent event)
     {
@@ -42,11 +53,11 @@ public class FairyTracker
 
     public void onTick(TickEvent.ClientTickEvent event)
     {
-        if (!isAutoTracking || !isInGame()) return;
+        if (!c.autoTracking || !isInGame()) return;
 
         if (event.phase == TickEvent.Phase.END)
         {
-            if (getTicks() % delay == 0)
+            if (getTicks() % c.autoTrackingDelayTicks == 0)
             {
                 trackOnce();
             }
@@ -55,7 +66,7 @@ public class FairyTracker
 
     public void onRenderLast(RenderWorldLastEvent event)
     {
-        if (!isTracking) return;
+        if (!c.tracking) return;
 
         if (set.isEmpty()) return;
 
@@ -70,7 +81,7 @@ public class FairyTracker
 
     public void onKeyInput(InputEvent.KeyInputEvent event)
     {
-        if (!isTracking) return;
+        if (!c.tracking) return;
 
         if (FMLClientHandler.instance().getClient().gameSettings.keyBindSneak.isPressed())
         {
@@ -107,7 +118,7 @@ public class FairyTracker
 
     public void trackOnce()
     {
-        if (!isTracking)
+        if (!c.tracking)
             sendChat("Fairy: tracking isn't enabled");
         else
         {
@@ -148,19 +159,19 @@ public class FairyTracker
 
     public void toggle()
     {
-        isTracking = !isTracking;
-        sendChat("Fairy: toggled " + isTracking + ", count: " + set.size());
+        c.tracking = !c.tracking;
+        sendChat("Fairy: toggled " + c.tracking + ", count: " + set.size());
     }
 
     public void toggleAutoTracking()
     {
-        isAutoTracking = !isAutoTracking;
-        sendChat("Fairy: auto tracking toggled " + isTracking + ", count: " + set.size());
+        c.autoTracking = !c.autoTracking;
+        sendChat("Fairy: auto tracking toggled " + c.tracking + ", count: " + set.size());
     }
 
     public void setDelay(int newDelay)
     {
-        delay = newDelay;
+        c.autoTrackingDelayTicks = newDelay;
         sendChat("Fairy: delay set to " + newDelay);
     }
 

@@ -1,0 +1,203 @@
+package a7.tweakception.commands;
+
+import a7.tweakception.Tweakception;
+import a7.tweakception.utils.DumpUtils;
+import a7.tweakception.utils.McUtils;
+import net.minecraft.command.CommandBase;
+import net.minecraft.command.ICommandSender;
+import net.minecraft.util.BlockPos;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import static a7.tweakception.utils.McUtils.*;
+
+public class TweakceptionVanillaCmdWrapper extends CommandBase
+{
+    private final List<Command> subCommands = new ArrayList<>();
+    private final List<String> subCommandStrings = new ArrayList<>();
+
+    public TweakceptionVanillaCmdWrapper()
+    {
+        addSub(new Command("dungeon",
+            null,
+            new Command("hidename",
+                args -> Tweakception.dungeonTweaks.toggleHideName()),
+            new Command("highlightstarredmobs",
+                args -> Tweakception.dungeonTweaks.toggleHighlightStarredMobs()),
+            new Command("highlightbats",
+                args -> Tweakception.dungeonTweaks.toggleHighlightBats()),
+            new Command("blockrightclick",
+                null,
+                new Command("set",
+                    args -> Tweakception.dungeonTweaks.blockRightClickSet()),
+                new Command("list",
+                    args -> Tweakception.dungeonTweaks.blockRightClickList())),
+            new Command("trackdamage",
+                args -> Tweakception.dungeonTweaks.toggleTrackDamageTags(),
+                new Command("setcount",
+                    args -> Tweakception.dungeonTweaks.setDamageTagTrackingCount(
+                            args.length >= 1 ? Integer.parseInt(args[0]) : 10)))));
+        addSub(new Command("crimson",
+            null,
+            new Command("map",
+                args -> Tweakception.crimsonTweaks.toggleMap(),
+                new Command("pos",
+                    args ->
+                    {
+                        if (args.length >= 2)
+                            Tweakception.crimsonTweaks.setMapPos(Integer.parseInt(args[0]), Integer.parseInt(args[1]));
+                        else
+                            sendCommandNotFound();
+                    }),
+                new Command("scale",
+                    args ->
+                    {
+                        if (args.length >= 1)
+                            Tweakception.crimsonTweaks.setMapScale(Float.parseFloat(args[0]));
+                        else
+                            sendCommandNotFound();
+                    }),
+                new Command("markerscale",
+                    args ->
+                    {
+                        if (args.length >= 1)
+                            Tweakception.crimsonTweaks.setMapMarkerScale(Float.parseFloat(args[0]));
+                        else
+                            sendCommandNotFound();
+                    })),
+            new Command("sulfur",
+                args -> Tweakception.crimsonTweaks.toggleSulfurHighlight())));
+        addSub(new Command("gt",
+            null,
+            new Command("island",
+                args -> Tweakception.globalTracker.printIsland()),
+            new Command("forcesetisland",
+                args ->
+                {
+                    if (args.length >= 1)
+                        Tweakception.globalTracker.forceSetIsland(String.join(" ", Arrays.copyOfRange(args, 1, args.length)));
+                    else
+                        Tweakception.globalTracker.forceSetIsland("");
+                }),
+            new Command("copylocation",
+                args -> Tweakception.globalTracker.copyLocation()),
+            new Command("usefallbackdetection",
+                args -> Tweakception.globalTracker.toggleFallbackDetection())));
+        addSub(new Command("fairy",
+            args -> Tweakception.fairyTracker.toggle(),
+            new Command("trackonce",
+                args -> Tweakception.fairyTracker.trackOnce()),
+            new Command("toggleauto",
+                args -> Tweakception.fairyTracker.toggleAutoTracking()),
+            new Command("setdelay",
+                args ->
+                {
+                    if (args.length >= 1)
+                        Tweakception.fairyTracker.setDelay(Integer.parseInt(args[0]));
+                    else
+                        sendCommandNotFound();
+                }),
+            new Command("setnotfound",
+                args -> Tweakception.fairyTracker.setNotFound()),
+            new Command("count",
+                args -> Tweakception.fairyTracker.count()),
+            new Command("list",
+                args -> Tweakception.fairyTracker.list()),
+            new Command("dump",
+                args -> Tweakception.fairyTracker.dump()),
+            new Command("import",
+                args -> Tweakception.fairyTracker.load()),
+            new Command("reset",
+                args -> Tweakception.fairyTracker.reset())));
+        addSub(new Command("slayer",
+            null,
+            new Command("eman",
+                null,
+                new Command("highlightglyph",
+                    args -> Tweakception.slayerTweaks.toggleHighlightGlyph()))));
+        addSub(new Command("looktrace",
+            args ->
+            {
+                // /tc looktrace reach adjacent liquid
+                // /tc looktrace 5.0   false    false
+                DumpUtils.doLookTrace(getWorld(), McUtils.getPlayer(),
+                        args.length >= 1 ? Double.parseDouble(args[0]) : 5.0,
+                        args.length >= 2 && args[1].equals("true"),
+                        args.length >= 3 && args[2].equals("true"));
+            }));
+        addSub(new Command("dumpentityinrange",
+            args -> DumpUtils.dumpEntitiesInRange(getWorld(), McUtils.getPlayer(),
+                    args.length >= 1 ? Double.parseDouble(args[0]) : 5.0)));
+        addSub(new Command("t",
+            args ->
+            {
+                sendChat("executed t");
+            }));
+    }
+
+    private void addSub(Command cmd)
+    {
+        subCommands.add(cmd);
+        subCommandStrings.add(cmd.getName());
+    }
+
+    @Override
+    public String getCommandName()
+    {
+        return "tc";
+    }
+
+    @Override
+    public String getCommandUsage(ICommandSender icommandsender)
+    {
+        return "/tc help";
+    }
+
+    @Override
+    public int getRequiredPermissionLevel()
+    {
+        return 0;
+    }
+
+    @Override
+    public void processCommand(ICommandSender sender, String[] args)
+    {
+        if (args.length == 0)
+        {
+            sendChat("Available sub commands");
+            for (String sub : subCommandStrings)
+                sendChat("/tc " + sub);
+        }
+        else
+        {
+            for (Command sub : subCommands)
+                if (args[0].equals(sub.getName()))
+                {
+                    sub.processCommands(Arrays.copyOfRange(args, 1, args.length));
+                    return;
+                }
+            sendCommandNotFound();
+        }
+    }
+
+    @Override
+    public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos)
+    {
+        if (args.length == 0)
+            return null;
+        else if (args.length == 1)
+            return getListOfStringsMatchingLastWord(args, subCommandStrings);
+        else
+            for (Command sub : subCommands)
+                if (args[0].equals(sub.getName()))
+                    return sub.getTabCompletions(Arrays.copyOfRange(args, 1, args.length));
+        return null;
+    }
+
+    private static void sendCommandNotFound()
+    {
+        sendChat("Tweakception: command not found or wrong syntax");
+    }
+}

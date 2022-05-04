@@ -29,6 +29,7 @@ public class InGameEventDispatcher
         fairyTracker.onTick(event);
         dungeonTweaks.onTick(event);
         crimsonTweaks.onTick(event);
+        slayerTweaks.onTick(event);
     }
 
     @SubscribeEvent
@@ -40,6 +41,7 @@ public class InGameEventDispatcher
         fairyTracker.onRenderLast(event);
         dungeonTweaks.onRenderLast(event);
         crimsonTweaks.onRenderLast(event);
+        slayerTweaks.onRenderLast(event);
     }
 
     @SubscribeEvent
@@ -48,6 +50,7 @@ public class InGameEventDispatcher
         if (!isInGame()) return;
         if (!isInSkyblock()) return;
 
+        dungeonTweaks.onRenderGameOverlayPost(event);
         crimsonTweaks.onRenderGameOverlayPost(event);
     }
 
@@ -120,6 +123,7 @@ public class InGameEventDispatcher
         if (!isInSkyblock()) return;
 
         fairyTracker.onEntityJoinWorld(event);
+        dungeonTweaks.onEntityJoinWorld(event);
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)

@@ -60,6 +60,7 @@ public class Configuration
         writer.close();
     }
 
+    // Use this for default of utf-8
     public BufferedReader createReaderFor(File file) throws IOException
     {
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(
@@ -68,6 +69,7 @@ public class Configuration
         return bufferedReader;
     }
 
+    // Use this for default of utf-8
     public BufferedWriter createWriterFor(File file) throws IOException
     {
         BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(
@@ -80,7 +82,7 @@ public class Configuration
     {
         File file = createFileWithCurrentDateTimeSuffix(name);
 
-        BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+        BufferedWriter writer = createWriterFor(file);
 
         for (String line : lines) {
             writer.write(line);

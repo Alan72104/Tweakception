@@ -1,6 +1,5 @@
 package a7.tweakception.tweaks;
 
-import a7.tweakception.Tweakception;
 import a7.tweakception.config.Configuration;
 import a7.tweakception.utils.RenderUtils;
 import net.minecraft.client.renderer.GlStateManager;
@@ -25,7 +24,7 @@ public class CrimsonTweaks extends Tweak
         public float mapPosY = 50.0f;
         public float mapScale = 1.0f;
         public float mapMarkerScale = 1.0f;
-        public boolean enableSulfurHighlight = false;
+        public boolean highlightSulfur = false;
     }
     private final ResourceLocation MAP_TEXTURE = new ResourceLocation("tweakception:crimson_map.png");
     private final ResourceLocation MAP_PLAYER_MARKER_TEXTURE = new ResourceLocation("tweakception:map_player_marker.png");
@@ -60,7 +59,7 @@ public class CrimsonTweaks extends Tweak
     {
         if (getCurrentIsland() != SkyblockIsland.CRIMSON_ISLE) return;
 
-        if (c.enableSulfurHighlight)
+        if (c.highlightSulfur)
         {
             for (BlockPos pos : BlockPos.getAllInBox(new BlockPos(getPlayer().posX - 50, 70, getPlayer().posZ - 50),
                     new BlockPos(getPlayer().posX + 50, 210, getPlayer().posZ + 50)))
@@ -131,6 +130,6 @@ public class CrimsonTweaks extends Tweak
 
     public void toggleSulfurHighlight()
     {
-        c.enableSulfurHighlight = !c.enableSulfurHighlight;
+        c.highlightSulfur = !c.highlightSulfur;
     }
 }

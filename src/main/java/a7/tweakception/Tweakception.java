@@ -26,6 +26,7 @@ public class Tweakception
     public static FairyTracker fairyTracker;
     public static DungeonTweaks dungeonTweaks;
     public static CrimsonTweaks crimsonTweaks;
+    public static SlayerTweaks slayerTweaks;
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) throws Exception
@@ -39,6 +40,7 @@ public class Tweakception
         fairyTracker = new FairyTracker(configuration);
         dungeonTweaks = new DungeonTweaks(configuration);
         crimsonTweaks = new CrimsonTweaks(configuration);
+        slayerTweaks = new SlayerTweaks(configuration);
 
         proxy.registerClientCommands();
         proxy.registerClientEventHandlers();

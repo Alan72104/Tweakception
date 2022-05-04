@@ -135,7 +135,8 @@ public class FairyTracker extends Tweak
 
     public void tryAddFairy(Entity e)
     {
-        if (e instanceof EntityArmorStand) {
+        if (e instanceof EntityArmorStand)
+        {
             EntityArmorStand armorStand = (EntityArmorStand) e;
             ItemStack head = armorStand.getCurrentArmor(3);
             try

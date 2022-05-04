@@ -1,29 +1,31 @@
 package a7.tweakception.utils;
 
-import java.util.List;
+import java.util.*;
 import javax.annotation.Nonnull;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.*;
 import net.minecraft.world.World;
 
+import static a7.tweakception.utils.McUtils.*;
+
 public class RayTraceUtils
 {
     @Nonnull
-    public static MovingObjectPosition getRayTraceFromEntity(World worldIn, Entity entityIn, boolean useLiquids)
+    public static MovingObjectPosition[] getRayTraceFromEntity(World worldIn, Entity entityIn, boolean useLiquids)
     {
         double reach = 5.0;
         return getRayTraceFromEntity(worldIn, entityIn, useLiquids, reach);
     }
 
     @Nonnull
-    public static MovingObjectPosition getRayTraceFromEntity(World worldIn, Entity entityIn, boolean useLiquids, double range)
+    public static MovingObjectPosition[] getRayTraceFromEntity(World worldIn, Entity entityIn, boolean useLiquids, double range)
     {
-        Vec3 eyesVec = new Vec3(entityIn.posX, entityIn.posY + entityIn.getEyeHeight(), entityIn.posZ);
+        Vec3 eyePos = new Vec3(entityIn.posX, entityIn.posY + entityIn.getEyeHeight(), entityIn.posZ);
         Vec3 look = entityIn.getLook(1f);
         Vec3 rangedLookRot = new Vec3(look.xCoord * range, look.yCoord * range, look.zCoord * range);
-        Vec3 lookVec = eyesVec.add(rangedLookRot);
+        Vec3 lookVec = eyePos.add(rangedLookRot);
 
-        MovingObjectPosition result = worldIn.rayTraceBlocks(eyesVec, lookVec, useLiquids, false, false);
+        MovingObjectPosition result = worldIn.rayTraceBlocks(eyePos, lookVec, useLiquids, false, false);
 
         if (result == null)
         {
@@ -33,33 +35,38 @@ public class RayTraceUtils
         AxisAlignedBB bb = entityIn.getEntityBoundingBox().expand(rangedLookRot.xCoord, rangedLookRot.yCoord, rangedLookRot.zCoord).expand(1d, 1d, 1d);
         List<Entity> list = worldIn.getEntitiesWithinAABBExcludingEntity(entityIn, bb);
 
-        double closest = result.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK ? eyesVec.distanceTo(result.hitVec) : Double.MAX_VALUE;
+//        double closest = result.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK ? eyePos.distanceTo(result.hitVec) : Double.MAX_VALUE;
         MovingObjectPosition entityTrace = null;
         Entity targetEntity = null;
+
+        Map<Double, Pair<Entity, MovingObjectPosition>> hitEntities = new TreeMap<>();
 
         for (Entity entity : list)
         {
             bb = entity.getEntityBoundingBox();
-            MovingObjectPosition traceTmp = bb.calculateIntercept(lookVec, eyesVec);
+            MovingObjectPosition traceTmp = bb.calculateIntercept(lookVec, eyePos);
 
             if (traceTmp != null)
             {
-                double distance = eyesVec.distanceTo(traceTmp.hitVec);
-
-                if (distance <= closest)
-                {
-                    targetEntity = entity;
-                    entityTrace = traceTmp;
-                    closest = distance;
-                }
+                double distance = eyePos.distanceTo(traceTmp.hitVec);
+                hitEntities.put(distance, new Pair<>(entity, traceTmp));
             }
         }
 
-        if (targetEntity != null)
+        List<MovingObjectPosition> finalList = new ArrayList<>(10);
+
+        if (hitEntities.size() > 0)
         {
-            result = new MovingObjectPosition(targetEntity, entityTrace.hitVec);
+            for (Pair<Entity, MovingObjectPosition> t : hitEntities.values())
+                finalList.add(new MovingObjectPosition(t.a, t.b.hitVec));
+        }
+        else
+        {
+            finalList.add(result);
         }
 
-        return result;
+
+
+        return finalList.toArray(new MovingObjectPosition[0]);
     }
 }

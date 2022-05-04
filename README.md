@@ -1,14 +1,13 @@
 # Tweakception
 
+config path - .minecraft/config/tweakception/config.json
+
+## TODO
+- Particle settings profile
+- Gui editor
+
 ## Modules/commands
-### CrimsonTweaks
-- crimson map - **Toggles map**
-- crimson map pos `int x` `int y`
-- crimson map scale `float scale`
-- crimson map markerscale `float scale`
-- crimson sulfur - **Toggles sponge highlight, very laggy**
 ### DungeonTweaks
-- dungeon nofog - **Toggles no fog, for f5**
 - dungeon hidename - **Toggles hide non starred mobs name**
 - dungeon highlightstarredmobs - **Toggles highlight starred mobs**
 - dungeon highlightbats - **Toggles highlight bats (*all bats*)**
@@ -17,6 +16,16 @@
   - **Note that it only checks the item name**
   - **Hold left alt to bypass**
 - dungeon blockrightclick list
+- dungeon trackdamage - **Toggles crit damage tag tracking**
+- dungeon trackdamage setcount `int count`
+### CrimsonTweaks
+- crimson map - **Toggles map**
+- crimson map pos `int x` `int y`
+- crimson map scale `float scale`
+- crimson map markerscale `float scale`
+- crimson sulfur - **Toggles sponge highlight, very laggy**
+### SlayerTweaks
+- slayer eman highlightglyph - **Might be slightly laggy**
 ### FairyTracker
 - fairy - **Toggles fairy scanner**
 - fairy trackonce  - **Scans loaded entities for fairy soul**
@@ -34,3 +43,12 @@
 - gt forcesetisland `string names...`
 - gt copylocation - **Copies current location to clipboard**
 - gt useFallbackDetection - **Toggles slightly slower location detection**
+<br> </br>
+### Misc
+- looktrace `[double reach]` `[bool adjacent]` `[bool liquid]` 
+  - **Does looktrace for block/entity and dumps data to file**
+  - **If result is entity then all hit entities are dumped (sorted by distance)**
+  - **Don't click the file link you will dead freeze**
+- dumpentityinrange `[double range]`
+  - **The bound is a box** 
+  - **Useful for 0 size armor stands**

@@ -8,9 +8,8 @@ import net.minecraft.util.ChatComponentText;
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.UnsupportedFlavorException;
-import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class McUtils
@@ -35,18 +34,21 @@ public class McUtils
         return getWorld() != null && getPlayer() != null;
     }
 
-    public static void sendChat(String s) {
+    public static void sendChat(String s)
+    {
         getPlayer().addChatMessage(new ChatComponentText(s));
     }
 
-    public static void sendChatf(String s, Object... args) {
+    public static void sendChatf(String s, Object... args)
+    {
         getPlayer().addChatMessage(new ChatComponentText(String.format(s, args)));
     }
 
-    private static final Pattern color = Pattern.compile("(?i)\\u00A7.");
+    private static final Matcher colorMatcher = Pattern.compile("(?i)\\u00A7.").matcher("");
 
-    public static String cleanColor(String in) {
-        return color.matcher(in).replaceAll("");
+    public static String cleanColor(String s)
+    {
+        return colorMatcher.reset(s).replaceAll("");
     }
 
     public static String cleanDuplicateColorCodes(String line) {

@@ -6,6 +6,12 @@ public enum SkyblockIsland
     {
         "The Catacombs"
     }),
+    THE_END("The End", new String[]
+    {
+        "The End",
+        "Void Sepulture",
+        "Dragon's Nest"
+    }),
     CRIMSON_ISLE("Crimson Isle", new String[]
     {
         "Crimson Isle",
@@ -28,6 +34,22 @@ public enum SkyblockIsland
         "Scarleton",
         "Stronghold",
         "The Wasteland"
+    }),
+    CRYSTAL_HOLLOWS("Crystal Hollows", new String[]
+    {
+        "Crystal Nucleus",
+        "Dragon's Lair",
+        "Fairy Grotto",
+        "Goblin Holdout",
+        "Goblin Queen's Den",
+        "Jungle Temple",
+        "Jungle",
+        "Khazad-dm", // û char will be removed during string cleaning
+        "Lost Precursor City",
+        "Magma Fields",
+        "Mines of Divan",
+        "Mithril Deposits",
+        "Precursor Remnants"
     });
 
     public String name;

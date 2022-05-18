@@ -13,19 +13,14 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.fml.client.FMLClientHandler;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.awt.*;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.UnsupportedFlavorException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.TreeSet;
 
-import static a7.tweakception.tweaks.GlobalTracker.*;
+import static a7.tweakception.tweaks.GlobalTracker.getTicks;
 import static a7.tweakception.utils.McUtils.*;
 
 public class FairyTracker extends Tweak
@@ -33,7 +28,7 @@ public class FairyTracker extends Tweak
     private final FairyTrackerConfig c;
     public static class FairyTrackerConfig
     {
-        public boolean tracking = false;
+        public boolean enabled = false;
         public boolean autoTracking = false;
         public int autoTrackingDelayTicks = 20;
     }
@@ -66,22 +61,24 @@ public class FairyTracker extends Tweak
 
     public void onRenderLast(RenderWorldLastEvent event)
     {
-        if (!c.tracking) return;
+        if (!c.enabled) return;
 
         if (set.isEmpty()) return;
 
-        int rgbNotFound = 0xa839ce;
-        int rgbFound = 0x39ce7f;
         for (FairyPos pos : set)
         {
-            RenderUtils.renderBeaconBeamOrBoundingBox(new BlockPos(pos.x, pos.y, pos.z),
-                    pos.isFound ? rgbFound : rgbNotFound, 1.0f, event.partialTicks);
+            Color color;
+            if (pos.isFound)
+                color = new Color(84, 166, 102);
+            else
+                color = new Color(206, 57, 199);
+            RenderUtils.drawBeaconBeamOrBoundingBox(new BlockPos(pos.x, pos.y, pos.z), color, event.partialTicks, 0);
         }
     }
 
     public void onKeyInput(InputEvent.KeyInputEvent event)
     {
-        if (!c.tracking) return;
+        if (!c.enabled) return;
 
         if (FMLClientHandler.instance().getClient().gameSettings.keyBindSneak.isPressed())
         {
@@ -118,7 +115,7 @@ public class FairyTracker extends Tweak
 
     public void trackOnce()
     {
-        if (!c.tracking)
+        if (!c.enabled)
             sendChat("Fairy: tracking isn't enabled");
         else
         {
@@ -160,14 +157,14 @@ public class FairyTracker extends Tweak
 
     public void toggle()
     {
-        c.tracking = !c.tracking;
-        sendChat("Fairy: toggled " + c.tracking + ", count: " + set.size());
+        c.enabled = !c.enabled;
+        sendChat("Fairy: toggled " + c.enabled + ", count: " + set.size());
     }
 
     public void toggleAutoTracking()
     {
         c.autoTracking = !c.autoTracking;
-        sendChat("Fairy: auto tracking toggled " + c.tracking + ", count: " + set.size());
+        sendChat("Fairy: auto tracking toggled " + c.enabled + ", count: " + set.size());
     }
 
     public void setDelay(int newDelay)

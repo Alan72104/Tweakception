@@ -1,12 +1,16 @@
 package a7.tweakception.utils;
 
-import java.util.*;
-import javax.annotation.Nonnull;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.*;
 import net.minecraft.world.World;
 
-import static a7.tweakception.utils.McUtils.*;
+import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
+import static a7.tweakception.utils.McUtils.Pair;
 
 public class RayTraceUtils
 {

@@ -5,25 +5,61 @@ config path - .minecraft/config/tweakception/config.json
 ## TODO
 - Particle settings profile
 - Gui editor
+- Dungeon key lightlight (armorstand data below)
+```
+Equipment:[
+  ...,
+  4:{
+    id:"minecraft:skull",
+    Count:1b,
+    tag:{
+        SkullOwner:{
+            Id:"8ad39a3a-2fc8-44d0-adfc-7824b1e0f802",
+            hypixelPopulated:1b,
+            Properties:{
+                textures:[
+                    0:{
+                        Value:"eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjU2MTU5NWQ5Yzc0NTc3OTZjNzE5ZmFlNDYzYTIyMjcxY2JjMDFjZjEwODA5ZjVhNjRjY2IzZDZhZTdmOGY2In19fQ=="}]}},
+        display:{
+            Name:"BOSS"}},
+    Damage:3s
+  }
+]
+```
 
 ## Modules/commands
 ### DungeonTweaks
+- dungeon nofog - **Toggles no fog, for blindness**
+- dungeon nofog auto - **Toggles no fog auto toggle on f5 entering/leaving**
 - dungeon hidename - **Toggles hide non starred mobs name**
-- dungeon highlightstarredmobs - **Toggles highlight starred mobs**
-- dungeon highlightbats - **Toggles highlight bats (*all bats*)**
+- dungeon highlightstarredmobs
+- dungeon highlightbats - **(all bats)**
+- dungeon highlightspiritbear
+- dungeon highlightshadowsssassin
 - dungeon blockrightclick set
   - **Toggles right click block for the current hotbar item, for items like shadow fury**
   - **Note that it only checks the item name**
   - **Hold left alt to bypass**
 - dungeon blockrightclick list
-- dungeon trackdamage - **Toggles crit damage tag tracking**
+- dungeon trackdamage - **Toggles overall damage tag tracking, crit is always enabled**
 - dungeon trackdamage setcount `int count`
+- dungeon trackdamage sethistorytimeout `int ticks` - **Sets damage history timeout ticks**
+- dungeon trackdamage noncrit - **Toggles non crit tracking, includes damages to you**
+- dungeon trackdamage wither
+- dungeon autoclosesecretchest - **This doesn't auto close chests with treasure talisman**
+- dungeon autosalvage - **Toggles salvage button auto pressing when there's a trash mob drop in the slot**
+- dungeon autojoinparty
+- dungeon autojoinparty list
+- dungeon autojoinparty add `string name`
+- dungeon autojoinparty remove `string name`
 ### CrimsonTweaks
 - crimson map - **Toggles map**
 - crimson map pos `int x` `int y`
 - crimson map scale `float scale`
 - crimson map markerscale `float scale`
 - crimson sulfur - **Toggles sponge highlight, very laggy**
+### MiningTweaks
+- mining highlightchests - **Toggles all chests highlighting in crystal hollows**
 ### SlayerTweaks
 - slayer eman highlightglyph - **Might be slightly laggy**
 ### FairyTracker
@@ -44,11 +80,16 @@ config path - .minecraft/config/tweakception/config.json
 - gt copylocation - **Copies current location to clipboard**
 - gt useFallbackDetection - **Toggles slightly slower location detection**
 <br> </br>
-### Misc
-- looktrace `[double reach]` `[bool adjacent]` `[bool liquid]` 
+### Dev commands
+- dev - **Toggles dev mode**
+  - **Press right ctrl to copy current hovered item in container nbt to clipboard**
+- tracelook `[double reach]` `[bool adjacent]` `[bool liquid]` 
   - **Does looktrace for block/entity and dumps data to file**
   - **If result is entity then all hit entities are dumped (sorted by distance)**
   - **Don't click the file link you will dead freeze**
 - dumpentityinrange `[double range]`
   - **The bound is a box** 
   - **Useful for 0 size armor stands**
+- clientsetblock `string blockName`
+  - **Sets the block at foot level**
+  - **blockName is the registry name in net.minecraft.init.Blocks**

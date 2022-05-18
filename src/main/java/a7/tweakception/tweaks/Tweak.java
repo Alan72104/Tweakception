@@ -1,6 +1,5 @@
 package a7.tweakception.tweaks;
 
-import a7.tweakception.Tweakception;
 import a7.tweakception.config.Configuration;
 
 public abstract class Tweak

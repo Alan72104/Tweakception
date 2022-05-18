@@ -1,6 +1,7 @@
 package a7.tweakception;
 
 import net.minecraftforge.client.event.*;
+import net.minecraftforge.client.event.sound.PlaySoundEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
@@ -33,6 +34,14 @@ public class InGameEventDispatcher
     }
 
     @SubscribeEvent
+    public void onPlayerTick(TickEvent.PlayerTickEvent event)
+    {
+        if (!isInSkyblock()) return;
+
+        autoFish.onPlayerTick(event);
+    }
+
+    @SubscribeEvent
     public void onRenderLast(RenderWorldLastEvent event)
     {
         if (!isInGame()) return;
@@ -42,6 +51,7 @@ public class InGameEventDispatcher
         dungeonTweaks.onRenderLast(event);
         crimsonTweaks.onRenderLast(event);
         slayerTweaks.onRenderLast(event);
+        miningTweaks.onRenderLast(event);
     }
 
     @SubscribeEvent
@@ -86,7 +96,7 @@ public class InGameEventDispatcher
 
     }
 
-    @SubscribeEvent(priority = EventPriority.LOW, receiveCanceled = true)
+    @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
     public void onClientChatReceived(ClientChatReceivedEvent event)
     {
         if (!isInSkyblock()) return;
@@ -106,6 +116,34 @@ public class InGameEventDispatcher
     public void onWorldUnload(WorldEvent.Unload event)
     {
         dungeonTweaks.onWorldUnload(event);
+        crimsonTweaks.onWorldUnload(event);
+        slayerTweaks.onWorldUnload(event);
+        miningTweaks.onWorldUnload(event);
+    }
+
+    @SubscribeEvent
+    public void onPlaySound(PlaySoundEvent event)
+    {
+        if (!isInGame()) return;
+        if (!isInSkyblock()) return;
+
+        dungeonTweaks.onPlaySound(event);
+    }
+
+    @SubscribeEvent
+    public void onGuiOpen(GuiOpenEvent event)
+    {
+        if (!isInSkyblock()) return;
+
+        dungeonTweaks.onGuiOpen(event);
+    }
+
+    @SubscribeEvent
+    public void onGuiKeyInputPre(GuiScreenEvent.KeyboardInputEvent.Pre event)
+    {
+        if (!isInSkyblock()) return;
+
+        globalTracker.onGuiKeyInputPre(event);
     }
 
     @SubscribeEvent

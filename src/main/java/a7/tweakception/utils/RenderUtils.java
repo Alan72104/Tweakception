@@ -183,89 +183,122 @@ public class RenderUtils
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
     }
 
-    public static void drawFilledBoundingBox(AxisAlignedBB p_181561_0_, float alpha, String special) {
-        Color c = new Color(specialToChromaRGB(special), true);
-
+    public static void drawFilledBoundingBox(AxisAlignedBB bb, Color c) {
         GlStateManager.enableBlend();
-        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+        GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
+        GlStateManager.disableDepth();
+        GlStateManager.disableCull();
         GlStateManager.disableTexture2D();
 
         Tessellator tessellator = Tessellator.getInstance();
         WorldRenderer worldrenderer = tessellator.getWorldRenderer();
 
-        GlStateManager.color(c.getRed() / 255f, c.getGreen() / 255f, c.getBlue() / 255f, c.getAlpha() / 255f * alpha);
+        GlStateManager.color(c.getRed() / 255f, c.getGreen() / 255f, c.getBlue() / 255f, c.getAlpha() / 255f);
 
         //vertical
         worldrenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
-        worldrenderer.pos(p_181561_0_.minX, p_181561_0_.minY, p_181561_0_.minZ).endVertex();
-        worldrenderer.pos(p_181561_0_.maxX, p_181561_0_.minY, p_181561_0_.minZ).endVertex();
-        worldrenderer.pos(p_181561_0_.maxX, p_181561_0_.minY, p_181561_0_.maxZ).endVertex();
-        worldrenderer.pos(p_181561_0_.minX, p_181561_0_.minY, p_181561_0_.maxZ).endVertex();
+        worldrenderer.pos(bb.minX, bb.minY, bb.minZ).endVertex();
+        worldrenderer.pos(bb.maxX, bb.minY, bb.minZ).endVertex();
+        worldrenderer.pos(bb.maxX, bb.minY, bb.maxZ).endVertex();
+        worldrenderer.pos(bb.minX, bb.minY, bb.maxZ).endVertex();
         tessellator.draw();
         worldrenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
-        worldrenderer.pos(p_181561_0_.minX, p_181561_0_.maxY, p_181561_0_.maxZ).endVertex();
-        worldrenderer.pos(p_181561_0_.maxX, p_181561_0_.maxY, p_181561_0_.maxZ).endVertex();
-        worldrenderer.pos(p_181561_0_.maxX, p_181561_0_.maxY, p_181561_0_.minZ).endVertex();
-        worldrenderer.pos(p_181561_0_.minX, p_181561_0_.maxY, p_181561_0_.minZ).endVertex();
+        worldrenderer.pos(bb.minX, bb.maxY, bb.maxZ).endVertex();
+        worldrenderer.pos(bb.maxX, bb.maxY, bb.maxZ).endVertex();
+        worldrenderer.pos(bb.maxX, bb.maxY, bb.minZ).endVertex();
+        worldrenderer.pos(bb.minX, bb.maxY, bb.minZ).endVertex();
         tessellator.draw();
 
         GlStateManager.color(
                 c.getRed() / 255f * 0.8f,
                 c.getGreen() / 255f * 0.8f,
                 c.getBlue() / 255f * 0.8f,
-                c.getAlpha() / 255f * alpha
+                c.getAlpha() / 255f
         );
 
         //x
         worldrenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
-        worldrenderer.pos(p_181561_0_.minX, p_181561_0_.minY, p_181561_0_.maxZ).endVertex();
-        worldrenderer.pos(p_181561_0_.minX, p_181561_0_.maxY, p_181561_0_.maxZ).endVertex();
-        worldrenderer.pos(p_181561_0_.minX, p_181561_0_.maxY, p_181561_0_.minZ).endVertex();
-        worldrenderer.pos(p_181561_0_.minX, p_181561_0_.minY, p_181561_0_.minZ).endVertex();
+        worldrenderer.pos(bb.minX, bb.minY, bb.maxZ).endVertex();
+        worldrenderer.pos(bb.minX, bb.maxY, bb.maxZ).endVertex();
+        worldrenderer.pos(bb.minX, bb.maxY, bb.minZ).endVertex();
+        worldrenderer.pos(bb.minX, bb.minY, bb.minZ).endVertex();
         tessellator.draw();
         worldrenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
-        worldrenderer.pos(p_181561_0_.maxX, p_181561_0_.minY, p_181561_0_.minZ).endVertex();
-        worldrenderer.pos(p_181561_0_.maxX, p_181561_0_.maxY, p_181561_0_.minZ).endVertex();
-        worldrenderer.pos(p_181561_0_.maxX, p_181561_0_.maxY, p_181561_0_.maxZ).endVertex();
-        worldrenderer.pos(p_181561_0_.maxX, p_181561_0_.minY, p_181561_0_.maxZ).endVertex();
+        worldrenderer.pos(bb.maxX, bb.minY, bb.minZ).endVertex();
+        worldrenderer.pos(bb.maxX, bb.maxY, bb.minZ).endVertex();
+        worldrenderer.pos(bb.maxX, bb.maxY, bb.maxZ).endVertex();
+        worldrenderer.pos(bb.maxX, bb.minY, bb.maxZ).endVertex();
         tessellator.draw();
 
         GlStateManager.color(
                 c.getRed() / 255f * 0.9f,
                 c.getGreen() / 255f * 0.9f,
                 c.getBlue() / 255f * 0.9f,
-                c.getAlpha() / 255f * alpha
+                c.getAlpha() / 255f
         );
         //z
         worldrenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
-        worldrenderer.pos(p_181561_0_.minX, p_181561_0_.maxY, p_181561_0_.minZ).endVertex();
-        worldrenderer.pos(p_181561_0_.maxX, p_181561_0_.maxY, p_181561_0_.minZ).endVertex();
-        worldrenderer.pos(p_181561_0_.maxX, p_181561_0_.minY, p_181561_0_.minZ).endVertex();
-        worldrenderer.pos(p_181561_0_.minX, p_181561_0_.minY, p_181561_0_.minZ).endVertex();
+        worldrenderer.pos(bb.minX, bb.maxY, bb.minZ).endVertex();
+        worldrenderer.pos(bb.maxX, bb.maxY, bb.minZ).endVertex();
+        worldrenderer.pos(bb.maxX, bb.minY, bb.minZ).endVertex();
+        worldrenderer.pos(bb.minX, bb.minY, bb.minZ).endVertex();
         tessellator.draw();
         worldrenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
-        worldrenderer.pos(p_181561_0_.minX, p_181561_0_.minY, p_181561_0_.maxZ).endVertex();
-        worldrenderer.pos(p_181561_0_.maxX, p_181561_0_.minY, p_181561_0_.maxZ).endVertex();
-        worldrenderer.pos(p_181561_0_.maxX, p_181561_0_.maxY, p_181561_0_.maxZ).endVertex();
-        worldrenderer.pos(p_181561_0_.minX, p_181561_0_.maxY, p_181561_0_.maxZ).endVertex();
+        worldrenderer.pos(bb.minX, bb.minY, bb.maxZ).endVertex();
+        worldrenderer.pos(bb.maxX, bb.minY, bb.maxZ).endVertex();
+        worldrenderer.pos(bb.maxX, bb.maxY, bb.maxZ).endVertex();
+        worldrenderer.pos(bb.minX, bb.maxY, bb.maxZ).endVertex();
         tessellator.draw();
-    }
-    public static void renderBoundingBox(double x, double y, double z, int rgb, float alphaMult, float partialTicks) {
-        AxisAlignedBB bb = new AxisAlignedBB(x, y, z, x + 1, y + 1, z + 1);
 
-        GlStateManager.disableDepth();
-        GlStateManager.disableCull();
-        GlStateManager.disableTexture2D();
-        drawFilledBoundingBox(bb, alphaMult, getSpecialColor(0, 100, rgb));
         GlStateManager.enableTexture2D();
         GlStateManager.enableCull();
         GlStateManager.enableDepth();
     }
 
+    public static void renderBoundingBoxBlockSize(double x, double y, double z, Color c)
+    {
+        AxisAlignedBB bb = new AxisAlignedBB(x, y, z, x + 1, y + 1, z + 1);
+        drawFilledBoundingBox(bb, c);
+    }
+
+    public static void renderBoundingBoxChestSize(double x, double y, double z, Color c)
+    {
+        AxisAlignedBB bb = new AxisAlignedBB(x + 0.0625, y, z + 0.0625,
+                x + 0.9375, y + 0.875, z + 0.9375);
+        drawFilledBoundingBox(bb, c);
+    }
+
+    public static Vector3d getInterpolatedViewingPos(float partialTicks)
+    {
+        Entity viewer = Minecraft.getMinecraft().getRenderViewEntity();
+        double viewerX = viewer.lastTickPosX + (viewer.posX - viewer.lastTickPosX) * partialTicks;
+        double viewerY = viewer.lastTickPosY + (viewer.posY - viewer.lastTickPosY) * partialTicks;
+        double viewerZ = viewer.lastTickPosZ + (viewer.posZ - viewer.lastTickPosZ) * partialTicks;
+        return new Vector3d(viewerX, viewerY, viewerZ);
+    }
+
+    // Type -1 is beacon beam
+    // Type 0 is auto
+    // Type 1 is bounding box
+    public static void drawBeaconBeamOrBoundingBox(BlockPos block, Color c, float partialTicks, int type)
+    {
+        Vector3d viewer = getInterpolatedViewingPos(partialTicks);
+        double x = block.getX() - viewer.x;
+        double y = block.getY() - viewer.y;
+        double z = block.getZ() - viewer.z;
+
+        double distSq = x * x + y * y + z * z;
+
+        if (type < 0 || (type == 0 && distSq > 10 * 10))
+            RenderUtils.renderBeaconBeam(x, y, z, c, partialTicks, true);
+        else
+            RenderUtils.renderBoundingBoxBlockSize(x, y, z, c);
+    }
+
     private static final ResourceLocation beaconBeam = new ResourceLocation("textures/entity/beacon_beam.png");
 
     private static void renderBeaconBeam(
-            double x, double y, double z, int rgb, float alphaMult,
+            double x, double y, double z, Color c,
             float partialTicks, Boolean disableDepth
     ) {
         int height = 300;
@@ -292,9 +325,10 @@ public class RenderUtils
         double time = Minecraft.getMinecraft().theWorld.getTotalWorldTime() + (double) partialTicks;
         double d1 = MathHelper.func_181162_h(-time * 0.2D - (double) MathHelper.floor_double(-time * 0.1D));
 
-        float r = ((rgb >> 16) & 0xFF) / 255f;
-        float g = ((rgb >> 8) & 0xFF) / 255f;
-        float b = (rgb & 0xFF) / 255f;
+        float r = ((c.getRed() >> 16) & 0xFF) / 255f;
+        float g = ((c.getGreen() >> 8) & 0xFF) / 255f;
+        float b = (c.getBlue() & 0xFF) / 255f;
+        float a = c.getAlpha() / 255f;
         double d2 = time * 0.025D * -1.5D;
         double d4 = 0.5D + Math.cos(d2 + 2.356194490192345D) * 0.2D;
         double d5 = 0.5D + Math.sin(d2 + 2.356194490192345D) * 0.2D;
@@ -307,22 +341,22 @@ public class RenderUtils
         double d14 = -1.0D + d1;
         double d15 = (double) (height) * 2.5D + d14;
         worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
-        worldrenderer.pos(x + d4, y + topOffset, z + d5).tex(1.0D, d15).color(r, g, b, 1.0F * alphaMult).endVertex();
+        worldrenderer.pos(x + d4, y + topOffset, z + d5).tex(1.0D, d15).color(r, g, b, a).endVertex();
         worldrenderer.pos(x + d4, y + bottomOffset, z + d5).tex(1.0D, d14).color(r, g, b, 1.0F).endVertex();
         worldrenderer.pos(x + d6, y + bottomOffset, z + d7).tex(0.0D, d14).color(r, g, b, 1.0F).endVertex();
-        worldrenderer.pos(x + d6, y + topOffset, z + d7).tex(0.0D, d15).color(r, g, b, 1.0F * alphaMult).endVertex();
-        worldrenderer.pos(x + d10, y + topOffset, z + d11).tex(1.0D, d15).color(r, g, b, 1.0F * alphaMult).endVertex();
+        worldrenderer.pos(x + d6, y + topOffset, z + d7).tex(0.0D, d15).color(r, g, b, a).endVertex();
+        worldrenderer.pos(x + d10, y + topOffset, z + d11).tex(1.0D, d15).color(r, g, b, a).endVertex();
         worldrenderer.pos(x + d10, y + bottomOffset, z + d11).tex(1.0D, d14).color(r, g, b, 1.0F).endVertex();
         worldrenderer.pos(x + d8, y + bottomOffset, z + d9).tex(0.0D, d14).color(r, g, b, 1.0F).endVertex();
-        worldrenderer.pos(x + d8, y + topOffset, z + d9).tex(0.0D, d15).color(r, g, b, 1.0F * alphaMult).endVertex();
-        worldrenderer.pos(x + d6, y + topOffset, z + d7).tex(1.0D, d15).color(r, g, b, 1.0F * alphaMult).endVertex();
+        worldrenderer.pos(x + d8, y + topOffset, z + d9).tex(0.0D, d15).color(r, g, b, a).endVertex();
+        worldrenderer.pos(x + d6, y + topOffset, z + d7).tex(1.0D, d15).color(r, g, b, a).endVertex();
         worldrenderer.pos(x + d6, y + bottomOffset, z + d7).tex(1.0D, d14).color(r, g, b, 1.0F).endVertex();
         worldrenderer.pos(x + d10, y + bottomOffset, z + d11).tex(0.0D, d14).color(r, g, b, 1.0F).endVertex();
-        worldrenderer.pos(x + d10, y + topOffset, z + d11).tex(0.0D, d15).color(r, g, b, 1.0F * alphaMult).endVertex();
-        worldrenderer.pos(x + d8, y + topOffset, z + d9).tex(1.0D, d15).color(r, g, b, 1.0F * alphaMult).endVertex();
+        worldrenderer.pos(x + d10, y + topOffset, z + d11).tex(0.0D, d15).color(r, g, b, a).endVertex();
+        worldrenderer.pos(x + d8, y + topOffset, z + d9).tex(1.0D, d15).color(r, g, b, a).endVertex();
         worldrenderer.pos(x + d8, y + bottomOffset, z + d9).tex(1.0D, d14).color(r, g, b, 1.0F).endVertex();
         worldrenderer.pos(x + d4, y + bottomOffset, z + d5).tex(0.0D, d14).color(r, g, b, 1.0F).endVertex();
-        worldrenderer.pos(x + d4, y + topOffset, z + d5).tex(0.0D, d15).color(r, g, b, 1.0F * alphaMult).endVertex();
+        worldrenderer.pos(x + d4, y + topOffset, z + d5).tex(0.0D, d15).color(r, g, b, a).endVertex();
         tessellator.draw();
 
         GlStateManager.disableCull();
@@ -330,70 +364,28 @@ public class RenderUtils
         double d13 = height + d12;
 
         worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
-        worldrenderer.pos(x + 0.2D, y + topOffset, z + 0.2D).tex(1.0D, d13).color(r, g, b, 0.25F * alphaMult).endVertex();
+        worldrenderer.pos(x + 0.2D, y + topOffset, z + 0.2D).tex(1.0D, d13).color(r, g, b, a * 0.25f).endVertex();
         worldrenderer.pos(x + 0.2D, y + bottomOffset, z + 0.2D).tex(1.0D, d12).color(r, g, b, 0.25F).endVertex();
         worldrenderer.pos(x + 0.8D, y + bottomOffset, z + 0.2D).tex(0.0D, d12).color(r, g, b, 0.25F).endVertex();
-        worldrenderer.pos(x + 0.8D, y + topOffset, z + 0.2D).tex(0.0D, d13).color(r, g, b, 0.25F * alphaMult).endVertex();
-        worldrenderer.pos(x + 0.8D, y + topOffset, z + 0.8D).tex(1.0D, d13).color(r, g, b, 0.25F * alphaMult).endVertex();
+        worldrenderer.pos(x + 0.8D, y + topOffset, z + 0.2D).tex(0.0D, d13).color(r, g, b, a * 0.25f).endVertex();
+        worldrenderer.pos(x + 0.8D, y + topOffset, z + 0.8D).tex(1.0D, d13).color(r, g, b, a * 0.25f).endVertex();
         worldrenderer.pos(x + 0.8D, y + bottomOffset, z + 0.8D).tex(1.0D, d12).color(r, g, b, 0.25F).endVertex();
         worldrenderer.pos(x + 0.2D, y + bottomOffset, z + 0.8D).tex(0.0D, d12).color(r, g, b, 0.25F).endVertex();
-        worldrenderer.pos(x + 0.2D, y + topOffset, z + 0.8D).tex(0.0D, d13).color(r, g, b, 0.25F * alphaMult).endVertex();
-        worldrenderer.pos(x + 0.8D, y + topOffset, z + 0.2D).tex(1.0D, d13).color(r, g, b, 0.25F * alphaMult).endVertex();
+        worldrenderer.pos(x + 0.2D, y + topOffset, z + 0.8D).tex(0.0D, d13).color(r, g, b, a * 0.25f).endVertex();
+        worldrenderer.pos(x + 0.8D, y + topOffset, z + 0.2D).tex(1.0D, d13).color(r, g, b, a * 0.25f).endVertex();
         worldrenderer.pos(x + 0.8D, y + bottomOffset, z + 0.2D).tex(1.0D, d12).color(r, g, b, 0.25F).endVertex();
         worldrenderer.pos(x + 0.8D, y + bottomOffset, z + 0.8D).tex(0.0D, d12).color(r, g, b, 0.25F).endVertex();
-        worldrenderer.pos(x + 0.8D, y + topOffset, z + 0.8D).tex(0.0D, d13).color(r, g, b, 0.25F * alphaMult).endVertex();
-        worldrenderer.pos(x + 0.2D, y + topOffset, z + 0.8D).tex(1.0D, d13).color(r, g, b, 0.25F * alphaMult).endVertex();
+        worldrenderer.pos(x + 0.8D, y + topOffset, z + 0.8D).tex(0.0D, d13).color(r, g, b, a * 0.25f).endVertex();
+        worldrenderer.pos(x + 0.2D, y + topOffset, z + 0.8D).tex(1.0D, d13).color(r, g, b, a * 0.25f).endVertex();
         worldrenderer.pos(x + 0.2D, y + bottomOffset, z + 0.8D).tex(1.0D, d12).color(r, g, b, 0.25F).endVertex();
         worldrenderer.pos(x + 0.2D, y + bottomOffset, z + 0.2D).tex(0.0D, d12).color(r, g, b, 0.25F).endVertex();
-        worldrenderer.pos(x + 0.2D, y + topOffset, z + 0.2D).tex(0.0D, d13).color(r, g, b, 0.25F * alphaMult).endVertex();
+        worldrenderer.pos(x + 0.2D, y + topOffset, z + 0.2D).tex(0.0D, d13).color(r, g, b, a * 0.25f).endVertex();
         tessellator.draw();
 
         GlStateManager.disableLighting();
         GlStateManager.enableTexture2D();
         if (disableDepth) {
             GlStateManager.enableDepth();
-        }
-    }
-
-    public static void renderBeaconBeam(BlockPos block, int rgb, float alphaMult, float partialTicks) {
-        double viewerX;
-        double viewerY;
-        double viewerZ;
-
-        Entity viewer = Minecraft.getMinecraft().getRenderViewEntity();
-        viewerX = viewer.lastTickPosX + (viewer.posX - viewer.lastTickPosX) * partialTicks;
-        viewerY = viewer.lastTickPosY + (viewer.posY - viewer.lastTickPosY) * partialTicks;
-        viewerZ = viewer.lastTickPosZ + (viewer.posZ - viewer.lastTickPosZ) * partialTicks;
-
-        double x = block.getX() - viewerX;
-        double y = block.getY() - viewerY;
-        double z = block.getZ() - viewerZ;
-
-        double distSq = x * x + y * y + z * z;
-
-        RenderUtils.renderBeaconBeam(x, y, z, rgb, 1.0f, partialTicks, distSq > 10 * 10);
-    }
-
-    public static void renderBeaconBeamOrBoundingBox(BlockPos block, int rgb, float alphaMult, float partialTicks) {
-        double viewerX;
-        double viewerY;
-        double viewerZ;
-
-        Entity viewer = Minecraft.getMinecraft().getRenderViewEntity();
-        viewerX = viewer.lastTickPosX + (viewer.posX - viewer.lastTickPosX) * partialTicks;
-        viewerY = viewer.lastTickPosY + (viewer.posY - viewer.lastTickPosY) * partialTicks;
-        viewerZ = viewer.lastTickPosZ + (viewer.posZ - viewer.lastTickPosZ) * partialTicks;
-
-        double x = block.getX() - viewerX;
-        double y = block.getY() - viewerY;
-        double z = block.getZ() - viewerZ;
-
-        double distSq = x * x + y * y + z * z;
-
-        if (distSq > 10 * 10) {
-            RenderUtils.renderBeaconBeam(x, y, z, rgb, alphaMult, partialTicks, true);
-        } else {
-            RenderUtils.renderBoundingBox(x, y, z, rgb, alphaMult, partialTicks);
         }
     }
 
@@ -445,5 +437,18 @@ public class RenderUtils
             arr[i] = Integer.parseInt(split[split.length - 1 - i], RADIX);
         }
         return arr;
+    }
+
+    public static class Vector3d
+    {
+        public double x;
+        public double y;
+        public double z;
+        public Vector3d(double x, double y, double z)
+        {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
     }
 }

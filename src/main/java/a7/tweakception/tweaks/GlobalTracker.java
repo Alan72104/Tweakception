@@ -1,38 +1,48 @@
 package a7.tweakception.tweaks;
 
-import a7.tweakception.Tweakception;
+import a7.tweakception.config.Configuration;
+import a7.tweakception.utils.DumpUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.inventory.Slot;
 import net.minecraft.scoreboard.Score;
 import net.minecraft.scoreboard.ScoreObjective;
 import net.minecraft.scoreboard.ScorePlayerTeam;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.util.EnumChatFormatting;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import org.lwjgl.input.Keyboard;
 
-import java.awt.*;
-import java.awt.datatransfer.StringSelection;
 import java.util.HashMap;
 import java.util.List;
 
 import static a7.tweakception.utils.McUtils.*;
 
-public class GlobalTracker
+public class GlobalTracker extends Tweak
 {
+    private final GlobalTrackerConfig c;
+    public static class GlobalTrackerConfig
+    {
+        public boolean devMode = false;
+    }
+    private static final HashMap<String, SkyblockIsland> SUBPLACE_TO_ISLAND_MAP = new HashMap<>();
     private static int ticks = 0;
     private static boolean isInSkyblock = false;
-    private static boolean isIslandDetectionOverridden = false;
-    private static HashMap<String, SkyblockIsland> subplaceToIslandMap = new HashMap<String, SkyblockIsland>();
+    private static boolean overrideIslandDetection = false;
     private static SkyblockIsland currentIsland = null;
     private static String currentLocationRaw = "";
-    private boolean useFallbackDetection = false;
+    private static String currentLocationRawCleaned = "";
+    private static boolean useFallbackDetection = false;
 
-    static
+    public GlobalTracker(Configuration configuration)
     {
+        super(configuration);
+        c = configuration.config.globalTracker;
         for (SkyblockIsland island : SkyblockIsland.values())
             for (String subPlace : island.places)
-                subplaceToIslandMap.put(subPlace, island);
+                SUBPLACE_TO_ISLAND_MAP.put(subPlace, island);
     }
 
     public void onTick(TickEvent.ClientTickEvent event)
@@ -42,14 +52,38 @@ public class GlobalTracker
             detectSkyblock();
     }
 
+    public void onGuiKeyInputPre(GuiScreenEvent.KeyboardInputEvent.Pre event)
+    {
+        if (!c.devMode) return;
+
+        if (Keyboard.getEventKey() == Keyboard.KEY_RCONTROL && Keyboard.getEventKeyState())
+        {
+            GuiScreen screen = event.gui;
+
+            if (screen instanceof GuiContainer)
+            {
+                GuiContainer container = (GuiContainer)screen;
+                Slot currentSlot = container.getSlotUnderMouse();
+
+                if (currentSlot != null && currentSlot.getHasStack())
+                {
+                    String nbt = currentSlot.getStack().serializeNBT().toString();
+                    nbt = DumpUtils.prettifyJson(nbt);
+                    setClipboard(nbt);
+                    sendChat("GT: copied item data to clipboard");
+                }
+            }
+        }
+    }
+
     public void printIsland()
     {
-        sendChat("GlobalTracker: " + (currentIsland != null ? currentIsland.name : "none"));
+        sendChat("GT: " + (currentIsland != null ? currentIsland.name : "none"));
     }
 
     private void detectSkyblock()
     {
-        if (isIslandDetectionOverridden)
+        if (overrideIslandDetection)
             return;
 
         Minecraft mc = getMc();
@@ -71,7 +105,6 @@ public class GlobalTracker
                 if (objectiveName.startsWith("SKYBLOCK"))
                 {
                     isInSkyblock = true;
-                    currentIsland = null;
                     List<Score> scores = (List<Score>)scoreboard.getSortedScores(sidebarObjective);
                     for (int i = scores.size() - 1; i >= 0; i--)
                     {
@@ -79,16 +112,23 @@ public class GlobalTracker
                         ScorePlayerTeam scoreplayerteam = scoreboard.getPlayersTeam(score.getPlayerName());
                         String line = ScorePlayerTeam.formatPlayerName(scoreplayerteam, score.getPlayerName());
 
-                        // Need special detection for in dungeon
+                        // Need special detection for dungeon " ⏣ The Catacombs (F5)"
+                        // And wtf are these
+                        //  §7⏣ §bVillage👾
+                        //  §7⏣ §cDungeon H🌠§cub
+                        //  §7⏣ §aYour Isla🌠§and
+                        //  §7⏣ §6Bank🌠
+                        //  §7⏣ §cJerry's W🌠§corkshop
+                        //  §7⏣ §cThe Catac👾§combs §7(F7)
 //                        if (!useFallbackDetection)
                         if (false)
                         {
-                            if (line.startsWith(" ⏣"))
+                            if (line.startsWith(" §7⏣"))
                             {
-                                line = cleanColor(cleanDuplicateColorCodes(line)).replaceAll("[^A-Za-z0-9() ]", "").trim();
                                 currentLocationRaw = line;
-
-                                currentIsland = subplaceToIslandMap.get(line);
+                                line = cleanColor(cleanDuplicateColorCodes(line)).replaceAll("[^A-Za-z0-9() ]", "").trim();
+                                currentLocationRawCleaned = line;
+                                currentIsland = SUBPLACE_TO_ISLAND_MAP.get(line);
                                 break;
                             }
                         }
@@ -96,7 +136,9 @@ public class GlobalTracker
                         {
                             if (line.contains("⏣"))
                             {
+                                currentLocationRaw = line;
                                 line = cleanColor(cleanDuplicateColorCodes(line)).replaceAll("[^A-Za-z0-9() ]", "").trim();
+                                currentLocationRawCleaned = line;
 
                                 islandLoop:
                                 for (SkyblockIsland island : SkyblockIsland.values())
@@ -120,9 +162,9 @@ public class GlobalTracker
         return isInSkyblock;
     }
 
-    public static String getCurrentLocationRaw()
+    public static String getCurrentLocationRawCleaned()
     {
-        return currentLocationRaw;
+        return currentLocationRawCleaned;
     }
 
     public static int getTicks()
@@ -135,36 +177,48 @@ public class GlobalTracker
         return currentIsland;
     }
 
+    public boolean isInDevMode()
+    {
+        return c.devMode;
+    }
+
     public void forceSetIsland(String name)
     {
         if (name == null || name.equals("") || name.equals("disable") || name.equals("off"))
         {
-            isIslandDetectionOverridden = false;
-            sendChat("GlobalTracker: toggle island override " + isIslandDetectionOverridden);
+            overrideIslandDetection = false;
+            sendChat("GT: toggle island override " + overrideIslandDetection);
         }
         else
         {
             for (SkyblockIsland island : SkyblockIsland.values())
                 if (island.name.toLowerCase().contains(name.toLowerCase()))
                 {
-                    isIslandDetectionOverridden = true;
+                    overrideIslandDetection = true;
+                    isInSkyblock = true;
                     currentIsland = island;
-                    sendChat("GlobalTracker: overridden current island with " + island.name);
+                    sendChat("GT: overridden current island with " + island.name);
                     return;
                 }
+            sendChat("GT: cannot find specified island in implemented island list");
         }
     }
 
     public void copyLocation()
     {
-        StringSelection s = new StringSelection(currentLocationRaw);
-        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(s, s);
-        sendChat("GlobalTracker: coipied raw current location to clipboard (" + currentLocationRaw + EnumChatFormatting.RESET + ")");
+        setClipboard(currentLocationRaw);
+        sendChat("GT: coipied raw location line to clipboard (" + currentLocationRaw + EnumChatFormatting.RESET + ")");
     }
 
     public void toggleFallbackDetection()
     {
         useFallbackDetection = !useFallbackDetection;
-        sendChat("GlobalTracker: toggled location fallback detection " + useFallbackDetection);
+        sendChat("GT: toggled location fallback detection " + useFallbackDetection);
+    }
+
+    public void toggleDevMode()
+    {
+        c.devMode = !c.devMode;
+        sendChat("GT: toggled dev mode " + c.devMode);
     }
 }

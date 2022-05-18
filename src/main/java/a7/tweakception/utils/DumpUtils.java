@@ -2,9 +2,12 @@ package a7.tweakception.utils;
 
 import a7.tweakception.Tweakception;
 import com.google.common.base.Optional;
+import com.mojang.authlib.GameProfile;
 import net.minecraft.block.Block;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.entity.AbstractClientPlayer;
+import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
@@ -24,10 +27,11 @@ import net.minecraftforge.fml.common.registry.GameData;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.*;
 
-import static a7.tweakception.utils.McUtils.getPlayer;
-import static a7.tweakception.utils.McUtils.sendChat;
+import static a7.tweakception.utils.McUtils.*;
 
 public class DumpUtils
 {
@@ -153,19 +157,20 @@ public class DumpUtils
             lines.add("TileEntity class: " + te.getClass().getName());
             lines.add("");
             lines.add("TileEntity NBT (from TileEntity#writeToNBT()):");
-            lines.add(nbt.toString());
+            lines.add(prettifyJson(nbt.toString()));
         }
 
         try
         {
-            File file = Tweakception.configuration.createWriteFileWithCurrentDateTimeSuffix("block_and_tileentity_data.txt", lines);
+            File file = Tweakception.configuration.createWriteFileWithCurrentDateTime("block_$_" +
+                    displayName.substring(0, Math.min(displayName.length(), 20)) + ".txt", lines);
 
-            IChatComponent name = new ChatComponentText(file.getName());
-            name.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, file.getAbsolutePath()));
-            name.getChatStyle().setUnderlined(true);
+            IChatComponent fileName = new ChatComponentText(file.getName());
+            fileName.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, file.getAbsolutePath()));
+            fileName.getChatStyle().setUnderlined(true);
 
             sendChat("Dumped block (" + displayName + ")");
-            getPlayer().addChatMessage(new ChatComponentTranslation("Output written to file %s", name));
+            getPlayer().addChatMessage(new ChatComponentTranslation("Output written to file %s", fileName));
         }
         catch (IOException e)
         {
@@ -208,31 +213,164 @@ public class DumpUtils
 
                     lines.add(
                             (rl != null ? rl.toString() : effect.getClass().getName()) + ", " +
-                                    effect.getAmplifier() + ", " +
-                                    effect.getDuration() + ", " +
-                                    effect.getIsAmbient());
+                            effect.getAmplifier() + ", " +
+                            effect.getDuration() + ", " +
+                            effect.getIsAmbient());
                 }
             }
             lines.add("");
         }
 
-        lines.add(nbt.toString());
+        lines.add(prettifyJson(nbt.toString()));
+        lines.add("");
+
+        if (entity instanceof AbstractClientPlayer)
+        {
+            lines.add("Entity is of AbstractClientPlayer");
+            AbstractClientPlayer player = (AbstractClientPlayer)entity;
+            ResourceLocation skinLocation = player.getLocationSkin();
+            lines.add("Skin location: " + skinLocation.toString());
+
+            NetworkPlayerInfo info = getMc().getNetHandler().getPlayerInfo(player.getUniqueID());
+            if (info != null)
+            {
+                GameProfile profile = info.getGameProfile();
+                lines.add("Entity has NetworkPlayerInfo");
+                lines.add("Name: " + profile.getName());
+                lines.add("Id: " + profile.getId());
+                lines.add("Properties: " + profile.getProperties().toString());
+            }
+            else
+                lines.add("AbstractClientPlayer doesn't have NetworkPlayerInfo");
+            lines.add("");
+        }
 
         try
         {
-            File file = Tweakception.configuration.createWriteFileWithCurrentDateTimeSuffix("entity_data.txt", lines);
+            String name = entity.getName();
+            File file = Tweakception.configuration.createWriteFileWithCurrentDateTime("entity_$_" +
+                    name.substring(0, Math.min(name.length(), 20)) + ".txt", lines);
 
-            IChatComponent name = new ChatComponentText(file.getName());
-            name.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, file.getAbsolutePath()));
-            name.getChatStyle().setUnderlined(true);
+            IChatComponent fileName = new ChatComponentText(file.getName());
+            fileName.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, file.getAbsolutePath()));
+            fileName.getChatStyle().setUnderlined(true);
 
             sendChat("Dumped entity (" + entity.getName() + ")");
-            getPlayer().addChatMessage(new ChatComponentTranslation("Output written to file %s", name));
+            getPlayer().addChatMessage(new ChatComponentTranslation("Output written to file %s", fileName));
         }
         catch (IOException e)
         {
             sendChat("Exception occurred when writing block dump file");
             Tweakception.logger.error("Exception occurred when writing block dump file", e);
         }
+    }
+
+    public static String prettifyJson(String s)
+    {
+        StringBuilder sb = new StringBuilder(s);
+        int currentIndent = 0;
+        String indent = "    ";
+        boolean escape = false;
+        int escapeCount = 0;
+        boolean inQuote = false;
+        String sep = System.lineSeparator();
+        int lastProcessedIndex = 0;
+        int stringQuoteType = 0; // 1 = single quote
+
+        try
+        {
+            for (int i = 0; i < sb.length(); )
+            {
+                switch (sb.charAt(i))
+                {
+                    case '{':
+                    case '[':
+                        if (!inQuote)
+                            currentIndent++;
+                    case ',':
+                        if (!inQuote)
+                        {
+                            sb.insert(i + 1, sep + String.join("", Collections.nCopies(currentIndent, indent)));
+                            i += indent.length() * currentIndent + sep.length() + 1;
+                        }
+                        else
+                            i++;
+                        break;
+                    case '}':
+                    case ']':
+                        if (!inQuote)
+                        {
+                            currentIndent--;
+                            sb.insert(i, System.lineSeparator() + String.join("", Collections.nCopies(currentIndent, indent)));
+                            i += indent.length() * currentIndent + sep.length();
+                        }
+                        i++;
+                        break;
+                    case '\\':
+                        escape = !escape;
+                        if (escape)
+                            escapeCount = 0;
+                        i++;
+                        break;
+                    case '\'':
+                        if (!escape)
+                        {
+                            if (inQuote)
+                            {
+                                if (stringQuoteType == 1)
+                                    inQuote = false;
+                            }
+                            else
+                            {
+                                stringQuoteType = 1;
+                                inQuote = true;
+                            }
+                        }
+                        i++;
+                        break;
+                    case '"':
+                        if (!escape)
+                        {
+                            if (inQuote)
+                            {
+                                if (stringQuoteType == 0)
+                                    inQuote = false;
+                            }
+                            else
+                            {
+                                stringQuoteType = 0;
+                                inQuote = true;
+                            }
+                        }
+                        i++;
+                        break;
+                    default:
+                        i++;
+                        break;
+                }
+                if (escape)
+                {
+                    escapeCount++;
+                    if (escapeCount >= 2)
+                        escape = false;
+                }
+                lastProcessedIndex = i;
+            }
+        }
+        catch (Exception e)
+        {
+            StringWriter writer = new StringWriter();
+            e.printStackTrace(new PrintWriter(writer));
+            String trace = writer.toString();
+            return "Failed to prettify json, failed at pos " + lastProcessedIndex + sep +
+                    "==========" + sep +
+                    trace +
+                    "==========" + sep +
+                    "Original string and failed pos:" + sep +
+                    s + sep +
+                    String.join("", Collections.nCopies(lastProcessedIndex, " ")) + "^";
+        }
+
+        return sb.toString();
     }
 }

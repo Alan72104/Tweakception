@@ -2,7 +2,6 @@ package a7.tweakception.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -78,9 +77,9 @@ public class Configuration
         return bufferedWriter;
     }
 
-    public File createWriteFileWithCurrentDateTimeSuffix(String name, List<String> lines) throws IOException
+    public File createWriteFileWithCurrentDateTime(String name, List<String> lines) throws IOException
     {
-        File file = createFileWithCurrentDateTimeSuffix(name);
+        File file = createFileWithCurrentDateTime(name);
 
         BufferedWriter writer = createWriterFor(file);
 
@@ -94,10 +93,14 @@ public class Configuration
         return file;
     }
 
-    public File createFileWithCurrentDateTimeSuffix(String name) throws IOException
+    public File createFileWithCurrentDateTime(String name) throws IOException
     {
         String[] split = name.split("\\.");
-        String nameBase = split[0] + "_" + new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss").format(new Date(System.currentTimeMillis()));
+        String[] baseSplit = split[0].split("\\$");
+        // a_$_b.txt -> a_time_b.txt / a_time_b_1.txt
+        String nameBase = baseSplit[0] +
+                new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss").format(new Date(System.currentTimeMillis())) +
+                (baseSplit.length > 1 ? baseSplit[1] : "");
         name = nameBase + "." + split[1];
         File file = createFile(name, false);
 

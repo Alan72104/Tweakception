@@ -1,17 +1,26 @@
 package a7.tweakception.tweaks;
 
+import a7.tweakception.Tweakception;
 import a7.tweakception.config.Configuration;
 import a7.tweakception.utils.RenderUtils;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.opengl.GL11;
 
-import static a7.tweakception.tweaks.GlobalTracker.*;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import static a7.tweakception.Tweakception.BlockSearchThread;
+import static a7.tweakception.tweaks.GlobalTracker.getCurrentIsland;
+import static a7.tweakception.tweaks.GlobalTracker.getTicks;
 import static a7.tweakception.utils.McUtils.*;
 
 public class CrimsonTweaks extends Tweak
@@ -43,7 +52,9 @@ public class CrimsonTweaks extends Tweak
     private final float MAP_PLAYER_MARKER_HEIGHT = 7.0f;
     private final float MAP_PLAYER_MARKER_SCALE = 5.0f / MAP_PLAYER_MARKER_WIDTH;
     private final float WORLD_TO_MAP_SCALE = (MAP_SPAWNPOINT_X - MAP_RIGHTMOST_X) / (WORLD_SPAWNPOINT_X - WORLD_RIGHTMOST_X);
-//    private final LinkedHashMap<Tuple<Integer, Integer>, ArrayList<BlockPos>> sponges = new LinkedHashMap<>();
+    private List<BlockPos> sponges = new ArrayList<>(25);
+    private List<BlockPos> spongesTemp = new ArrayList<>(25);
+    private BlockSearchThread searchThread;
 
     public CrimsonTweaks(Configuration configuration)
     {
@@ -53,6 +64,23 @@ public class CrimsonTweaks extends Tweak
 
     public void onTick(TickEvent.ClientTickEvent event)
     {
+        if (getCurrentIsland() != SkyblockIsland.CRIMSON_ISLE) return;
+
+        if (getTicks() % 20 == 5)
+        {
+            if (c.highlightSulfur)
+            {
+                if (searchThread == null || searchThread.done)
+                {
+                    EntityPlayerSP p = getPlayer();
+                    sponges = spongesTemp;
+                    spongesTemp = new ArrayList<>(20);
+                    searchThread = new BlockSearchThread((int)p.posX - 50, 70, (int)p.posZ - 50,
+                            (int)p.posX + 50, 230, (int)p.posZ + 50, getWorld(), Blocks.sponge, spongesTemp);
+                    Tweakception.threadPool.execute(searchThread);
+                }
+            }
+        }
     }
 
     public void onRenderLast(RenderWorldLastEvent event)
@@ -61,14 +89,8 @@ public class CrimsonTweaks extends Tweak
 
         if (c.highlightSulfur)
         {
-            for (BlockPos pos : BlockPos.getAllInBox(new BlockPos(getPlayer().posX - 50, 70, getPlayer().posZ - 50),
-                    new BlockPos(getPlayer().posX + 50, 210, getPlayer().posZ + 50)))
-            {
-                if (getWorld().getBlockState(pos).getBlock() == Blocks.sponge)
-                {
-                    RenderUtils.renderBeaconBeamOrBoundingBox(pos, 0xa89d32, 0.5f, event.partialTicks);
-                }
-            }
+            for (BlockPos pos : sponges)
+                RenderUtils.drawBeaconBeamOrBoundingBox(pos, new Color(168, 157, 50, 127), event.partialTicks, 0);
         }
     }
 
@@ -106,30 +128,46 @@ public class CrimsonTweaks extends Tweak
         }
     }
 
+    public void onWorldUnload(WorldEvent.Unload event)
+    {
+        if (searchThread != null)
+            searchThread.cancel = true;
+    }
+
     public void toggleMap()
     {
         c.enableMap = !c.enableMap;
-        sendChat("CrimsonTweaks => Map: toggled " + c.enableMap);
+        sendChat("CT-Map: toggled " + c.enableMap);
     }
 
     public void setMapPos(int x, int y)
     {
         c.mapPosX = x;
         c.mapPosY = y;
+        sendChat("CT-Map: set pos to " + c.mapPosX + ", " + c.mapPosY);
     }
 
     public void setMapScale(float scale)
     {
         c.mapScale = scale;
+        sendChat("CT-Map: set scale to " + c.mapScale);
     }
 
     public void setMapMarkerScale(float scale)
     {
         c.mapMarkerScale = scale;
+        sendChat("CT-Map: set marker scale to " + c.mapMarkerScale);
     }
 
     public void toggleSulfurHighlight()
     {
         c.highlightSulfur = !c.highlightSulfur;
+        sendChat("CT-SulfurHighlight: toggled " + c.highlightSulfur);
+        if (!c.highlightSulfur)
+        {
+            if (searchThread != null && !searchThread.done)
+                searchThread.cancel = true;
+            searchThread = null;
+        }
     }
 }

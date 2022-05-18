@@ -13,6 +13,8 @@ buildscript {
     dependencies {
         classpath "com.github.asbyth:ForgeGradle:6f53277"
         classpath "com.github.xcfrg:MixinGradle:0.6-SNAPSHOT"
+//        classpath "net.minecraftforge.gradle.forge:6f53277"
+//        classpath "org.spongepowered.mixin:d75e32e"
         classpath "com.google.code.gson:gson:2.9.0"
     }
 }
@@ -62,6 +64,11 @@ minecraft {
     }
 }
 
+//mixin {
+//    add sourceSets.main, "mixins.tweakception.refmap.json"
+//    config "mixins.tweakception.json"
+//}
+
 repositories {
     mavenCentral()
     maven {
@@ -72,12 +79,15 @@ repositories {
         name = "jitpack"
         url = "https://jitpack.io/"
     }
+    maven {
+        url = "https://repo.spongepowered.org/maven/"
+    }
 }
 
 dependencies {
-    implementation 'com.google.code.gson:gson:2.9.0'
-    compile "com.github.xcfrg:MixinGradle:0.6-SNAPSHOT"
-    annotationProcessor "com.github.xcfrg:MixinGradle:0.6-SNAPSHOT"
+    implementation "com.google.code.gson:gson:2.9.0"
+    implementation "org.spongepowered:mixin:0.6-SNAPSHOT"
+    annotationProcessor "org.spongepowered:mixin:0.6-SNAPSHOT"
 }
 
 //version = "${config.minecraft_version}-${config.mod_version}-${System.getenv("BUILD_NUMBER") ?: 0}"

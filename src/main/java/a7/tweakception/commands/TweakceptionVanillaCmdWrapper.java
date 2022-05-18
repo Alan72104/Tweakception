@@ -3,31 +3,42 @@ package a7.tweakception.commands;
 import a7.tweakception.Tweakception;
 import a7.tweakception.utils.DumpUtils;
 import a7.tweakception.utils.McUtils;
+import net.minecraft.block.Block;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.ResourceLocation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import static a7.tweakception.utils.McUtils.*;
+import static a7.tweakception.utils.McUtils.getWorld;
+import static a7.tweakception.utils.McUtils.sendChat;
 
 public class TweakceptionVanillaCmdWrapper extends CommandBase
 {
     private final List<Command> subCommands = new ArrayList<>();
-    private final List<String> subCommandStrings = new ArrayList<>();
 
     public TweakceptionVanillaCmdWrapper()
     {
         addSub(new Command("dungeon",
             null,
+            new Command("nofog",
+                args -> Tweakception.dungeonTweaks.toggleNoFog(),
+                new Command("auto",
+                    args -> Tweakception.dungeonTweaks.toggleNoFogAutoToggle())),
             new Command("hidename",
                 args -> Tweakception.dungeonTweaks.toggleHideName()),
             new Command("highlightstarredmobs",
                 args -> Tweakception.dungeonTweaks.toggleHighlightStarredMobs()),
             new Command("highlightbats",
                 args -> Tweakception.dungeonTweaks.toggleHighlightBats()),
+            new Command("highlightspiritbear",
+                args -> Tweakception.dungeonTweaks.toggleHighlightSpiritBear()),
+            new Command("highlightshadowsssassin",
+                args -> Tweakception.dungeonTweaks.toggleHighlightShadowAssassin()),
             new Command("blockrightclick",
                 null,
                 new Command("set",
@@ -38,7 +49,27 @@ public class TweakceptionVanillaCmdWrapper extends CommandBase
                 args -> Tweakception.dungeonTweaks.toggleTrackDamageTags(),
                 new Command("setcount",
                     args -> Tweakception.dungeonTweaks.setDamageTagTrackingCount(
-                            args.length >= 1 ? Integer.parseInt(args[0]) : 10)))));
+                            args.length >= 1 ? Integer.parseInt(args[0]) : 10)),
+                new Command("sethistorytimeout",
+                    args -> Tweakception.dungeonTweaks.setDamageTagHistoryTimeoutTicks(
+                            args.length >= 1 ? Integer.parseInt(args[0]) : 20 * 30)),
+                new Command("noncrit",
+                    args -> Tweakception.dungeonTweaks.toggleTrackNonCritDamageTags()),
+                new Command("wither",
+                    args -> Tweakception.dungeonTweaks.toggleTrackWitherDamageTags())),
+            new Command("autoclosesecretchest",
+                args -> Tweakception.dungeonTweaks.toggleAutoCloseSecretChest()),
+            new Command("autosalvage",
+                args -> Tweakception.dungeonTweaks.toggleAutoSalvage()),
+            new Command("autojoinparty",
+                args -> Tweakception.dungeonTweaks.toggleAutoJoinParty(),
+                new Command("list",
+                    args -> Tweakception.dungeonTweaks.autoJoinPartyList()),
+                new Command("add",
+                    args -> Tweakception.dungeonTweaks.autoJoinPartyAdd(args.length >= 1 ? args[0] : "")),
+                new Command("remove",
+                    args -> Tweakception.dungeonTweaks.autoJoinPartyRemove(args.length >= 1 ? args[0] : "")))
+        ));
         addSub(new Command("crimson",
             null,
             new Command("map",
@@ -68,7 +99,12 @@ public class TweakceptionVanillaCmdWrapper extends CommandBase
                             sendCommandNotFound();
                     })),
             new Command("sulfur",
-                args -> Tweakception.crimsonTweaks.toggleSulfurHighlight())));
+                args -> Tweakception.crimsonTweaks.toggleSulfurHighlight())
+        ));
+        addSub(new Command("mining",
+            null,
+            new Command("highlightchests",
+                args -> Tweakception.miningTweaks.toggleHighlightChests())));
         addSub(new Command("gt",
             null,
             new Command("island",
@@ -84,7 +120,8 @@ public class TweakceptionVanillaCmdWrapper extends CommandBase
             new Command("copylocation",
                 args -> Tweakception.globalTracker.copyLocation()),
             new Command("usefallbackdetection",
-                args -> Tweakception.globalTracker.toggleFallbackDetection())));
+                args -> Tweakception.globalTracker.toggleFallbackDetection())
+        ));
         addSub(new Command("fairy",
             args -> Tweakception.fairyTracker.toggle(),
             new Command("trackonce",
@@ -110,13 +147,15 @@ public class TweakceptionVanillaCmdWrapper extends CommandBase
             new Command("import",
                 args -> Tweakception.fairyTracker.load()),
             new Command("reset",
-                args -> Tweakception.fairyTracker.reset())));
+                args -> Tweakception.fairyTracker.reset())
+        ));
         addSub(new Command("slayer",
             null,
             new Command("eman",
                 null,
                 new Command("highlightglyph",
-                    args -> Tweakception.slayerTweaks.toggleHighlightGlyph()))));
+                    args -> Tweakception.slayerTweaks.toggleHighlightGlyph()))
+        ));
         addSub(new Command("looktrace",
             args ->
             {
@@ -126,21 +165,32 @@ public class TweakceptionVanillaCmdWrapper extends CommandBase
                         args.length >= 1 ? Double.parseDouble(args[0]) : 5.0,
                         args.length >= 2 && args[1].equals("true"),
                         args.length >= 3 && args[2].equals("true"));
-            }));
+            }).setVisibility(false));
         addSub(new Command("dumpentityinrange",
             args -> DumpUtils.dumpEntitiesInRange(getWorld(), McUtils.getPlayer(),
-                    args.length >= 1 ? Double.parseDouble(args[0]) : 5.0)));
+                    args.length >= 1 ? Double.parseDouble(args[0]) : 5.0)).setVisibility(false));
+        addSub(new Command("clientsetblock",
+            args ->
+            {
+                if (args.length == 1)
+                    getWorld().setBlockState(McUtils.getPlayer().getPosition(),
+                            Block.blockRegistry.getObject(new ResourceLocation(args[0])).getDefaultState(),
+                            1);
+                else
+                    sendChat("Give me 1 argument");
+            }).setVisibility(false));
+        addSub(new Command("dev",
+            args -> Tweakception.globalTracker.toggleDevMode()).setVisibility(false));
         addSub(new Command("t",
             args ->
             {
                 sendChat("executed t");
-            }));
+            }).setVisibility(false));
     }
 
     private void addSub(Command cmd)
     {
         subCommands.add(cmd);
-        subCommandStrings.add(cmd.getName());
     }
 
     @Override
@@ -167,8 +217,8 @@ public class TweakceptionVanillaCmdWrapper extends CommandBase
         if (args.length == 0)
         {
             sendChat("Available sub commands");
-            for (String sub : subCommandStrings)
-                sendChat("/tc " + sub);
+            for (String subName : getVisibleSubCommandStrings())
+                sendChat("/tc " + subName);
         }
         else
         {
@@ -188,12 +238,20 @@ public class TweakceptionVanillaCmdWrapper extends CommandBase
         if (args.length == 0)
             return null;
         else if (args.length == 1)
-            return getListOfStringsMatchingLastWord(args, subCommandStrings);
+            return getListOfStringsMatchingLastWord(args, getVisibleSubCommandStrings());
         else
             for (Command sub : subCommands)
                 if (args[0].equals(sub.getName()))
                     return sub.getTabCompletions(Arrays.copyOfRange(args, 1, args.length));
         return null;
+    }
+
+    private List<String> getVisibleSubCommandStrings()
+    {
+        return subCommands.stream().
+                filter(cmd -> cmd.visibility || Tweakception.globalTracker.isInDevMode()).
+                map(Command::getName).
+                collect(Collectors.toList());
     }
 
     private static void sendCommandNotFound()

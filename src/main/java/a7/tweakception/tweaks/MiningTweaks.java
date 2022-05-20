@@ -54,7 +54,7 @@ public class MiningTweaks extends Tweak
         }
     }
 
-    public void onMultiBlockChangePacket(S22PacketMultiBlockChange packet)
+    public void onPacketMultiBlockChange(S22PacketMultiBlockChange packet)
     {
         if (getCurrentIsland() != SkyblockIsland.CRYSTAL_HOLLOWS) return;
 
@@ -70,7 +70,7 @@ public class MiningTweaks extends Tweak
         }
     }
 
-    public void onBlockChangePacket(S23PacketBlockChange packet)
+    public void onPacketBlockChange(S23PacketBlockChange packet)
     {
         if (getCurrentIsland() != SkyblockIsland.CRYSTAL_HOLLOWS) return;
 
@@ -83,7 +83,7 @@ public class MiningTweaks extends Tweak
             treasureChests.remove(pos);
     }
 
-    public void onBlockActionPacket(S24PacketBlockAction packet)
+    public void onPacketBlockAction(S24PacketBlockAction packet)
     {
 //        if (getCurrentIsland() != SkyblockIsland.CRYSTAL_HOLLOWS) return;
 //

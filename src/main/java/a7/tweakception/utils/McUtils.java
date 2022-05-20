@@ -3,6 +3,8 @@ package a7.tweakception.utils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ChatComponentText;
 
 import java.awt.*;
@@ -42,6 +44,20 @@ public class McUtils
     public static void sendChatf(String s, Object... args)
     {
         getPlayer().addChatMessage(new ChatComponentText(String.format(s, args)));
+    }
+
+    public static String getSkyblockItemId(ItemStack item)
+    {
+        NBTTagCompound tag = item.getTagCompound();
+        if (tag != null)
+        {
+            NBTTagCompound extra = tag.getCompoundTag("ExtraAttributes");
+            if (extra != null)
+            {
+                return extra.getString("id");
+            }
+        }
+        return null;
     }
 
     private static final Matcher colorMatcher = Pattern.compile("(?i)\\u00A7.").matcher("");

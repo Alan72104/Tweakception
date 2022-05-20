@@ -48,7 +48,7 @@ public class GlobalTracker extends Tweak
     public void onTick(TickEvent.ClientTickEvent event)
     {
         ticks++;
-        if (ticks % 20 == 10)
+        if (ticks % 10 == 8)
             detectSkyblock();
     }
 
@@ -126,7 +126,7 @@ public class GlobalTracker extends Tweak
                             if (line.startsWith(" §7⏣"))
                             {
                                 currentLocationRaw = line;
-                                line = cleanColor(cleanDuplicateColorCodes(line)).replaceAll("[^A-Za-z0-9() ]", "").trim();
+                                line = cleanColor(cleanDuplicateColorCodes(line)).replaceAll("[^A-Za-z0-9() \\-']", "").trim();
                                 currentLocationRawCleaned = line;
                                 currentIsland = SUBPLACE_TO_ISLAND_MAP.get(line);
                                 break;
@@ -137,7 +137,7 @@ public class GlobalTracker extends Tweak
                             if (line.contains("⏣"))
                             {
                                 currentLocationRaw = line;
-                                line = cleanColor(cleanDuplicateColorCodes(line)).replaceAll("[^A-Za-z0-9() ]", "").trim();
+                                line = cleanColor(cleanDuplicateColorCodes(line)).replaceAll("[^A-Za-z0-9() \\-']", "").trim();
                                 currentLocationRawCleaned = line;
 
                                 islandLoop:

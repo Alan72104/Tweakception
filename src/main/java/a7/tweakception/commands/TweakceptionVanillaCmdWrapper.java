@@ -68,7 +68,21 @@ public class TweakceptionVanillaCmdWrapper extends CommandBase
                 new Command("add",
                     args -> Tweakception.dungeonTweaks.autoJoinPartyAdd(args.length >= 1 ? args[0] : "")),
                 new Command("remove",
-                    args -> Tweakception.dungeonTweaks.autoJoinPartyRemove(args.length >= 1 ? args[0] : "")))
+                    args -> Tweakception.dungeonTweaks.autoJoinPartyRemove(args.length >= 1 ? args[0] : ""))),
+            new Command("frag",
+                    args -> Tweakception.dungeonTweaks.listFragCounts(),
+                new Command("startsession",
+                    args -> Tweakception.dungeonTweaks.fragStartSession()),
+                new Command("endsession",
+                    args -> Tweakception.dungeonTweaks.fragEndSession()),
+                new Command("next",
+                    args -> Tweakception.dungeonTweaks.fragNext()),
+                new Command("setfragbot",
+                    args -> Tweakception.dungeonTweaks.setFragBot(args.length >= 1 ? args[0] : "")),
+                new Command("stats",
+                    null)),
+            new Command("trackshootingspeed",
+                args -> Tweakception.dungeonTweaks.toggleTrackShootingSpeed())
         ));
         addSub(new Command("crimson",
             null,
@@ -156,6 +170,8 @@ public class TweakceptionVanillaCmdWrapper extends CommandBase
                 new Command("highlightglyph",
                     args -> Tweakception.slayerTweaks.toggleHighlightGlyph()))
         ));
+        addSub(new Command("next",
+            args -> Tweakception.dungeonTweaks.fragNext()));
         addSub(new Command("looktrace",
             args ->
             {

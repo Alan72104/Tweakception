@@ -29,6 +29,7 @@ public class Tweakception
     public static Logger logger;
     public static Configuration configuration;
     public static ExecutorService threadPool;
+    public static Scheduler scheduler;
     public static InGameEventDispatcher inGameEventDispatcher;
     public static GlobalTracker globalTracker;
     public static FairyTracker fairyTracker;
@@ -47,6 +48,7 @@ public class Tweakception
 
         inGameEventDispatcher = new InGameEventDispatcher();
         threadPool = Executors.newFixedThreadPool(2);
+        scheduler = new Scheduler();
         globalTracker = new GlobalTracker(configuration);
         fairyTracker = new FairyTracker(configuration);
         dungeonTweaks = new DungeonTweaks(configuration);

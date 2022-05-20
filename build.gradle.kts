@@ -1,5 +1,7 @@
 import net.minecraftforge.gradle.user.ReobfMappingType
+import java.io.FileInputStream
 import java.io.ByteArrayOutputStream
+import java.util.Properties
 
 plugins {
     java
@@ -13,22 +15,22 @@ val baseVersion = "1.0"
 
 
 val buildExtra = mutableListOf<String>()
-val buildVersion = properties["BUILD_VERSION"] as? String
-if (buildVersion != null)
-    buildExtra.add(buildVersion)
+//val buildVersion = properties["BUILD_VERSION"] as? String
+//if (buildVersion != null)
+//    buildExtra.add(buildVersion)
 //val githubCi = properties["GITHUB_ACTIONS"] as? String
 //if (githubCi == "true")
 //    buildExtra.add("ci")
 
-val stdout = ByteArrayOutputStream()
-val execResult = exec {
-    commandLine("git", "describe", "--always", "--first-parent", "--abbrev=7")
-    standardOutput = stdout
-    isIgnoreExitValue = true
-}
-if (execResult.exitValue == 0) {
-    buildExtra.add(String(stdout.toByteArray()).trim())
-}
+//val stdout = ByteArrayOutputStream()
+//val execResult = exec {
+//    commandLine("git", "describe", "--always", "--first-parent", "--abbrev=7")
+//    standardOutput = stdout
+//    isIgnoreExitValue = true
+//}
+//if (execResult.exitValue == 0) {
+//    buildExtra.add(String(stdout.toByteArray()).trim())
+//}
 
 //val gitDiffStdout = ByteArrayOutputStream()
 //val gitDiffResult = exec {
@@ -40,7 +42,26 @@ if (execResult.exitValue == 0) {
 //    buildExtra.add("dirty")
 //}
 
-version = baseVersion + (if (buildExtra.isEmpty()) "" else buildExtra.joinToString(prefix = "+", separator = "."))
+val versionPropsFile = file("build-version.properties")
+var patchVersion = 0
+
+if (versionPropsFile.canRead()) {
+    val versionProps = Properties()
+
+    versionProps.load(FileInputStream(versionPropsFile))
+
+    patchVersion = versionProps["VERSION_CODE"].toString().toInt() + 1
+
+    versionProps["VERSION_CODE"] = patchVersion.toString()
+    versionProps.store(versionPropsFile.bufferedWriter(), null)
+}
+else
+{
+    throw GradleException("Could not read version.properties!")
+}
+
+//version = baseVersion + (if (buildExtra.isEmpty()) "" else buildExtra.joinToString(prefix = "+", separator = "."))
+version = baseVersion + "." + patchVersion.toString()
 
 
 // Toolchains:
@@ -114,8 +135,8 @@ tasks.withType(Jar::class) {
 tasks.shadowJar {
     archiveClassifier.set("dep")
     exclude(
-            "module-info.class"
-//            "LICENSE.txt"
+            "module-info.class",
+            "LICENSE.txt"
     )
     dependencies {
         include(dependency("org.spongepowered:mixin:0.7.11-SNAPSHOT"))

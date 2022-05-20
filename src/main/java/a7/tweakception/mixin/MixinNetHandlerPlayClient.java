@@ -2,6 +2,7 @@ package a7.tweakception.mixin;
 
 import a7.tweakception.Tweakception;
 import net.minecraft.client.network.NetHandlerPlayClient;
+import net.minecraft.network.play.server.S0DPacketCollectItem;
 import net.minecraft.network.play.server.S22PacketMultiBlockChange;
 import net.minecraft.network.play.server.S23PacketBlockChange;
 import net.minecraft.network.play.server.S24PacketBlockAction;
@@ -20,7 +21,7 @@ public class MixinNetHandlerPlayClient
     {
         if (!isInSkyblock()) return;
 
-        Tweakception.miningTweaks.onBlockChangePacket(packetIn);
+        Tweakception.miningTweaks.onPacketBlockChange(packetIn);
     }
 
     @Inject(method = "handleMultiBlockChange", at = @At(value="HEAD"))
@@ -28,7 +29,7 @@ public class MixinNetHandlerPlayClient
     {
         if (!isInSkyblock()) return;
 
-        Tweakception.miningTweaks.onMultiBlockChangePacket(packetIn);
+        Tweakception.miningTweaks.onPacketMultiBlockChange(packetIn);
     }
 
     @Inject(method = "handleBlockAction", at = @At(value="HEAD"))
@@ -36,7 +37,14 @@ public class MixinNetHandlerPlayClient
     {
         if (!isInSkyblock()) return;
 
-        Tweakception.miningTweaks.onBlockActionPacket(packetIn);
+        Tweakception.miningTweaks.onPacketBlockAction(packetIn);
     }
 
+    @Inject(method = "handleCollectItem", at = @At(value="HEAD"))
+    public void handleCollectItem(S0DPacketCollectItem packetIn, CallbackInfo ci)
+    {
+        if (!isInSkyblock()) return;
+
+        Tweakception.dungeonTweaks.onPacketCollectItem(packetIn);
+    }
 }

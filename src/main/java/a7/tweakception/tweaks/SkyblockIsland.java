@@ -2,6 +2,10 @@ package a7.tweakception.tweaks;
 
 public enum SkyblockIsland
 {
+    DUNGEON_HUB("Dungeon Hub", new String[]
+    {
+        "Dungeon Hub"
+    }),
     DUNGEON("Dungeon", new String[]
     {
         "The Catacombs"

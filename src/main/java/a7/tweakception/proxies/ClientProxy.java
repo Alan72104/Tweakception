@@ -19,6 +19,7 @@ public class ClientProxy implements IProxy
     public void registerClientEventHandlers()
     {
         MinecraftForge.EVENT_BUS.register(Tweakception.inGameEventDispatcher);
+        MinecraftForge.EVENT_BUS.register(Tweakception.scheduler);
     }
 
     public void registerServerEventHandlers()

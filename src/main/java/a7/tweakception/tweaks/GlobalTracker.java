@@ -47,9 +47,12 @@ public class GlobalTracker extends Tweak
 
     public void onTick(TickEvent.ClientTickEvent event)
     {
-        ticks++;
-        if (ticks % 10 == 8)
-            detectSkyblock();
+        if (event.phase == TickEvent.Phase.START)
+        {
+            ticks++;
+            if (ticks % 10 == 8)
+                detectSkyblock();
+        }
     }
 
     public void onGuiKeyInputPre(GuiScreenEvent.KeyboardInputEvent.Pre event)

@@ -76,6 +76,8 @@ public class DungeonTweaks extends Tweak
         public long fastestFragrun = 0L;
         public int totalFragruns = 0;
         public boolean trackShootingSpeed = false;
+        public int shootingSpeedTrackingSampleSecs = 2;
+        public int shootingSpeedTrackingRange = 4;
     }
     private static final String F5_BOSS_START = "Welcome, you arrive right on time. I am Livid, the Master of Shadows.";
     private static final String F5_BOSS_END = "Impossible! How did you figure out which one I was?";
@@ -445,7 +447,7 @@ public class DungeonTweaks extends Tweak
                 while (arrowSpawnTimes.size() > 0)
                 {
                     int cur = arrowSpawnTimes.peek();
-                    if (getTicks() - cur > 20 * 2)
+                    if (getTicks() - cur > 20 * c.shootingSpeedTrackingSampleSecs)
                         arrowSpawnTimes.remove();
                     else
                         break;
@@ -545,7 +547,7 @@ public class DungeonTweaks extends Tweak
 
         if (c.trackShootingSpeed)
         {
-            float count = arrowSpawnTimes.size() / 2.0f;
+            float count = (float)arrowSpawnTimes.size() / c.shootingSpeedTrackingSampleSecs;
             String s = f("Arrows/s: %.3f", count);
             r.drawString(s, width - 60 - r.getStringWidth(s), 10, 0xffffffff);
         }
@@ -641,7 +643,7 @@ public class DungeonTweaks extends Tweak
         {
             if (event.entity instanceof EntityArrow)
             {
-                if (event.entity.getDistanceToEntity(getPlayer()) <= 4.0f)
+                if (event.entity.getDistanceToEntity(getPlayer()) <= c.shootingSpeedTrackingRange)
                 {
                     arrowSpawnTimes.add(getTicks());
                 }
@@ -1118,5 +1120,17 @@ public class DungeonTweaks extends Tweak
     {
         c.trackShootingSpeed = !c.trackShootingSpeed;
         sendChat("DT-TrackShootingSpeed: toggled " + c.trackShootingSpeed);
+    }
+
+    public void setShootingSpeedTrackingSampleSecs(int secs)
+    {
+        c.shootingSpeedTrackingSampleSecs = secs;
+        sendChat("DT-TrackShootingSpeed: set sample secs to " + c.shootingSpeedTrackingSampleSecs);
+    }
+
+    public void setShootingSpeedTrackingRange(int blocks)
+    {
+        c.shootingSpeedTrackingRange = blocks;
+        sendChat("DT-TrackShootingSpeed: set spawn range to " + c.shootingSpeedTrackingRange);
     }
 }

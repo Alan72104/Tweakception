@@ -62,6 +62,8 @@ Equipment:[
 - dungeon trackshootingspeed
   - **Toggles shooting speed tracker**
   - **Arrows that spawn in 4 blocks is added to the counter, and removed after 2 seconds**
+- dungeon trackshootingspeed setsamplesecs `int secs`
+- dungeon trackshootingspeed setspawnrange `int blocks`
 ### CrimsonTweaks
 - crimson map - **Toggles map**
 - crimson map pos `int x` `int y`
@@ -92,7 +94,8 @@ Equipment:[
 <br> </br>
 ### Dev commands
 - dev - **Toggles dev mode**
-  - **Press right ctrl to copy current hovered item in container nbt to clipboard**
+  - **Press right ctrl to copy the nbt of current hovered item in container to clipboard**
+  - **Enables dev commands' tab completion**
 - tracelook `[double reach]` `[bool adjacent]` `[bool liquid]` 
   - **Does looktrace for block/entity and dumps data to file**
   - **If result is entity then all hit entities are dumped (sorted by distance)**
@@ -103,3 +106,5 @@ Equipment:[
 - clientsetblock `string blockName`
   - **Sets the block at foot level**
   - **blockName is the registry name in net.minecraft.init.Blocks**
+- trackticktime
+  - **Toggles tick times tracking, in microseconds**

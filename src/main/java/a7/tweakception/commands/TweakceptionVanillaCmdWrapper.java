@@ -1,6 +1,7 @@
 package a7.tweakception.commands;
 
 import a7.tweakception.Tweakception;
+import a7.tweakception.tweaks.Tweak;
 import a7.tweakception.utils.DumpUtils;
 import a7.tweakception.utils.McUtils;
 import net.minecraft.block.Block;
@@ -82,7 +83,13 @@ public class TweakceptionVanillaCmdWrapper extends CommandBase
                 new Command("stats",
                     null)),
             new Command("trackshootingspeed",
-                args -> Tweakception.dungeonTweaks.toggleTrackShootingSpeed())
+                args -> Tweakception.dungeonTweaks.toggleTrackShootingSpeed(),
+                    new Command("setsamplesecs",
+                            args -> Tweakception.dungeonTweaks.setShootingSpeedTrackingSampleSecs(
+                                    args.length >= 1 ? Integer.parseInt(args[0]) : 2)),
+                    new Command("setspawnrange",
+                            args -> Tweakception.dungeonTweaks.setShootingSpeedTrackingRange(
+                                    args.length >= 1 ? Integer.parseInt(args[0]) : 2)))
         ));
         addSub(new Command("crimson",
             null,
@@ -195,6 +202,8 @@ public class TweakceptionVanillaCmdWrapper extends CommandBase
                 else
                     sendChat("Give me 1 argument");
             }).setVisibility(false));
+        addSub(new Command("trackticktime",
+            args -> Tweakception.inGameEventDispatcher.toggleTickTimeTracking()).setVisibility(false));
         addSub(new Command("dev",
             args -> Tweakception.globalTracker.toggleDevMode()).setVisibility(false));
         addSub(new Command("t",

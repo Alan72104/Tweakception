@@ -95,14 +95,16 @@ public class McUtils
     public static String formatIntCommas(int in)
     {
         String s = String.valueOf(in);
-        int i = s.length() + 1;
         StringBuilder sb = new StringBuilder();
-        for (char c : s.toCharArray())
+        int l = s.length();
+        char[] a = s.toCharArray();
+        if (l > 0)
+            sb.append(a[0]);
+        for (int i = 1; i < l; i++)
         {
-            i--;
-            if (i % 3 == 0)
+            if ((l-i) % 3 == 0)
                 sb.append(',');
-            sb.append(c);
+            sb.append(a[i]);
         }
         return sb.toString();
     }

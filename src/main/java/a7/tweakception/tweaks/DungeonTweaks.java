@@ -37,8 +37,6 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 
 import java.awt.*;
-import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -47,6 +45,7 @@ import java.util.stream.Collectors;
 
 import static a7.tweakception.tweaks.GlobalTracker.*;
 import static a7.tweakception.utils.McUtils.*;
+import static a7.tweakception.utils.McUtils.msToMMSSmmm;
 
 public class DungeonTweaks extends Tweak
 {
@@ -75,6 +74,7 @@ public class DungeonTweaks extends Tweak
         public String fragBot = "";
         public long fastestFragrun = 0L;
         public int totalFragruns = 0;
+        public long fastestBloodRush = 0L;
         public boolean trackShootingSpeed = false;
         public int shootingSpeedTrackingSampleSecs = 2;
         public int shootingSpeedTrackingRange = 4;
@@ -98,8 +98,6 @@ public class DungeonTweaks extends Tweak
     private static final Map<String, String> FRAGS_AND_NAMES = new HashMap<>();
     private static final String SHADOW_ASSASSIN_SKIN_PATH = "skins/3399e00f404411e465d74388df132d51fe868ecf86f1c073faffa1d9172ec0f3";
 
-    private static final SimpleDateFormat DATE_MMSS = new SimpleDateFormat("mm:ss");
-    private static final SimpleDateFormat DATE_MMSSSS = new SimpleDateFormat("mm:ss.SS");
     private static boolean isDamageFormattingExceptionNotified = false;
     private static boolean isGetFieldExceptionNotified = false;
     static
@@ -131,9 +129,17 @@ public class DungeonTweaks extends Tweak
     private final Matcher essenceMatcher = Pattern.compile(" {2}§[\\da-f](\\w+) Essence §[\\da-f]x(\\d+)").matcher("");
     private final Matcher partyRequestMatcher = Pattern.compile(" (.*) has invited you to join (?:their|.*) party!").matcher("");
     private boolean fragGotten = false;
-    private long fragrunStartTime = 0L;
+    private boolean fragRunTracking = false;
+    private long fragrunStartTime = 0L; // long = millis, int = ticks
+    private long fragBloodRushTime = 0L;
+    private String fragBloodRushRecord = "";
+    private int fragLastRunDisplayStartTime = 0;
+    private String fragLastRunTime= "";
+    private String fragLastRecord = "";
+    private String fragLastBloodRush = "";
     private int fragSessionRuns = 0;
     private long fragSessionTotalTime = 0L;
+    private long fragSessionFastestBloodRush = 0L;
     private boolean fragPendingEndRunWarp = false;
     private int fragPendingEndRunStartTime = 0;
     private final Queue<Integer> arrowSpawnTimes = new ArrayDeque<>();
@@ -177,6 +183,10 @@ public class DungeonTweaks extends Tweak
         TRASH_ITEMS.add("ROTTEN_HELMET");
         TRASH_ITEMS.add("ROTTEN_LEGGINGS");
         TRASH_ITEMS.add("SILENT_DEATH");
+        TRASH_ITEMS.add("SKELETON_GRUNT_BOOTS");
+        TRASH_ITEMS.add("SKELETON_GRUNT_CHESTPLATE");
+        TRASH_ITEMS.add("SKELETON_GRUNT_HELMET");
+        TRASH_ITEMS.add("SKELETON_GRUNT_LEGGINGS");
         TRASH_ITEMS.add("SKELETON_LORD_BOOTS");
         TRASH_ITEMS.add("SKELETON_LORD_CHESTPLATE");
         TRASH_ITEMS.add("SKELETON_LORD_HELMET");
@@ -232,7 +242,7 @@ public class DungeonTweaks extends Tweak
                 if (c.enableNoFogAutoToggle)
                 {
                     if (getCurrentIsland() == SkyblockIsland.DUNGEON &&
-                            (getCurrentLocationRawCleaned().contains("(F5)") || getCurrentLocationRawCleaned().contains("(M5)")))
+                            (getCurrentLocationRaw().contains("(F5)") || getCurrentLocationRaw().contains("(M5)")))
                     {
                         if (!c.enableNoFog)
                         {
@@ -275,7 +285,7 @@ public class DungeonTweaks extends Tweak
                             if (s.startsWith("§f✧") && critTagMatcher.reset(s).matches())
                             {
                                 int num = Integer.parseInt(cleanColor(critTagMatcher.group(1)));
-                                s = NumberFormat.getIntegerInstance().format(num);
+                                s = formatIntCommas(num);
                                 StringBuilder sb = new StringBuilder(35);
                                 sb.append("§f✧");
                                 int i = 0;
@@ -294,13 +304,13 @@ public class DungeonTweaks extends Tweak
                             else if (c.trackWitherDamageTags && witherTagMatcher.reset(s).matches())
                             {
                                 int num = Integer.parseInt(cleanColor(witherTagMatcher.group(1)));
-                                s = "§0" + NumberFormat.getIntegerInstance().format(num);
+                                s = "§0" + formatIntCommas(num);
                                 addDamageInfo(p.a, s);
                             }
                             else if (c.trackNonCritDamageTags && nonCritTagMatcher.reset(s).matches())
                             {
                                 int num = Integer.parseInt(cleanColor(nonCritTagMatcher.group(1)));
-                                s = "§7" + NumberFormat.getIntegerInstance().format(num) + nonCritTagMatcher.group(2);
+                                s = "§7" + formatIntCommas(num) + nonCritTagMatcher.group(2);
                                 addDamageInfo(p.a, s);
                             }
                         }
@@ -419,21 +429,20 @@ public class DungeonTweaks extends Tweak
                 blacksmithMenuOpened = false;
             }
 
-            if (fragPendingEndRunWarp)
+            if (fragRunTracking && fragPendingEndRunWarp)
             {
                 if (getCurrentIsland() == SkyblockIsland.DUNGEON_HUB)
                 {
                     fragPendingEndRunWarp = false;
                     if (!c.fragBot.equals(""))
                     {
+                        fragEnd();
                         sendChat("DT-Frag: repartying " + c.fragBot);
                         Tweakception.scheduler.addDelayed(() -> getPlayer().sendChatMessage("/p disband"), 20).
-                                thenDelayed(() -> getPlayer().sendChatMessage("/p " + c.fragBot), 10);
+                                thenDelayed(() -> getPlayer().sendChatMessage("/p " + c.fragBot), 15);
                     }
                     else
                         sendChat("DT-Frag: please set a frag bot using `setfragbot <name>`");
-                    fragEnd();
-                    fragrunStartTime = System.currentTimeMillis();
                 }
                 else if (getTicks() - fragPendingEndRunStartTime >= 20 * 10)
                 {
@@ -532,17 +541,51 @@ public class DungeonTweaks extends Tweak
             }
         }
 
-        if (fragrunStartTime != 0L)
+        if (fragRunTracking)
         {
-            long elapsed = System.currentTimeMillis() - fragrunStartTime;
-            String time = "run time: " + DATE_MMSS.format(new Date(elapsed));
-            String runs = "session total runs: " + fragSessionRuns;
-            String total = "session total time: " + DATE_MMSS.format(new Date(fragSessionTotalTime));
-            String total2 = "total runs: " + c.totalFragruns;
-            r.drawString(time, width - 10 - r.getStringWidth(time), 10, 0xffffffff);
-            r.drawString(runs, width - 10 - r.getStringWidth(runs), 10 + r.FONT_HEIGHT, 0xffffffff);
-            r.drawString(total, width - 10 - r.getStringWidth(total), 10 + r.FONT_HEIGHT * 2, 0xffffffff);
-            r.drawString(total2, width - 10 - r.getStringWidth(total2), 10 + r.FONT_HEIGHT * 3, 0xffffffff);
+            int x = width - 10;
+            int y = 10;
+
+            String status;
+            if (fragPendingEndRunWarp)
+                status = "§cPending warp";
+            else if (fragrunStartTime != 0L)
+                status = "§aRun time: " + msToMMSSmmm(System.currentTimeMillis() - fragrunStartTime);
+            else
+                status = "§aIdle";
+
+            String br;
+            if (fragBloodRushTime != 0L)
+                br = "§aBlood rush: " + msToMMSSmmm(fragBloodRushTime) + "§r" + fragBloodRushRecord;
+            else
+                br = "§aBlood rush: §cnot yet";
+
+            String runs = "Session total runs: " + fragSessionRuns;
+            String sFastest = "Session fastest blood rush: " + msToMMSSmmm(fragSessionFastestBloodRush);
+            // If fragSessionRuns is 0 then fragSessionTotalTime will also be 0
+            String avg = "Session avg run time: " + msToMMSSmmm(fragSessionTotalTime / Math.max(fragSessionRuns, 1));
+            String total = "Session total time: " + msToHHMMSSmmm(fragSessionTotalTime);
+            String total2 = "Total runs: " + c.totalFragruns;
+            String fastest = "Fastest run: " + msToMMSSmmm(c.fastestFragrun);
+            String fastestBr = "Fastest blood rush: " + msToMMSSmmm(c.fastestBloodRush);
+
+            r.drawString(status, x - r.getStringWidth(status), y, 0xffffffff); y += r.FONT_HEIGHT;
+            r.drawString(br, x - r.getStringWidth(br), y, 0xffffffff); y += r.FONT_HEIGHT;
+            r.drawString(runs, x - r.getStringWidth(runs), y, 0xffffffff); y += r.FONT_HEIGHT;
+            r.drawString(sFastest, x - r.getStringWidth(sFastest), y, 0xffffffff); y += r.FONT_HEIGHT;
+            r.drawString(avg, x - r.getStringWidth(avg), y, 0xffffffff); y += r.FONT_HEIGHT;
+            r.drawString(total, x - r.getStringWidth(total), y, 0xffffffff); y += r.FONT_HEIGHT;
+            r.drawString(total2, x - r.getStringWidth(total2), y, 0xffffffff); y += r.FONT_HEIGHT;
+            r.drawString(fastest, x - r.getStringWidth(fastest), y, 0xffffffff); y += r.FONT_HEIGHT;
+            r.drawString(fastestBr, x - r.getStringWidth(fastestBr), y, 0xffffffff); y += r.FONT_HEIGHT;
+
+            if (fragLastRunDisplayStartTime != 0 && getTicks() - fragLastRunDisplayStartTime <= 20 * 30)
+            {
+                String lastRun = "§bLast run time: " + fragLastRunTime + "§r" + fragLastRecord;
+                String lastBr = "§bLast blood rush: " + fragLastBloodRush;
+                r.drawString(lastRun, x - r.getStringWidth(lastRun), y, 0xffffffff); y += r.FONT_HEIGHT;
+                r.drawString(lastBr, x - r.getStringWidth(lastBr), y, 0xffffffff);
+            }
         }
 
         if (c.trackShootingSpeed)
@@ -618,7 +661,7 @@ public class DungeonTweaks extends Tweak
         if (c.trackDamageTags)
         {
             // The custom name doesn't come with the first update
-            // So detect the name 5 ticks later
+            // So check the name 5 ticks later
             if (event.entity instanceof EntityArmorStand)
             {
                 damageTagsTemp.add(new Pair<>(getTicks(), event.entity));
@@ -666,12 +709,12 @@ public class DungeonTweaks extends Tweak
                     {
                         if (Keyboard.isKeyDown(Keyboard.KEY_LMENU))
                         {
-                            sendChat("DT-BlockRightClick: overrode block click for item (" + name + EnumChatFormatting.RESET + ")");
+                            sendChat("DT-BlockRightClick: overrode block click for item (" + name + "§r)");
                         }
                         else
                         {
                             event.setCanceled(true);
-                            sendChat("DT-BlockRightClick: blocked click for item (" + name + EnumChatFormatting.RESET + "), hold alt to override it");
+                            sendChat("DT-BlockRightClick: blocked click for item (" + name + "§r), hold alt to override it");
                         }
                     }
                 }
@@ -686,7 +729,7 @@ public class DungeonTweaks extends Tweak
         Entity player = getWorld().getEntityByID(packet.getEntityID());
         Entity entity = getWorld().getEntityByID(packet.getCollectedItemEntityID());
 
-        if (player == null || player == getPlayer())
+        if (fragRunTracking && (player == null || player == getPlayer()))
         {
             if (entity instanceof EntityItem)
             {
@@ -737,6 +780,25 @@ public class DungeonTweaks extends Tweak
                     resetLivid();
                 }
             }
+            else if (getCurrentIsland() == SkyblockIsland.DUNGEON && msg.equals("Dungeon starts in 1 second."))
+            {
+                Tweakception.globalTracker.updateIslandNow();
+                if (getCurrentLocationRaw().contains("(F7)") || getCurrentLocationRaw().contains("(M7)"))
+                {
+                    fragGotten = false;
+                    if (fragRunTracking)
+                        fragStart();
+                }
+            }
+            else if (getCurrentIsland() == SkyblockIsland.DUNGEON && msg.equals("The BLOOD DOOR has been opened!"))
+            {
+                Tweakception.globalTracker.updateIslandNow();
+                if (getCurrentLocationRaw().contains("(F7)") || getCurrentLocationRaw().contains("(M7)"))
+                {
+                    if (fragRunTracking)
+                        fragSetBloodRush();
+                }
+            }
             else if (c.autoJoinParty &&
                     msg.startsWith("-----------------------------------------------------"))
             {
@@ -749,10 +811,6 @@ public class DungeonTweaks extends Tweak
                         getPlayer().sendChatMessage("/p " + name);
                     }
                 }
-            }
-            else if (msg.equals("[NPC] Mort: Good luck."))
-            {
-                fragGotten = false;
             }
         }
     }
@@ -1010,7 +1068,7 @@ public class DungeonTweaks extends Tweak
 
     public void fragStartSession()
     {
-        if (fragrunStartTime != 0L)
+        if (fragRunTracking)
         {
             sendChat("DT-Frag: you're already in a session, use `endsession` to end");
             return;
@@ -1021,44 +1079,54 @@ public class DungeonTweaks extends Tweak
             return;
         }
 
-        sendChat("DT-Frag: starting session, timer started");
-        fragrunStartTime = System.currentTimeMillis();
+        sendChat("DT-Frag: starting session, timer will start when you start f7");
+
+        fragRunTracking = true;
+        fragrunStartTime = 0L;
+        fragBloodRushTime = 0L;
+        fragBloodRushRecord = "";
+        fragPendingEndRunWarp = false;
+
+        fragSessionFastestBloodRush = 0L;
         fragSessionRuns = 0;
         fragSessionTotalTime = 0L;
+
+        fragLastRunTime = "";
+        fragLastRecord = "";
+        fragLastRunDisplayStartTime = 0;
     }
 
     public void fragEndSession()
     {
-        if (fragrunStartTime == 0L)
+        if (!fragRunTracking)
         {
             sendChat("DT-Frag: you've not started a session");
             return;
         }
 
         if (getCurrentIsland() == SkyblockIsland.DUNGEON &&
-            (getCurrentLocationRawCleaned().contains("(F7)") || getCurrentLocationRawCleaned().contains("(M7)")))
+            (getCurrentLocationRaw().contains("(F7)") || getCurrentLocationRaw().contains("(M7)")))
         {
             fragEnd();
         }
 
-        fragrunStartTime = 0L;
+        fragRunTracking = false;
 
-        sendChat("DT-Frag: ending session, total runs: " + c.totalFragruns);
+        sendChat("DT-Frag: ending session, life total runs: " + c.totalFragruns);
 
         if (fragSessionRuns == 0)
             return;
-        String totalFormatted = new SimpleDateFormat("HH:mm:ss.SS").format(new Date(fragSessionTotalTime));
-        String avgFormatted = new SimpleDateFormat("mm:ss.SS").format(new Date(fragSessionTotalTime / fragSessionRuns));
 
         sendChat("DT-Frag: session runs: " + fragSessionRuns);
-        sendChat("DT-Frag: session total time: " + totalFormatted);
-        sendChat("DT-Frag: session average time: " + avgFormatted);
+        sendChat("DT-Frag: session fastest blood rush: " + msToMMSSmmm(fragSessionFastestBloodRush));
+        sendChat("DT-Frag: session total time: " + msToHHMMSSmmm(fragSessionTotalTime));
+        sendChat("DT-Frag: session average run time: " + msToMMSSmmm(fragSessionTotalTime / fragSessionRuns));
     }
 
     public void fragNext()
     {
         if (getCurrentIsland() != SkyblockIsland.DUNGEON &&
-            !(getCurrentLocationRawCleaned().contains("(F7)") || getCurrentLocationRawCleaned().contains("(M7)")))
+            !(getCurrentLocationRaw().contains("(F7)") || getCurrentLocationRaw().contains("(M7)")))
         {
             sendChat("DT-Frag: floor 7 not detected");
             return;
@@ -1074,31 +1142,66 @@ public class DungeonTweaks extends Tweak
         fragPendingEndRunWarp = true;
         fragPendingEndRunStartTime = getTicks();
         getPlayer().sendChatMessage("/warp dhub");
+        // Continued at `if (fragPendingEndRunWarp)` in onTick()
+    }
+
+    private void fragStart()
+    {
+        fragrunStartTime = System.currentTimeMillis();
+        sendChat("DT-Frag: started the next run");
     }
 
     private void fragEnd()
     {
         long elapsed = System.currentTimeMillis() - fragrunStartTime;
+
+        fragLastRunDisplayStartTime = getTicks();
+        fragLastRunTime = msToMMSSmmm(elapsed);
+        fragLastBloodRush = msToMMSSmmm(fragBloodRushTime);
+
+        fragrunStartTime = 0L;
+        fragBloodRushTime = 0L;
+        fragBloodRushRecord = "";
+
         fragSessionRuns++;
-        c.totalFragruns++;
         fragSessionTotalTime += elapsed;
-        String formatted = new SimpleDateFormat("mm:ss.SS").format(new Date(elapsed));
-        String avgFormatted = new SimpleDateFormat("mm:ss.SS").format(new Date(fragSessionTotalTime / fragSessionRuns));
-        String fastestFormatted = new SimpleDateFormat("mm:ss.SS").format(new Date(c.fastestFragrun));
-        String record;
+
+        c.totalFragruns++;
+
         if (c.fastestFragrun == 0L || elapsed < c.fastestFragrun)
         {
-            record = "(§eNEW RECORD!§r)";
+            fragLastRecord = "(§eNEW RECORD!§r)";
             c.fastestFragrun = elapsed;
         }
         else if (elapsed == c.fastestFragrun)
-            record = "(§aFASTEST TIME!§r)";
+            fragLastRecord = "(§aFASTEST TIME!§r)";
         else
-            record = "";
-        sendChatf("DT-Frag: run took %s%s, session runs: %d, session average: %s, fastest time %s",
-                formatted, record, fragSessionRuns, avgFormatted, fastestFormatted);
+            fragLastRecord = "";
+
+        sendChatf("DT-Frag: run took %s§r%s", fragLastRunTime, fragLastRecord);
     }
 
+    private void fragSetBloodRush()
+    {
+        fragBloodRushTime = System.currentTimeMillis() - fragrunStartTime;
+        fragBloodRushRecord = "";
+
+        if (fragSessionFastestBloodRush == 0L || fragBloodRushTime < fragSessionFastestBloodRush)
+        {
+            fragSessionFastestBloodRush = fragBloodRushTime;
+            fragBloodRushRecord = "(§eSESSION NEW RECORD!§r)";
+        }
+        else if (fragBloodRushTime == fragSessionFastestBloodRush)
+            fragBloodRushRecord = "(§aSESSION FASTEST TIME!§r)";
+
+        if (c.fastestBloodRush == 0L || fragBloodRushTime < c.fastestBloodRush)
+        {
+            c.fastestBloodRush = fragBloodRushTime;
+            fragBloodRushRecord = "(§eNEW RECORD!§r)";
+        }
+        else if (fragBloodRushTime == c.fastestBloodRush)
+            fragBloodRushRecord = "(§aFASTEST TIME!§r)";
+    }
 
     public void setFragBot(String name)
     {

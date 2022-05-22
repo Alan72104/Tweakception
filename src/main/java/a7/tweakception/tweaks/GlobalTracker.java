@@ -29,6 +29,7 @@ public class GlobalTracker extends Tweak
     }
     private static final HashMap<String, SkyblockIsland> SUBPLACE_TO_ISLAND_MAP = new HashMap<>();
     private static int ticks = 0;
+    private static boolean islandUpdatedThisTick = false;
     private static boolean isInSkyblock = false;
     private static boolean overrideIslandDetection = false;
     private static SkyblockIsland currentIsland = null;
@@ -50,6 +51,7 @@ public class GlobalTracker extends Tweak
         if (event.phase == TickEvent.Phase.START)
         {
             ticks++;
+            islandUpdatedThisTick = false;
             if (ticks % 10 == 8)
                 detectSkyblock();
         }
@@ -94,67 +96,66 @@ public class GlobalTracker extends Tweak
         currentIsland = null;
         currentLocationRaw = "";
 
+        islandUpdatedThisTick = true;
+
         if (mc.isSingleplayer())
             return;
 
-        if (mc.theWorld != null && mc.thePlayer != null &&
-                mc.thePlayer.getClientBrand().toLowerCase().contains("hypixel")) // It's actually getServerBrand()
+        String serverBrand = mc.thePlayer.getClientBrand(); // It's actually getServerBrand()
+        if (mc.theWorld == null || mc.thePlayer == null || serverBrand == null ||
+            !serverBrand.toLowerCase().contains("hypixel"))
+            return;
+        Scoreboard scoreboard = mc.theWorld.getScoreboard();
+        ScoreObjective sidebarObjective = scoreboard.getObjectiveInDisplaySlot(1);
+        if (sidebarObjective == null)
+            return;
+        String objectiveName = sidebarObjective.getDisplayName().replaceAll("(?i)\\u00A7.", "");
+        if (!objectiveName.startsWith("SKYBLOCK"))
+            return;
+
+        isInSkyblock = true;
+        for (Score score : scoreboard.getSortedScores(sidebarObjective))
         {
-            Scoreboard scoreboard = mc.theWorld.getScoreboard();
-            ScoreObjective sidebarObjective = scoreboard.getObjectiveInDisplaySlot(1);
-            if (sidebarObjective != null)
-            {
-                String objectiveName = sidebarObjective.getDisplayName().replaceAll("(?i)\\u00A7.", "");
-                if (objectiveName.startsWith("SKYBLOCK"))
-                {
-                    isInSkyblock = true;
-                    List<Score> scores = (List<Score>)scoreboard.getSortedScores(sidebarObjective);
-                    for (int i = scores.size() - 1; i >= 0; i--)
-                    {
-                        Score score = scores.get(i);
-                        ScorePlayerTeam scoreplayerteam = scoreboard.getPlayersTeam(score.getPlayerName());
-                        String line = ScorePlayerTeam.formatPlayerName(scoreplayerteam, score.getPlayerName());
+            ScorePlayerTeam scoreplayerteam = scoreboard.getPlayersTeam(score.getPlayerName());
+            String line = ScorePlayerTeam.formatPlayerName(scoreplayerteam, score.getPlayerName());
 
-                        // Need special detection for dungeon " ⏣ The Catacombs (F5)"
-                        // And wtf are these
-                        //  §7⏣ §bVillage👾
-                        //  §7⏣ §cDungeon H🌠§cub
-                        //  §7⏣ §aYour Isla🌠§and
-                        //  §7⏣ §6Bank🌠
-                        //  §7⏣ §cJerry's W🌠§corkshop
-                        //  §7⏣ §cThe Catac👾§combs §7(F7)
+            // Need special detection for dungeon " ⏣ The Catacombs (F5)"
+            // And wtf are these
+            //  §7⏣ §bVillage👾
+            //  §7⏣ §cDungeon H🌠§cub
+            //  §7⏣ §aYour Isla🌠§and
+            //  §7⏣ §6Bank🌠
+            //  §7⏣ §cJerry's W🌠§corkshop
+            //  §7⏣ §cThe Catac👾§combs §7(F7)
 //                        if (!useFallbackDetection)
-                        if (false)
-                        {
-                            if (line.startsWith(" §7⏣"))
-                            {
-                                currentLocationRaw = line;
-                                line = cleanColor(cleanDuplicateColorCodes(line)).replaceAll("[^A-Za-z0-9() \\-']", "").trim();
-                                currentLocationRawCleaned = line;
-                                currentIsland = SUBPLACE_TO_ISLAND_MAP.get(line);
-                                break;
-                            }
-                        }
-                        else
-                        {
-                            if (line.contains("⏣"))
-                            {
-                                currentLocationRaw = line;
-                                line = cleanColor(cleanDuplicateColorCodes(line)).replaceAll("[^A-Za-z0-9() \\-']", "").trim();
-                                currentLocationRawCleaned = line;
+            if (false)
+            {
+                if (line.startsWith(" §7⏣"))
+                {
+                    currentLocationRaw = line;
+                    line = cleanColor(cleanDuplicateColorCodes(line)).replaceAll("[^A-Za-z0-9() \\-']", "").trim();
+                    currentLocationRawCleaned = line;
+                    currentIsland = SUBPLACE_TO_ISLAND_MAP.get(line);
+                    break;
+                }
+            }
+            else
+            {
+                if (line.contains("⏣"))
+                {
+                    currentLocationRaw = line;
+                    line = cleanColor(cleanDuplicateColorCodes(line)).replaceAll("[^A-Za-z0-9() \\-']", "").trim();
+                    currentLocationRawCleaned = line;
 
-                                islandLoop:
-                                for (SkyblockIsland island : SkyblockIsland.values())
-                                    for (String subPlace : island.places)
-                                        if (line.contains(subPlace))
-                                        {
-                                            currentIsland = island;
-                                            break islandLoop;
-                                        }
-                                break;
+                    islandLoop:
+                    for (SkyblockIsland island : SkyblockIsland.values())
+                        for (String subPlace : island.places)
+                            if (line.contains(subPlace))
+                            {
+                                currentIsland = island;
+                                break islandLoop;
                             }
-                        }
-                    }
+                    break;
                 }
             }
         }
@@ -165,7 +166,7 @@ public class GlobalTracker extends Tweak
         return isInSkyblock;
     }
 
-    public static String getCurrentLocationRawCleaned()
+    public static String getCurrentLocationRaw()
     {
         return currentLocationRawCleaned;
     }
@@ -180,9 +181,10 @@ public class GlobalTracker extends Tweak
         return currentIsland;
     }
 
-    public boolean isInDevMode()
+    public void updateIslandNow()
     {
-        return c.devMode;
+        if (!islandUpdatedThisTick)
+            detectSkyblock();
     }
 
     public void forceSetIsland(String name)
@@ -191,6 +193,7 @@ public class GlobalTracker extends Tweak
         {
             overrideIslandDetection = false;
             sendChat("GT: toggle island override " + overrideIslandDetection);
+            islandUpdatedThisTick = false;
         }
         else
         {
@@ -200,11 +203,17 @@ public class GlobalTracker extends Tweak
                     overrideIslandDetection = true;
                     isInSkyblock = true;
                     currentIsland = island;
+                    islandUpdatedThisTick = true;
                     sendChat("GT: overridden current island with " + island.name);
                     return;
                 }
             sendChat("GT: cannot find specified island in implemented island list");
         }
+    }
+
+    public boolean isInDevMode()
+    {
+        return c.devMode;
     }
 
     public void copyLocation()

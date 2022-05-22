@@ -92,6 +92,38 @@ public class McUtils
         return sb.toString();
     }
 
+    public static String formatIntCommas(int in)
+    {
+        String s = String.valueOf(in);
+        int i = s.length() + 1;
+        StringBuilder sb = new StringBuilder();
+        for (char c : s.toCharArray())
+        {
+            i--;
+            if (i % 3 == 0)
+                sb.append(',');
+            sb.append(c);
+        }
+        return sb.toString();
+    }
+
+    public static String msToHHMMSSmmm(long ms)
+    {
+        return String.format("%d:%02d:%02d.%03d",
+                ms / 3_600_000,
+                ms % 3_600_000 / 1_000_000,
+                ms % 60_000 / 1_000,
+                ms % 1_000);
+    }
+
+    public static String msToMMSSmmm(long ms)
+    {
+        return String.format("%02d:%02d.%03d",
+                ms / 60_000,
+                ms % 60_000 / 1_000,
+                ms % 1_000);
+    }
+
     public static String f(String s, Object... args)
     {
         return String.format(s, args);

@@ -52,9 +52,9 @@ Equipment:[
 - dungeon autojoinparty list
 - dungeon autojoinparty add `string name`
 - dungeon autojoinparty remove `string name`
-- dungeon frag - **Lists frag drop counts**
+- dungeon frag - **Lists frag drop counts, it only logs when frag tracking is on**
 - dungeon frag next - **Warps to dhub and reparty, and starts the next run**
-- dungeon frag startsession - **Starts a frag session, enables the timer and `next` command**
+- dungeon frag startsession - **Starts frag tracking**
 - dungeon frag endsession
 - dungeon frag setfragbot `<string name>` - **Sets the frag bot to reparty with**
 - dungeon frag stats

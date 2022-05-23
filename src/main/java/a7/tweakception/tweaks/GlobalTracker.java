@@ -127,7 +127,7 @@ public class GlobalTracker extends Tweak
             //  §7⏣ §6Bank🌠
             //  §7⏣ §cJerry's W🌠§corkshop
             //  §7⏣ §cThe Catac👾§combs §7(F7)
-//                        if (!useFallbackDetection)
+//            if (!useFallbackDetection)
             if (false)
             {
                 if (line.startsWith(" §7⏣"))
@@ -192,7 +192,7 @@ public class GlobalTracker extends Tweak
         if (name == null || name.equals("") || name.equals("disable") || name.equals("off"))
         {
             overrideIslandDetection = false;
-            sendChat("GT: toggle island override " + overrideIslandDetection);
+            sendChat("GT: toggle island override off");
             islandUpdatedThisTick = false;
         }
         else
@@ -207,7 +207,7 @@ public class GlobalTracker extends Tweak
                     sendChat("GT: overridden current island with " + island.name);
                     return;
                 }
-            sendChat("GT: cannot find specified island in implemented island list");
+            sendChat("GT: cannot find island in implemented island list");
         }
     }
 
@@ -219,7 +219,7 @@ public class GlobalTracker extends Tweak
     public void copyLocation()
     {
         setClipboard(currentLocationRaw);
-        sendChat("GT: coipied raw location line to clipboard (" + currentLocationRaw + EnumChatFormatting.RESET + ")");
+        sendChat("GT: copied raw location line to clipboard (" + currentLocationRaw + "§r)");
     }
 
     public void toggleFallbackDetection()

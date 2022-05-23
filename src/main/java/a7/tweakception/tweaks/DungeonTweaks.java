@@ -45,7 +45,6 @@ import java.util.stream.Collectors;
 
 import static a7.tweakception.tweaks.GlobalTracker.*;
 import static a7.tweakception.utils.McUtils.*;
-import static a7.tweakception.utils.McUtils.msToMMSSmmm;
 
 public class DungeonTweaks extends Tweak
 {
@@ -1131,7 +1130,7 @@ public class DungeonTweaks extends Tweak
             sendChat("DT-Frag: floor 7 not detected");
             return;
         }
-        if (fragrunStartTime == 0L)
+        if (!fragRunTracking)
         {
             sendChat("DT-Frag: please start a session first using `startsession`, and the timer will start");
             return;

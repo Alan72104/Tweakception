@@ -1,7 +1,6 @@
 package a7.tweakception.commands;
 
 import a7.tweakception.Tweakception;
-import a7.tweakception.tweaks.Tweak;
 import a7.tweakception.utils.DumpUtils;
 import a7.tweakception.utils.McUtils;
 import net.minecraft.block.Block;
@@ -18,11 +17,11 @@ import java.util.stream.Collectors;
 import static a7.tweakception.utils.McUtils.getWorld;
 import static a7.tweakception.utils.McUtils.sendChat;
 
-public class TweakceptionVanillaCmdWrapper extends CommandBase
+public class TweakceptionCommand extends CommandBase
 {
     private final List<Command> subCommands = new ArrayList<>();
 
-    public TweakceptionVanillaCmdWrapper()
+    public TweakceptionCommand()
     {
         addSub(new Command("dungeon",
             null,
@@ -134,7 +133,7 @@ public class TweakceptionVanillaCmdWrapper extends CommandBase
                 args ->
                 {
                     if (args.length >= 1)
-                        Tweakception.globalTracker.forceSetIsland(String.join(" ", Arrays.copyOfRange(args, 1, args.length)));
+                        Tweakception.globalTracker.forceSetIsland(String.join(" ", args));
                     else
                         Tweakception.globalTracker.forceSetIsland("");
                 }),
@@ -213,11 +212,6 @@ public class TweakceptionVanillaCmdWrapper extends CommandBase
             }).setVisibility(false));
     }
 
-    private void addSub(Command cmd)
-    {
-        subCommands.add(cmd);
-    }
-
     @Override
     public String getCommandName()
     {
@@ -242,13 +236,13 @@ public class TweakceptionVanillaCmdWrapper extends CommandBase
         if (args.length == 0)
         {
             sendChat("Available sub commands");
-            for (String subName : getVisibleSubCommandStrings())
+            for (String subName : getVisibleSubCommandNames())
                 sendChat("/tc " + subName);
         }
         else
         {
             for (Command sub : subCommands)
-                if (args[0].equals(sub.getName()))
+                if (sub.isVisible() && args[0].equals(sub.getName()))
                 {
                     sub.processCommands(Arrays.copyOfRange(args, 1, args.length));
                     return;
@@ -263,20 +257,36 @@ public class TweakceptionVanillaCmdWrapper extends CommandBase
         if (args.length == 0)
             return null;
         else if (args.length == 1)
-            return getListOfStringsMatchingLastWord(args, getVisibleSubCommandStrings());
+            return getPossibleCompletions(args[0], getVisibleSubCommandNames());
         else
             for (Command sub : subCommands)
-                if (args[0].equals(sub.getName()))
+                if (sub.isVisible() && args[0].equals(sub.getName()))
                     return sub.getTabCompletions(Arrays.copyOfRange(args, 1, args.length));
         return null;
     }
 
-    private List<String> getVisibleSubCommandStrings()
+    private List<String> getVisibleSubCommandNames()
     {
         return subCommands.stream().
-                filter(cmd -> cmd.visibility || Tweakception.globalTracker.isInDevMode()).
+                filter(Command::isVisible).
                 map(Command::getName).
                 collect(Collectors.toList());
+    }
+
+    private void addSub(Command cmd)
+    {
+        subCommands.add(cmd);
+    }
+
+    private static List<String> getPossibleCompletions(String arg, List<String> opts)
+    {
+        List<String> list = new ArrayList<String>();
+
+        for (String opt : opts)
+            if (opt.startsWith(arg))
+                list.add(opt);
+
+        return list;
     }
 
     private static void sendCommandNotFound()

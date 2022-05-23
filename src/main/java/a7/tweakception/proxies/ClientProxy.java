@@ -1,7 +1,7 @@
 package a7.tweakception.proxies;
 
 import a7.tweakception.Tweakception;
-import a7.tweakception.commands.TweakceptionVanillaCmdWrapper;
+import a7.tweakception.commands.TweakceptionCommand;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.MinecraftForge;
 
@@ -9,7 +9,7 @@ public class ClientProxy implements IProxy
 {
     public void registerClientCommands()
     {
-        ClientCommandHandler.instance.registerCommand(new TweakceptionVanillaCmdWrapper());
+        ClientCommandHandler.instance.registerCommand(new TweakceptionCommand());
     }
 
     public void registerServerCommands()

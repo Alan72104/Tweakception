@@ -1,7 +1,10 @@
 package a7.tweakception.tweaks;
 
 import a7.tweakception.config.Configuration;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+
+import static a7.tweakception.utils.McUtils.*;
 
 public class AutoFish extends Tweak
 {
@@ -22,10 +25,10 @@ public class AutoFish extends Tweak
     {
         if (event.phase == TickEvent.Phase.START)
         {
-//            if (!event.player.getUniqueID().equals(getPlayer().getUniqueID())) return;
-//
-//            EntityPlayer player = event.player;
-//            lastTickFishing = player.fishEntity != null;
+            if (!event.player.getUniqueID().equals(getPlayer().getUniqueID())) return;
+
+            EntityPlayer player = event.player;
+            lastTickFishing = player.fishEntity != null;
 
         }
     }

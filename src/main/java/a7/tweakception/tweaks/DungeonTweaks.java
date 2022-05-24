@@ -2,7 +2,7 @@ package a7.tweakception.tweaks;
 
 import a7.tweakception.Tweakception;
 import a7.tweakception.config.Configuration;
-import a7.tweakception.utils.McUtils;
+import a7.tweakception.utils.Pair;
 import a7.tweakception.utils.RenderUtils;
 import net.minecraft.block.Block;
 import net.minecraft.client.entity.EntityOtherPlayerMP;
@@ -234,232 +234,231 @@ public class DungeonTweaks extends Tweak
 
     public void onTick(TickEvent.ClientTickEvent event)
     {
-        if (event.phase == TickEvent.Phase.END)
+        if (event.phase == TickEvent.Phase.END) return;
+
+        if (getTicks() % 20 == 0)
         {
-            if (getTicks() % 20 == 0)
+            if (c.enableNoFogAutoToggle)
             {
-                if (c.enableNoFogAutoToggle)
+                if (getCurrentIsland() == SkyblockIsland.DUNGEON &&
+                        (getCurrentLocationRaw().contains("(F5)") || getCurrentLocationRaw().contains("(M5)")))
                 {
-                    if (getCurrentIsland() == SkyblockIsland.DUNGEON &&
-                            (getCurrentLocationRaw().contains("(F5)") || getCurrentLocationRaw().contains("(M5)")))
+                    if (!c.enableNoFog)
                     {
-                        if (!c.enableNoFog)
-                        {
-                            c.enableNoFog = true;
-                            wasNoFogAutoToggled = true;
-                            sendChat("DT-NoFog: dungeon floor 5 detected, auto toggled on");
-                        }
-                        else
-                            wasNoFogAutoToggled = false;
+                        c.enableNoFog = true;
+                        wasNoFogAutoToggled = true;
+                        sendChat("DT-NoFog: dungeon floor 5 detected, auto toggled on");
                     }
                     else
+                        wasNoFogAutoToggled = false;
+                }
+                else
+                {
+                    if (c.enableNoFog && wasNoFogAutoToggled)
                     {
-                        if (c.enableNoFog && wasNoFogAutoToggled)
-                        {
-                            c.enableNoFog = false;
-                            wasNoFogAutoToggled = false;
-                            sendChat("DT-NoFog: auto toggled off");
-                        }
+                        c.enableNoFog = false;
+                        wasNoFogAutoToggled = false;
+                        sendChat("DT-NoFog: auto toggled off");
                     }
                 }
             }
+        }
 
-            bats.removeIf(e -> e.isDead);
-            shadowAssassins.removeIf(e -> e.isDead);
+        bats.removeIf(e -> e.isDead);
+        shadowAssassins.removeIf(e -> e.isDead);
 
-            if (c.trackDamageTags)
+        if (c.trackDamageTags)
+        {
+            Iterator<Pair<Integer, Entity>> it = damageTagsTemp.iterator();
+            while (it.hasNext())
             {
-                Iterator<Pair<Integer, Entity>> it = damageTagsTemp.iterator();
-                while (it.hasNext())
+                Pair<Integer, Entity> p = it.next();
+                int elapsed = getTicks() - p.a;
+                if (elapsed < 5)
+                    break;
+                else
                 {
-                    Pair<Integer, Entity> p = it.next();
-                    int elapsed = getTicks() - p.a;
-                    if (elapsed < 5)
-                        break;
-                    else
+                    String s = p.b.getName();
+                    try
                     {
-                        String s = p.b.getName();
-                        try
+                        if (s.startsWith("§f✧") && critTagMatcher.reset(s).matches())
                         {
-                            if (s.startsWith("§f✧") && critTagMatcher.reset(s).matches())
+                            int num = Integer.parseInt(cleanColor(critTagMatcher.group(1)));
+                            s = formatIntCommas(num);
+                            StringBuilder sb = new StringBuilder(35);
+                            sb.append("§f✧");
+                            int i = 0;
+                            for (char c : s.toCharArray())
                             {
-                                int num = Integer.parseInt(cleanColor(critTagMatcher.group(1)));
-                                s = formatIntCommas(num);
-                                StringBuilder sb = new StringBuilder(35);
-                                sb.append("§f✧");
-                                int i = 0;
-                                for (char c : s.toCharArray())
-                                {
-                                    if (c == ',')
-                                        sb.append(EnumChatFormatting.GRAY);
-                                    else
-                                        sb.append(KOOL_COLORS[i++ % KOOL_COLORS.length]);
-                                    sb.append(c);
-                                }
-                                sb.append("§f✧");
-                                sb.append(critTagMatcher.group(2));
-                                addDamageInfo(p.a, sb.toString());
+                                if (c == ',')
+                                    sb.append(EnumChatFormatting.GRAY);
+                                else
+                                    sb.append(KOOL_COLORS[i++ % KOOL_COLORS.length]);
+                                sb.append(c);
                             }
-                            else if (c.trackWitherDamageTags && witherTagMatcher.reset(s).matches())
-                            {
-                                int num = Integer.parseInt(cleanColor(witherTagMatcher.group(1)));
-                                s = "§0" + formatIntCommas(num);
-                                addDamageInfo(p.a, s);
-                            }
-                            else if (c.trackNonCritDamageTags && nonCritTagMatcher.reset(s).matches())
-                            {
-                                int num = Integer.parseInt(cleanColor(nonCritTagMatcher.group(1)));
-                                s = "§7" + formatIntCommas(num) + nonCritTagMatcher.group(2);
-                                addDamageInfo(p.a, s);
-                            }
+                            sb.append("§f✧");
+                            sb.append(critTagMatcher.group(2));
+                            addDamageInfo(p.a, sb.toString());
                         }
-                        catch (Exception e)
+                        else if (c.trackWitherDamageTags && witherTagMatcher.reset(s).matches())
                         {
-                            if (!isDamageFormattingExceptionNotified)
-                            {
-                                isDamageFormattingExceptionNotified = true;
-                                sendChat("DT-TrackDamageTags: formatting failed");
-                                sendChat(e.toString());
-                                e.printStackTrace();
-                            }
+                            int num = Integer.parseInt(cleanColor(witherTagMatcher.group(1)));
+                            s = "§0" + formatIntCommas(num);
+                            addDamageInfo(p.a, s);
                         }
-                        it.remove();
+                        else if (c.trackNonCritDamageTags && nonCritTagMatcher.reset(s).matches())
+                        {
+                            int num = Integer.parseInt(cleanColor(nonCritTagMatcher.group(1)));
+                            s = "§7" + formatIntCommas(num) + nonCritTagMatcher.group(2);
+                            addDamageInfo(p.a, s);
+                        }
                     }
-                }
-
-                Iterator<Pair<Integer, String>> it2 = damageTags.descendingIterator();
-                while (it2.hasNext())
-                {
-                    int elapsed = getTicks() - it2.next().a;
-                    if (elapsed > c.damageTagHistoryTimeoutTicks)
-                        it2.remove();
-                    else
-                        break;
+                    catch (Exception e)
+                    {
+                        if (!isDamageFormattingExceptionNotified)
+                        {
+                            isDamageFormattingExceptionNotified = true;
+                            sendChat("DT-TrackDamageTags: formatting failed");
+                            sendChat(e.toString());
+                            e.printStackTrace();
+                        }
+                    }
+                    it.remove();
                 }
             }
 
-            if (getMc().currentScreen instanceof GuiChest)
+            Iterator<Pair<Integer, String>> it2 = damageTags.descendingIterator();
+            while (it2.hasNext())
             {
-                GuiChest chest = (GuiChest)getMc().currentScreen;
-                ContainerChest container = (ContainerChest)chest.inventorySlots;
-                if (secretChestOpened)
+                int elapsed = getTicks() - it2.next().a;
+                if (elapsed > c.damageTagHistoryTimeoutTicks)
+                    it2.remove();
+                else
+                    break;
+            }
+        }
+
+        if (getMc().currentScreen instanceof GuiChest)
+        {
+            GuiChest chest = (GuiChest)getMc().currentScreen;
+            ContainerChest container = (ContainerChest)chest.inventorySlots;
+            if (secretChestOpened)
+            {
+                IInventory inv = container.getLowerChestInventory();
+                // Also double chest secret shits
+                if (inv.getSizeInventory() == 27)
                 {
-                    IInventory inv = container.getLowerChestInventory();
-                    // Also double chest secret shits
-                    if (inv.getSizeInventory() == 27)
+                    ItemStack center = inv.getStackInSlot(9 + 5 - 1);
+                    if (center != null && SECRET_CHEST_ITEMS.contains(center.getDisplayName()))
                     {
-                        ItemStack center = inv.getStackInSlot(9 + 5 - 1);
-                        if (center != null && SECRET_CHEST_ITEMS.contains(center.getDisplayName()))
-                        {
-                            getPlayer().closeScreen();
-                            secretChestOpened = false;
-                        }
-                    }
-                    else
+                        getPlayer().closeScreen();
                         secretChestOpened = false;
+                    }
                 }
-                else if (blacksmithMenuOpened && container.getLowerChestInventory().getName().equals("Salvage Item"))
+                else
+                    secretChestOpened = false;
+            }
+            else if (blacksmithMenuOpened && container.getLowerChestInventory().getName().equals("Salvage Item"))
+            {
+                IInventory inv = container.getLowerChestInventory();
+                if (inv.getSizeInventory() == 54)
                 {
-                    IInventory inv = container.getLowerChestInventory();
-                    if (inv.getSizeInventory() == 54)
+                    ItemStack item = inv.getStackInSlot(9 * 2 + 5 - 1);
+                    if (item != null && !salvageClickSent && getTicks() - salvageLastClickTick >= 15)
                     {
-                        ItemStack item = inv.getStackInSlot(9 * 2 + 5 - 1);
-                        if (item != null && !salvageClickSent && getTicks() - salvageLastClickTick >= 15)
+                        String id = getSkyblockItemId(item);
+                        Item firstPane = inv.getStackInSlot(0).getItem();
+                        ItemStack salvageBtn = inv.getStackInSlot(9 * 3 + 5 - 1);
+                        if (id != null && TRASH_ITEMS.contains(id) &&
+                            firstPane != null && Block.getBlockFromItem(firstPane) == Blocks.stained_glass_pane &&
+                            salvageBtn != null && salvageBtn.getDisplayName().equals("§aSalvage Item"))
                         {
-                            String id = getSkyblockItemId(item);
-                            Item firstPane = inv.getStackInSlot(0).getItem();
-                            ItemStack salvageBtn = inv.getStackInSlot(9 * 3 + 5 - 1);
-                            if (id != null && TRASH_ITEMS.contains(id) &&
-                                firstPane != null && Block.getBlockFromItem(firstPane) == Blocks.stained_glass_pane &&
-                                salvageBtn != null && salvageBtn.getDisplayName().equals("§aSalvage Item"))
-                            {
-                                getMc().playerController.windowClick(container.windowId, 9 * 3 + 5 - 1,
-                                        0, 0, getPlayer());
-                                salvageClickSent = true;
-                                salvageLastClickTick = getTicks();
+                            getMc().playerController.windowClick(container.windowId, 9 * 3 + 5 - 1,
+                                    0, 0, getPlayer());
+                            salvageClickSent = true;
+                            salvageLastClickTick = getTicks();
 //                                        sendChat("Salvaged click sent");
-                                NBTTagCompound nbt = salvageBtn.getTagCompound();
-                                if (nbt != null)
+                            NBTTagCompound nbt = salvageBtn.getTagCompound();
+                            if (nbt != null)
+                            {
+                                NBTTagCompound display = nbt.getCompoundTag("display");
+                                if (display != null)
                                 {
-                                    NBTTagCompound display = nbt.getCompoundTag("display");
-                                    if (display != null)
+                                    NBTTagList lore = display.getTagList("Lore", Constants.NBT.TAG_STRING);
+                                    if (lore != null)
                                     {
-                                        NBTTagList lore = display.getTagList("Lore", Constants.NBT.TAG_STRING);
-                                        if (lore != null)
+                                        for (int i = 0; i < lore.tagCount(); i++)
                                         {
-                                            for (int i = 0; i < lore.tagCount(); i++)
+                                            String line = lore.getStringTagAt(i);
+                                            if (essenceMatcher.reset(line).matches())
                                             {
-                                                String line = lore.getStringTagAt(i);
-                                                if (essenceMatcher.reset(line).matches())
+                                                String ess = essenceMatcher.group(1).toLowerCase();
+                                                if (ESSENCES.contains(ess))
                                                 {
-                                                    String ess = essenceMatcher.group(1).toLowerCase();
-                                                    if (ESSENCES.contains(ess))
-                                                    {
-                                                        salvagingEssenceType = ess;
-                                                        salvagingEssencegAmount = Integer.parseInt(essenceMatcher.group(2));
-                                                    }
-                                                    else
-                                                        salvagingEssenceType = "";
+                                                    salvagingEssenceType = ess;
+                                                    salvagingEssencegAmount = Integer.parseInt(essenceMatcher.group(2));
                                                 }
+                                                else
+                                                    salvagingEssenceType = "";
                                             }
                                         }
                                     }
                                 }
                             }
                         }
-                        else
-                        {
-                            if (salvageClickSent && !salvagingEssenceType.equals(""))
-                            {
-                                c.salvagedEssences.merge(salvagingEssenceType, salvagingEssencegAmount, Integer::sum);
-                                sendChatf("DT-AutoSalvage: salvaged %d %s essences, total: %d", salvagingEssencegAmount,
-                                        salvagingEssenceType, c.salvagedEssences.get(salvagingEssenceType));
-                            }
-                            salvageClickSent = false;
-                        }
                     }
                     else
-                        blacksmithMenuOpened = false;
-                }
-            }
-            else
-            {
-                secretChestOpened = false;
-                blacksmithMenuOpened = false;
-            }
-
-            if (fragRunTracking && fragPendingEndRunWarp)
-            {
-                if (getCurrentIsland() == SkyblockIsland.DUNGEON_HUB)
-                {
-                    fragPendingEndRunWarp = false;
-                    if (!c.fragBot.equals(""))
                     {
-                        fragEnd();
-                        sendChat("DT-Frag: repartying " + c.fragBot);
-                        Tweakception.scheduler.addDelayed(() -> getPlayer().sendChatMessage("/p disband"), 20).
-                                thenDelayed(() -> getPlayer().sendChatMessage("/p " + c.fragBot), 15);
+                        if (salvageClickSent && !salvagingEssenceType.equals(""))
+                        {
+                            c.salvagedEssences.merge(salvagingEssenceType, salvagingEssencegAmount, Integer::sum);
+                            sendChatf("DT-AutoSalvage: salvaged %d %s essences, total: %d", salvagingEssencegAmount,
+                                    salvagingEssenceType, c.salvagedEssences.get(salvagingEssenceType));
+                        }
+                        salvageClickSent = false;
                     }
-                    else
-                        sendChat("DT-Frag: please set a frag bot using `setfragbot <name>`");
                 }
-                else if (getTicks() - fragPendingEndRunStartTime >= 20 * 10)
-                {
-                    fragPendingEndRunWarp = false;
-                    sendChat("DT-Frag: still not warped back to dhub, try doing it again");
-                }
+                else
+                    blacksmithMenuOpened = false;
             }
+        }
+        else
+        {
+            secretChestOpened = false;
+            blacksmithMenuOpened = false;
+        }
 
-            if (c.trackShootingSpeed)
+        if (fragRunTracking && fragPendingEndRunWarp)
+        {
+            if (getCurrentIsland() == SkyblockIsland.DUNGEON_HUB)
             {
-                while (arrowSpawnTimes.size() > 0)
+                fragPendingEndRunWarp = false;
+                if (!c.fragBot.equals(""))
                 {
-                    int cur = arrowSpawnTimes.peek();
-                    if (getTicks() - cur > 20 * c.shootingSpeedTrackingSampleSecs)
-                        arrowSpawnTimes.remove();
-                    else
-                        break;
+                    fragEnd();
+                    sendChat("DT-Frag: repartying " + c.fragBot);
+                    Tweakception.scheduler.addDelayed(() -> getPlayer().sendChatMessage("/p disband"), 20).
+                            thenDelayed(() -> getPlayer().sendChatMessage("/p " + c.fragBot), 15);
                 }
+                else
+                    sendChat("DT-Frag: please set a frag bot using `setfragbot <name>`");
+            }
+            else if (getTicks() - fragPendingEndRunStartTime >= 20 * 10)
+            {
+                fragPendingEndRunWarp = false;
+                sendChat("DT-Frag: still not warped back to dhub, try doing it again");
+            }
+        }
+
+        if (c.trackShootingSpeed)
+        {
+            while (arrowSpawnTimes.size() > 0)
+            {
+                int cur = arrowSpawnTimes.peek();
+                if (getTicks() - cur > 20 * c.shootingSpeedTrackingSampleSecs)
+                    arrowSpawnTimes.remove();
+                else
+                    break;
             }
         }
     }
@@ -583,7 +582,7 @@ public class DungeonTweaks extends Tweak
                 String lastRun = "§bLast run time: " + fragLastRunTime + "§r" + fragLastRecord;
                 String lastBr = "§bLast blood rush: " + fragLastBloodRush;
                 r.drawString(lastRun, x - r.getStringWidth(lastRun), y, 0xffffffff); y += r.FONT_HEIGHT;
-                r.drawString(lastBr, x - r.getStringWidth(lastBr), y, 0xffffffff);
+                r.drawString(lastBr, x - r.getStringWidth(lastBr), y, 0xffffffff); y += r.FONT_HEIGHT;
             }
         }
 
@@ -630,7 +629,7 @@ public class DungeonTweaks extends Tweak
     {
         try
         {
-            Timer timer = McUtils.setAccessibleAndGetField(getMc(), "field_71428_T" /* timer */);
+            Timer timer = getMc().timer;
             RenderUtils.drawHighlightBox(entity, AxisAlignedBB.fromBounds(-0.4, 0.0, -0.4, 0.4, -2.0, 0.4),
                     new Color(0, 255, 0, 85), timer.renderPartialTicks, false);
         }

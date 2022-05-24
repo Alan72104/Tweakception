@@ -113,7 +113,7 @@ public class McUtils
     {
         return String.format("%d:%02d:%02d.%03d",
                 ms / 3_600_000,
-                ms % 3_600_000 / 1_000_000,
+                ms % 3_600_000 / 60_000,
                 ms % 60_000 / 1_000,
                 ms % 1_000);
     }
@@ -157,17 +157,5 @@ public class McUtils
             return null;
         }
         return s;
-    }
-
-    public static class Pair<A, B>
-    {
-        public final A a;
-        public final B b;
-
-        public Pair(A a, B b)
-        {
-            this.a = a;
-            this.b = b;
-        }
     }
 }

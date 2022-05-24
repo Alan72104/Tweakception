@@ -52,6 +52,7 @@ public class InGameEventDispatcher
         dungeonTweaks.onTick(event);
         crimsonTweaks.onTick(event);
         slayerTweaks.onTick(event);
+        miningTweaks.onTick(event);
 
         if (trackTickTime)
         {
@@ -103,6 +104,7 @@ public class InGameEventDispatcher
 
         dungeonTweaks.onRenderGameOverlayPost(event);
         crimsonTweaks.onRenderGameOverlayPost(event);
+        autoFish.onRenderGameOverlayPost(event);
 
         if (trackTickTime)
             renderOverlayTime = renderOverlayTime * 0.2f + (System.nanoTime() - renderOverlayStart) * 0.8f;

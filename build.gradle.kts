@@ -128,7 +128,7 @@ tasks.withType(Jar::class) {
         this["MixinConfigs"] = "mixins.tweakception.json"
         this["FMLCorePluginContainsFMLMod"] = "true"
         this["ForceLoadAsMod"] = "true"
-//        this["FMLAT"] = "tweakception_at.cfg"
+        this["FMLAT"] = "tweakception_at.cfg"
     }
 }
 

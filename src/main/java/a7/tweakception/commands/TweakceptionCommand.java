@@ -178,6 +178,41 @@ public class TweakceptionCommand extends CommandBase
         ));
         addSub(new Command("next",
             args -> Tweakception.dungeonTweaks.fragNext()));
+        addSub(new Command("autofish",
+            args -> Tweakception.autoFish.toggleAutoFish(),
+            new Command("setretrievedelay",
+                args ->
+                {
+                    if (args.length >= 2)
+                        Tweakception.autoFish.setRetrieveDelay(Integer.parseInt(args[0]), Integer.parseInt(args[1]), false);
+                    else
+                        Tweakception.autoFish.setRetrieveDelay(0, 0, true);
+                }),
+            new Command("setrecastdelay",
+                args ->
+                {
+                    if (args.length >= 2)
+                        Tweakception.autoFish.setRecastDelay(Integer.parseInt(args[0]), Integer.parseInt(args[1]), false);
+                    else
+                        Tweakception.autoFish.setRecastDelay(0, 0, true);
+                }),
+            new Command("setcatchestomove",
+                args ->
+                {
+                    if (args.length >= 2)
+                        Tweakception.autoFish.setCatchesToMove(Integer.parseInt(args[0]), Integer.parseInt(args[1]), false);
+                    else
+                        Tweakception.autoFish.setCatchesToMove(0, 0, true);
+                }),
+            new Command("toggledebug",
+                args -> Tweakception.autoFish.toggleDebugInfo()),
+            new Command("setheadmovingticks",
+                args -> Tweakception.autoFish.setHeadMovingTicks(args.length >= 1 ? Integer.parseInt(args[0]) : 0)),
+            new Command("setheadmovingyawrange",
+                args -> Tweakception.autoFish.setHeadMovingYawRange(args.length >= 1 ? Float.parseFloat(args[0]) : 0.0f)),
+            new Command("setheadmovingpitchrange",
+                args -> Tweakception.autoFish.setHeadMovingPitchRange(args.length >= 1 ? Float.parseFloat(args[0]) : 0.0f))
+            ).setVisibility(false));
         addSub(new Command("looktrace",
             args ->
             {
@@ -199,7 +234,7 @@ public class TweakceptionCommand extends CommandBase
                             Block.blockRegistry.getObject(new ResourceLocation(args[0])).getDefaultState(),
                             1);
                 else
-                    sendChat("Give me 1 argument");
+                    sendChat("Give me 1 arg");
             }).setVisibility(false));
         addSub(new Command("trackticktime",
             args -> Tweakception.inGameEventDispatcher.toggleTickTimeTracking()).setVisibility(false));

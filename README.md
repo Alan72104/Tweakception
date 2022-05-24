@@ -56,14 +56,14 @@ Equipment:[
 - dungeon frag next - **Warps to dhub and reparty, and starts the next run**
 - dungeon frag startsession - **Starts frag tracking**
 - dungeon frag endsession
-- dungeon frag setfragbot `<string name>` - **Sets the frag bot to reparty with**
+- dungeon frag setfragbot `[string name]` - **Sets or removes the player to reparty with**
 - dungeon frag stats
 - next - **An alias for `dungeon frag next`**
 - dungeon trackshootingspeed
   - **Toggles shooting speed tracker**
   - **Arrows that spawn in 4 blocks is added to the counter, and removed after 2 seconds**
-- dungeon trackshootingspeed setsamplesecs `int secs`
-- dungeon trackshootingspeed setspawnrange `int blocks`
+- dungeon trackshootingspeed setsamplesecs `[int secs]` - **Leave empty to reset**
+- dungeon trackshootingspeed setspawnrange `[int blocks]`
 ### CrimsonTweaks
 - crimson map - **Toggles map**
 - crimson map pos `int x` `int y`
@@ -87,12 +87,11 @@ Equipment:[
 - fairy reset - **Resets without warning**
 ### GlobalTracker
 - gt island - **Prints current location**
-- gt forcesetisland - **Removes location override**
-- gt forcesetisland `string names...`
-- gt copylocation - **Copies current location to clipboard**
-- gt useFallbackDetection - **Toggles slightly slower location detection**
+- gt forcesetisland `[string name...]` - **Sets or removes location override**
+- gt copylocation - **Copies raw current location to clipboard**
+- gt usefallbackdetection - **Toggles slightly slower location detection**
 <br> </br>
-### Dev commands
+## Dev commands
 - dev - **Toggles dev mode**
   - **Press right ctrl to copy the nbt of current hovered item in container to clipboard**
   - **Enables dev commands' tab completion**
@@ -108,3 +107,12 @@ Equipment:[
   - **blockName is the registry name in net.minecraft.init.Blocks**
 - trackticktime
   - **Toggles tick times tracking, in microseconds**
+### AutoFish
+- autofish - **Toggles auto fish**
+- autofish setretrievedelay `[int min]` `[int max]` - **Leave 1 or more empty to reset**
+- autofish setrecastdelay `[int min]` `[int max]`
+- autofish setcatchestomove `[int min]` `[int max]`
+- autofish setheadmovingticks `[int ticks]`
+- autofish setheadmovingyawrange `[float range]`
+- autofish setheadmovingpitchrange `[float range]`
+- autofish toggledebug - **Toggles variable showing on screen**

@@ -1,6 +1,8 @@
 package a7.tweakception.tweaks;
 
 import a7.tweakception.config.Configuration;
+import a7.tweakception.utils.McUtils;
+import a7.tweakception.utils.Pair;
 import a7.tweakception.utils.RenderUtils;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
@@ -12,12 +14,14 @@ import net.minecraft.tileentity.TileEntityChest;
 import net.minecraft.util.BlockPos;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 
-import java.awt.*;
-import java.util.Set;
+import java.awt.Color;
+import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import static a7.tweakception.tweaks.GlobalTracker.getCurrentIsland;
+import static a7.tweakception.tweaks.GlobalTracker.getTicks;
 import static a7.tweakception.utils.McUtils.getWorld;
 import static a7.tweakception.utils.McUtils.sendChat;
 
@@ -28,7 +32,7 @@ public class MiningTweaks extends Tweak
     {
         public boolean highlightChests = false;
     }
-    private final Set<BlockPos> treasureChests = new ConcurrentSkipListSet<>();
+    private final Set<TreasureChest> treasureChests = new ConcurrentSkipListSet<>(Comparator.comparing(a -> a.pos));
 
     public MiningTweaks(Configuration configuration)
     {
@@ -36,19 +40,65 @@ public class MiningTweaks extends Tweak
         c = configuration.config.miningTweaks;
     }
 
+    public void onTick(TickEvent.ClientTickEvent event)
+    {
+        if (event.phase == TickEvent.Phase.END) return;
+
+        if (getCurrentIsland() == SkyblockIsland.CRYSTAL_HOLLOWS)
+        {
+            if (!treasureChests.isEmpty())
+            {
+                Iterator<TreasureChest> it = treasureChests.iterator();
+                while (it.hasNext())
+                {
+                    TreasureChest chest = it.next();
+                    BlockPos bp = chest.pos;
+                    TileEntity te = getWorld().getTileEntity(bp);
+                    if (te instanceof TileEntityChest)
+                    {
+                        TileEntityChest teChest = (TileEntityChest)te;
+                        if (!chest.opened && teChest.numPlayersUsing > 0)
+                            chest.opened = true;
+                    }
+                    else
+                        it.remove();
+                }
+            }
+        }
+    }
+
+    private static final Color CHEST_COLOR_OPENED = new Color(0, 255, 0, 255 / 6);
+    private static final Color CHEST_COLOR_CLOSED = new Color(255, 0, 0, 255 / 6);
+    private static final Color CHEST_COLOR_WARNING = new Color(255, 255, 0, 255 / 6);
+
     public void onRenderLast(RenderWorldLastEvent event)
     {
         if (getCurrentIsland() == SkyblockIsland.CRYSTAL_HOLLOWS)
         {
-            for (BlockPos pos : treasureChests)
+            if (!treasureChests.isEmpty())
             {
-                RenderUtils.Vector3d p = RenderUtils.getInterpolatedViewingPos(event.partialTicks);
-                TileEntity te = getWorld().getTileEntity(pos);
-                if (te instanceof TileEntityChest)
+                RenderUtils.Vector3d pos = RenderUtils.getInterpolatedViewingPos(event.partialTicks);
+
+                for (TreasureChest chest : treasureChests)
                 {
-                    TileEntityChest chest = (TileEntityChest)te;
-                    Color color = chest.numPlayersUsing > 0 ? new Color(0, 255, 0, 255 / 6) : new Color(255, 0, 0, 255 / 6);
-                    RenderUtils.renderBoundingBoxChestSize(pos.getX() - p.x, pos.getY() - p.y, pos.getZ() - p.z, color);
+                    BlockPos bp = chest.pos;
+                    Color color;
+                    if (chest.opened)
+                        color = CHEST_COLOR_OPENED;
+                    else
+                    {
+                        int elapsed = getTicks() - chest.spawnTicks;
+                        if (elapsed >= 20 * 45)
+                        {
+                            if (elapsed % 10 >= 5)
+                                color = CHEST_COLOR_WARNING;
+                            else
+                                continue;
+                        }
+                        else
+                            color = CHEST_COLOR_CLOSED;
+                    }
+                    RenderUtils.renderBoundingBoxChestSize(bp.getX() - pos.x, bp.getY() - pos.y, bp.getZ() - pos.z, color);
                 }
             }
         }
@@ -64,9 +114,9 @@ public class MiningTweaks extends Tweak
             BlockPos pos = change.getPos();
 
             if (block == Blocks.chest)
-                treasureChests.add(pos);
+                treasureChests.add(new TreasureChest(pos, getTicks()));
             else if (block == Blocks.air)
-                treasureChests.remove(pos);
+                treasureChests.remove(new TreasureChest(pos));
         }
     }
 
@@ -78,9 +128,9 @@ public class MiningTweaks extends Tweak
         BlockPos pos = packet.getBlockPosition();
 
         if (block == Blocks.chest)
-            treasureChests.add(pos);
+            treasureChests.add(new TreasureChest(pos, getTicks()));
         else if (block == Blocks.air)
-            treasureChests.remove(pos);
+            treasureChests.remove(new TreasureChest(pos));
     }
 
     public void onPacketBlockAction(S24PacketBlockAction packet)
@@ -104,5 +154,21 @@ public class MiningTweaks extends Tweak
     {
         c.highlightChests = !c.highlightChests;
         sendChat("MT-HighlightChests: toggled " + c.highlightChests);
+    }
+
+    private static class TreasureChest
+    {
+        public BlockPos pos;
+        public int spawnTicks = 0;
+        public boolean opened = false;
+        public TreasureChest(BlockPos pos)
+        {
+            this.pos = pos;
+        }
+        public TreasureChest(BlockPos pos, int spawnTicks)
+        {
+            this.pos = pos;
+            this.spawnTicks = spawnTicks;
+        }
     }
 }

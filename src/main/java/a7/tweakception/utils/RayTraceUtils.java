@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import static a7.tweakception.utils.McUtils.Pair;
 
 public class RayTraceUtils
 {

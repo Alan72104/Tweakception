@@ -325,9 +325,9 @@ public class RenderUtils
         double time = Minecraft.getMinecraft().theWorld.getTotalWorldTime() + (double) partialTicks;
         double d1 = MathHelper.func_181162_h(-time * 0.2D - (double) MathHelper.floor_double(-time * 0.1D));
 
-        float r = ((c.getRed() >> 16) & 0xFF) / 255f;
-        float g = ((c.getGreen() >> 8) & 0xFF) / 255f;
-        float b = (c.getBlue() & 0xFF) / 255f;
+        float r = c.getRed() / 255f;
+        float g = c.getGreen() / 255f;
+        float b = c.getBlue() / 255f;
         float a = c.getAlpha() / 255f;
         double d2 = time * 0.025D * -1.5D;
         double d4 = 0.5D + Math.cos(d2 + 2.356194490192345D) * 0.2D;

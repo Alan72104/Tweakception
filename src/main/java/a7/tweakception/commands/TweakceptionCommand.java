@@ -211,7 +211,9 @@ public class TweakceptionCommand extends CommandBase
             new Command("setheadmovingyawrange",
                 args -> Tweakception.autoFish.setHeadMovingYawRange(args.length >= 1 ? Float.parseFloat(args[0]) : 0.0f)),
             new Command("setheadmovingpitchrange",
-                args -> Tweakception.autoFish.setHeadMovingPitchRange(args.length >= 1 ? Float.parseFloat(args[0]) : 0.0f))
+                args -> Tweakception.autoFish.setHeadMovingPitchRange(args.length >= 1 ? Float.parseFloat(args[0]) : 0.0f)),
+            new Command("toggleslugfish",
+                args -> Tweakception.autoFish.toggleSlugfish())
             ).setVisibility(false));
         addSub(new Command("looktrace",
             args ->

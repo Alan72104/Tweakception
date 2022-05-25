@@ -6,6 +6,7 @@ import net.minecraft.client.gui.ScaledResolution;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Random;
 
@@ -34,7 +35,11 @@ public class AutoFish extends Tweak
     private boolean reflectionSuccess = false;
     private Class<?> neuFishingHelperClass = null;
     private Object neuFishingHelperInstance = null;
+    private Field neuWarningStateField = null;
+    private Field neuLastRodCastMillisField = null;
     private Enum<?> neuWarningState = null;
+    private long neuLastRodCastMillis = 0L;
+//    private boolean lastTickFishing = false;
     private NeuState neuState = NeuState.NOTHING;
     private FishingState state = FishingState.NOTHING;
     private int retrieveWaitingTicks = 0;
@@ -47,6 +52,7 @@ public class AutoFish extends Tweak
     private int movingTicksTarget = 0;
     private float movingTargetDeltaYaw = 0.0f;
     private float movingTargetDeltaPitch = 0.0f;
+    private boolean waitForSlugfish = false;
     private enum NeuState
     {
         NOTHING,
@@ -92,11 +98,14 @@ public class AutoFish extends Tweak
             {
                 case NOTHING:
                 case WAITING:
-                    state = FishingState.values()[neuState.ordinal()];
-
-                    if (state == FishingState.HOOKED)
+                    if (!waitForSlugfish || System.currentTimeMillis() - neuLastRodCastMillis > 32 * 1000)
                     {
-                        retrieveWaitingTicks = rand.nextInt(c.maxRetrieveDelay - c.minRetrieveDelay + 1) + c.minRetrieveDelay;
+                        state = FishingState.values()[neuState.ordinal()];
+
+                        if (state == FishingState.HOOKED)
+                        {
+                            retrieveWaitingTicks = rand.nextInt(c.maxRetrieveDelay - c.minRetrieveDelay + 1) + c.minRetrieveDelay;
+                        }
                     }
 
                     break;
@@ -174,22 +183,18 @@ public class AutoFish extends Tweak
             int y = 30;
 
             String neuState = "neu state: " + neuWarningState.toString();
-            String sstate = "state: " + state.toString();
-            String shookWaitingTicks = "retrieve waiting ticks: " + retrieveWaitingTicks;
-            String slastClickTicks = "last click ticks: " + lastRetrieveClickTicks;
-            String spendingRecastTicks = "pending recast ticks: " + pendingRecastTicks;
+            String s = "state: " + state.toString();
+            String slug = "slugfish 30s: " + waitForSlugfish + ", " + (System.currentTimeMillis() - neuLastRodCastMillis) / 1000.0f;
+            String rt = "retrieve waiting ticks: " + retrieveWaitingTicks;
+            String rc = "pending recast ticks: " + pendingRecastTicks;
             String k = "catches left to move: " + catchesLeftToMove;
-            String yaw = "target dyaw: " + movingTargetDeltaYaw;
-            String pitch = "target dpitch: " + movingTargetDeltaPitch;
 
             r.drawString(neuState, x - r.getStringWidth(neuState), y, 0xffffffff); y += r.FONT_HEIGHT;
-            r.drawString(sstate, x - r.getStringWidth(sstate), y, 0xffffffff); y += r.FONT_HEIGHT;
-            r.drawString(shookWaitingTicks, x - r.getStringWidth(shookWaitingTicks), y, 0xffffffff); y += r.FONT_HEIGHT;
-            r.drawString(slastClickTicks, x - r.getStringWidth(slastClickTicks), y, 0xffffffff); y += r.FONT_HEIGHT;
-            r.drawString(spendingRecastTicks, x - r.getStringWidth(spendingRecastTicks), y, 0xffffffff); y += r.FONT_HEIGHT;
+            r.drawString(s, x - r.getStringWidth(s), y, 0xffffffff); y += r.FONT_HEIGHT;
+            r.drawString(slug, x - r.getStringWidth(slug), y, 0xffffffff); y += r.FONT_HEIGHT;
+            r.drawString(rt, x - r.getStringWidth(rt), y, 0xffffffff); y += r.FONT_HEIGHT;
+            r.drawString(rc, x - r.getStringWidth(rc), y, 0xffffffff); y += r.FONT_HEIGHT;
             r.drawString(k, x - r.getStringWidth(k), y, 0xffffffff); y += r.FONT_HEIGHT;
-            r.drawString(yaw, x - r.getStringWidth(yaw), y, 0xffffffff); y += r.FONT_HEIGHT;
-            r.drawString(pitch, x - r.getStringWidth(pitch), y, 0xffffffff); y += r.FONT_HEIGHT;
         }
     }
 
@@ -198,8 +203,9 @@ public class AutoFish extends Tweak
         int neuStateOrdinal = 0;
         try
         {
-            neuWarningState = (Enum<?>)neuFishingHelperClass.getDeclaredField("warningState").get(neuFishingHelperInstance);
+            neuWarningState = (Enum<?>)neuWarningStateField.get(neuFishingHelperInstance);
             neuStateOrdinal = neuWarningState.ordinal();
+            neuLastRodCastMillis = (long)neuLastRodCastMillisField.get(neuFishingHelperInstance);
         }
         catch (Exception e)
         {
@@ -220,7 +226,11 @@ public class AutoFish extends Tweak
             neuFishingHelperClass = Class.forName("io.github.moulberry.notenoughupdates.miscfeatures.FishingHelper");
             Method getInstance = neuFishingHelperClass.getMethod("getInstance");
             neuFishingHelperInstance = getInstance.invoke(null);
-            neuWarningState = (Enum<?>)neuFishingHelperClass.getDeclaredField("warningState").get(neuFishingHelperInstance);
+            neuWarningStateField = neuFishingHelperClass.getDeclaredField("warningState");
+            neuLastRodCastMillisField = neuFishingHelperClass.getDeclaredField("lastCastRodMillis");
+            neuLastRodCastMillisField.setAccessible(true);
+            neuWarningState = (Enum<?>)neuWarningStateField.get(neuFishingHelperInstance);
+            neuLastRodCastMillis = (long)neuLastRodCastMillisField.get(neuFishingHelperInstance);
         }
         catch (Exception e)
         {
@@ -316,7 +326,7 @@ public class AutoFish extends Tweak
     public void setHeadMovingYawRange(float r)
     {
         if (r != 0.0f)
-            c.headMovingYawRange = Math.max(r, 10.0f);
+            c.headMovingYawRange = Math.min(r, 8.0f);
         else
             c.headMovingYawRange = new AutoFishConfig().headMovingYawRange;
         sendChat("AutoFish: set head moving yaw range to +-" + c.headMovingYawRange);
@@ -325,9 +335,15 @@ public class AutoFish extends Tweak
     public void setHeadMovingPitchRange(float r)
     {
         if (r != 0.0f)
-            c.headMovingPitchRange = Math.max(r, 10.0f);
+            c.headMovingPitchRange = Math.min(r, 8.0f);
         else
             c.headMovingPitchRange = new AutoFishConfig().headMovingPitchRange;
         sendChat("AutoFish: set head moving pitch range to +-" + c.headMovingPitchRange);
+    }
+
+    public void toggleSlugfish()
+    {
+        waitForSlugfish = !waitForSlugfish;
+        sendChat("AutoFish: toggled slugfish waiting " + waitForSlugfish);
     }
 }

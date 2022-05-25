@@ -75,8 +75,8 @@ public class CrimsonTweaks extends Tweak
                     EntityPlayerSP p = getPlayer();
                     sponges = spongesTemp;
                     spongesTemp = new ArrayList<>(20);
-                    searchThread = new BlockSearchThread((int)p.posX - 50, 70, (int)p.posZ - 50,
-                            (int)p.posX + 50, 230, (int)p.posZ + 50, getWorld(), Blocks.sponge, spongesTemp);
+                    searchThread = new BlockSearchThread((int)p.posX - 64, 70, (int)p.posZ - 64,
+                            (int)p.posX + 64, 150, (int)p.posZ + 64, getWorld(), Blocks.sponge, spongesTemp);
                     Tweakception.threadPool.execute(searchThread);
                 }
             }

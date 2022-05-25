@@ -116,3 +116,4 @@ Equipment:[
 - autofish setheadmovingyawrange `[float range]`
 - autofish setheadmovingpitchrange `[float range]`
 - autofish toggledebug - **Toggles variable showing on screen**
+- autofish toggleslugfish - **Toggles waiting for 30 secs before setting the hook**

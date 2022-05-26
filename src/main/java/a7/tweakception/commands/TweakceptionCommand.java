@@ -241,7 +241,7 @@ public class TweakceptionCommand extends CommandBase
         addSub(new Command("trackticktime",
             args -> Tweakception.inGameEventDispatcher.toggleTickTimeTracking()).setVisibility(false));
         addSub(new Command("dev",
-            args -> Tweakception.globalTracker.toggleDevMode()).setVisibility(false));
+            args -> Tweakception.globalTracker.toggleDevMode()));
         addSub(new Command("t",
             args ->
             {

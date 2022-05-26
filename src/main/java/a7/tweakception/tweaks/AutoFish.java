@@ -184,7 +184,7 @@ public class AutoFish extends Tweak
 
             String neuState = "neu state: " + neuWarningState.toString();
             String s = "state: " + state.toString();
-            String slug = "slugfish 30s: " + waitForSlugfish + ", " + (System.currentTimeMillis() - neuLastRodCastMillis) / 1000.0f;
+            String slug = f("slugfish 30s: %s, %.1f", waitForSlugfish, (System.currentTimeMillis() - neuLastRodCastMillis) / 1000.0f);
             String rt = "retrieve waiting ticks: " + retrieveWaitingTicks;
             String rc = "pending recast ticks: " + pendingRecastTicks;
             String k = "catches left to move: " + catchesLeftToMove;

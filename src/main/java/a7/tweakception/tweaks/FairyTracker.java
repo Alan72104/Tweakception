@@ -22,6 +22,7 @@ import java.util.TreeSet;
 
 import static a7.tweakception.tweaks.GlobalTracker.getTicks;
 import static a7.tweakception.utils.McUtils.*;
+import static a7.tweakception.utils.Utils.*;
 
 public class FairyTracker extends Tweak
 {

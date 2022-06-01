@@ -247,7 +247,7 @@ public class DumpUtils
 
         try
         {
-            String name = entity.getName();
+            String name = McUtils.cleanColor(entity.getName());
             File file = Tweakception.configuration.createWriteFileWithCurrentDateTime("entity_$_" +
                     name.substring(0, Math.min(name.length(), 20)) + ".txt", lines);
 

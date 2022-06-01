@@ -47,7 +47,7 @@ Equipment:[
 - dungeon trackdamage noncrit - **Toggles non crit tracking, includes damages to you**
 - dungeon trackdamage wither
 - dungeon autoclosesecretchest - **This doesn't auto close chests with treasure talisman**
-- dungeon autosalvage - **Toggles salvage button auto pressing when there's a trash mob drop in the slot**
+- dungeon autosalvage - **Automatically presses salvage button when there's a trash mob drop in the slot**
 - dungeon autojoinparty
 - dungeon autojoinparty list
 - dungeon autojoinparty add `string name`
@@ -60,20 +60,23 @@ Equipment:[
 - dungeon frag stats
 - next - **An alias for `dungeon frag next`**
 - dungeon trackshootingspeed
-  - **Toggles shooting speed tracker**
-  - **Arrows that spawn in 4 blocks is added to the counter, and removed after 2 seconds**
 - dungeon trackshootingspeed setsamplesecs `[int secs]` - **Leave empty to reset**
 - dungeon trackshootingspeed setspawnrange `[int blocks]`
+- dungeon displaymobnametag
+  - **Displays the name of the armorstand closest to the mob that took the most hits in last 3 seconds**
+- dungeon trackbonzomask
+  - **Shows a X under the used bonzo masks in inventory,**
+  - **also sends a reminder when it becomes aviliable**
 ### CrimsonTweaks
 - crimson map - **Toggles map**
 - crimson map pos `int x` `int y`
 - crimson map scale `float scale`
 - crimson map markerscale `float scale`
-- crimson sulfur - **Toggles sponge highlight, very laggy**
+- crimson sulfur - **Toggles sponge highlight**
 ### MiningTweaks
 - mining highlightchests - **Toggles all chests highlighting in crystal hollows**
 ### SlayerTweaks
-- slayer eman highlightglyph - **Might be slightly laggy**
+- slayer eman highlightglyph
 ### FairyTracker
 - fairy - **Toggles fairy scanner**
 - fairy trackonce  - **Scans loaded entities for fairy soul**
@@ -93,8 +96,8 @@ Equipment:[
 <br> </br>
 ## Dev commands
 - dev - **Toggles dev mode**
-  - **Press right ctrl to copy the nbt of current hovered item in container to clipboard**
-  - **Enables dev commands' tab completion**
+  - **Press right ctrl to copy the nbt of current hovered item in a container**
+  - **Enables dev commands' usage**
 - tracelook `[double reach]` `[bool adjacent]` `[bool liquid]` 
   - **Does looktrace for block/entity and dumps data to file**
   - **If result is entity then all hit entities are dumped (sorted by distance)**

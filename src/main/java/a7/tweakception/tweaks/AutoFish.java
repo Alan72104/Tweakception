@@ -1,17 +1,26 @@
 package a7.tweakception.tweaks;
 
+import a7.tweakception.Tweakception;
 import a7.tweakception.config.Configuration;
+import a7.tweakception.utils.McUtils;
+import net.minecraft.client.audio.ISound;
+import net.minecraft.client.audio.PositionedSoundRecord;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Random;
+import java.util.function.Supplier;
 
 import static a7.tweakception.tweaks.GlobalTracker.*;
 import static a7.tweakception.utils.McUtils.*;
+import static a7.tweakception.utils.Utils.*;
 
 public class AutoFish extends Tweak
 {
@@ -195,6 +204,33 @@ public class AutoFish extends Tweak
             r.drawString(rt, x - r.getStringWidth(rt), y, 0xffffffff); y += r.FONT_HEIGHT;
             r.drawString(rc, x - r.getStringWidth(rc), y, 0xffffffff); y += r.FONT_HEIGHT;
             r.drawString(k, x - r.getStringWidth(k), y, 0xffffffff); y += r.FONT_HEIGHT;
+        }
+    }
+
+    public void onChatReceived(ClientChatReceivedEvent event)
+    {
+        if (enable)
+        {
+            if (event.message.getUnformattedText().equals("You spot a Golden Fish surface from beneath the lava!"))
+            {
+                Runnable playSound = () ->
+                {
+                    EntityPlayerSP p = McUtils.getPlayer();
+                    ISound sound = new PositionedSoundRecord(new ResourceLocation("random.levelup"),
+                            1.0f, 2.0f, (float)p.posX, (float)p.posY, (float)p.posZ);
+                    getMc().getSoundHandler().playSound(sound);
+                };
+
+                playSound.run();
+                Tweakception.scheduler.addDelayed(playSound, 10)
+                        .thenDelayed(playSound, 10)
+                        .thenDelayed(playSound, 10)
+                        .thenDelayed(playSound, 10)
+                        .thenDelayed(playSound, 10);
+
+                if (getPlayer().fishEntity != null)
+                    getMc().rightClickMouse();
+            }
         }
     }
 

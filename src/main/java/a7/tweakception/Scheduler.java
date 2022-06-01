@@ -49,7 +49,7 @@ public class Scheduler
 
     public static class ScheduledTask
     {
-        private Scheduler scheduler;
+        private final Scheduler scheduler;
         public Runnable task;
         public Runnable andThen;
         public int startTicks;

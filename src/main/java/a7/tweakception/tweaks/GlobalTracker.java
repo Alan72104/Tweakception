@@ -1,6 +1,7 @@
 package a7.tweakception.tweaks;
 
 import a7.tweakception.config.Configuration;
+import a7.tweakception.events.IslandChangedEvent;
 import a7.tweakception.utils.DumpUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -12,6 +13,7 @@ import net.minecraft.scoreboard.ScorePlayerTeam;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.client.event.GuiScreenEvent;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 
@@ -19,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import static a7.tweakception.utils.McUtils.*;
+import static a7.tweakception.utils.Utils.*;
 
 public class GlobalTracker extends Tweak
 {
@@ -32,10 +35,12 @@ public class GlobalTracker extends Tweak
     private static boolean islandUpdatedThisTick = false;
     private static boolean isInSkyblock = false;
     private static boolean overrideIslandDetection = false;
+    private static SkyblockIsland prevIsland = null;
     private static SkyblockIsland currentIsland = null;
     private static String currentLocationRaw = "";
     private static String currentLocationRawCleaned = "";
     private static boolean useFallbackDetection = false;
+    public static boolean t = false;
 
     public GlobalTracker(Configuration configuration)
     {
@@ -53,7 +58,10 @@ public class GlobalTracker extends Tweak
             ticks++;
             islandUpdatedThisTick = false;
             if (ticks % 10 == 8)
+            {
                 detectSkyblock();
+                checkIslandChange();
+            }
         }
     }
 
@@ -158,6 +166,15 @@ public class GlobalTracker extends Tweak
                     break;
                 }
             }
+        }
+    }
+
+    public void checkIslandChange()
+    {
+        if (currentIsland != prevIsland)
+        {
+            MinecraftForge.EVENT_BUS.post(new IslandChangedEvent(prevIsland, currentIsland));
+            prevIsland = currentIsland;
         }
     }
 

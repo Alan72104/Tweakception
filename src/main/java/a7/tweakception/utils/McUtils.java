@@ -5,17 +5,17 @@ import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ChatComponentText;
+import net.minecraftforge.common.util.Constants;
 
-import java.awt.*;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.StringSelection;
-import java.lang.reflect.Field;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class McUtils
 {
+    private static final Matcher colorMatcher = Pattern.compile("(?i)\\u00A7.").matcher("");
+
     public static Minecraft getMc()
     {
         return Minecraft.getMinecraft();
@@ -46,6 +46,29 @@ public class McUtils
         getPlayer().addChatMessage(new ChatComponentText(String.format(s, args)));
     }
 
+    public static String[] getDisplayLore(ItemStack stack)
+    {
+        NBTTagCompound nbt = stack.getTagCompound();
+        if (nbt != null)
+        {
+            NBTTagCompound display = nbt.getCompoundTag("display");
+            if (display != null)
+            {
+                NBTTagList lore = display.getTagList("Lore", Constants.NBT.TAG_STRING);
+                if (lore.tagCount() > 0)
+                {
+                    String[] a = new String[lore.tagCount()];
+                    for (int i = 0; i < lore.tagCount(); i++)
+                    {
+                        a[i] = lore.getStringTagAt(i);
+                    }
+                    return a;
+                }
+            }
+        }
+        return null;
+    }
+
     public static String getSkyblockItemId(ItemStack item)
     {
         NBTTagCompound tag = item.getTagCompound();
@@ -60,7 +83,19 @@ public class McUtils
         return null;
     }
 
-    private static final Matcher colorMatcher = Pattern.compile("(?i)\\u00A7.").matcher("");
+    public static String getSkyblockItemUuid(ItemStack item)
+    {
+        NBTTagCompound tag = item.getTagCompound();
+        if (tag != null)
+        {
+            NBTTagCompound extra = tag.getCompoundTag("ExtraAttributes");
+            if (extra != null)
+            {
+                return extra.getString("uuid");
+            }
+        }
+        return null;
+    }
 
     public static String cleanColor(String s)
     {
@@ -90,72 +125,5 @@ public class McUtils
             }
         }
         return sb.toString();
-    }
-
-    public static String formatIntCommas(int in)
-    {
-        String s = String.valueOf(in);
-        StringBuilder sb = new StringBuilder();
-        int l = s.length();
-        char[] a = s.toCharArray();
-        if (l > 0)
-            sb.append(a[0]);
-        for (int i = 1; i < l; i++)
-        {
-            if ((l-i) % 3 == 0)
-                sb.append(',');
-            sb.append(a[i]);
-        }
-        return sb.toString();
-    }
-
-    public static String msToHHMMSSmmm(long ms)
-    {
-        return String.format("%d:%02d:%02d.%03d",
-                ms / 3_600_000,
-                ms % 3_600_000 / 60_000,
-                ms % 60_000 / 1_000,
-                ms % 1_000);
-    }
-
-    public static String msToMMSSmmm(long ms)
-    {
-        return String.format("%02d:%02d.%03d",
-                ms / 60_000,
-                ms % 60_000 / 1_000,
-                ms % 1_000);
-    }
-
-    public static String f(String s, Object... args)
-    {
-        return String.format(s, args);
-    }
-
-    public static <T> T setAccessibleAndGetField(Object o, String name) throws NoSuchFieldException, IllegalAccessException
-    {
-        Field field = o.getClass().getDeclaredField(name);
-        field.setAccessible(true);
-        //noinspection unchecked
-        return (T)field.get(o);
-    }
-
-    public static void setClipboard(String s)
-    {
-        StringSelection ss = new StringSelection(s);
-        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(ss, ss);
-    }
-
-    public static String getClipboard()
-    {
-        String s;
-        try
-        {
-            s = (String)Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
-        }
-        catch (Exception e)
-        {
-            return null;
-        }
-        return s;
     }
 }

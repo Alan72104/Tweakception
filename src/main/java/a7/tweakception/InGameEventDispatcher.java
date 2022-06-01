@@ -1,9 +1,12 @@
 package a7.tweakception;
 
+import a7.tweakception.events.IslandChangedEvent;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
+import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.WorldEvent;
@@ -21,16 +24,9 @@ import static a7.tweakception.utils.McUtils.sendChat;
 public class InGameEventDispatcher
 {
     private boolean trackTickTime = false;
-    private long clientTickStart = 0L;
-    private float clientTickTime = 0.0f;
-    private long renderWorldStart = 0L;
-    private float renderWorldTime = 0.0f;
-    private long renderOverlayStart = 0L;
-    private float renderOverlayTime = 0.0f;
-    private long livingRenderStart = 0L;
-    private float livingRenderTime = 0.0f;
-    private long livingSpecialRenderStart = 0L;
-    private float livingSpecialRenderTime = 0.0f;
+    private final long[] tickStartTimes = new long[5];
+    private final float[] tickTimes = new float[5];
+    private final float[] lastTickTimes = new float[5];
 
     public void toggleTickTimeTracking()
     {
@@ -41,7 +37,7 @@ public class InGameEventDispatcher
     public void onClientTick(TickEvent.ClientTickEvent event)
     {
         if (trackTickTime)
-            clientTickStart = System.nanoTime();
+            tickStartTimes[0] = System.nanoTime();
         if (!isInGame()) return;
 
         globalTracker.onTick(event);
@@ -56,14 +52,14 @@ public class InGameEventDispatcher
 
         if (trackTickTime)
         {
-            clientTickTime = clientTickTime * 0.2f + (System.nanoTime() - clientTickStart) * 0.8f;
+            tickTimes[0] = tickTimes[0] * 0.2f + (System.nanoTime() - tickStartTimes[0]) * 0.8f;
             if (event.phase == TickEvent.Phase.END && getTicks() % 20 == 0)
             {
-                sendChat("Client tick: " + clientTickTime / 1000.0f + " us");
-                sendChat("World render: " + renderWorldTime / 1000.0f + " us");
-                sendChat("Overlay render: " + renderOverlayTime / 1000.0f + " us");
-                sendChat("Living Render: " + livingRenderTime / 1000.0f + " us");
-                sendChat("Living special render: " + livingSpecialRenderTime / 1000.0f + " us");
+                sendChat("Client tick: " + tickTimes[0] / 1000.0f + " us");
+                sendChat("World render: " + tickTimes[1] / 1000.0f + " us");
+                sendChat("Overlay render: " + tickTimes[2] / 1000.0f + " us");
+                sendChat("Living Render: " + tickTimes[3] / 1000.0f + " us");
+                sendChat("Living special render: " + tickTimes[4] / 1000.0f + " us");
             }
         }
     }
@@ -80,7 +76,7 @@ public class InGameEventDispatcher
     public void onRenderLast(RenderWorldLastEvent event)
     {
         if (trackTickTime)
-            renderWorldStart = System.nanoTime();
+            tickStartTimes[1] = System.nanoTime();
         if (!isInGame()) return;
         if (!isInSkyblock()) return;
 
@@ -91,14 +87,14 @@ public class InGameEventDispatcher
         miningTweaks.onRenderLast(event);
 
         if (trackTickTime)
-            renderWorldTime = renderWorldTime * 0.2f + (System.nanoTime() - renderWorldStart) * 0.8f;
+            tickTimes[1] = tickTimes[1] * 0.2f + (System.nanoTime() - tickStartTimes[1]) * 0.8f;
     }
 
     @SubscribeEvent
     public void onRenderGameOverlayPost(RenderGameOverlayEvent.Post event)
     {
         if (trackTickTime)
-            renderOverlayStart = System.nanoTime();
+            tickStartTimes[2] = System.nanoTime();
         if (!isInGame()) return;
         if (!isInSkyblock()) return;
 
@@ -107,19 +103,18 @@ public class InGameEventDispatcher
         autoFish.onRenderGameOverlayPost(event);
 
         if (trackTickTime)
-            renderOverlayTime = renderOverlayTime * 0.2f + (System.nanoTime() - renderOverlayStart) * 0.8f;
+            tickTimes[2] = tickTimes[2] * 0.2f + (System.nanoTime() - tickStartTimes[2]) * 0.8f;
     }
 
     @SubscribeEvent
     public void onLivingRenderPost(RenderLivingEvent.Post event)
     {
         if (trackTickTime)
-            livingRenderStart = System.nanoTime();
+            tickStartTimes[3] = System.nanoTime();
         if (!isInSkyblock()) return;
 
-        dungeonTweaks.onLivingRenderPost(event);
         if (trackTickTime)
-            livingRenderTime = livingRenderTime * 0.2f + (System.nanoTime() - livingRenderStart) * 0.8f;
+            tickTimes[3] = tickTimes[3] * 0.2f + (System.nanoTime() - tickStartTimes[3]) * 0.8f;
     }
 
     // Called on RenderLivingEntity.renderName()
@@ -127,12 +122,12 @@ public class InGameEventDispatcher
     public void onLivingSpecialRenderPre(RenderLivingEvent.Specials.Pre event)
     {
         if (trackTickTime)
-            livingSpecialRenderStart = System.nanoTime();
+            tickStartTimes[4] = System.nanoTime();
         if (!isInSkyblock()) return;
 
         dungeonTweaks.onLivingSpecialRenderPre(event);
         if (trackTickTime)
-            livingSpecialRenderTime = livingSpecialRenderTime * 0.2f + (System.nanoTime() - livingSpecialRenderStart) * 0.8f;
+            tickTimes[4] = tickTimes[4] * 0.2f + (System.nanoTime() - tickStartTimes[4]) * 0.8f;
     }
 
     @SubscribeEvent
@@ -156,6 +151,7 @@ public class InGameEventDispatcher
         if (!isInSkyblock()) return;
 
         dungeonTweaks.onChatReceived(event);
+        autoFish.onChatReceived(event);
     }
 
     @SubscribeEvent
@@ -176,6 +172,12 @@ public class InGameEventDispatcher
     }
 
     @SubscribeEvent
+    public void onIslandChanged(IslandChangedEvent event)
+    {
+        dungeonTweaks.onIslandChanged(event);
+    }
+
+    @SubscribeEvent
     public void onPlaySound(PlaySoundEvent event)
     {
         if (!isInGame()) return;
@@ -190,6 +192,14 @@ public class InGameEventDispatcher
         if (!isInSkyblock()) return;
 
         dungeonTweaks.onGuiOpen(event);
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public void onItemTooltip(ItemTooltipEvent event)
+    {
+        if (!isInSkyblock()) return;
+
+        dungeonTweaks.onItemTooltip(event);
     }
 
     @SubscribeEvent

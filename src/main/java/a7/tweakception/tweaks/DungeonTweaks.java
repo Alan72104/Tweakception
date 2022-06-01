@@ -2,6 +2,7 @@ package a7.tweakception.tweaks;
 
 import a7.tweakception.Tweakception;
 import a7.tweakception.config.Configuration;
+import a7.tweakception.events.IslandChangedEvent;
 import a7.tweakception.utils.Pair;
 import a7.tweakception.utils.RenderUtils;
 import net.minecraft.block.Block;
@@ -20,17 +21,16 @@ import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.play.server.S0DPacketCollectItem;
+import net.minecraft.network.play.server.S19PacketEntityStatus;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.Timer;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
-import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
+import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -39,12 +39,16 @@ import org.lwjgl.input.Keyboard;
 import java.awt.*;
 import java.util.List;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static a7.tweakception.tweaks.GlobalTracker.*;
 import static a7.tweakception.utils.McUtils.*;
+import static a7.tweakception.utils.Utils.*;
 
 public class DungeonTweaks extends Tweak
 {
@@ -77,6 +81,8 @@ public class DungeonTweaks extends Tweak
         public boolean trackShootingSpeed = false;
         public int shootingSpeedTrackingSampleSecs = 2;
         public int shootingSpeedTrackingRange = 4;
+        public boolean displayTargetMobNameTag = false;
+        public boolean trackBonzoMaskUsage = true;
     }
     private static final String F5_BOSS_START = "Welcome, you arrive right on time. I am Livid, the Master of Shadows.";
     private static final String F5_BOSS_END = "Impossible! How did you figure out which one I was?";
@@ -95,7 +101,7 @@ public class DungeonTweaks extends Tweak
     private static final Set<String> ESSENCES = new HashSet<>(Arrays.asList("wither", "spider", "undead", "dragon",
             "gold", "diamond", "ice", "crimson"));
     private static final Map<String, String> FRAGS_AND_NAMES = new HashMap<>();
-    private static final String SHADOW_ASSASSIN_SKIN_PATH = "skins/3399e00f404411e465d74388df132d51fe868ecf86f1c073faffa1d9172ec0f3";
+    private static final Set<String> DUNGEON_FLOOR_HEADS = new HashSet<>();
 
     private static boolean isDamageFormattingExceptionNotified = false;
     private static boolean isGetFieldExceptionNotified = false;
@@ -116,16 +122,17 @@ public class DungeonTweaks extends Tweak
     private final List<Entity> shadowAssassins = new LinkedList<>();
     private final LinkedList<Pair<Integer, String>> damageTags = new LinkedList<>();
     private final LinkedList<Pair<Integer, Entity>> damageTagsTemp = new LinkedList<>();
-    private final Matcher critTagMatcher = Pattern.compile("§f✧((?:§.\\d)+)§.✧(.*)").matcher(""); // §f✧§a6§b7§c8§a✧§d♥
-    private final Matcher nonCritTagMatcher = Pattern.compile("§7(\\d+)(.*)").matcher(""); // §712345
-    private final Matcher witherTagMatcher = Pattern.compile("§0(\\d+)$").matcher(""); // §012345
+    private final Matcher anyDamageTagMatcher = Pattern.compile("^§.✧?(?:(?:§.)?\\d)+.*").matcher("");
+    private final Matcher critTagMatcher = Pattern.compile("^§f✧((?:§.\\d)+)§.✧(.*)").matcher(""); // §f✧§a6§b7§c8§a✧§d♥
+    private final Matcher nonCritTagMatcher = Pattern.compile("^§7(\\d+)(.*)").matcher(""); // §712345
+    private final Matcher witherTagMatcher = Pattern.compile("^§0(\\d+)$").matcher(""); // §012345
     private boolean secretChestOpened = false;
     private boolean blacksmithMenuOpened = false;
     private boolean salvageClickSent = false;
     private int salvageLastClickTick = 0;
     private String salvagingEssenceType = "";
     private int salvagingEssencegAmount = 0;
-    private final Matcher essenceMatcher = Pattern.compile(" {2}§[\\da-f](\\w+) Essence §[\\da-f]x(\\d+)").matcher("");
+    private final Matcher essenceMatcher = Pattern.compile("^ {2}§[\\da-f](\\w+) Essence §[\\da-f]x(\\d+)").matcher("");
     private final Matcher partyRequestMatcher = Pattern.compile(" (.*) has invited you to join (?:their|.*) party!").matcher("");
     private boolean fragGotten = false;
     private boolean fragRunTracking = false;
@@ -140,9 +147,22 @@ public class DungeonTweaks extends Tweak
     private long fragSessionTotalTime = 0L;
     private long fragSessionFastestBloodRush = 0L;
     private boolean fragPendingEndRunWarp = false;
-    private int fragPendingEndRunStartTime = 0;
     private final Queue<Integer> arrowSpawnTimes = new ArrayDeque<>();
-    public boolean t = false;
+    private final ConcurrentMap<Entity, ConcurrentLinkedQueue<Integer>> entityHurtTimes = new ConcurrentHashMap<>();
+    private Entity hitDisplayTargetNameTag = null;
+    private final ConcurrentLinkedQueue<BonzoMaskUsage> usedBonzoMasks = new ConcurrentLinkedQueue<>();
+    private final Matcher bonzoMaskCooldownMatcher = Pattern.compile("^§8Cooldown: §a(\\d+)s").matcher("");
+    private final Matcher dungeonItemStatMatcher = Pattern.compile(" §8\\(([-+])?(\\d+(?:\\.\\d+)?)(%?)\\)(.*)").matcher("");
+    private static class BonzoMaskUsage
+    {
+        public String uuid;
+        public int useTicks = 0;
+        public int cooldownSecs = 0;
+        public BonzoMaskUsage(String uuid) { this.uuid = uuid; }
+        public BonzoMaskUsage(String uuid, int ticks, int cd) { this.uuid = uuid; useTicks = ticks; cooldownSecs = cd; }
+        @Override public boolean equals(Object o) { return o instanceof BonzoMaskUsage && ((BonzoMaskUsage)o).uuid.equals(this.uuid); }
+        @Override public int hashCode() { return uuid.hashCode(); }
+    }
 
     public DungeonTweaks(Configuration configuration)
     {
@@ -230,6 +250,20 @@ public class DungeonTweaks extends Tweak
         TRASH_ITEMS.add("ZOMBIE_SOLDIER_CUTLASS");
         TRASH_ITEMS.add("ZOMBIE_SOLDIER_HELMET");
         TRASH_ITEMS.add("ZOMBIE_SOLDIER_LEGGINGS");
+        DUNGEON_FLOOR_HEADS.add("GOLD_BONZO_HEAD");
+        DUNGEON_FLOOR_HEADS.add("GOLD_SCARF_HEAD");
+        DUNGEON_FLOOR_HEADS.add("GOLD_PROFESSOR_HEAD");
+        DUNGEON_FLOOR_HEADS.add("GOLD_THORN_HEAD");
+        DUNGEON_FLOOR_HEADS.add("GOLD_LIVID_HEAD");
+        DUNGEON_FLOOR_HEADS.add("GOLD_SADAN_HEAD");
+        DUNGEON_FLOOR_HEADS.add("GOLD_NECRON_HEAD");
+        DUNGEON_FLOOR_HEADS.add("DIAMOND_BONZO_HEAD");
+        DUNGEON_FLOOR_HEADS.add("DIAMOND_SCARF_HEAD");
+        DUNGEON_FLOOR_HEADS.add("DIAMOND_PROFESSOR_HEAD");
+        DUNGEON_FLOOR_HEADS.add("DIAMOND_THORN_HEAD");
+        DUNGEON_FLOOR_HEADS.add("DIAMOND_LIVID_HEAD");
+        DUNGEON_FLOOR_HEADS.add("DIAMOND_SADAN_HEAD");
+        DUNGEON_FLOOR_HEADS.add("DIAMOND_NECRON_HEAD");
     }
 
     public void onTick(TickEvent.ClientTickEvent event)
@@ -243,14 +277,15 @@ public class DungeonTweaks extends Tweak
                 if (getCurrentIsland() == SkyblockIsland.DUNGEON &&
                         (getCurrentLocationRaw().contains("(F5)") || getCurrentLocationRaw().contains("(M5)")))
                 {
-                    if (!c.enableNoFog)
-                    {
-                        c.enableNoFog = true;
-                        wasNoFogAutoToggled = true;
-                        sendChat("DT-NoFog: dungeon floor 5 detected, auto toggled on");
-                    }
-                    else
-                        wasNoFogAutoToggled = false;
+                    if (!wasNoFogAutoToggled)
+                        if (!c.enableNoFog)
+                        {
+                            c.enableNoFog = true;
+                            wasNoFogAutoToggled = true;
+                            sendChat("DT-NoFog: dungeon floor 5 detected, auto toggled on");
+                        }
+                        else
+                            wasNoFogAutoToggled = false;
                 }
                 else
                 {
@@ -264,21 +299,70 @@ public class DungeonTweaks extends Tweak
             }
         }
 
+        if (getTicks() % 5 == 3)
+        {
+            if (c.displayTargetMobNameTag)
+            {
+                int maxHurtCount = 0;
+
+                Entity targetMob = null;
+                hitDisplayTargetNameTag = null;
+
+                for (Map.Entry<Entity, ConcurrentLinkedQueue<Integer>> entry : entityHurtTimes.entrySet())
+                {
+                    Entity entity = entry.getKey();
+
+                    if (entity.isDead)
+                        entityHurtTimes.remove(entity);
+                    else
+                    {
+                        ConcurrentLinkedQueue<Integer> queue = entry.getValue();
+
+                        removeWhile(queue, ele -> getTicks() - ele > 20 * 3);
+
+                        int size = queue.size();
+
+                        if (size == 0)
+                            entityHurtTimes.remove(entity);
+                        else if (size > maxHurtCount)
+                        {
+                            maxHurtCount = size;
+                            targetMob = entity;
+                        }
+                    }
+                }
+
+                if (targetMob != null)
+                {
+                    AxisAlignedBB aabb = targetMob.getEntityBoundingBox().addCoord(0.0, 4.0, 0.0);
+                    List<Entity> entities = getWorld().getEntitiesWithinAABB(EntityArmorStand.class, aabb, e -> true);
+                    float nearestDistance = 100.0f;
+                    for (Entity e : entities)
+                    {
+                        String name = e.getName();
+                        if (!e.isDead && !anyDamageTagMatcher.reset(name).matches())
+                        {
+                            float dis = e.getDistanceToEntity(targetMob);
+                            if (dis < nearestDistance)
+                            {
+                                nearestDistance = dis;
+                                hitDisplayTargetNameTag = e;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         bats.removeIf(e -> e.isDead);
         shadowAssassins.removeIf(e -> e.isDead);
 
         if (c.trackDamageTags)
         {
-            Iterator<Pair<Integer, Entity>> it = damageTagsTemp.iterator();
-            while (it.hasNext())
-            {
-                Pair<Integer, Entity> p = it.next();
-                int elapsed = getTicks() - p.a;
-                if (elapsed < 5)
-                    break;
-                else
+            removeWhile(damageTagsTemp, ele -> getTicks() - ele.a >= 5,
+                ele ->
                 {
-                    String s = p.b.getName();
+                    String s = ele.b.getName();
                     try
                     {
                         if (s.startsWith("§f✧") && critTagMatcher.reset(s).matches())
@@ -298,19 +382,19 @@ public class DungeonTweaks extends Tweak
                             }
                             sb.append("§f✧");
                             sb.append(critTagMatcher.group(2));
-                            addDamageInfo(p.a, sb.toString());
+                            addDamageInfo(ele.a, sb.toString());
                         }
                         else if (c.trackWitherDamageTags && witherTagMatcher.reset(s).matches())
                         {
                             int num = Integer.parseInt(cleanColor(witherTagMatcher.group(1)));
                             s = "§0" + formatIntCommas(num);
-                            addDamageInfo(p.a, s);
+                            addDamageInfo(ele.a, s);
                         }
                         else if (c.trackNonCritDamageTags && nonCritTagMatcher.reset(s).matches())
                         {
                             int num = Integer.parseInt(cleanColor(nonCritTagMatcher.group(1)));
                             s = "§7" + formatIntCommas(num) + nonCritTagMatcher.group(2);
-                            addDamageInfo(p.a, s);
+                            addDamageInfo(ele.a, s);
                         }
                     }
                     catch (Exception e)
@@ -323,19 +407,9 @@ public class DungeonTweaks extends Tweak
                             e.printStackTrace();
                         }
                     }
-                    it.remove();
-                }
-            }
+                });
 
-            Iterator<Pair<Integer, String>> it2 = damageTags.descendingIterator();
-            while (it2.hasNext())
-            {
-                int elapsed = getTicks() - it2.next().a;
-                if (elapsed > c.damageTagHistoryTimeoutTicks)
-                    it2.remove();
-                else
-                    break;
-            }
+            removeWhile(damageTags, ele -> getTicks() - ele.a > c.damageTagHistoryTimeoutTicks);
         }
 
         if (getMc().currentScreen instanceof GuiChest)
@@ -377,34 +451,23 @@ public class DungeonTweaks extends Tweak
                                     0, 0, getPlayer());
                             salvageClickSent = true;
                             salvageLastClickTick = getTicks();
-//                                        sendChat("Salvaged click sent");
-                            NBTTagCompound nbt = salvageBtn.getTagCompound();
-                            if (nbt != null)
-                            {
-                                NBTTagCompound display = nbt.getCompoundTag("display");
-                                if (display != null)
+                            String[] lore = getDisplayLore(salvageBtn);
+                            if (lore != null)
+                                for (String line : lore)
                                 {
-                                    NBTTagList lore = display.getTagList("Lore", Constants.NBT.TAG_STRING);
-                                    if (lore != null)
+                                    if (essenceMatcher.reset(line).matches())
                                     {
-                                        for (int i = 0; i < lore.tagCount(); i++)
+                                        String ess = essenceMatcher.group(1).toLowerCase();
+                                        if (ESSENCES.contains(ess))
                                         {
-                                            String line = lore.getStringTagAt(i);
-                                            if (essenceMatcher.reset(line).matches())
-                                            {
-                                                String ess = essenceMatcher.group(1).toLowerCase();
-                                                if (ESSENCES.contains(ess))
-                                                {
-                                                    salvagingEssenceType = ess;
-                                                    salvagingEssencegAmount = Integer.parseInt(essenceMatcher.group(2));
-                                                }
-                                                else
-                                                    salvagingEssenceType = "";
-                                            }
+                                            salvagingEssenceType = ess;
+                                            salvagingEssencegAmount = Integer.parseInt(essenceMatcher.group(2));
                                         }
+                                        else
+                                            salvagingEssenceType = "";
+                                        break;
                                     }
                                 }
-                            }
                         }
                     }
                     else
@@ -428,37 +491,45 @@ public class DungeonTweaks extends Tweak
             blacksmithMenuOpened = false;
         }
 
-        if (fragRunTracking && fragPendingEndRunWarp)
+        if (fragRunTracking)
         {
             if (getCurrentIsland() == SkyblockIsland.DUNGEON_HUB)
             {
-                fragPendingEndRunWarp = false;
-                if (!c.fragBot.equals(""))
+                if (fragPendingEndRunWarp)
                 {
-                    fragEnd();
-                    sendChat("DT-Frag: repartying " + c.fragBot);
-                    Tweakception.scheduler.addDelayed(() -> getPlayer().sendChatMessage("/p disband"), 20).
-                            thenDelayed(() -> getPlayer().sendChatMessage("/p " + c.fragBot), 15);
+                    fragPendingEndRunWarp = false;
+                    if (!c.fragBot.equals(""))
+                    {
+                        fragEnd();
+                        sendChat("DT-Frag: repartying " + c.fragBot);
+                        Tweakception.scheduler.addDelayed(() -> getPlayer().sendChatMessage("/p disband"), 20).
+                                thenDelayed(() -> getPlayer().sendChatMessage("/p " + c.fragBot), 15);
+                    }
+                    else
+                        sendChat("DT-Frag: please set a frag bot using `setfragbot <name>`");
                 }
-                else
-                    sendChat("DT-Frag: please set a frag bot using `setfragbot <name>`");
             }
-            else if (getTicks() - fragPendingEndRunStartTime >= 20 * 10)
+            else
             {
-                fragPendingEndRunWarp = false;
-                sendChat("DT-Frag: still not warped back to dhub, try doing it again");
+                if (fragrunStartTime != 0L && !isInF7())
+                {
+                    fragrunStartTime = 0L;
+                    sendChat("DT-Frag: not in f7, run is cancelled!");
+                }
             }
         }
 
         if (c.trackShootingSpeed)
         {
-            while (arrowSpawnTimes.size() > 0)
+            removeWhile(arrowSpawnTimes, ele -> getTicks() - ele > 20 * c.shootingSpeedTrackingSampleSecs);
+        }
+
+        if (c.trackBonzoMaskUsage && getCurrentIsland() == SkyblockIsland.DUNGEON)
+        {
+            if (!usedBonzoMasks.isEmpty())
             {
-                int cur = arrowSpawnTimes.peek();
-                if (getTicks() - cur > 20 * c.shootingSpeedTrackingSampleSecs)
-                    arrowSpawnTimes.remove();
-                else
-                    break;
+                removeWhile(usedBonzoMasks, ele -> getTicks() - ele.useTicks > (ele.cooldownSecs + 1) * 20,
+                    ele -> sendChat("DT-TrackBonzoMaskUsage: §aone of your bonzo masks is now available!"));
             }
         }
     }
@@ -532,9 +603,11 @@ public class DungeonTweaks extends Tweak
         {
             int x = width - 10;
             int y = height - 20;
-            for (Pair<Integer, String> s : damageTags)
+            Iterator<Pair<Integer, String>> it = damageTags.descendingIterator();
+            while (it.hasNext())
             {
-                r.drawString(s.b, x - r.getStringWidth(s.b), y, 0xfff0f0f0);
+                Pair<Integer, String> ele = it.next();
+                r.drawString(ele.b, x - r.getStringWidth(ele.b), y, 0xfff0f0f0);
                 y -= r.FONT_HEIGHT;
             }
         }
@@ -560,7 +633,6 @@ public class DungeonTweaks extends Tweak
 
             String runs = "Session total runs: " + fragSessionRuns;
             String sFastest = "Session fastest blood rush: " + msToMMSSmmm(fragSessionFastestBloodRush);
-            // If fragSessionRuns is 0 then fragSessionTotalTime will also be 0
             String avg = "Session avg run time: " + msToMMSSmmm(fragSessionTotalTime / Math.max(fragSessionRuns, 1));
             String total = "Session total time: " + msToHHMMSSmmm(fragSessionTotalTime);
             String total2 = "Total runs: " + c.totalFragruns;
@@ -592,13 +664,17 @@ public class DungeonTweaks extends Tweak
             String s = f("Arrows/s: %.3f", count);
             r.drawString(s, width - 60 - r.getStringWidth(s), 10, 0xffffffff);
         }
+
+        if (c.displayTargetMobNameTag)
+        {
+            if (hitDisplayTargetNameTag != null)
+            {
+                String name = hitDisplayTargetNameTag.getName();
+                r.drawString(name, (width - r.getStringWidth(name)) / 2, 30, 0xffffffff);
+            }
+        }
     }
 
-    public void onLivingRenderPost(RenderLivingEvent.Post event)
-    {
-    }
-
-    // Called on RenderLivingEntity.renderName()
     public void onLivingSpecialRenderPre(RenderLivingEvent.Specials.Pre event)
     {
         if (getCurrentIsland() != SkyblockIsland.DUNGEON) return;
@@ -662,7 +738,7 @@ public class DungeonTweaks extends Tweak
             // So check the name 5 ticks later
             if (event.entity instanceof EntityArmorStand)
             {
-                damageTagsTemp.add(new Pair<>(getTicks(), event.entity));
+                damageTagsTemp.offer(new Pair<>(getTicks(), event.entity));
                 return;
             }
         }
@@ -743,6 +819,25 @@ public class DungeonTweaks extends Tweak
         }
     }
 
+    public void onPacketEntityStatus(S19PacketEntityStatus packet)
+    {
+        if (c.displayTargetMobNameTag && packet.getOpCode() == 2)
+        {
+            Entity e = packet.getEntity(getWorld());
+            if (e != null)
+            {
+                if (entityHurtTimes.containsKey(e))
+                    entityHurtTimes.get(e).offer(getTicks());
+                else
+                {
+                    ConcurrentLinkedQueue<Integer> q = new ConcurrentLinkedQueue<>();
+                    q.offer(getTicks());
+                    entityHurtTimes.put(e, q);
+                }
+            }
+        }
+    }
+
     public void onGuiOpen(GuiOpenEvent event)
     {
         if (event.gui instanceof GuiChest)
@@ -763,51 +858,103 @@ public class DungeonTweaks extends Tweak
 
     public void onChatReceived(ClientChatReceivedEvent event)
     {
-        if (event.type == 0)
+        if (event.type != 0) return;
+
+        String msg = event.message.getUnformattedText();
+        if (getCurrentIsland() == SkyblockIsland.DUNGEON && msg.startsWith("[BOSS]"))
         {
-            String msg = event.message.getUnformattedText();
-            if (getCurrentIsland() == SkyblockIsland.DUNGEON && msg.startsWith("[BOSS]"))
+            if (msg.contains(F5_BOSS_START))
             {
-                if (msg.contains(F5_BOSS_START))
-                {
-                    isInF5Bossfight = true;
-                }
-                else if (msg.contains(F5_BOSS_END))
-                {
-                    isInF5Bossfight = false;
-                    resetLivid();
-                }
+                isInF5Bossfight = true;
             }
-            else if (getCurrentIsland() == SkyblockIsland.DUNGEON && msg.equals("Dungeon starts in 1 second."))
+            else if (msg.contains(F5_BOSS_END))
             {
-                Tweakception.globalTracker.updateIslandNow();
-                if (getCurrentLocationRaw().contains("(F7)") || getCurrentLocationRaw().contains("(M7)"))
-                {
-                    fragGotten = false;
-                    if (fragRunTracking)
-                        fragStart();
-                }
+                isInF5Bossfight = false;
+                resetLivid();
             }
-            else if (getCurrentIsland() == SkyblockIsland.DUNGEON && msg.equals("The BLOOD DOOR has been opened!"))
+        }
+        else if (getCurrentIsland() == SkyblockIsland.DUNGEON && msg.equals("Dungeon starts in 1 second."))
+        {
+            Tweakception.globalTracker.updateIslandNow();
+            if (isInF7())
             {
-                Tweakception.globalTracker.updateIslandNow();
-                if (getCurrentLocationRaw().contains("(F7)") || getCurrentLocationRaw().contains("(M7)"))
-                {
-                    if (fragRunTracking)
-                        fragSetBloodRush();
-                }
+                fragGotten = false;
+                if (fragRunTracking)
+                    fragStart();
             }
-            else if (c.autoJoinParty &&
-                    msg.startsWith("-----------------------------------------------------"))
+        }
+        else if (getCurrentIsland() == SkyblockIsland.DUNGEON && msg.equals("The BLOOD DOOR has been opened!"))
+        {
+            if (isInF7())
             {
-                if (partyRequestMatcher.reset(msg).find())
+                if (fragRunTracking)
+                    fragSetBloodRush();
+            }
+        }
+        else if (getCurrentIsland() == SkyblockIsland.DUNGEON && msg.contains(" Bonzo's Mask saved your life!"))
+        {
+            ItemStack head = getPlayer().getCurrentArmor(3);
+            if (head != null)
+            {
+                String id = getSkyblockItemId(head);
+                String uuid = getSkyblockItemUuid(head);
+                if (id != null && (id.equals("BONZO_MASK") || id.equals("STARRED_BONZO_MASK")) &&
+                    uuid != null && !usedBonzoMasks.contains(new BonzoMaskUsage(uuid)))
                 {
-                    String name = partyRequestMatcher.group(1)/*.replaceAll("[.*]", "").trim()*/.toLowerCase();
-                    if (c.autoJoinPartyOwners.contains(name))
+                    String[] lore = getDisplayLore(head);
+                    if (lore != null)
                     {
-                        sendChat("DT-AutoJoinParty: joining " + name + "'s party");
-                        getPlayer().sendChatMessage("/p " + name);
+                        int cooldown = 360;
+                        for (int i = lore.length - 1; i >= 0; i--)
+                        {
+                            if (bonzoMaskCooldownMatcher.reset(lore[i]).matches())
+                            {
+                                cooldown = Integer.parseInt(bonzoMaskCooldownMatcher.group(1));
+                                break;
+                            }
+                        }
+                        usedBonzoMasks.offer(new BonzoMaskUsage(uuid, getTicks(), cooldown));
                     }
+                }
+            }
+        }
+        else if (c.autoJoinParty &&
+                msg.startsWith("-----------------------------------------------------"))
+        {
+            if (partyRequestMatcher.reset(msg).find())
+            {
+                String name = partyRequestMatcher.group(1)/*.replaceAll("[.*]", "").trim()*/.toLowerCase();
+                if (c.autoJoinPartyOwners.contains(name))
+                {
+                    sendChat("DT-AutoJoinParty: joining " + name + "'s party");
+                    getPlayer().sendChatMessage("/p " + name);
+                }
+            }
+        }
+    }
+
+    public void onItemTooltip(ItemTooltipEvent event)
+    {
+        if (event.itemStack == null || event.toolTip == null) return;
+
+        String id = getSkyblockItemId(event.itemStack);
+        if (id != null && id.endsWith("HEAD") && DUNGEON_FLOOR_HEADS.contains(id))
+        {
+            for (int i = 0; i < event.toolTip.size(); i++)
+            {
+                String line = event.toolTip.get(i);
+                if (line.equals("§5§o")) break;
+
+                if (line.startsWith("§5§o§7") && !line.startsWith("§5§o§7Gear Score") &&
+                    dungeonItemStatMatcher.reset(line).find())
+                {
+                    String sign = dungeonItemStatMatcher.group(1);
+                    float num = Float.parseFloat(dungeonItemStatMatcher.group(2));
+                    String percent = dungeonItemStatMatcher.group(3);
+                    String extra = dungeonItemStatMatcher.group(4);
+
+                    String doubled = sign + (num * 2) + percent;
+                    event.toolTip.set(i, line + " §e(" + doubled + ")" + extra);
                 }
             }
         }
@@ -843,6 +990,29 @@ public class DungeonTweaks extends Tweak
         if (c.highlightShadowAssassins)
             shadowAssassins.clear();
         fragGotten = false;
+        if (c.displayTargetMobNameTag)
+            entityHurtTimes.clear();
+    }
+
+    public void onIslandChanged(IslandChangedEvent event)
+    {
+        if (event.getPrevIsland() == SkyblockIsland.DUNGEON)
+        {
+            if (c.trackBonzoMaskUsage)
+            {
+                usedBonzoMasks.clear();
+            }
+        }
+    }
+
+    public boolean isTrackingBonzoMaskUsage()
+    {
+        return c.trackBonzoMaskUsage;
+    }
+
+    public boolean isBonzoMaskUsed(String uuid)
+    {
+        return usedBonzoMasks.contains(new BonzoMaskUsage(uuid));
     }
 
     private void resetLivid()
@@ -856,11 +1026,17 @@ public class DungeonTweaks extends Tweak
         }
     }
 
-    private void addDamageInfo(int tick,String s)
+    private void addDamageInfo(int spawnTicks, String s)
     {
-        damageTags.addFirst(new Pair<>(tick, s));
+        damageTags.offer(new Pair<>(spawnTicks, s));
         if (damageTags.size() > c.damageTagTrackingCount)
-            damageTags.removeLast();
+            damageTags.remove();
+    }
+
+    private boolean isInF7()
+    {
+        return getCurrentIsland() == SkyblockIsland.DUNGEON &&
+                (getCurrentLocationRaw().contains("(F7)") || getCurrentLocationRaw().contains("(M7)"));
     }
 
     public void toggleNoFog()
@@ -1102,8 +1278,7 @@ public class DungeonTweaks extends Tweak
             return;
         }
 
-        if (getCurrentIsland() == SkyblockIsland.DUNGEON &&
-            (getCurrentLocationRaw().contains("(F7)") || getCurrentLocationRaw().contains("(M7)")))
+        if (isInF7())
         {
             fragEnd();
         }
@@ -1138,7 +1313,6 @@ public class DungeonTweaks extends Tweak
         sendChat("DT-Frag: warping back to dhub for next run");
 
         fragPendingEndRunWarp = true;
-        fragPendingEndRunStartTime = getTicks();
         getPlayer().sendChatMessage("/warp dhub");
         // Continued at `if (fragPendingEndRunWarp)` in onTick()
     }
@@ -1147,6 +1321,9 @@ public class DungeonTweaks extends Tweak
     {
         fragrunStartTime = System.currentTimeMillis();
         sendChat("DT-Frag: started the next run");
+
+        // To prevent active run being cancelled when starting before the island is updated
+        Tweakception.globalTracker.updateIslandNow();
     }
 
     private void fragEnd()
@@ -1233,5 +1410,17 @@ public class DungeonTweaks extends Tweak
     {
         c.shootingSpeedTrackingRange = blocks;
         sendChat("DT-TrackShootingSpeed: set spawn range to " + c.shootingSpeedTrackingRange);
+    }
+
+    public void toggleDisplayMobNameTag()
+    {
+        c.displayTargetMobNameTag = !c.displayTargetMobNameTag;
+        sendChat("DT-DisplayMobNameTag: toggled " + c.displayTargetMobNameTag);
+    }
+
+    public void toggleTrackbonzoMaskUsage()
+    {
+        c.trackBonzoMaskUsage = !c.trackBonzoMaskUsage;
+        sendChat("DT-TrackbonzoMaskUsage: toggled " + c.trackBonzoMaskUsage);
     }
 }

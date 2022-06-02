@@ -6,10 +6,13 @@ import a7.tweakception.events.IslandChangedEvent;
 import a7.tweakception.utils.Pair;
 import a7.tweakception.utils.RenderUtils;
 import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.gui.inventory.GuiChest;
+import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityArmorStand;
@@ -19,6 +22,7 @@ import net.minecraft.entity.projectile.EntityArrow;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.Slot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.S0DPacketCollectItem;
@@ -35,6 +39,7 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 
 import java.awt.*;
 import java.util.List;
@@ -84,6 +89,7 @@ public class DungeonTweaks extends Tweak
         public int shootingSpeedTrackingRange = 4;
         public boolean displayTargetMobNameTag = false;
         public boolean trackBonzoMaskUsage = true;
+        public boolean blockOpheliaShopClicks = true;
     }
     private static final String F5_BOSS_START = "Welcome, you arrive right on time. I am Livid, the Master of Shadows.";
     private static final String F5_BOSS_END = "Impossible! How did you figure out which one I was?";
@@ -846,7 +852,7 @@ public class DungeonTweaks extends Tweak
             GuiChest chest = (GuiChest)event.gui;
             ContainerChest container = (ContainerChest)chest.inventorySlots;
             String containerName = container.getLowerChestInventory().getName();
-            if (c.autoCloseSecretChest && containerName.equals("Chest") && getCurrentIsland() == SkyblockIsland.DUNGEON)
+            if (getCurrentIsland() == SkyblockIsland.DUNGEON && c.autoCloseSecretChest && containerName.equals("Chest"))
                 secretChestOpened = true;
             else if (c.autoSalvage && containerName.equals("Dungeon Blacksmith"))
             {
@@ -933,7 +939,6 @@ public class DungeonTweaks extends Tweak
             }
         }
     }
-
     public void onItemTooltip(ItemTooltipEvent event)
     {
         if (event.itemStack == null || event.toolTip == null) return;
@@ -1014,6 +1019,11 @@ public class DungeonTweaks extends Tweak
     public boolean isBonzoMaskUsed(String uuid)
     {
         return usedBonzoMasks.contains(new BonzoMaskUsage(uuid));
+    }
+
+    public boolean isBlockingOpheliaShopClicks()
+    {
+        return c.blockOpheliaShopClicks;
     }
 
     private void resetLivid()
@@ -1423,5 +1433,11 @@ public class DungeonTweaks extends Tweak
     {
         c.trackBonzoMaskUsage = !c.trackBonzoMaskUsage;
         sendChat("DT-TrackbonzoMaskUsage: toggled " + c.trackBonzoMaskUsage);
+    }
+
+    public void toggleBlockOpheliaShopClicks()
+    {
+        c.blockOpheliaShopClicks = !c.blockOpheliaShopClicks;
+        sendChat("DT-BlockOpheliaShopClicks: toggled " + c.blockOpheliaShopClicks);
     }
 }

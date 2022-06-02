@@ -67,6 +67,7 @@ Equipment:[
 - dungeon trackbonzomask
   - **Shows a X under the used bonzo masks in inventory,**
   - **also sends a reminder when it becomes aviliable**
+- dungeon blockopheliaclicks
 ### CrimsonTweaks
 - crimson map - **Toggles map**
 - crimson map pos `int x` `int y`

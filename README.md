@@ -60,7 +60,7 @@ Equipment:[
 - dungeon frag stats
 - next - **An alias for `dungeon frag next`**
 - dungeon trackshootingspeed
-- dungeon trackshootingspeed setsamplesecs `[int secs]` - **Leave empty to reset**
+- dungeon trackshootingspeed setsamplesecs `[int secs]` - **Leave empty or 0/-1 to reset**
 - dungeon trackshootingspeed setspawnrange `[int blocks]`
 - dungeon displaymobnametag
   - **Displays the name of the armorstand closest to the mob that took the most hits in last 3 seconds**

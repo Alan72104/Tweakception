@@ -15,7 +15,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import static a7.tweakception.tweaks.GlobalTracker.getCurrentIsland;
-import static a7.tweakception.utils.McUtils.*;
+import static a7.tweakception.utils.McUtils.getSkyblockItemId;
+import static a7.tweakception.utils.McUtils.getSkyblockItemUuid;
 
 @Mixin(GuiContainer.class)
 public abstract class MixinGuiContainer extends GuiScreen

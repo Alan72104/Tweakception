@@ -1,8 +1,6 @@
 package a7.tweakception.tweaks;
 
 import a7.tweakception.config.Configuration;
-import a7.tweakception.utils.McUtils;
-import a7.tweakception.utils.Pair;
 import a7.tweakception.utils.RenderUtils;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
@@ -16,8 +14,10 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
-import java.awt.Color;
-import java.util.*;
+import java.awt.*;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import static a7.tweakception.tweaks.GlobalTracker.getCurrentIsland;

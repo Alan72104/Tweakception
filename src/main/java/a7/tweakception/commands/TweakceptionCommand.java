@@ -5,10 +5,6 @@ import a7.tweakception.tweaks.GlobalTracker;
 import a7.tweakception.utils.DumpUtils;
 import a7.tweakception.utils.McUtils;
 import net.minecraft.block.Block;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.audio.ISound;
-import net.minecraft.client.audio.PositionedSoundRecord;
-import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.BlockPos;
@@ -17,11 +13,10 @@ import net.minecraft.util.ResourceLocation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static a7.tweakception.utils.McUtils.*;
-import static a7.tweakception.utils.McUtils.getPlayer;
+import static a7.tweakception.utils.McUtils.getWorld;
+import static a7.tweakception.utils.McUtils.sendChat;
 
 public class TweakceptionCommand extends CommandBase
 {
@@ -55,10 +50,10 @@ public class TweakceptionCommand extends CommandBase
                 args -> Tweakception.dungeonTweaks.toggleTrackDamageTags(),
                 new Command("setcount",
                     args -> Tweakception.dungeonTweaks.setDamageTagTrackingCount(
-                            args.length >= 1 ? Integer.parseInt(args[0]) : 10)),
+                            args.length >= 1 ? Integer.parseInt(args[0]) : 0)),
                 new Command("sethistorytimeout",
                     args -> Tweakception.dungeonTweaks.setDamageTagHistoryTimeoutTicks(
-                            args.length >= 1 ? Integer.parseInt(args[0]) : 20 * 30)),
+                            args.length >= 1 ? Integer.parseInt(args[0]) : 0)),
                 new Command("noncrit",
                     args -> Tweakception.dungeonTweaks.toggleTrackNonCritDamageTags()),
                 new Command("wither",
@@ -91,10 +86,10 @@ public class TweakceptionCommand extends CommandBase
                 args -> Tweakception.dungeonTweaks.toggleTrackShootingSpeed(),
                     new Command("setsamplesecs",
                             args -> Tweakception.dungeonTweaks.setShootingSpeedTrackingSampleSecs(
-                                    args.length >= 1 ? Integer.parseInt(args[0]) : 2)),
+                                    args.length >= 1 ? Integer.parseInt(args[0]) : 0)),
                     new Command("setspawnrange",
                             args -> Tweakception.dungeonTweaks.setShootingSpeedTrackingRange(
-                                    args.length >= 1 ? Integer.parseInt(args[0]) : 2))),
+                                    args.length >= 1 ? Integer.parseInt(args[0]) : 0))),
             new Command("displaymobnametag",
                 args -> Tweakception.dungeonTweaks.toggleDisplayMobNameTag()),
             new Command("trackbonzomask",
@@ -140,13 +135,7 @@ public class TweakceptionCommand extends CommandBase
             new Command("island",
                 args -> Tweakception.globalTracker.printIsland()),
             new Command("forcesetisland",
-                args ->
-                {
-                    if (args.length >= 1)
-                        Tweakception.globalTracker.forceSetIsland(String.join(" ", args));
-                    else
-                        Tweakception.globalTracker.forceSetIsland("");
-                }),
+                args -> Tweakception.globalTracker.forceSetIsland(args.length >= 1 ? String.join(" ", args) : "")),
             new Command("copylocation",
                 args -> Tweakception.globalTracker.copyLocation()),
             new Command("usefallbackdetection",
@@ -159,13 +148,7 @@ public class TweakceptionCommand extends CommandBase
             new Command("toggleauto",
                 args -> Tweakception.fairyTracker.toggleAutoTracking()),
             new Command("setdelay",
-                args ->
-                {
-                    if (args.length >= 1)
-                        Tweakception.fairyTracker.setDelay(Integer.parseInt(args[0]));
-                    else
-                        sendCommandNotFound();
-                }),
+                args -> Tweakception.fairyTracker.setDelay(args.length >= 1 ? Integer.parseInt(args[0]) : 0)),
             new Command("setnotfound",
                 args -> Tweakception.fairyTracker.setNotFound()),
             new Command("count",
@@ -194,25 +177,25 @@ public class TweakceptionCommand extends CommandBase
                 args ->
                 {
                     if (args.length >= 2)
-                        Tweakception.autoFish.setRetrieveDelay(Integer.parseInt(args[0]), Integer.parseInt(args[1]), false);
+                        Tweakception.autoFish.setRetrieveDelay(Integer.parseInt(args[0]), Integer.parseInt(args[1]));
                     else
-                        Tweakception.autoFish.setRetrieveDelay(0, 0, true);
+                        Tweakception.autoFish.setRetrieveDelay(-1, -1);
                 }),
             new Command("setrecastdelay",
                 args ->
                 {
                     if (args.length >= 2)
-                        Tweakception.autoFish.setRecastDelay(Integer.parseInt(args[0]), Integer.parseInt(args[1]), false);
+                        Tweakception.autoFish.setRecastDelay(Integer.parseInt(args[0]), Integer.parseInt(args[1]));
                     else
-                        Tweakception.autoFish.setRecastDelay(0, 0, true);
+                        Tweakception.autoFish.setRecastDelay(-1, -1);
                 }),
             new Command("setcatchestomove",
                 args ->
                 {
                     if (args.length >= 2)
-                        Tweakception.autoFish.setCatchesToMove(Integer.parseInt(args[0]), Integer.parseInt(args[1]), false);
+                        Tweakception.autoFish.setCatchesToMove(Integer.parseInt(args[0]), Integer.parseInt(args[1]));
                     else
-                        Tweakception.autoFish.setCatchesToMove(0, 0, true);
+                        Tweakception.autoFish.setCatchesToMove(-1, -1);
                 }),
             new Command("toggledebug",
                 args -> Tweakception.autoFish.toggleDebugInfo()),

@@ -22,7 +22,8 @@ import java.util.TreeSet;
 
 import static a7.tweakception.tweaks.GlobalTracker.getTicks;
 import static a7.tweakception.utils.McUtils.*;
-import static a7.tweakception.utils.Utils.*;
+import static a7.tweakception.utils.Utils.getClipboard;
+import static a7.tweakception.utils.Utils.setClipboard;
 
 public class FairyTracker extends Tweak
 {
@@ -170,7 +171,7 @@ public class FairyTracker extends Tweak
 
     public void setDelay(int newDelay)
     {
-        c.autoTrackingDelayTicks = newDelay;
+        c.autoTrackingDelayTicks = newDelay > 0 ? newDelay : new FairyTrackerConfig().autoTrackingDelayTicks;
         sendChat("Fairy: delay set to " + newDelay);
     }
 

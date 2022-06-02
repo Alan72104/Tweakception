@@ -16,11 +16,10 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Random;
-import java.util.function.Supplier;
 
-import static a7.tweakception.tweaks.GlobalTracker.*;
+import static a7.tweakception.tweaks.GlobalTracker.getTicks;
 import static a7.tweakception.utils.McUtils.*;
-import static a7.tweakception.utils.Utils.*;
+import static a7.tweakception.utils.Utils.f;
 
 public class AutoFish extends Tweak
 {
@@ -305,54 +304,30 @@ public class AutoFish extends Tweak
         sendChat("AutoFish: toggled debug info " + c.enableDebugInfo);
     }
 
-    public void setRetrieveDelay(int min, int max, boolean reset)
+    public void setRetrieveDelay(int min, int max)
     {
-        if (!reset)
-        {
-            c.minRetrieveDelay = Math.max(min, 0);
-            c.maxRetrieveDelay = Math.min(max, 20);
-        }
-        else
-        {
-            c.minRetrieveDelay = new AutoFishConfig().minRetrieveDelay;
-            c.maxRetrieveDelay = new AutoFishConfig().maxRetrieveDelay;
-        }
+        c.minRetrieveDelay = min >= 0 ? min : new AutoFishConfig().minRetrieveDelay;
+        c.maxRetrieveDelay = max >= 0 ? Math.min(max, 20) : new AutoFishConfig().maxRetrieveDelay;
         sendChatf("AutoFish: set retrieve delay to min %d, max %d", c.minRetrieveDelay, c.maxRetrieveDelay);
     }
 
-    public void setRecastDelay(int min, int max, boolean reset)
+    public void setRecastDelay(int min, int max)
     {
-        if (!reset)
-        {
-            c.minRecastDelay = Math.max(min, 5);
-            c.maxRecastDelay = Math.min(max, 50);
-        }
-        else
-        {
-            c.minRecastDelay = new AutoFishConfig().minRecastDelay;
-            c.maxRecastDelay = new AutoFishConfig().maxRecastDelay;
-        }
+        c.minRecastDelay = min >= 0 ? Math.max(min, 5) : new AutoFishConfig().minRecastDelay;
+        c.maxRecastDelay = max >= 0 ? Math.min(max, 50) : new AutoFishConfig().maxRecastDelay;
         sendChatf("AutoFish: set recast delay to min %d, max %d", c.minRecastDelay, c.maxRecastDelay);
     }
 
-    public void setCatchesToMove(int min, int max, boolean reset)
+    public void setCatchesToMove(int min, int max)
     {
-        if (!reset)
-        {
-            c.minCatchesToMove = Math.max(min, 0);
-            c.maxCatchesToMove = Math.min(max, 30);
-        }
-        else
-        {
-            c.minCatchesToMove = new AutoFishConfig().minCatchesToMove;
-            c.maxCatchesToMove = new AutoFishConfig().maxCatchesToMove;
-        }
+        c.minCatchesToMove = min >= 0 ? min : new AutoFishConfig().minCatchesToMove;
+        c.maxCatchesToMove = max >= 0 ? Math.min(max, 30) : new AutoFishConfig().maxCatchesToMove;
         sendChatf("AutoFish: set catches to move to min %d, max %d", c.minCatchesToMove, c.maxCatchesToMove);
     }
 
     public void setHeadMovingTicks(int ticks)
     {
-        if (ticks != 0)
+        if (ticks > 0)
             c.headMovingTicks = Math.max(ticks, 3);
         else
             c.headMovingTicks = new AutoFishConfig().headMovingTicks;
@@ -361,7 +336,7 @@ public class AutoFish extends Tweak
 
     public void setHeadMovingYawRange(float r)
     {
-        if (r != 0.0f)
+        if (r > 0.0f)
             c.headMovingYawRange = Math.min(r, 8.0f);
         else
             c.headMovingYawRange = new AutoFishConfig().headMovingYawRange;
@@ -370,7 +345,7 @@ public class AutoFish extends Tweak
 
     public void setHeadMovingPitchRange(float r)
     {
-        if (r != 0.0f)
+        if (r > 0.0f)
             c.headMovingPitchRange = Math.min(r, 8.0f);
         else
             c.headMovingPitchRange = new AutoFishConfig().headMovingPitchRange;

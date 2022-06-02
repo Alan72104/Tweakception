@@ -38,6 +38,7 @@ import org.lwjgl.input.Keyboard;
 
 import java.awt.*;
 import java.util.List;
+import java.util.Queue;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -1151,7 +1152,7 @@ public class DungeonTweaks extends Tweak
 
     public void setDamageTagTrackingCount(int count)
     {
-        c.damageTagTrackingCount = count;
+        c.damageTagTrackingCount = count > 0 ? count : new DungeonTweaksConfig().damageTagTrackingCount;
         sendChat("DT-TrackDamageTags: set count to " + c.damageTagTrackingCount);
         damageTags.clear();
         damageTagsTemp.clear();
@@ -1159,7 +1160,7 @@ public class DungeonTweaks extends Tweak
 
     public void setDamageTagHistoryTimeoutTicks(int ticks)
     {
-        c.damageTagHistoryTimeoutTicks = ticks;
+        c.damageTagHistoryTimeoutTicks = ticks > 0 ? ticks : new DungeonTweaksConfig().damageTagHistoryTimeoutTicks;
         sendChat("DT-TrackDamageTags: set history timeout to " + c.damageTagHistoryTimeoutTicks + " ticks");
     }
 
@@ -1402,13 +1403,13 @@ public class DungeonTweaks extends Tweak
 
     public void setShootingSpeedTrackingSampleSecs(int secs)
     {
-        c.shootingSpeedTrackingSampleSecs = secs;
+        c.shootingSpeedTrackingSampleSecs = secs > 0 ? secs : new DungeonTweaksConfig().shootingSpeedTrackingSampleSecs;
         sendChat("DT-TrackShootingSpeed: set sample secs to " + c.shootingSpeedTrackingSampleSecs);
     }
 
     public void setShootingSpeedTrackingRange(int blocks)
     {
-        c.shootingSpeedTrackingRange = blocks;
+        c.shootingSpeedTrackingRange = blocks > 0 ? blocks : new DungeonTweaksConfig().shootingSpeedTrackingRange;
         sendChat("DT-TrackShootingSpeed: set spawn range to " + c.shootingSpeedTrackingRange);
     }
 

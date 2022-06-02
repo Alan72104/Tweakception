@@ -11,17 +11,15 @@ import net.minecraft.scoreboard.Score;
 import net.minecraft.scoreboard.ScoreObjective;
 import net.minecraft.scoreboard.ScorePlayerTeam;
 import net.minecraft.scoreboard.Scoreboard;
-import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 
 import java.util.HashMap;
-import java.util.List;
 
 import static a7.tweakception.utils.McUtils.*;
-import static a7.tweakception.utils.Utils.*;
+import static a7.tweakception.utils.Utils.setClipboard;
 
 public class GlobalTracker extends Tweak
 {

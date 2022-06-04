@@ -31,7 +31,8 @@ Equipment:[
 ### DungeonTweaks
 - dungeon nofog - **Toggles no fog, for blindness**
 - dungeon nofog auto - **Toggles no fog auto toggle on f5 entering/leaving**
-- dungeon hidename - **Toggles hide non starred mobs name**
+- dungeon hidename - **Hides non starred mobs name in dungeon**
+- dungeon hidedamagetags - **Hides any damage tags in everywhere**
 - dungeon highlightstarredmobs
 - dungeon highlightbats - **(all bats)**
 - dungeon highlightspiritbear
@@ -68,6 +69,11 @@ Equipment:[
   - **Shows a X under the used bonzo masks in inventory,**
   - **also sends a reminder when it becomes aviliable**
 - dungeon blockopheliaclicks
+- dungeon partyfinder quickplayerinfo
+  - **Displays quick cata/secret/item info of every player in party tooltip**
+  - **[35.70 | 11.2/18k API disabled]**
+  - **[35.70 | 11.2/18k WBladex2 Term]**
+- dungeon clearcaches
 ### CrimsonTweaks
 - crimson map - **Toggles map**
 - crimson map pos `int x` `int y`
@@ -94,6 +100,13 @@ Equipment:[
 - gt forcesetisland `[string name...]` - **Sets or removes location override**
 - gt copylocation - **Copies raw current location to clipboard**
 - gt usefallbackdetection - **Toggles slightly slower location detection**
+- gt rightctrlcopy nbt *(dev)*
+- gt rightctrlcopy tooltip *(dev)*
+### APIManager
+- api set `string key`
+- api clearcaches
+- api debug *(dev)* - **Toggles request printing**
+- api copyprofile `[string playerName]` *(dev)* - **Copies/gets the player info of the most recently used profile**
 <br> </br>
 ## Dev commands
 - dev - **Toggles dev mode**

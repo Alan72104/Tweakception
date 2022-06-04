@@ -11,9 +11,17 @@ import java.util.function.Predicate;
 
 public class Utils
 {
-    public static String formatIntCommas(int in)
+    public static String stringRepeat(String s, int c)
     {
-        String s = String.valueOf(in);
+        StringBuilder sb = new StringBuilder();
+        while (c-- > 0)
+            sb.append(s);
+        return sb.toString();
+    }
+
+    public static String formatCommas(long n)
+    {
+        String s = String.valueOf(n);
         StringBuilder sb = new StringBuilder();
         int l = s.length();
         char[] a = s.toCharArray();
@@ -26,6 +34,23 @@ public class Utils
             sb.append(a[i]);
         }
         return sb.toString();
+    }
+
+    public static String formatMetric(long n)
+    {
+        if (n >= 1_000_000_000)
+        {
+            return (n / 1_000_000_000) + "b";
+        }
+        else if (n >= 1_000_000)
+        {
+            return (n / 1_000_000) + "m";
+        }
+        else if (n >= 1_000)
+        {
+            return (n / 1_000) + "k";
+        }
+        return String.valueOf(n);
     }
 
     public static String msToHHMMSSmmm(long ms)

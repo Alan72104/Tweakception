@@ -9,12 +9,13 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ChatComponentText;
 import net.minecraftforge.common.util.Constants;
 
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class McUtils
 {
-    private static final Matcher colorMatcher = Pattern.compile("(?i)\\u00A7.").matcher("");
+    private static final Matcher colorMatcher = Pattern.compile("§.").matcher("");
 
     public static Minecraft getMc()
     {

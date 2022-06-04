@@ -34,6 +34,8 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.dungeonTweaks.toggleNoFogAutoToggle())),
             new Command("hidename",
                 args -> Tweakception.dungeonTweaks.toggleHideName()),
+            new Command("hidedamagetags",
+                args -> Tweakception.dungeonTweaks.toggleHideDamageTags()),
             new Command("highlightstarredmobs",
                 args -> Tweakception.dungeonTweaks.toggleHighlightStarredMobs()),
             new Command("highlightbats",
@@ -97,7 +99,13 @@ public class TweakceptionCommand extends CommandBase
             new Command("trackbonzomask",
                 args -> Tweakception.dungeonTweaks.toggleTrackbonzoMaskUsage()),
             new Command("blockopheliaclicks",
-                args -> Tweakception.dungeonTweaks.toggleBlockOpheliaShopClicks())
+                args -> Tweakception.dungeonTweaks.toggleBlockOpheliaShopClicks()),
+            new Command("partyfinder",
+                null,
+                new Command("quickplayerinfo",
+                    args -> Tweakception.dungeonTweaks.togglePartyFinderQuickPlayerInfo()),
+                new Command("clearcaches",
+                    args -> Tweakception.dungeonTweaks.freeCaches()))
         ));
         addSub(new Command("crimson",
             null,
@@ -133,7 +141,8 @@ public class TweakceptionCommand extends CommandBase
         addSub(new Command("mining",
             null,
             new Command("highlightchests",
-                args -> Tweakception.miningTweaks.toggleHighlightChests())));
+                args -> Tweakception.miningTweaks.toggleHighlightChests())
+        ));
         addSub(new Command("gt",
             null,
             new Command("island",
@@ -143,7 +152,13 @@ public class TweakceptionCommand extends CommandBase
             new Command("copylocation",
                 args -> Tweakception.globalTracker.copyLocation()),
             new Command("usefallbackdetection",
-                args -> Tweakception.globalTracker.toggleFallbackDetection())
+                args -> Tweakception.globalTracker.toggleFallbackDetection()),
+            new Command("rightctrlcopy",
+                null,
+                new Command("nbt",
+                    args -> Tweakception.globalTracker.rightCtrlCopySet("nbt")),
+                new Command("tooltip",
+                    args -> Tweakception.globalTracker.rightCtrlCopySet("tooltip"))).setVisibility(false)
         ));
         addSub(new Command("fairy",
             args -> Tweakception.fairyTracker.toggle(),
@@ -172,6 +187,19 @@ public class TweakceptionCommand extends CommandBase
                 null,
                 new Command("highlightglyph",
                     args -> Tweakception.slayerTweaks.toggleHighlightGlyph()))
+        ));
+        addSub(new Command("api",
+            null,
+            new Command("set",
+                args -> Tweakception.apiManager.setApiKey(args.length > 0 ? args[0] : "")),
+            new Command("clearcaches",
+                args -> Tweakception.apiManager.freeCaches()),
+            new Command("debug",
+                args -> Tweakception.apiManager.toggleDebug()).setVisibility(false),
+            new Command("printcaches",
+                args -> Tweakception.apiManager.printCaches()).setVisibility(false),
+            new Command("copyprofile",
+                args -> Tweakception.apiManager.copySkyblockProfile(args.length > 0 ? args[0] : "")).setVisibility(false)
         ));
         addSub(new Command("next",
             args -> Tweakception.dungeonTweaks.fragNext()));

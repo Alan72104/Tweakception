@@ -38,6 +38,7 @@ public class Tweakception
     public static SlayerTweaks slayerTweaks;
     public static AutoFish autoFish;
     public static MiningTweaks miningTweaks;
+    public static APIManager apiManager;
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) throws Exception
@@ -47,7 +48,7 @@ public class Tweakception
         configuration = new Configuration(event.getModConfigurationDirectory().getAbsolutePath() + "/" + ProjectInfo.MOD_ID + "/");
 
         inGameEventDispatcher = new InGameEventDispatcher();
-        threadPool = Executors.newFixedThreadPool(2);
+        threadPool = Executors.newFixedThreadPool(3);
         scheduler = new Scheduler();
         globalTracker = new GlobalTracker(configuration);
         fairyTracker = new FairyTracker(configuration);
@@ -56,6 +57,7 @@ public class Tweakception
         slayerTweaks = new SlayerTweaks(configuration);
         autoFish = new AutoFish(configuration);
         miningTweaks = new MiningTweaks(configuration);
+        apiManager = new APIManager(configuration);
 
         proxy.registerClientCommands();
         proxy.registerClientEventHandlers();

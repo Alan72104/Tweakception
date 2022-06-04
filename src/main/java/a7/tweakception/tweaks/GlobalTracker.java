@@ -17,6 +17,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 
 import java.util.HashMap;
+import java.util.List;
 
 import static a7.tweakception.utils.McUtils.*;
 import static a7.tweakception.utils.Utils.setClipboard;
@@ -27,6 +28,7 @@ public class GlobalTracker extends Tweak
     public static class GlobalTrackerConfig
     {
         public boolean devMode = false;
+        public String rightCtrlCopyType = "nbt";
     }
     private static final HashMap<String, SkyblockIsland> SUBPLACE_TO_ISLAND_MAP = new HashMap<>();
     private static int ticks = 0;
@@ -78,10 +80,25 @@ public class GlobalTracker extends Tweak
 
                 if (currentSlot != null && currentSlot.getHasStack())
                 {
-                    String nbt = currentSlot.getStack().serializeNBT().toString();
-                    nbt = DumpUtils.prettifyJson(nbt);
-                    setClipboard(nbt);
-                    sendChat("GT: copied item data to clipboard");
+                    switch (c.rightCtrlCopyType)
+                    {
+                        case "nbt":
+                        {
+                            String nbt = currentSlot.getStack().serializeNBT().toString();
+                            nbt = DumpUtils.prettifyJson(nbt);
+                            setClipboard(nbt);
+                            sendChat("GT: copied item nbt to clipboard");
+                            break;
+                        }
+                        case "tooltip":
+                        {
+                            List<String> tooltip = currentSlot.getStack().getTooltip(getPlayer(), true);
+                            String s = String.join(System.lineSeparator(), tooltip);
+                            setClipboard(s);
+                            sendChat("GT: copied item tooltip to clipboard");
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -115,7 +132,7 @@ public class GlobalTracker extends Tweak
         ScoreObjective sidebarObjective = scoreboard.getObjectiveInDisplaySlot(1);
         if (sidebarObjective == null)
             return;
-        String objectiveName = sidebarObjective.getDisplayName().replaceAll("(?i)\\u00A7.", "");
+        String objectiveName = sidebarObjective.getDisplayName().replaceAll("§.", "");
         if (!objectiveName.startsWith("SKYBLOCK"))
             return;
 
@@ -247,5 +264,11 @@ public class GlobalTracker extends Tweak
     {
         c.devMode = !c.devMode;
         sendChat("GT: toggled dev mode " + c.devMode);
+    }
+
+    public void rightCtrlCopySet(String type)
+    {
+        c.rightCtrlCopyType = type;
+        sendChat("GT-RightCtrlCopy: set to " + c.rightCtrlCopyType);
     }
 }

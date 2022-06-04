@@ -11,4 +11,5 @@ public class TweakceptionConfig
     public SlayerTweaks.SlayerTweaksConfig slayerTweaks = new SlayerTweaks.SlayerTweaksConfig();
     public AutoFish.AutoFishConfig autoFish = new AutoFish.AutoFishConfig();
     public MiningTweaks.MiningTweaksConfig miningTweaks = new MiningTweaks.MiningTweaksConfig();
+    public APIManager.APIManagerConfig apiManager = new APIManager.APIManagerConfig();
 }

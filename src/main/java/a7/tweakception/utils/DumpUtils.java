@@ -268,7 +268,7 @@ public class DumpUtils
     public static String prettifyJson(String s)
     {
         StringBuilder sb = new StringBuilder(s);
-        int currentIndent = 0;
+        int indentCount = 0;
         String indent = "    ";
         boolean escape = false;
         int escapeCount = 0;
@@ -286,12 +286,12 @@ public class DumpUtils
                     case '{':
                     case '[':
                         if (!inQuote)
-                            currentIndent++;
+                            indentCount++;
                     case ',':
                         if (!inQuote)
                         {
-                            sb.insert(i + 1, sep + String.join("", Collections.nCopies(currentIndent, indent)));
-                            i += indent.length() * currentIndent + sep.length() + 1;
+                            sb.insert(i + 1, sep + Utils.stringRepeat(indent, indentCount));
+                            i += indent.length() * indentCount + sep.length() + 1;
                         }
                         else
                             i++;
@@ -300,9 +300,9 @@ public class DumpUtils
                     case ']':
                         if (!inQuote)
                         {
-                            currentIndent--;
-                            sb.insert(i, System.lineSeparator() + String.join("", Collections.nCopies(currentIndent, indent)));
-                            i += indent.length() * currentIndent + sep.length();
+                            indentCount--;
+                            sb.insert(i, System.lineSeparator() + Utils.stringRepeat(indent, indentCount));
+                            i += indent.length() * indentCount + sep.length();
                         }
                         i++;
                         break;
@@ -368,7 +368,7 @@ public class DumpUtils
                     "==========" + sep +
                     "Original string and failed pos:" + sep +
                     s + sep +
-                    String.join("", Collections.nCopies(lastProcessedIndex, " ")) + "^";
+                    Utils.stringRepeat(" ", lastProcessedIndex) + "^";
         }
 
         return sb.toString();

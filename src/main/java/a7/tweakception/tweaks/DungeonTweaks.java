@@ -3,16 +3,14 @@ package a7.tweakception.tweaks;
 import a7.tweakception.Tweakception;
 import a7.tweakception.config.Configuration;
 import a7.tweakception.events.IslandChangedEvent;
-import a7.tweakception.utils.Pair;
-import a7.tweakception.utils.RenderUtils;
+import a7.tweakception.utils.*;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import net.minecraft.block.Block;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.gui.inventory.GuiChest;
-import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityArmorStand;
@@ -22,9 +20,11 @@ import net.minecraft.entity.projectile.EntityArrow;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Slot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompressedStreamTools;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.play.server.S0DPacketCollectItem;
 import net.minecraft.network.play.server.S19PacketEntityStatus;
 import net.minecraft.util.AxisAlignedBB;
@@ -39,22 +39,25 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
-import org.lwjgl.input.Mouse;
 
 import java.awt.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.Queue;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
+import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static a7.tweakception.tweaks.GlobalTracker.*;
 import static a7.tweakception.utils.McUtils.*;
-import static a7.tweakception.utils.Utils.*;
+import static a7.tweakception.utils.Utils.f;
+import static a7.tweakception.utils.Utils.removeWhile;
 
 public class DungeonTweaks extends Tweak
 {
@@ -64,6 +67,7 @@ public class DungeonTweaks extends Tweak
         public boolean enableNoFog = false;
         public boolean enableNoFogAutoToggle = false;
         public boolean hideNonStarredMobsName = true;
+        public boolean hideDamageTags = false;
         public boolean highlightStarredMobs = false;
         public boolean highlightBats = true;
         public boolean highlightSpiritBear = true;
@@ -90,6 +94,7 @@ public class DungeonTweaks extends Tweak
         public boolean displayTargetMobNameTag = false;
         public boolean trackBonzoMaskUsage = true;
         public boolean blockOpheliaShopClicks = true;
+        public boolean partyFinderDisplayQuickPlayerInfo = false;
     }
     private static final String F5_BOSS_START = "Welcome, you arrive right on time. I am Livid, the Master of Shadows.";
     private static final String F5_BOSS_END = "Impossible! How did you figure out which one I was?";
@@ -159,16 +164,31 @@ public class DungeonTweaks extends Tweak
     private Entity hitDisplayTargetNameTag = null;
     private final ConcurrentLinkedQueue<BonzoMaskUsage> usedBonzoMasks = new ConcurrentLinkedQueue<>();
     private final Matcher bonzoMaskCooldownMatcher = Pattern.compile("^§8Cooldown: §a(\\d+)s").matcher("");
-    private final Matcher dungeonItemStatMatcher = Pattern.compile(" §8\\(([-+])?(\\d+(?:\\.\\d+)?)(%?)\\)(.*)").matcher("");
+    private final Matcher dungeonItemStatMatcher = Pattern.compile(" §8\\(([-+])?(\\d+(?:,\\d+)*(?:\\.\\d+)?)(%?)\\)(.*)").matcher("");
+    private final Map<String, DungeonStats> uuidToDungeonStatsMap = new HashMap<>();
+    private final Matcher partyFinderPlayerMatcher = Pattern.compile("^§5§o (?:§[\\da-f])?([\\w\\d]+)§f: §e(\\w+)§b \\(§e(\\d{1,2})§b\\)").matcher("");
     private static class BonzoMaskUsage
     {
-        public String uuid;
-        public int useTicks = 0;
-        public int cooldownSecs = 0;
-        public BonzoMaskUsage(String uuid) { this.uuid = uuid; }
+        public final String uuid;
+        public final int useTicks;
+        public final int cooldownSecs;
+        public BonzoMaskUsage(String uuid) { this.uuid = uuid; useTicks = 0; cooldownSecs = 0; }
         public BonzoMaskUsage(String uuid, int ticks, int cd) { this.uuid = uuid; useTicks = ticks; cooldownSecs = cd; }
         @Override public boolean equals(Object o) { return o instanceof BonzoMaskUsage && ((BonzoMaskUsage)o).uuid.equals(this.uuid); }
         @Override public int hashCode() { return uuid.hashCode(); }
+    }
+    private static class DungeonStats
+    {
+        public float cata = 0.0f;
+        public float secretPerRun = 0.0f;
+        public long totalSecret = 0L;
+        public int wBlade = 0;
+        public int term = 0;
+        public boolean apiDiabled = false;
+        public DungeonStats() { }
+        public DungeonStats(float c, float spr, long ts, int wb, int t, boolean ad)
+        { cata = c; secretPerRun = spr; totalSecret = ts; wBlade = wb; term = t; apiDiabled = ad; }
+        public static final DungeonStats NOT_AVAILABLE = new DungeonStats();
     }
 
     public DungeonTweaks(Configuration configuration)
@@ -375,7 +395,7 @@ public class DungeonTweaks extends Tweak
                         if (s.startsWith("§f✧") && critTagMatcher.reset(s).matches())
                         {
                             int num = Integer.parseInt(cleanColor(critTagMatcher.group(1)));
-                            s = formatIntCommas(num);
+                            s = Utils.formatCommas(num);
                             StringBuilder sb = new StringBuilder(35);
                             sb.append("§f✧");
                             int i = 0;
@@ -394,13 +414,13 @@ public class DungeonTweaks extends Tweak
                         else if (c.trackWitherDamageTags && witherTagMatcher.reset(s).matches())
                         {
                             int num = Integer.parseInt(cleanColor(witherTagMatcher.group(1)));
-                            s = "§0" + formatIntCommas(num);
+                            s = "§0" + Utils.formatCommas(num);
                             addDamageInfo(ele.a, s);
                         }
                         else if (c.trackNonCritDamageTags && nonCritTagMatcher.reset(s).matches())
                         {
                             int num = Integer.parseInt(cleanColor(nonCritTagMatcher.group(1)));
-                            s = "§7" + formatIntCommas(num) + nonCritTagMatcher.group(2);
+                            s = "§7" + Utils.formatCommas(num) + nonCritTagMatcher.group(2);
                             addDamageInfo(ele.a, s);
                         }
                     }
@@ -421,7 +441,7 @@ public class DungeonTweaks extends Tweak
 
         if (getMc().currentScreen instanceof GuiChest)
         {
-            GuiChest chest = (GuiChest)getMc().currentScreen;
+            GuiChest chest = (GuiChest) getMc().currentScreen;
             ContainerChest container = (ContainerChest)chest.inventorySlots;
             if (secretChestOpened)
             {
@@ -628,23 +648,23 @@ public class DungeonTweaks extends Tweak
             if (fragPendingEndRunWarp)
                 status = "§cPending warp";
             else if (fragrunStartTime != 0L)
-                status = "§aRun time: " + msToMMSSmmm(System.currentTimeMillis() - fragrunStartTime);
+                status = "§aRun time: " + Utils.msToMMSSmmm(System.currentTimeMillis() - fragrunStartTime);
             else
                 status = "§aIdle";
 
             String br;
             if (fragBloodRushTime != 0L)
-                br = "§aBlood rush: " + msToMMSSmmm(fragBloodRushTime) + "§r" + fragBloodRushRecord;
+                br = "§aBlood rush: " + Utils.msToMMSSmmm(fragBloodRushTime) + "§r" + fragBloodRushRecord;
             else
                 br = "§aBlood rush: §cnot yet";
 
             String runs = "Session total runs: " + fragSessionRuns;
-            String sFastest = "Session fastest blood rush: " + msToMMSSmmm(fragSessionFastestBloodRush);
-            String avg = "Session avg run time: " + msToMMSSmmm(fragSessionTotalTime / Math.max(fragSessionRuns, 1));
-            String total = "Session total time: " + msToHHMMSSmmm(fragSessionTotalTime);
+            String sFastest = "Session fastest blood rush: " + Utils.msToMMSSmmm(fragSessionFastestBloodRush);
+            String avg = "Session avg run time: " + Utils.msToMMSSmmm(fragSessionTotalTime / Math.max(fragSessionRuns, 1));
+            String total = "Session total time: " + Utils.msToHHMMSSmmm(fragSessionTotalTime);
             String total2 = "Total runs: " + c.totalFragruns;
-            String fastest = "Fastest run: " + msToMMSSmmm(c.fastestFragrun);
-            String fastestBr = "Fastest blood rush: " + msToMMSSmmm(c.fastestBloodRush);
+            String fastest = "Fastest run: " + Utils.msToMMSSmmm(c.fastestFragrun);
+            String fastestBr = "Fastest blood rush: " + Utils.msToMMSSmmm(c.fastestBloodRush);
 
             r.drawString(status, x - r.getStringWidth(status), y, 0xffffffff); y += r.FONT_HEIGHT;
             r.drawString(br, x - r.getStringWidth(br), y, 0xffffffff); y += r.FONT_HEIGHT;
@@ -684,13 +704,19 @@ public class DungeonTweaks extends Tweak
 
     public void onLivingSpecialRenderPre(RenderLivingEvent.Specials.Pre event)
     {
-        if (getCurrentIsland() != SkyblockIsland.DUNGEON) return;
-
-        if (c.hideNonStarredMobsName || c.highlightStarredMobs || c.highlightSpiritBear)
+        if (event.entity instanceof EntityArmorStand)
         {
-            if (event.entity instanceof EntityArmorStand)
+            String name = event.entity.getName();
+
+            if (c.hideDamageTags && anyDamageTagMatcher.reset(name).matches())
             {
-                String name = event.entity.getName();
+                event.setCanceled(true);
+                return;
+            }
+
+            if (getCurrentIsland() == SkyblockIsland.DUNGEON &&
+                (c.hideNonStarredMobsName || c.highlightStarredMobs || c.highlightSpiritBear))
+            {
                 if (name.endsWith("§c❤"))
                 {
                     boolean isStarred = name.contains("✯");
@@ -955,13 +981,93 @@ public class DungeonTweaks extends Tweak
                     dungeonItemStatMatcher.reset(line).find())
                 {
                     String sign = dungeonItemStatMatcher.group(1);
-                    float num = Float.parseFloat(dungeonItemStatMatcher.group(2));
+                    float num = Float.parseFloat(dungeonItemStatMatcher.group(2).replace(",", ""));
                     String percent = dungeonItemStatMatcher.group(3);
                     String extra = dungeonItemStatMatcher.group(4);
 
                     String doubled = sign + (num * 2) + percent;
                     event.toolTip.set(i, line + " §e(" + doubled + ")" + extra);
                 }
+            }
+        }
+        else if (c.partyFinderDisplayQuickPlayerInfo && getMc().currentScreen instanceof GuiChest)
+        {
+            GuiChest chest = (GuiChest) getMc().currentScreen;
+            ContainerChest container = (ContainerChest)chest.inventorySlots;
+            String containerName = container.getLowerChestInventory().getName();
+            if (containerName.equals("Party Finder"))
+            {
+                final int spaceWidth = getMc().fontRendererObj.getStringWidth(" ");
+                int maxWidth = 0;
+                // Line, result, width
+                List<TriPair<Integer, MatchResult, Integer>> playerLines = new ArrayList<>(5);
+
+                for (int i = 0; i < event.toolTip.size(); i++)
+                {
+                    String line = event.toolTip.get(i);
+                    if (partyFinderPlayerMatcher.reset(line).matches())
+                    {
+                        int width = getMc().fontRendererObj.getStringWidth(line);
+                        maxWidth = Math.max(maxWidth, width);
+                        playerLines.add(new TriPair<>(i, partyFinderPlayerMatcher.toMatchResult(), width));
+                        if (playerLines.size() == 5)
+                            break;
+                    }
+                }
+
+                for (TriPair<Integer, MatchResult, Integer> ele : playerLines)
+                {
+                    int i = ele.a;
+                    String line = event.toolTip.get(i);
+                    String padding = Utils.stringRepeat(" ", (maxWidth - ele.c) / spaceWidth);
+
+                    if (!Tweakception.apiManager.hasApiKey())
+                    {
+                        event.toolTip.set(i, line + padding + " §fNo API key");
+                        break;
+                    }
+
+                    String name = ele.b.group(1);
+                    DungeonStats stats = getPlayerDungeonStats(name);
+
+                    if (stats == null)
+                    {
+                        event.toolTip.set(i, line + padding + " §fGetting info...");
+                        break;
+                    }
+
+                    if (stats == DungeonStats.NOT_AVAILABLE)
+                    {
+                        event.toolTip.set(i, line + padding + " §cFailed resolving user or not available");
+                        continue;
+                    }
+
+                    StringBuilder sb = new StringBuilder(line);
+                    sb.append(padding);
+                    sb.append(f(" §f[%.2f | %.1f/%s", stats.cata, stats.secretPerRun, Utils.formatMetric(stats.totalSecret)));
+
+                    if (stats.apiDiabled)
+                        sb.append(" §cAPI disabled");
+                    else
+                    {
+                        if (stats.wBlade > 0)
+                        {
+                            sb.append(" §eWBlade");
+                            if (stats.wBlade > 1)
+                                sb.append("§cx").append(stats.wBlade);
+                        }
+                        if (stats.term > 0)
+                        {
+                            sb.append(" §eTerm");
+                            if (stats.term > 1)
+                                sb.append("§cx").append(stats.term);
+                        }
+                    }
+
+                    sb.append("§r]");
+                    event.toolTip.set(i, sb.toString());
+                }
+
             }
         }
     }
@@ -986,6 +1092,8 @@ public class DungeonTweaks extends Tweak
 
     public void onWorldUnload(WorldEvent.Unload event)
     {
+        if (GlobalTracker.t)
+            sendChat("world unload");
         if (isInF5Bossfight)
         {
             resetLivid();
@@ -1002,6 +1110,8 @@ public class DungeonTweaks extends Tweak
 
     public void onIslandChanged(IslandChangedEvent event)
     {
+        if (GlobalTracker.t)
+            sendChat("island changed from " + event.getPrevIsland() + " to " + event.getNewIsland());
         if (event.getPrevIsland() == SkyblockIsland.DUNGEON)
         {
             if (c.trackBonzoMaskUsage)
@@ -1050,6 +1160,135 @@ public class DungeonTweaks extends Tweak
                 (getCurrentLocationRaw().contains("(F7)") || getCurrentLocationRaw().contains("(M7)"));
     }
 
+    private DungeonStats getPlayerDungeonStats(String name)
+    {
+        String uuid = Tweakception.apiManager.getPlayerUUID(name);
+        if (uuid == null)
+            return null;
+        if (uuid.equals(APIManager.UUID_NOT_AVAILABLE))
+            return DungeonStats.NOT_AVAILABLE;
+        if (uuidToDungeonStatsMap.containsKey(uuid))
+            return uuidToDungeonStatsMap.get(uuid);
+
+        JsonObject sbInfo = Tweakception.apiManager.getSkyblockPlayerInfo(name);
+        JsonObject hyInfo = Tweakception.apiManager.getHypixelPlayerInfo(name);
+
+        if (sbInfo == null || hyInfo == null)
+            return null;
+
+        if (sbInfo == APIManager.INFO_NOT_AVAILABLE || hyInfo == APIManager.INFO_NOT_AVAILABLE)
+        {
+            uuidToDungeonStatsMap.put(uuid, DungeonStats.NOT_AVAILABLE);
+            return DungeonStats.NOT_AVAILABLE;
+        }
+
+        int cataLevel = 0;
+        float toNext = 0.0f;
+        float secrets = 0.0f;
+        long comps = 0;
+
+        if (sbInfo.has("dungeons"))
+        {
+            JsonObject dungeons = sbInfo.get("dungeons").getAsJsonObject();
+            JsonObject dungeon_types = dungeons.get("dungeon_types").getAsJsonObject();
+            JsonObject catacombs = dungeon_types.get("catacombs").getAsJsonObject();
+            if (catacombs.has("experience"))
+            {
+                float experience = catacombs.get("experience").getAsFloat();
+                for (int i = 0; i < Constants.CATACOMBS_LEVEL_EXPS.length; i++)
+                    if (experience >= Constants.CATACOMBS_LEVEL_EXPS[i])
+                    {
+                        experience -= Constants.CATACOMBS_LEVEL_EXPS[i];
+                        cataLevel = i + 1;
+                    }
+                    else
+                        break;
+                if (cataLevel < 50)
+                    toNext = experience / Constants.CATACOMBS_LEVEL_EXPS[cataLevel];
+            }
+
+            if (hyInfo.has("achievements"))
+            {
+                JsonObject achievements = hyInfo.get("achievements").getAsJsonObject();
+                if (achievements.has("skyblock_treasure_hunter"))
+                {
+                    secrets = achievements.get("skyblock_treasure_hunter").getAsFloat();
+                    if (catacombs.has("tier_completions"))
+                    {
+                        JsonObject tierCompletions = catacombs.get("tier_completions").getAsJsonObject();
+                        for (Map.Entry<String, JsonElement> entry : tierCompletions.entrySet())
+                            comps += entry.getValue().getAsFloat();
+                    }
+                    if (dungeon_types.has("master_catacombs"))
+                    {
+                        JsonObject masterCatacombs = dungeon_types.get("master_catacombs").getAsJsonObject();
+                        if (masterCatacombs.has("tier_completions"))
+                        {
+                            JsonObject tierCompletionsM = masterCatacombs.get("tier_completions").getAsJsonObject();
+                            for (Map.Entry<String, JsonElement> entry : tierCompletionsM.entrySet())
+                                comps += entry.getValue().getAsFloat();
+                        }
+                    }
+                }
+            }
+        }
+
+        final float cata = cataLevel + toNext;
+        final float secretsPerRun = secrets / Math.max(comps, 1);
+
+        boolean apiDisabled = false;
+        int wBlade = 0;
+        int term = 0;
+        if (sbInfo.has("inv_contents"))
+        {
+            String invContents = sbInfo.get("inv_contents").getAsJsonObject().get("data").getAsString();
+            NBTTagCompound invNbt = null;
+            try
+            {
+                invNbt = CompressedStreamTools.readCompressed(
+                        new ByteArrayInputStream(Base64.getDecoder().decode(invContents)));
+            }
+            catch (IOException ignored)
+            {
+            }
+
+            if (invNbt != null)
+            {
+                final int TAG_COMPOUND = net.minecraftforge.common.util.Constants.NBT.TAG_COMPOUND;
+                NBTTagList items = invNbt.getTagList("i", TAG_COMPOUND);
+                if (GlobalTracker.t)
+                    Utils.setClipboard(DumpUtils.prettifyJson(items.toString()));
+                for (int i = 0; i < items.tagCount(); i++)
+                {
+                    NBTTagCompound item = items.getCompoundTagAt(i);
+                    if (item == null || item.getKeySet().size() == 0)
+                        continue;
+
+                    NBTTagCompound itemTag = item.getCompoundTag("tag");
+
+                    if (itemTag != null && itemTag.hasKey("ExtraAttributes", TAG_COMPOUND))
+                    {
+                        NBTTagCompound extra = itemTag.getCompoundTag("ExtraAttributes");
+                        String id = extra.getString("id");
+                        if (id != null)
+                        {
+                            if (id.equals("HYPERION") || id.equals("SCYLLA") || id.equals("VALKYRIE") || id.equals("ASTRAEA"))
+                                wBlade++;
+                            else if (id.equals("TERMINATOR"))
+                                term++;
+                        }
+                    }
+                }
+            }
+        }
+        else
+            apiDisabled = true;
+
+        DungeonStats stats = new DungeonStats(cata, secretsPerRun, (long)secrets, wBlade, term, apiDisabled);
+        uuidToDungeonStatsMap.put(uuid, stats);
+        return stats;
+    }
+
     public void toggleNoFog()
     {
         c.enableNoFog = !c.enableNoFog;
@@ -1066,6 +1305,12 @@ public class DungeonTweaks extends Tweak
     {
         c.hideNonStarredMobsName = !c.hideNonStarredMobsName;
         sendChat("DT-HideName: toggled hide name " + c.hideNonStarredMobsName);
+    }
+
+    public void toggleHideDamageTags()
+    {
+        c.hideDamageTags = !c.hideDamageTags;
+        sendChatf("DT-HideDamageTags: toggled " + c.hideDamageTags);
     }
 
     public void toggleHighlightStarredMobs()
@@ -1302,9 +1547,9 @@ public class DungeonTweaks extends Tweak
             return;
 
         sendChat("DT-Frag: session runs: " + fragSessionRuns);
-        sendChat("DT-Frag: session fastest blood rush: " + msToMMSSmmm(fragSessionFastestBloodRush));
-        sendChat("DT-Frag: session total time: " + msToHHMMSSmmm(fragSessionTotalTime));
-        sendChat("DT-Frag: session average run time: " + msToMMSSmmm(fragSessionTotalTime / fragSessionRuns));
+        sendChat("DT-Frag: session fastest blood rush: " + Utils.msToMMSSmmm(fragSessionFastestBloodRush));
+        sendChat("DT-Frag: session total time: " + Utils.msToHHMMSSmmm(fragSessionTotalTime));
+        sendChat("DT-Frag: session average run time: " + Utils.msToMMSSmmm(fragSessionTotalTime / fragSessionRuns));
     }
 
     public void fragNext()
@@ -1342,8 +1587,8 @@ public class DungeonTweaks extends Tweak
         long elapsed = System.currentTimeMillis() - fragrunStartTime;
 
         fragLastRunDisplayStartTime = getTicks();
-        fragLastRunTime = msToMMSSmmm(elapsed);
-        fragLastBloodRush = msToMMSSmmm(fragBloodRushTime);
+        fragLastRunTime = Utils.msToMMSSmmm(elapsed);
+        fragLastBloodRush = Utils.msToMMSSmmm(fragBloodRushTime);
 
         fragrunStartTime = 0L;
         fragBloodRushTime = 0L;
@@ -1439,5 +1684,17 @@ public class DungeonTweaks extends Tweak
     {
         c.blockOpheliaShopClicks = !c.blockOpheliaShopClicks;
         sendChat("DT-BlockOpheliaShopClicks: toggled " + c.blockOpheliaShopClicks);
+    }
+
+    public void togglePartyFinderQuickPlayerInfo()
+    {
+        c.partyFinderDisplayQuickPlayerInfo = !c.partyFinderDisplayQuickPlayerInfo;
+        sendChat("DT-PartyFinderDisplayQuickPlayerInfo: toggled " + c.partyFinderDisplayQuickPlayerInfo);
+    }
+
+    public void freeCaches()
+    {
+        uuidToDungeonStatsMap.clear();
+        sendChat("DT: cleared caches");
     }
 }

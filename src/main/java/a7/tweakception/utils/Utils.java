@@ -36,6 +36,32 @@ public class Utils
         return sb.toString();
     }
 
+    public static String formatCommas(float n)
+    {
+        String s = String.valueOf(n);
+        return formatCommas(s);
+    }
+
+    // Input string could be "1234" or "1234.5"
+    public static String formatCommas(String s)
+    {
+        String[] split = s.split("\\.", 2);
+        StringBuilder sb = new StringBuilder();
+        int l = split[0].length();
+        char[] a = split[0].toCharArray();
+        if (l > 0)
+            sb.append(a[0]);
+        for (int i = 1; i < l; i++)
+        {
+            if ((l-i) % 3 == 0)
+                sb.append(',');
+            sb.append(a[i]);
+        }
+        if (split.length > 1)
+            sb.append('.').append(split[1]);
+        return sb.toString();
+    }
+
     public static String formatMetric(long n)
     {
         if (n >= 1_000_000_000)

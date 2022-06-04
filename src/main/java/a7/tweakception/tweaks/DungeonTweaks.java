@@ -43,6 +43,7 @@ import org.lwjgl.input.Keyboard;
 import java.awt.*;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Queue;
 import java.util.*;
@@ -981,12 +982,12 @@ public class DungeonTweaks extends Tweak
                     dungeonItemStatMatcher.reset(line).find())
                 {
                     String sign = dungeonItemStatMatcher.group(1);
-                    float num = Float.parseFloat(dungeonItemStatMatcher.group(2).replace(",", ""));
+                    DecimalFormat format = new DecimalFormat("###,###.##");
+                    String num = format.format(Float.parseFloat(dungeonItemStatMatcher.group(2).replace(",", "")) * 2.0f);
                     String percent = dungeonItemStatMatcher.group(3);
                     String extra = dungeonItemStatMatcher.group(4);
 
-                    String doubled = sign + (num * 2) + percent;
-                    event.toolTip.set(i, line + " §e(" + doubled + ")" + extra);
+                    event.toolTip.set(i, line + " §e(" + sign + num + percent + ")" + extra);
                 }
             }
         }

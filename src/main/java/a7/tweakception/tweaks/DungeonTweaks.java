@@ -96,6 +96,7 @@ public class DungeonTweaks extends Tweak
         public boolean trackBonzoMaskUsage = true;
         public boolean blockOpheliaShopClicks = true;
         public boolean partyFinderDisplayQuickPlayerInfo = false;
+        public boolean partyFinderQuickPlayerInfoShowSecretPerExp = false;
     }
     private static final String F5_BOSS_START = "Welcome, you arrive right on time. I am Livid, the Master of Shadows.";
     private static final String F5_BOSS_END = "Impossible! How did you figure out which one I was?";
@@ -181,14 +182,15 @@ public class DungeonTweaks extends Tweak
     private static class DungeonStats
     {
         public float cata = 0.0f;
+        public float cataExp = 0.0f;
         public float secretPerRun = 0.0f;
         public long totalSecret = 0L;
         public int wBlade = 0;
         public int term = 0;
         public boolean apiDiabled = false;
         public DungeonStats() { }
-        public DungeonStats(float c, float spr, long ts, int wb, int t, boolean ad)
-        { cata = c; secretPerRun = spr; totalSecret = ts; wBlade = wb; term = t; apiDiabled = ad; }
+        public DungeonStats(float c, float ce, float spr, long ts, int wb, int t, boolean ad)
+        { cata = c; cataExp = ce; secretPerRun = spr; totalSecret = ts; wBlade = wb; term = t; apiDiabled = ad; }
         public static final DungeonStats NOT_AVAILABLE = new DungeonStats();
     }
 
@@ -521,7 +523,7 @@ public class DungeonTweaks extends Tweak
 
         if (fragRunTracking)
         {
-            if (getCurrentIsland() == SkyblockIsland.DUNGEON_HUB)
+            if (getCurrentIsland() != SkyblockIsland.DUNGEON)
             {
                 if (fragPendingEndRunWarp)
                 {
@@ -536,13 +538,13 @@ public class DungeonTweaks extends Tweak
                     else
                         sendChat("DT-Frag: please set a frag bot using `setfragbot <name>`");
                 }
-            }
-            else
-            {
-                if (fragrunStartTime != 0L && !isInF7())
+                else
                 {
-                    fragrunStartTime = 0L;
-                    sendChat("DT-Frag: not in f7, run is cancelled!");
+                    if (fragrunStartTime != 0L && !isInF7())
+                    {
+                        fragrunStartTime = 0L;
+                        sendChat("DT-Frag: not in f7, run is cancelled!");
+                    }
                 }
             }
         }
@@ -1045,7 +1047,10 @@ public class DungeonTweaks extends Tweak
 
                     StringBuilder sb = new StringBuilder(line);
                     sb.append(padding);
-                    sb.append(f(" §f[%.2f | %.1f/%s", stats.cata, stats.secretPerRun, Utils.formatMetric(stats.totalSecret)));
+                    sb.append(f(" §f[%.2f | %.1f/%s",
+                        stats.cata, stats.secretPerRun, Utils.formatMetric(stats.totalSecret)));
+                    if (c.partyFinderQuickPlayerInfoShowSecretPerExp)
+                        sb.append(f("/%.1f", stats.totalSecret / (stats.cataExp / 50000.0f)));
 
                     if (stats.apiDiabled)
                         sb.append(" §cAPI disabled");
@@ -1183,6 +1188,7 @@ public class DungeonTweaks extends Tweak
             return DungeonStats.NOT_AVAILABLE;
         }
 
+        float cataExp = 0.0f;
         int cataLevel = 0;
         float toNext = 0.0f;
         float secrets = 0.0f;
@@ -1196,6 +1202,7 @@ public class DungeonTweaks extends Tweak
             if (catacombs.has("experience"))
             {
                 float experience = catacombs.get("experience").getAsFloat();
+                cataExp = experience;
                 for (int i = 0; i < Constants.CATACOMBS_LEVEL_EXPS.length; i++)
                     if (experience >= Constants.CATACOMBS_LEVEL_EXPS[i])
                     {
@@ -1285,7 +1292,7 @@ public class DungeonTweaks extends Tweak
         else
             apiDisabled = true;
 
-        DungeonStats stats = new DungeonStats(cata, secretsPerRun, (long)secrets, wBlade, term, apiDisabled);
+        DungeonStats stats = new DungeonStats(cata, cataExp, secretsPerRun, (long)secrets, wBlade, term, apiDisabled);
         uuidToDungeonStatsMap.put(uuid, stats);
         return stats;
     }
@@ -1691,6 +1698,12 @@ public class DungeonTweaks extends Tweak
     {
         c.partyFinderDisplayQuickPlayerInfo = !c.partyFinderDisplayQuickPlayerInfo;
         sendChat("DT-PartyFinderDisplayQuickPlayerInfo: toggled " + c.partyFinderDisplayQuickPlayerInfo);
+    }
+
+    public void togglePartyFinderQuickPlayerInfoShowSecretPerExp()
+    {
+        c.partyFinderQuickPlayerInfoShowSecretPerExp = !c.partyFinderQuickPlayerInfoShowSecretPerExp;
+        sendChat("DT-PartyFinderDisplayQuickPlayerInfo: toggled secrets per 50k exp " + c.partyFinderQuickPlayerInfoShowSecretPerExp);
     }
 
     public void freeCaches()

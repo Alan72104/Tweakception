@@ -103,7 +103,9 @@ public class TweakceptionCommand extends CommandBase
             new Command("partyfinder",
                 null,
                 new Command("quickplayerinfo",
-                    args -> Tweakception.dungeonTweaks.togglePartyFinderQuickPlayerInfo()),
+                    args -> Tweakception.dungeonTweaks.togglePartyFinderQuickPlayerInfo(),
+                    new Command("secretperexp",
+                        args -> Tweakception.dungeonTweaks.togglePartyFinderQuickPlayerInfoShowSecretPerExp())),
                 new Command("clearcaches",
                     args -> Tweakception.dungeonTweaks.freeCaches()))
         ));

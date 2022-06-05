@@ -71,8 +71,10 @@ Equipment:[
 - dungeon blockopheliaclicks
 - dungeon partyfinder quickplayerinfo
   - **Displays quick cata/secret/item info of every player in party tooltip**
-  - **[35.70 | 11.2/18k API disabled]**
-  - **[35.70 | 11.2/18k WBladex2 Term]**
+  - **Format: <cata> | <secrets per run/total secrets/secrets per 50k exp(optional)> WBlade? Term?**
+  - **[35.70 | 11.2/18k/27.1 WBladex2 Term]**
+  - **[35.70 | 11.2/18k/27.1 API disabled]** 
+- dungeon partyfinder quickplayerinfo secretperexp
 - dungeon clearcaches
 ### CrimsonTweaks
 - crimson map - **Toggles map**

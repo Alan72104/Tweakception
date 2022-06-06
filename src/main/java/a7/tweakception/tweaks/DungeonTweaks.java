@@ -783,7 +783,6 @@ public class DungeonTweaks extends Tweak
         {
             if (event.entity instanceof EntityOtherPlayerMP)
             {
-//                EntityOtherPlayerMP player = (EntityOtherPlayerMP)event.entity;
                 if (event.entity.getName().equals("Shadow Assassin"))
                 {
                     shadowAssassins.add(event.entity);
@@ -798,7 +797,7 @@ public class DungeonTweaks extends Tweak
             {
                 if (event.entity.getDistanceToEntity(getPlayer()) <= c.shootingSpeedTrackingRange)
                 {
-                    arrowSpawnTimes.add(getTicks());
+                    arrowSpawnTimes.offer(getTicks());
                 }
             }
         }
@@ -807,7 +806,7 @@ public class DungeonTweaks extends Tweak
     public void onInteract(PlayerInteractEvent event)
     {
         if (event.action == PlayerInteractEvent.Action.RIGHT_CLICK_AIR ||
-                event.action == PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK)
+            event.action == PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK)
         {
             if (!c.blockRightClickItemNames.isEmpty())
             {

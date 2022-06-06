@@ -5,6 +5,7 @@
   "refmap": "mixins.tweakception.refmap.json",
   "minVersion": "0.6",
   "mixins": [
+    "MixinUtil"
   ],
   "client": [
     "MixinGuiContainer",

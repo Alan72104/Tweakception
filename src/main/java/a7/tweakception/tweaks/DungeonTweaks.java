@@ -523,20 +523,22 @@ public class DungeonTweaks extends Tweak
 
         if (fragRunTracking)
         {
+            Tweakception.globalTracker.updateIslandNow();
             if (getCurrentIsland() != SkyblockIsland.DUNGEON)
             {
-                if (fragPendingEndRunWarp)
+                if (fragPendingEndRunWarp || fragGotten)
                 {
                     fragPendingEndRunWarp = false;
+                    fragGotten = false;
+                    fragEnd();
                     if (!c.fragBot.equals(""))
                     {
-                        fragEnd();
                         sendChat("DT-Frag: repartying " + c.fragBot);
                         Tweakception.scheduler.addDelayed(() -> getPlayer().sendChatMessage("/p disband"), 20).
-                                thenDelayed(() -> getPlayer().sendChatMessage("/p " + c.fragBot), 15);
+                                thenDelayed(() -> getPlayer().sendChatMessage("/p " + c.fragBot), 20);
                     }
                     else
-                        sendChat("DT-Frag: please set a frag bot using `setfragbot <name>`");
+                        sendChat("DT-Frag: cannot reparty, please set a frag bot using `setfragbot <name>`");
                 }
                 else
                 {
@@ -551,14 +553,16 @@ public class DungeonTweaks extends Tweak
 
         if (c.trackShootingSpeed)
         {
-            removeWhile(arrowSpawnTimes, ele -> getTicks() - ele > 20 * c.shootingSpeedTrackingSampleSecs);
+            removeWhile(arrowSpawnTimes,
+                ele -> getTicks() - ele > 20 * c.shootingSpeedTrackingSampleSecs);
         }
 
         if (c.trackBonzoMaskUsage && getCurrentIsland() == SkyblockIsland.DUNGEON)
         {
             if (!usedBonzoMasks.isEmpty())
             {
-                removeWhile(usedBonzoMasks, ele -> getTicks() - ele.useTicks > (ele.cooldownSecs + 1) * 20,
+                removeWhile(usedBonzoMasks,
+                    ele -> getTicks() - ele.useTicks > (ele.cooldownSecs + 1) * 20,
                     ele -> sendChat("DT-TrackBonzoMaskUsage: §aone of your bonzo masks is now available!"));
             }
         }
@@ -1108,22 +1112,16 @@ public class DungeonTweaks extends Tweak
             bats.clear();
         if (c.highlightShadowAssassins)
             shadowAssassins.clear();
-        fragGotten = false;
         if (c.displayTargetMobNameTag)
             entityHurtTimes.clear();
+        if (c.trackBonzoMaskUsage)
+            usedBonzoMasks.clear();
+        if (fragRunTracking)
+            fragGotten = false;
     }
 
     public void onIslandChanged(IslandChangedEvent event)
     {
-        if (GlobalTracker.t)
-            sendChat("island changed from " + event.getPrevIsland() + " to " + event.getNewIsland());
-        if (event.getPrevIsland() == SkyblockIsland.DUNGEON)
-        {
-            if (c.trackBonzoMaskUsage)
-            {
-                usedBonzoMasks.clear();
-            }
-        }
     }
 
     public boolean isTrackingBonzoMaskUsage()

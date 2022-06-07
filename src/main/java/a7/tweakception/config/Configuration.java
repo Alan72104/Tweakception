@@ -95,19 +95,22 @@ public class Configuration
 
     public File createFileWithCurrentDateTime(String name) throws IOException
     {
-        String[] split = name.split("\\.");
-        String[] baseSplit = split[0].split("\\$");
+        int periodIndex = name.lastIndexOf(".");
+        String base = name.substring(0, periodIndex);
+        String ext = name.substring(periodIndex);
+        String[] baseSplit = base.split("\\$");
         // a_$_b.txt -> a_time_b.txt / a_time_b_1.txt
-        String nameBase = baseSplit[0] +
+        String newBase = baseSplit[0] +
                 new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss").format(new Date(System.currentTimeMillis())) +
                 (baseSplit.length > 1 ? baseSplit[1] : "");
-        name = nameBase + "." + split[1];
+        name = newBase + "." + ext;
+
         File file = createFile(name, false);
 
         int count = 1;
         while (file.exists())
         {
-            name = nameBase + "_" + count + "." + split[1];
+            name = newBase + "_" + count + "." + ext;
             file = createFile(name, false);
             count++;
         }

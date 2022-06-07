@@ -57,11 +57,20 @@ public class DumpUtils
 
     public static void dumpEntitiesInRange(World world, EntityPlayer entity, double range)
     {
-        AxisAlignedBB bb = entity.getEntityBoundingBox().expand(range, range, range);
-        List<Entity> list = world.getEntitiesWithinAABBExcludingEntity(entity, bb);
-        list.sort((a, b) -> Float.compare(a.getDistanceToEntity(entity), b.getDistanceToEntity(entity)));
-        for (Entity e : list)
-            dumpEntity(e);
+        try
+        {
+            AxisAlignedBB bb = entity.getEntityBoundingBox().expand(range, range, range);
+            List<Entity> list = world.getEntitiesWithinAABBExcludingEntity(entity, bb);
+            list.sort((a, b) -> Float.compare(a.getDistanceToEntity(entity), b.getDistanceToEntity(entity)));
+            for (Entity e : list)
+                dumpEntity(e);
+        }
+        catch (Exception e)
+        {
+            sendChat("Exception occurred while dumping entities");
+            sendChat(e.toString());
+            e.printStackTrace();
+        }
     }
 
     public static void dumpBlock(World world, EntityPlayer entity, BlockPos pos)
@@ -169,7 +178,7 @@ public class DumpUtils
             fileName.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, file.getAbsolutePath()));
             fileName.getChatStyle().setUnderlined(true);
 
-            sendChat("Dumped block (" + displayName + ")");
+            sendChat("Dumped block (" + displayName + "§r)");
             getPlayer().addChatMessage(new ChatComponentTranslation("Output written to file %s", fileName));
         }
         catch (IOException e)
@@ -255,7 +264,7 @@ public class DumpUtils
             fileName.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, file.getAbsolutePath()));
             fileName.getChatStyle().setUnderlined(true);
 
-            sendChat("Dumped entity (" + entity.getName() + ")");
+            sendChat("Dumped entity (" + entity.getName() + "§r)");
             getPlayer().addChatMessage(new ChatComponentTranslation("Output written to file %s", fileName));
         }
         catch (IOException e)

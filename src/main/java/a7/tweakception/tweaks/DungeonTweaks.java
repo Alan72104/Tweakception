@@ -121,13 +121,6 @@ public class DungeonTweaks extends Tweak
 
     private static boolean isDamageFormattingExceptionNotified = false;
     private static boolean isGetFieldExceptionNotified = false;
-    static
-    {
-        FRAGS_AND_NAMES.put("GIANT_FRAGMENT_DIAMOND", "Diamante's Handle");
-        FRAGS_AND_NAMES.put("GIANT_FRAGMENT_LASER", "L.A.S.R.'s Eye");
-        FRAGS_AND_NAMES.put("GIANT_FRAGMENT_BIGFOOT", "Bigfoot's Lasso");
-        FRAGS_AND_NAMES.put("GIANT_FRAGMENT_BOULDER", "Jolly Pink Rock");
-    }
     private boolean wasNoFogAutoToggled = false;
     private boolean isInF5Bossfight = false;
     private String realLividName;
@@ -276,6 +269,10 @@ public class DungeonTweaks extends Tweak
         TRASH_ITEMS.add("ZOMBIE_SOLDIER_CUTLASS");
         TRASH_ITEMS.add("ZOMBIE_SOLDIER_HELMET");
         TRASH_ITEMS.add("ZOMBIE_SOLDIER_LEGGINGS");
+        FRAGS_AND_NAMES.put("GIANT_FRAGMENT_DIAMOND", "Diamante's Handle");
+        FRAGS_AND_NAMES.put("GIANT_FRAGMENT_LASER", "L.A.S.R.'s Eye");
+        FRAGS_AND_NAMES.put("GIANT_FRAGMENT_BIGFOOT", "Bigfoot's Lasso");
+        FRAGS_AND_NAMES.put("GIANT_FRAGMENT_BOULDER", "Jolly Pink Rock");
         DUNGEON_FLOOR_HEADS.add("GOLD_BONZO_HEAD");
         DUNGEON_FLOOR_HEADS.add("GOLD_SCARF_HEAD");
         DUNGEON_FLOOR_HEADS.add("GOLD_PROFESSOR_HEAD");
@@ -331,13 +328,12 @@ public class DungeonTweaks extends Tweak
             }
         }
 
-        if (getTicks() % 5 == 3)
+        if (getTicks() % 2 == 1)
         {
             if (c.displayTargetMobNameTag)
             {
-                int maxHurtCount = 0;
-
                 Entity targetMob = null;
+                float nearestDistance = Float.MAX_VALUE;
                 hitDisplayTargetNameTag = null;
 
                 for (Map.Entry<Entity, ConcurrentLinkedQueue<Integer>> entry : entityHurtTimes.entrySet())
@@ -353,12 +349,13 @@ public class DungeonTweaks extends Tweak
                         removeWhile(queue, ele -> getTicks() - ele > 20 * 3);
 
                         int size = queue.size();
+                        float dis = entry.getKey().getDistanceToEntity(getPlayer());
 
                         if (size == 0)
                             entityHurtTimes.remove(entity);
-                        else if (size > maxHurtCount)
+                        else if (dis < nearestDistance)
                         {
-                            maxHurtCount = size;
+                            nearestDistance = dis;
                             targetMob = entity;
                         }
                     }
@@ -366,9 +363,9 @@ public class DungeonTweaks extends Tweak
 
                 if (targetMob != null)
                 {
-                    AxisAlignedBB aabb = targetMob.getEntityBoundingBox().addCoord(0.0, 4.0, 0.0);
+                    AxisAlignedBB aabb = targetMob.getEntityBoundingBox().addCoord(0.5, 4.0, 0.5);
                     List<Entity> entities = getWorld().getEntitiesWithinAABB(EntityArmorStand.class, aabb, e -> true);
-                    float nearestDistance = 100.0f;
+                    nearestDistance = Float.MAX_VALUE;
                     for (Entity e : entities)
                     {
                         String name = e.getName();

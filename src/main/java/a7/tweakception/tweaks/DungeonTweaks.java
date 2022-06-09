@@ -93,7 +93,7 @@ public class DungeonTweaks extends Tweak
         public int shootingSpeedTrackingSampleSecs = 2;
         public int shootingSpeedTrackingRange = 4;
         public boolean displayTargetMobNameTag = false;
-        public boolean trackBonzoMaskUsage = true;
+        public boolean trackMaskUsage = true;
         public boolean blockOpheliaShopClicks = true;
         public boolean partyFinderDisplayQuickPlayerInfo = false;
         public boolean partyFinderQuickPlayerInfoShowSecretPerExp = false;
@@ -116,6 +116,8 @@ public class DungeonTweaks extends Tweak
             "gold", "diamond", "ice", "crimson"));
     private static final Map<String, String> FRAGS_AND_NAMES = new HashMap<>();
     private static final Set<String> DUNGEON_FLOOR_HEADS = new HashSet<>();
+    private static final Set<String> MASKS = new HashSet<>(Arrays.asList("BONZO_MASK",
+            "STARRED_BONZO_MASK", "SPIRIT_MASK"));
 
     private static boolean isDamageFormattingExceptionNotified = false;
     private static boolean isGetFieldExceptionNotified = false;
@@ -164,21 +166,11 @@ public class DungeonTweaks extends Tweak
     private final Queue<Integer> arrowSpawnTimes = new ArrayDeque<>();
     private final ConcurrentMap<Entity, ConcurrentLinkedQueue<Integer>> entityHurtTimes = new ConcurrentHashMap<>();
     private Entity hitDisplayTargetNameTag = null;
-    private final ConcurrentLinkedQueue<BonzoMaskUsage> usedBonzoMasks = new ConcurrentLinkedQueue<>();
-    private final Matcher bonzoMaskCooldownMatcher = Pattern.compile("^§8Cooldown: §a(\\d+)s").matcher("");
+    private final Map<String, MaskUsage> maskUsages = new ConcurrentHashMap<>();
+    private final Matcher maskCooldownMatcher = Pattern.compile("^§8Cooldown: §a(\\d+)s").matcher("");
     private final Matcher dungeonItemStatMatcher = Pattern.compile(" §8\\(([-+])?(\\d+(?:,\\d+)*(?:\\.\\d+)?)(%?)\\)(.*)").matcher("");
     private final Map<String, DungeonStats> uuidToDungeonStatsMap = new HashMap<>();
     private final Matcher partyFinderPlayerMatcher = Pattern.compile("^§5§o (?:§[\\da-f])?([\\w\\d]+)§f: §e(\\w+)§b \\(§e(\\d{1,2})§b\\)").matcher("");
-    private static class BonzoMaskUsage
-    {
-        public final String uuid;
-        public final int useTicks;
-        public final int cooldownSecs;
-        public BonzoMaskUsage(String uuid) { this.uuid = uuid; useTicks = 0; cooldownSecs = 0; }
-        public BonzoMaskUsage(String uuid, int ticks, int cd) { this.uuid = uuid; useTicks = ticks; cooldownSecs = cd; }
-        @Override public boolean equals(Object o) { return o instanceof BonzoMaskUsage && ((BonzoMaskUsage)o).uuid.equals(this.uuid); }
-        @Override public int hashCode() { return uuid.hashCode(); }
-    }
     private static class DungeonStats
     {
         public float cata = 0.0f;
@@ -192,6 +184,12 @@ public class DungeonTweaks extends Tweak
         public DungeonStats(float c, float ce, float spr, long ts, int wb, int t, boolean ad)
         { cata = c; cataExp = ce; secretPerRun = spr; totalSecret = ts; wBlade = wb; term = t; apiDiabled = ad; }
         public static final DungeonStats NOT_AVAILABLE = new DungeonStats();
+    }
+    private static class MaskUsage
+    {
+        public int useTicks = 0;
+        public int cooldownTicks = 0;
+        public MaskUsage(int u, int c) { useTicks = u; cooldownTicks = c; }
     }
 
     public DungeonTweaks(Configuration configuration)
@@ -557,13 +555,18 @@ public class DungeonTweaks extends Tweak
                 ele -> getTicks() - ele > 20 * c.shootingSpeedTrackingSampleSecs);
         }
 
-        if (c.trackBonzoMaskUsage && getCurrentIsland() == SkyblockIsland.DUNGEON)
+        if (c.trackMaskUsage && getCurrentIsland() == SkyblockIsland.DUNGEON)
         {
-            if (!usedBonzoMasks.isEmpty())
+            for (Map.Entry<String, MaskUsage> ele : maskUsages.entrySet())
             {
-                removeWhile(usedBonzoMasks,
-                    ele -> getTicks() - ele.useTicks > (ele.cooldownSecs + 1) * 20,
-                    ele -> sendChat("DT-TrackBonzoMaskUsage: §aone of your bonzo masks is now available!"));
+                MaskUsage usage = ele.getValue();
+
+                if (getTicks() - usage.useTicks > usage.cooldownTicks + 20)
+                {
+                    sendChatf("DT-TrackMaskUsage: §ayour §e%s §ais now available!",
+                            String.join(" ", ele.getKey().toLowerCase().split("_")));
+                    maskUsages.remove(ele.getKey());
+                }
             }
         }
     }
@@ -930,15 +933,14 @@ public class DungeonTweaks extends Tweak
                     fragSetBloodRush();
             }
         }
-        else if (getCurrentIsland() == SkyblockIsland.DUNGEON && msg.contains(" Bonzo's Mask saved your life!"))
+        else if (getCurrentIsland() == SkyblockIsland.DUNGEON && msg.startsWith("Your ") && msg.endsWith(" saved your life!"))
         {
             ItemStack head = getPlayer().getCurrentArmor(3);
             if (head != null)
             {
                 String id = getSkyblockItemId(head);
-                String uuid = getSkyblockItemUuid(head);
-                if (id != null && (id.equals("BONZO_MASK") || id.equals("STARRED_BONZO_MASK")) &&
-                    uuid != null && !usedBonzoMasks.contains(new BonzoMaskUsage(uuid)))
+//                String uuid = getSkyblockItemUuid(head);
+                if (id != null && MASKS.contains(id))
                 {
                     String[] lore = getDisplayLore(head);
                     if (lore != null)
@@ -946,14 +948,23 @@ public class DungeonTweaks extends Tweak
                         int cooldown = 360;
                         for (int i = lore.length - 1; i >= 0; i--)
                         {
-                            if (bonzoMaskCooldownMatcher.reset(lore[i]).matches())
+                            if (maskCooldownMatcher.reset(lore[i]).matches())
                             {
-                                cooldown = Integer.parseInt(bonzoMaskCooldownMatcher.group(1));
+                                cooldown = Integer.parseInt(maskCooldownMatcher.group(1));
                                 break;
                             }
                         }
-                        usedBonzoMasks.offer(new BonzoMaskUsage(uuid, getTicks(), cooldown));
+                        MaskUsage usage = new MaskUsage(getTicks(), cooldown * 20);
+                        maskUsages.put(id, usage);
                     }
+                    else
+                    {
+                        sendChat("DT-TrackMaskUsage: cannot retrieve the lore of your mask, this will not be tracked!");
+                    }
+                }
+                else
+                {
+                    sendChat("DT-TrackMaskUsage: cannot retrieve the id of your mask (or not registered), this will not be tracked!");
                 }
             }
         }
@@ -1114,8 +1125,8 @@ public class DungeonTweaks extends Tweak
             shadowAssassins.clear();
         if (c.displayTargetMobNameTag)
             entityHurtTimes.clear();
-        if (c.trackBonzoMaskUsage)
-            usedBonzoMasks.clear();
+        if (c.trackMaskUsage)
+            maskUsages.clear();
         if (fragRunTracking)
             fragGotten = false;
     }
@@ -1124,14 +1135,14 @@ public class DungeonTweaks extends Tweak
     {
     }
 
-    public boolean isTrackingBonzoMaskUsage()
+    public boolean isTrackingMaskUsage()
     {
-        return c.trackBonzoMaskUsage;
+        return c.trackMaskUsage;
     }
 
-    public boolean isBonzoMaskUsed(String uuid)
+    public boolean isMaskUsed(String uuid)
     {
-        return usedBonzoMasks.contains(new BonzoMaskUsage(uuid));
+        return maskUsages.containsKey(uuid);
     }
 
     public boolean isBlockingOpheliaShopClicks()
@@ -1679,10 +1690,10 @@ public class DungeonTweaks extends Tweak
         sendChat("DT-DisplayMobNameTag: toggled " + c.displayTargetMobNameTag);
     }
 
-    public void toggleTrackbonzoMaskUsage()
+    public void toggleTrackMaskUsage()
     {
-        c.trackBonzoMaskUsage = !c.trackBonzoMaskUsage;
-        sendChat("DT-TrackbonzoMaskUsage: toggled " + c.trackBonzoMaskUsage);
+        c.trackMaskUsage = !c.trackMaskUsage;
+        sendChat("DT-TrackMaskUsage: toggled " + c.trackMaskUsage);
     }
 
     public void toggleBlockOpheliaShopClicks()

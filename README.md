@@ -65,9 +65,9 @@ Equipment:[
 - dungeon trackshootingspeed setspawnrange `[int blocks]`
 - dungeon displaymobnametag
   - **Displays the name of the armorstand closest to the mob that took the most hits in last 3 seconds**
-- dungeon trackbonzomask
-  - **Shows a X under the used bonzo masks in inventory,**
-  - **also sends a reminder when it becomes aviliable**
+- dungeon trackmask
+  - **Shows a X under the used masks in inventory,**
+  - **also sends a reminder when it becomes available**
 - dungeon blockopheliaclicks
 - dungeon partyfinder quickplayerinfo
   - **Displays quick cata/secret/item info of every player in party tooltip**

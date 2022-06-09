@@ -3,9 +3,7 @@ package a7.tweakception.mixin;
 import a7.tweakception.Tweakception;
 import a7.tweakception.tweaks.SkyblockIsland;
 import a7.tweakception.utils.McUtils;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
-import net.minecraft.client.audio.PositionedSound;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.audio.SoundCategory;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -36,15 +34,13 @@ public abstract class MixinGuiContainer extends GuiScreen
     @Inject(method = "drawSlot", at = @At("TAIL"))
     public void slotDrawn(Slot slot, CallbackInfo ci)
     {
-        if (Tweakception.dungeonTweaks.isTrackingBonzoMaskUsage() &&
+        if (Tweakception.dungeonTweaks.isTrackingMaskUsage() &&
             getCurrentIsland() == SkyblockIsland.DUNGEON &&
             slot.getStack() != null)
         {
             ItemStack stack = slot.getStack();
             String id = getSkyblockItemId(stack);
-            String uuid = getSkyblockItemUuid(stack);
-            if (id != null && (id.equals("BONZO_MASK") || id.equals("STARRED_BONZO_MASK") && uuid != null &&
-                Tweakception.dungeonTweaks.isBonzoMaskUsed(uuid)))
+            if (id != null && Tweakception.dungeonTweaks.isMaskUsed(id))
             {
                 GlStateManager.pushMatrix();
                 GlStateManager.translate(0, 0, itemRender.zLevel + 200);

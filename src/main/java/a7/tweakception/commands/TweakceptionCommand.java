@@ -5,9 +5,6 @@ import a7.tweakception.tweaks.GlobalTracker;
 import a7.tweakception.utils.DumpUtils;
 import a7.tweakception.utils.McUtils;
 import net.minecraft.block.Block;
-import net.minecraft.client.audio.ISound;
-import net.minecraft.client.audio.PositionedSoundRecord;
-import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.BlockPos;
@@ -96,8 +93,8 @@ public class TweakceptionCommand extends CommandBase
                                     args.length >= 1 ? Integer.parseInt(args[0]) : 0))),
             new Command("displaymobnametag",
                 args -> Tweakception.dungeonTweaks.toggleDisplayMobNameTag()),
-            new Command("trackbonzomask",
-                args -> Tweakception.dungeonTweaks.toggleTrackbonzoMaskUsage()),
+            new Command("trackmask",
+                args -> Tweakception.dungeonTweaks.toggleTrackMaskUsage()),
             new Command("blockopheliaclicks",
                 args -> Tweakception.dungeonTweaks.toggleBlockOpheliaShopClicks()),
             new Command("partyfinder",

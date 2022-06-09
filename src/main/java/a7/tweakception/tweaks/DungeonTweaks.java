@@ -192,10 +192,8 @@ public class DungeonTweaks extends Tweak
         public MaskUsage(int u, int c) { useTicks = u; cooldownTicks = c; }
     }
 
-    public DungeonTweaks(Configuration configuration)
+    static
     {
-        super(configuration);
-        c = configuration.config.dungeonTweaks;
         LIVID_PREFIX_TO_COLOR_MAP.put("Arcade", "§e");
         LIVID_PREFIX_TO_COLOR_MAP.put("Crossed", "§d");
         LIVID_PREFIX_TO_COLOR_MAP.put("Doctor", "§7");
@@ -292,6 +290,12 @@ public class DungeonTweaks extends Tweak
         DUNGEON_FLOOR_HEADS.add("DIAMOND_LIVID_HEAD");
         DUNGEON_FLOOR_HEADS.add("DIAMOND_SADAN_HEAD");
         DUNGEON_FLOOR_HEADS.add("DIAMOND_NECRON_HEAD");
+    }
+
+    public DungeonTweaks(Configuration configuration)
+    {
+        super(configuration);
+        c = configuration.config.dungeonTweaks;
     }
 
     public void onTick(TickEvent.ClientTickEvent event)

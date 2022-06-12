@@ -88,13 +88,15 @@ public class MiningTweaks extends Tweak
                     else
                     {
                         int elapsed = getTicks() - chest.spawnTicks;
-                        if (elapsed >= 20 * 45)
+                        if (elapsed >= 20 * 50)
                         {
-                            if (elapsed % 10 >= 5)
+                            if (elapsed % 10 < 5)
                                 color = CHEST_COLOR_WARNING;
                             else
                                 continue;
                         }
+                        else if (elapsed >= 20 * 30)
+                            color = CHEST_COLOR_WARNING;
                         else
                             color = CHEST_COLOR_CLOSED;
                     }

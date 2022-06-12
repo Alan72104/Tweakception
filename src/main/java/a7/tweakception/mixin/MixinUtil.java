@@ -11,7 +11,7 @@ import java.util.concurrent.FutureTask;
 public class MixinUtil
 {
     /**
-     * To get rid of the stupid try catch printStacktrace
+     * @reason To get rid of the stupid try catch printStacktrace
      * @author Alan72104
      */
     @Overwrite

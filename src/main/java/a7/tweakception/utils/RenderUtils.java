@@ -6,34 +6,91 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.item.EntityArmorStand;
-import net.minecraft.entity.passive.EntityBat;
 import net.minecraft.util.*;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
 
 import java.awt.*;
 
-import static java.awt.Color.RGBtoHSB;
+import static a7.tweakception.utils.McUtils.getMc;
 
 public class RenderUtils
 {
-    private static long startTime = -1;
-    private static final int RADIX = 10;
-    private static final int MIN_CHROMA_SECS = 1;
-    private static final int MAX_CHROMA_SECS = 60;
+    public static final Color DEFAULT_HIGHLIGHT_COLOR = new Color(0, 255, 0, 85);
+    private static final ResourceLocation beaconBeam = new ResourceLocation("textures/entity/beacon_beam.png");
 
+    public static AxisAlignedBB getAABBFromType(int type)
+    {
+        AxisAlignedBB bb;
+        switch (type)
+        {
+            case -1: // Armor stand
+                bb = new AxisAlignedBB(0.0, 0.0, 0.0, 0.5, 1.975, 0.5);
+                break;
+            default:
+            case 0: // Zombie
+                bb = new AxisAlignedBB(0.0, 0.0, 0.0, 0.6, 1.95, 0.6);
+                break;
+            case 1: // Spider
+                bb = new AxisAlignedBB(0.0, 0.0, 0.0, 1.4, 0.9, 1.4);
+                break;
+            case 2: // Wolf
+                bb = new AxisAlignedBB(0.0, 0.0, 0.0, 0.6, 0.85, 0.6);
+                break;
+            case 3: // Enderman
+                bb = new AxisAlignedBB(0.0, 0.0, 0.0, 0.6, 2.9, 0.6);
+                break;
+            case 4: // Blaze
+                bb = new AxisAlignedBB(0.0, 0.0, 0.0, 1.8, 0.6, 1.8);
+                break;
+            case 5: // Bat
+                bb = new AxisAlignedBB(0.0, 0.0, 0.0, 0.5, 0.9, 0.5);
+                break;
+            case 6: // Pig
+                bb = new AxisAlignedBB(0.0, 0.0, 0.0, 0.9, 0.9, 0.9);
+                break;
+            case 7: // Player
+                bb = new AxisAlignedBB(0.0, 0.0, 0.0, 0.6, 1.8, 0.6);
+                break;
+        }
+        return bb;
+    }
+
+    public static void drawDefaultHighlightBoxUnderEntity(Entity entity, int type, Color c, boolean depth)
+    {
+        AxisAlignedBB bb = getAABBFromType(type);
+//        bb.offset(-(bb.maxX / 2.0), -bb.maxY, -(bb.maxZ / 2.0));
+        double defaultYOffset = 0.19375;
+        bb = bb.offset(-(bb.maxX - entity.width) / 2.0, -bb.maxY - defaultYOffset, -(bb.maxZ - entity.height) / 2.0);
+        drawHighlightBox(entity, bb, c, getMc().timer.renderPartialTicks, depth);
+    }
+
+    public static void drawDefaultHighlightBox(Entity entity, int type, Color c, boolean depth)
+    {
+        AxisAlignedBB bb = getAABBFromType(type);
+        bb = bb.offset(-bb.maxX / 2.0, 0.0, -bb.maxZ / 2.0);
+        drawHighlightBox(entity, bb, c, getMc().timer.renderPartialTicks, depth);
+    }
+
+    public static void drawDefaultHighlightBoxForEntity(Entity entity, Color c, boolean depth)
+    {
+        AxisAlignedBB bb = new AxisAlignedBB(0.0, 0.0, 0.0, entity.width, entity.height, entity.width);
+        bb = bb.offset(-bb.maxX / 2.0, 0.0, -bb.maxZ / 2.0);
+        drawHighlightBox(entity, bb, c, getMc().timer.renderPartialTicks, depth);
+    }
+
+    // Draws a box relative to the entity, origin is the entity's center
     public static void drawHighlightBox(Entity entity, AxisAlignedBB axisAlignedBB, Color c, float partialTicks, boolean depth)
     {
-        Entity viewing_from = Minecraft.getMinecraft().getRenderViewEntity();
+        Entity viewEntity = Minecraft.getMinecraft().getRenderViewEntity();
 
-        double x_fix = viewing_from.lastTickPosX + ((viewing_from.posX - viewing_from.lastTickPosX) * partialTicks);
-        double y_fix = viewing_from.lastTickPosY + ((viewing_from.posY - viewing_from.lastTickPosY) * partialTicks);
-        double z_fix = viewing_from.lastTickPosZ + ((viewing_from.posZ - viewing_from.lastTickPosZ) * partialTicks);
+        double viewX = viewEntity.lastTickPosX + ((viewEntity.posX - viewEntity.lastTickPosX) * partialTicks);
+        double viewY = viewEntity.lastTickPosY + ((viewEntity.posY - viewEntity.lastTickPosY) * partialTicks);
+        double viewZ = viewEntity.lastTickPosZ + ((viewEntity.posZ - viewEntity.lastTickPosZ) * partialTicks);
 
         GlStateManager.pushMatrix();
 
-        GlStateManager.translate(-x_fix, -y_fix, -z_fix);
+        GlStateManager.translate(-viewX, -viewY, -viewZ);
 
         GlStateManager.disableLighting();
         GlStateManager.enableBlend();
@@ -45,15 +102,6 @@ public class RenderUtils
             GlStateManager.depthMask(false);
         }
         GlStateManager.color(c.getRed() / 255.0f, c.getGreen() / 255.0f, c.getBlue() / 255.0f, c.getAlpha() / 255.0f);
-        if (axisAlignedBB == null) {
-            if (entity instanceof EntityArmorStand) {
-                axisAlignedBB = AxisAlignedBB.fromBounds(-0.4, -1.5, -0.4, 0.4, 0, 0.4);
-            } else if (entity instanceof EntityBat) {
-                axisAlignedBB = AxisAlignedBB.fromBounds(-0.4, -1.4, -0.4, 0.4, 0.4, 0.4);
-            } else {
-                axisAlignedBB = AxisAlignedBB.fromBounds(-0.4, -1.5, -0.4, 0.4, 0, 0.4);
-            }
-        }
 
         Vec3 renderPos = new Vec3(
                 (float) (entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * partialTicks),
@@ -295,7 +343,14 @@ public class RenderUtils
             RenderUtils.renderBoundingBoxBlockSize(x, y, z, c);
     }
 
-    private static final ResourceLocation beaconBeam = new ResourceLocation("textures/entity/beacon_beam.png");
+    public static void drawBeaconBeamAtEntity(Entity entity, Color c)
+    {
+        Vector3d viewer = getInterpolatedViewingPos(getMc().timer.renderPartialTicks);
+        double x = entity.posX - viewer.x - 0.5;
+        double y = entity.posY - viewer.y - 0.5;
+        double z = entity.posZ - viewer.z - 0.5;
+        RenderUtils.renderBeaconBeam(x, y, z, c, getMc().timer.renderPartialTicks, true);
+    }
 
     private static void renderBeaconBeam(
             double x, double y, double z, Color c,
@@ -387,56 +442,6 @@ public class RenderUtils
         if (disableDepth) {
             GlStateManager.enableDepth();
         }
-    }
-
-    public static String getSpecialColor(int chromaSpeed, int alpha, int rgb) {
-        return getSpecialColor(chromaSpeed, alpha, (rgb & 0xFF0000) >> 16, (rgb & 0x00FF00) >> 8, (rgb & 0x0000FF));
-    }
-
-    public static String getSpecialColor(int chromaSpeed, int alpha, int r, int g, int b) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(Integer.toString(chromaSpeed, RADIX)).append(":");
-        sb.append(Integer.toString(alpha, RADIX)).append(":");
-        sb.append(Integer.toString(r, RADIX)).append(":");
-        sb.append(Integer.toString(g, RADIX)).append(":");
-        sb.append(Integer.toString(b, RADIX));
-        return sb.toString();
-    }
-    public static int specialToChromaRGB(String special) {
-        if (startTime < 0) startTime = System.currentTimeMillis();
-
-        int[] d = decompose(special);
-        int chr = d[4];
-        int a = d[3];
-        int r = d[2];
-        int g = d[1];
-        int b = d[0];
-
-        float[] hsv = RGBtoHSB(r, g, b, null);
-
-        if (chr > 0) {
-            float seconds = getSecondsForSpeed(chr);
-            hsv[0] += (System.currentTimeMillis() - startTime) / 1000f / seconds;
-            hsv[0] %= 1;
-            if (hsv[0] < 0) hsv[0] += 1;
-        }
-
-        return (a & 0xFF) << 24 | (Color.HSBtoRGB(hsv[0], hsv[1], hsv[2]) & 0x00FFFFFF);
-    }
-
-    public static float getSecondsForSpeed(int speed) {
-        return (255 - speed) / 254f * (MAX_CHROMA_SECS - MIN_CHROMA_SECS) + MIN_CHROMA_SECS;
-    }
-
-    private static int[] decompose(String csv) {
-        String[] split = csv.split(":");
-
-        int[] arr = new int[split.length];
-
-        for (int i = 0; i < split.length; i++) {
-            arr[i] = Integer.parseInt(split[split.length - 1 - i], RADIX);
-        }
-        return arr;
     }
 
     public static class Vector3d

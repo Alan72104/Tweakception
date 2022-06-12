@@ -3,6 +3,9 @@ package a7.tweakception.utils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.item.EntityArmorStand;
+import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -96,6 +99,32 @@ public class McUtils
             }
         }
         return null;
+    }
+
+    public static String getArmorStandHeadTexture(EntityArmorStand armorStand)
+    {
+        ItemStack head = armorStand.getCurrentArmor(3);
+
+        if (head == null)
+            return null;
+        if (head.getItem() != Items.skull)
+            return null;
+
+        NBTTagCompound tag = head.getTagCompound();
+        if (tag == null)
+            return null;
+        if (!tag.hasKey("SkullOwner"))
+            return null;
+        tag = tag.getCompoundTag("SkullOwner");
+        if (!tag.hasKey("Properties"))
+            return null;
+        tag = tag.getCompoundTag("Properties");
+        if (!tag.hasKey("textures"))
+            return null;
+        NBTTagList list = tag.getTagList("textures", Constants.NBT.TAG_COMPOUND);
+        if (list.tagCount() == 0)
+            return null;
+        return list.getCompoundTagAt(0).getString("Value");
     }
 
     public static String cleanColor(String s)

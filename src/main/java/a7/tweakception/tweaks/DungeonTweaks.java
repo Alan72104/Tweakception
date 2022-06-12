@@ -11,11 +11,16 @@ import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.gui.inventory.GuiChest;
+import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.monster.EntityEnderman;
+import net.minecraft.entity.monster.EntitySkeleton;
+import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.passive.EntityBat;
+import net.minecraft.entity.passive.EntityPig;
 import net.minecraft.entity.projectile.EntityArrow;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.ContainerChest;
@@ -29,7 +34,6 @@ import net.minecraft.network.play.server.S0DPacketCollectItem;
 import net.minecraft.network.play.server.S19PacketEntityStatus;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.EnumChatFormatting;
-import net.minecraft.util.Timer;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
@@ -73,6 +77,7 @@ public class DungeonTweaks extends Tweak
         public boolean highlightBats = true;
         public boolean highlightSpiritBear = true;
         public boolean highlightShadowAssassins = true;
+        public boolean highlightDoorKeys = true;
         public Set<String> blockRightClickItemNames = new HashSet<>();
         public boolean trackDamageTags = false;
         public int damageTagTrackingCount = 10;
@@ -130,7 +135,9 @@ public class DungeonTweaks extends Tweak
     private final List<Entity> bats = new LinkedList<>();
     private final List<Entity> shadowAssassins = new LinkedList<>();
     private final LinkedList<Pair<Integer, String>> damageTags = new LinkedList<>();
-    private final LinkedList<Pair<Integer, Entity>> damageTagsTemp = new LinkedList<>();
+    private final LinkedList<Pair<Integer, Entity>> armorStandsTemp = new LinkedList<>();
+    private final Set<Entity> starredMobs = new HashSet<>();
+    private Entity spiritBear = null;
     private final Matcher anyDamageTagMatcher = Pattern.compile("^§.✧?(?:(?:§.)?\\d)+.*").matcher("");
     private final Matcher critTagMatcher = Pattern.compile("^§f✧((?:§.\\d)+)§.✧(.*)").matcher(""); // §f✧§a6§b7§c8§a✧§d♥
     private final Matcher nonCritTagMatcher = Pattern.compile("^§7(\\d+)(.*)").matcher(""); // §712345
@@ -386,59 +393,99 @@ public class DungeonTweaks extends Tweak
         bats.removeIf(e -> e.isDead);
         shadowAssassins.removeIf(e -> e.isDead);
 
-        if (c.trackDamageTags)
+        if (c.highlightStarredMobs || c.trackDamageTags)
         {
-            removeWhile(damageTagsTemp, ele -> getTicks() - ele.a >= 5,
+            removeWhile(damageTags, ele -> getTicks() - ele.a > c.damageTagHistoryTimeoutTicks);
+            starredMobs.removeIf(ele -> ele.isDead);
+
+            removeWhile(armorStandsTemp, ele -> getTicks() - ele.a >= 5,
                 ele ->
                 {
-                    String s = ele.b.getName();
-                    try
+                    Entity stand = ele.b;
+                    String name = stand.getName();
+
+                    if (name.endsWith("§c❤"))
                     {
-                        if (s.startsWith("§f✧") && critTagMatcher.reset(s).matches())
+                        if (c.highlightStarredMobs)
                         {
-                            int num = Integer.parseInt(cleanColor(critTagMatcher.group(1)));
-                            s = Utils.formatCommas(num);
-                            StringBuilder sb = new StringBuilder(35);
-                            sb.append("§f✧");
-                            int i = 0;
-                            for (char c : s.toCharArray())
+                            boolean isStarred = name.contains("✯");
+                            if (isStarred)
                             {
-                                if (c == ',')
-                                    sb.append(EnumChatFormatting.GRAY);
-                                else
-                                    sb.append(KOOL_COLORS[i++ % KOOL_COLORS.length]);
-                                sb.append(c);
+                                Entity nearest = null;
+                                double nearestDis = Float.MAX_VALUE;
+                                List<Entity> nearEntities = getWorld().getEntitiesWithinAABBExcludingEntity(stand,
+                                        stand.getEntityBoundingBox().expand(0.5, 2.5, 0.5));
+                                for (Entity e : nearEntities)
+                                {
+                                    double dis = e.getDistanceSqToEntity(stand);
+                                    if (dis < nearestDis &&
+                                        (e instanceof EntityOtherPlayerMP ||
+                                        e instanceof EntitySkeleton ||
+                                        e instanceof EntityZombie ||
+                                        e instanceof EntityEnderman))
+                                    {
+                                        nearestDis = dis;
+                                        nearest = e;
+                                    }
+                                }
+                                if (nearest != null)
+                                {
+                                    starredMobs.add(nearest);
+                                    return;
+                                }
                             }
-                            sb.append("§f✧");
-                            sb.append(critTagMatcher.group(2));
-                            addDamageInfo(ele.a, sb.toString());
                         }
-                        else if (c.trackWitherDamageTags && witherTagMatcher.reset(s).matches())
-                        {
-                            int num = Integer.parseInt(cleanColor(witherTagMatcher.group(1)));
-                            s = "§0" + Utils.formatCommas(num);
-                            addDamageInfo(ele.a, s);
-                        }
-                        else if (c.trackNonCritDamageTags && nonCritTagMatcher.reset(s).matches())
-                        {
-                            int num = Integer.parseInt(cleanColor(nonCritTagMatcher.group(1)));
-                            s = "§7" + Utils.formatCommas(num) + nonCritTagMatcher.group(2);
-                            addDamageInfo(ele.a, s);
-                        }
+                        return;
                     }
-                    catch (Exception e)
+
+                    if (c.trackDamageTags)
                     {
-                        if (!isDamageFormattingExceptionNotified)
+                        try
                         {
-                            isDamageFormattingExceptionNotified = true;
-                            sendChat("DT-TrackDamageTags: formatting failed");
-                            sendChat(e.toString());
-                            e.printStackTrace();
+                            if (name.startsWith("§f✧") && critTagMatcher.reset(name).matches())
+                            {
+                                int num = Integer.parseInt(cleanColor(critTagMatcher.group(1)));
+                                name = Utils.formatCommas(num);
+                                StringBuilder sb = new StringBuilder(35);
+                                sb.append("§f✧");
+                                int i = 0;
+                                for (char c : name.toCharArray())
+                                {
+                                    if (c == ',')
+                                        sb.append(EnumChatFormatting.GRAY);
+                                    else
+                                        sb.append(KOOL_COLORS[i++ % KOOL_COLORS.length]);
+                                    sb.append(c);
+                                }
+                                sb.append("§f✧");
+                                sb.append(critTagMatcher.group(2));
+                                addDamageInfo(ele.a, sb.toString());
+                            }
+                            else if (c.trackWitherDamageTags && witherTagMatcher.reset(name).matches())
+                            {
+                                int num = Integer.parseInt(cleanColor(witherTagMatcher.group(1)));
+                                name = "§0" + Utils.formatCommas(num);
+                                addDamageInfo(ele.a, name);
+                            }
+                            else if (c.trackNonCritDamageTags && nonCritTagMatcher.reset(name).matches())
+                            {
+                                int num = Integer.parseInt(cleanColor(nonCritTagMatcher.group(1)));
+                                name = "§7" + Utils.formatCommas(num) + nonCritTagMatcher.group(2);
+                                addDamageInfo(ele.a, name);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            if (!isDamageFormattingExceptionNotified)
+                            {
+                                isDamageFormattingExceptionNotified = true;
+                                sendChat("DT-TrackDamageTags: formatting failed");
+                                sendChat(e.toString());
+                                e.printStackTrace();
+                            }
                         }
                     }
                 });
-
-            removeWhile(damageTags, ele -> getTicks() - ele.a > c.damageTagHistoryTimeoutTicks);
         }
 
         if (getMc().currentScreen instanceof GuiChest)
@@ -606,26 +653,22 @@ public class DungeonTweaks extends Tweak
         if (getCurrentIsland() != SkyblockIsland.DUNGEON) return;
 
         if (isInF5Bossfight && lividFound)
-            RenderUtils.drawHighlightBox(realLivid, AxisAlignedBB.fromBounds(-0.4, 0, -0.4, 0.4, 1.8, 0.4),
-                    new Color(0, 255, 0, 192), event.partialTicks, false);
+            RenderUtils.drawDefaultHighlightBoxForEntity(realLivid, new Color(0, 255, 0, 192), false);
 
         if (c.highlightBats)
-        {
             for (Entity bat : bats)
-            {
-                RenderUtils.drawHighlightBox(bat, AxisAlignedBB.fromBounds(-0.3, -0.5, -0.3, 0.3, 0.5, 0.3),
-                        new Color(255, 76, 76, 85), event.partialTicks, false);
-            }
-        }
+                RenderUtils.drawDefaultHighlightBoxForEntity(bat, new Color(255, 76, 76, 85), false);
 
         if (c.highlightShadowAssassins)
-        {
             for (Entity sa : shadowAssassins)
-            {
-                RenderUtils.drawHighlightBox(sa, AxisAlignedBB.fromBounds(-0.4, 0, -0.4, 0.4, 1.8, 0.4),
-                        new Color(255, 76, 76, 85), event.partialTicks, false);
-            }
-        }
+                RenderUtils.drawDefaultHighlightBoxForEntity(sa, new Color(255, 76, 76, 85), false);
+
+        if (c.highlightSpiritBear && spiritBear != null)
+            RenderUtils.drawDefaultHighlightBox(spiritBear, 7, new Color(0, 255, 0, 192), false);
+
+        if (c.highlightStarredMobs)
+            for (Entity e : starredMobs)
+                RenderUtils.drawDefaultHighlightBoxForEntity(e, RenderUtils.DEFAULT_HIGHLIGHT_COLOR, false);
     }
 
     public void onRenderGameOverlayPost(RenderGameOverlayEvent.Post event)
@@ -713,6 +756,26 @@ public class DungeonTweaks extends Tweak
         }
     }
 
+    public void onLivingRenderPost(RenderLivingEvent.Post event)
+    {
+        if (c.highlightDoorKeys &&
+            getCurrentIsland() == SkyblockIsland.DUNGEON &&
+            event.entity instanceof EntityArmorStand)
+        {
+            String tex = McUtils.getArmorStandHeadTexture((EntityArmorStand)event.entity);
+            if (tex != null)
+            {
+                String witherKeyTexture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzRkYjRhZGZhOWJmNDhmZjVkNDE3MDdhZTM0ZWE3OGJkMjM3MTY1OWZjZDhjZDg5MzQ3NDlhZjRjY2U5YiJ9fX0=";
+                String bloodKeyTexture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjU2MTU5NWQ5Yzc0NTc3OTZjNzE5ZmFlNDYzYTIyMjcxY2JjMDFjZjEwODA5ZjVhNjRjY2IzZDZhZTdmOGY2In19fQ==";
+
+                if (tex.equals(witherKeyTexture))
+                    RenderUtils.drawBeaconBeamAtEntity(event.entity, new Color(84, 166, 102, 128));
+                else if (tex.equals(bloodKeyTexture))
+                    RenderUtils.drawBeaconBeamAtEntity(event.entity, new Color(84, 166, 102, 128));
+            }
+        }
+    }
+
     public void onLivingSpecialRenderPre(RenderLivingEvent.Specials.Pre event)
     {
         if (event.entity instanceof EntityArmorStand)
@@ -725,48 +788,32 @@ public class DungeonTweaks extends Tweak
                 return;
             }
 
-            if (getCurrentIsland() == SkyblockIsland.DUNGEON &&
-                (c.hideNonStarredMobsName || c.highlightStarredMobs || c.highlightSpiritBear))
+            if (getCurrentIsland() == SkyblockIsland.DUNGEON && c.hideNonStarredMobsName)
             {
                 if (name.endsWith("§c❤"))
                 {
-                    boolean isStarred = name.contains("✯");
-                    boolean isSpiritBear = name.startsWith("§c§d§lSpirit Bear");
-                    boolean isShadowAssassin = name.startsWith("§c§d§lShadow Assassin");
+                    boolean isStarred = name.substring(0, Math.min(name.length(), 5)).contains("✯");
 
-                    if (c.highlightStarredMobs && isStarred || c.highlightSpiritBear && isSpiritBear ||
-                        c.highlightShadowAssassins && isShadowAssassin)
-                        highLightMobFromNametag(event.entity);
-
-                    if (c.hideNonStarredMobsName && !isStarred && !isShadowAssassin)
+                    if (!isStarred)
                         event.setCanceled(true);
                 }
             }
         }
     }
 
-    private void highLightMobFromNametag(EntityLivingBase entity)
-    {
-        try
-        {
-            Timer timer = getMc().timer;
-            RenderUtils.drawHighlightBox(entity, AxisAlignedBB.fromBounds(-0.4, 0.0, -0.4, 0.4, -2.0, 0.4),
-                    new Color(0, 255, 0, 85), timer.renderPartialTicks, false);
-        }
-        catch (Exception e)
-        {
-            if (!isGetFieldExceptionNotified)
-            {
-                isGetFieldExceptionNotified = true;
-                sendChat("DT-HighlightStarredMobs: getField failed");
-                sendChat(e.toString());
-                e.printStackTrace();
-            }
-        }
-    }
-
     public void onEntityJoinWorld(EntityJoinWorldEvent event)
     {
+        if (c.trackDamageTags || c.highlightStarredMobs && getCurrentIsland() == SkyblockIsland.DUNGEON)
+        {
+            // The custom name doesn't come with the first update
+            // So check the name 5 ticks later
+            if (event.entity instanceof EntityArmorStand)
+            {
+                armorStandsTemp.offer(new Pair<>(getTicks(), event.entity));
+                return;
+            }
+        }
+
         if (c.highlightBats && getCurrentIsland() == SkyblockIsland.DUNGEON)
         {
             if (event.entity instanceof EntityBat)
@@ -776,26 +823,20 @@ public class DungeonTweaks extends Tweak
             }
         }
 
-        if (c.trackDamageTags)
+        if (getCurrentIsland() == SkyblockIsland.DUNGEON &&
+            event.entity instanceof EntityOtherPlayerMP)
         {
-            // The custom name doesn't come with the first update
-            // So check the name 5 ticks later
-            if (event.entity instanceof EntityArmorStand)
+            if (c.highlightShadowAssassins &&
+                event.entity.getName().equals("Shadow Assassin"))
             {
-                damageTagsTemp.offer(new Pair<>(getTicks(), event.entity));
+                shadowAssassins.add(event.entity);
                 return;
             }
-        }
-
-        if (c.highlightShadowAssassins)
-        {
-            if (event.entity instanceof EntityOtherPlayerMP)
+            if (c.highlightSpiritBear &&
+                event.entity.getName().equals("Spirit Bear"))
             {
-                if (event.entity.getName().equals("Shadow Assassin"))
-                {
-                    shadowAssassins.add(event.entity);
-                    return;
-                }
+                spiritBear = event.entity;
+                return;
             }
         }
 
@@ -1113,13 +1154,15 @@ public class DungeonTweaks extends Tweak
 
     public void onWorldUnload(WorldEvent.Unload event)
     {
-        if (GlobalTracker.t)
-            sendChat("world unload");
         if (isInF5Bossfight)
         {
             resetLivid();
             isInF5Bossfight = false;
         }
+        if (c.highlightStarredMobs)
+            starredMobs.clear();
+        if (c.highlightSpiritBear)
+            spiritBear = null;
         if (c.highlightBats)
             bats.clear();
         if (c.highlightShadowAssassins)
@@ -1359,6 +1402,12 @@ public class DungeonTweaks extends Tweak
         }
     }
 
+    public void toggleHighlightDoorKeys()
+    {
+        c.highlightDoorKeys = !c.highlightDoorKeys;
+        sendChat("DT-HighlightDoorKeys: toggled " + c.highlightDoorKeys);
+    }
+
     public void blockRightClickSet()
     {
         ItemStack item = getPlayer().inventory.getCurrentItem();
@@ -1400,7 +1449,7 @@ public class DungeonTweaks extends Tweak
         if (c.trackDamageTags)
         {
             damageTags.clear();
-            damageTagsTemp.clear();
+            armorStandsTemp.clear();
         }
     }
 
@@ -1427,7 +1476,7 @@ public class DungeonTweaks extends Tweak
         c.damageTagTrackingCount = count > 0 ? count : new DungeonTweaksConfig().damageTagTrackingCount;
         sendChat("DT-TrackDamageTags: set count to " + c.damageTagTrackingCount);
         damageTags.clear();
-        damageTagsTemp.clear();
+        armorStandsTemp.clear();
     }
 
     public void setDamageTagHistoryTimeoutTicks(int ticks)

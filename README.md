@@ -7,27 +7,17 @@ config path - .minecraft/config/tweakception/config.json
 - Gui editor
 - Dungeon key lightlight (armorstand data below)
 ```
-Equipment:[
-  ...,
-  4:{
-    id:"minecraft:skull",
-    Count:1b,
-    tag:{
-        SkullOwner:{
-            Id:"8ad39a3a-2fc8-44d0-adfc-7824b1e0f802",
-            hypixelPopulated:1b,
-            Properties:{
-                textures:[
-                    0:{
-                        Value:"eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjU2MTU5NWQ5Yzc0NTc3OTZjNzE5ZmFlNDYzYTIyMjcxY2JjMDFjZjEwODA5ZjVhNjRjY2IzZDZhZTdmOGY2In19fQ=="}]}},
-        display:{
-            Name:"BOSS"}},
-    Damage:3s
-  }
-]
+wither key:
+eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzRkYjRhZGZhOWJmNDhmZjVkNDE3MDdhZTM0ZWE3OGJkMjM3MTY1OWZjZDhjZDg5MzQ3NDlhZjRjY2U5YiJ9fX0=
+blood:
+eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjU2MTU5NWQ5Yzc0NTc3OTZjNzE5ZmFlNDYzYTIyMjcxY2JjMDFjZjEwODA5ZjVhNjRjY2IzZDZhZTdmOGY2In19fQ==
 ```
 
 ## Modules/commands
+
+###### *(ins)* - Setting is per instance, does not save to config
+###### *(dev)* - Requires dev mode to use
+
 ### DungeonTweaks
 - dungeon nofog - **Toggles no fog, for blindness**
 - dungeon nofog auto - **Toggles no fog auto toggle on f5 entering/leaving**
@@ -37,6 +27,7 @@ Equipment:[
 - dungeon highlightbats - **(all bats)**
 - dungeon highlightspiritbear
 - dungeon highlightshadowsssassin
+- dungeon highlightdoorkeys - **Shows a beacon beam at where the door key is**
 - dungeon blockrightclick set
   - **Toggles right click block for the current hotbar item, for items like shadow fury**
   - **Note that it only checks the item name**
@@ -85,6 +76,8 @@ Equipment:[
 ### MiningTweaks
 - mining highlightchests - **Toggles all chests highlighting in crystal hollows**
 ### SlayerTweaks
+- slayer autothrowfishingrod *(ins)* - **Automatically throws fishing rod in hotbar when slayer boss hp goes below a threshold percent**
+- slayer autothrowfishingrod setthreshold `[int percent]` - **Defaults to 15%**
 - slayer eman highlightglyph
 ### FairyTracker
 - fairy - **Toggles fairy scanner**
@@ -102,8 +95,10 @@ Equipment:[
 - gt forcesetisland `[string name...]` - **Sets or removes location override**
 - gt copylocation - **Copies raw current location to clipboard**
 - gt usefallbackdetection - **Toggles slightly slower location detection**
-- gt rightctrlcopy nbt *(dev)*
-- gt rightctrlcopy tooltip *(dev)*
+- gt highlightshinypigs
+- gt highlightshinypigs setname - **Example:** `setname [vip] alan72104`
+- gt rightctrlcopy nbt *(dev)* *(ins)*
+- gt rightctrlcopy tooltip *(dev)* *(ins)*
 ### APIManager
 - api set `string key`
 - api clearcaches
@@ -114,7 +109,7 @@ Equipment:[
 - dev - **Toggles dev mode**
   - **Press right ctrl to copy the nbt of current hovered item in a container**
   - **Enables dev commands' usage**
-- tracelook `[double reach]` `[bool adjacent]` `[bool liquid]` 
+- looktrace `[double reach]` `[bool adjacent]` `[bool liquid]` 
   - **Does looktrace for block/entity and dumps data to file**
   - **If result is entity then all hit entities are dumped (sorted by distance)**
   - **Don't click the file link you will dead freeze**

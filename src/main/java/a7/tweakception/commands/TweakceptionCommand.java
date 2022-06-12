@@ -13,6 +13,7 @@ import net.minecraft.util.ResourceLocation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 import static a7.tweakception.utils.McUtils.*;
@@ -41,6 +42,8 @@ public class TweakceptionCommand extends CommandBase
                 args -> Tweakception.dungeonTweaks.toggleHighlightSpiritBear()),
             new Command("highlightshadowsssassin",
                 args -> Tweakception.dungeonTweaks.toggleHighlightShadowAssassin()),
+            new Command("highlightdoorkeys",
+                args -> Tweakception.dungeonTweaks.toggleHighlightDoorKeys()),
             new Command("blockrightclick",
                 null,
                 new Command("set",
@@ -147,11 +150,15 @@ public class TweakceptionCommand extends CommandBase
             new Command("island",
                 args -> Tweakception.globalTracker.printIsland()),
             new Command("forcesetisland",
-                args -> Tweakception.globalTracker.forceSetIsland(args.length >= 1 ? String.join(" ", args) : "")),
+                args -> Tweakception.globalTracker.forceSetIsland(args.length > 0 ? String.join(" ", args) : "")),
             new Command("copylocation",
                 args -> Tweakception.globalTracker.copyLocation()),
             new Command("usefallbackdetection",
                 args -> Tweakception.globalTracker.toggleFallbackDetection()),
+            new Command("highlightshinypigs",
+                args -> Tweakception.globalTracker.toggleHighlightShinyPigs(),
+                new Command("setname",
+                    args -> Tweakception.globalTracker.setHighlightShinyPigsName(args.length > 0 ? String.join(" ", args) : ""))),
             new Command("rightctrlcopy",
                 null,
                 new Command("nbt",
@@ -166,7 +173,7 @@ public class TweakceptionCommand extends CommandBase
             new Command("toggleauto",
                 args -> Tweakception.fairyTracker.toggleAutoTracking()),
             new Command("setdelay",
-                args -> Tweakception.fairyTracker.setDelay(args.length >= 1 ? Integer.parseInt(args[0]) : 0)),
+                args -> Tweakception.fairyTracker.setDelay(args.length > 0 ? Integer.parseInt(args[0]) : 0)),
             new Command("setnotfound",
                 args -> Tweakception.fairyTracker.setNotFound()),
             new Command("count",
@@ -185,7 +192,16 @@ public class TweakceptionCommand extends CommandBase
             new Command("eman",
                 null,
                 new Command("highlightglyph",
-                    args -> Tweakception.slayerTweaks.toggleHighlightGlyph()))
+                    args -> Tweakception.slayerTweaks.toggleHighlightGlyph())),
+            new Command("highlightslayers",
+                args -> Tweakception.slayerTweaks.toggleHighlightSlayers()),
+            new Command("highlightslayerminiboss",
+                args -> Tweakception.slayerTweaks.toggleHighlightSlayerMiniboss()),
+            new Command("autothrowfishingrod",
+                args -> Tweakception.slayerTweaks.toggleAutoThrowFishingRod(),
+                new Command("setthreshold",
+                    args -> Tweakception.slayerTweaks.setAutoThrowFishingRodThreshold(
+                            args.length >= 1 ? Integer.parseInt(args[0]) : -1)))
         ));
         addSub(new Command("api",
             null,

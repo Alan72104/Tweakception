@@ -11,6 +11,21 @@ import java.util.function.Predicate;
 
 public class Utils
 {
+    public static int clamp(int n, int min, int max)
+    {
+        return Math.max(Math.min(n, max), min);
+    }
+
+    public static float clamp(float n, float min, float max)
+    {
+        return Math.max(Math.min(n, max), min);
+    }
+
+    public static double clamp(double n, double min, double max)
+    {
+        return Math.max(Math.min(n, max), min);
+    }
+
     public static String stringRepeat(String s, int c)
     {
         StringBuilder sb = new StringBuilder();

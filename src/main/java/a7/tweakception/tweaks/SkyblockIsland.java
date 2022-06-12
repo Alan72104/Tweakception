@@ -2,6 +2,37 @@ package a7.tweakception.tweaks;
 
 public enum SkyblockIsland
 {
+    HUB("Hub", new String[]
+    {
+        "Archery Range",
+        "Auction House",
+        "Bank",
+        "Bazaar Alley",
+        "Blacksmith",
+        "Builder's House",
+        "Canvas Room",
+        "Coal Mine",
+        "Colosseum Arena",
+        "Colosseum",
+        "Community Center",
+        "Election Room",
+        "Farm",
+        "Farmhouse",
+        "Fashion Shop",
+        "Fisherman's Hut",
+        "Flower House",
+        "Forest",
+        "Graveyard",
+        "High Level",
+        "Library",
+        "Mountain",
+        "Museum",
+        "Ruins",
+        "Tavern",
+        "Village",
+        "Wilderness",
+        "Wizard Tower"
+    }),
     DUNGEON_HUB("Dungeon Hub", new String[]
     {
         "Dungeon Hub"

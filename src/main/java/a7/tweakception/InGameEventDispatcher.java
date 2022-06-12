@@ -112,6 +112,8 @@ public class InGameEventDispatcher
             tickStartTimes[3] = System.nanoTime();
         if (!isInSkyblock()) return;
 
+        dungeonTweaks.onLivingRenderPost(event);
+
         if (trackTickTime)
             tickTimes[3] = tickTimes[3] * 0.2f + (System.nanoTime() - tickStartTimes[3]) * 0.8f;
     }
@@ -125,6 +127,8 @@ public class InGameEventDispatcher
         if (!isInSkyblock()) return;
 
         dungeonTweaks.onLivingSpecialRenderPre(event);
+        globalTracker.onLivingSpecialRenderPre(event);
+
         if (trackTickTime)
             tickTimes[4] = tickTimes[4] * 0.2f + (System.nanoTime() - tickStartTimes[4]) * 0.8f;
     }
@@ -225,6 +229,7 @@ public class InGameEventDispatcher
 
         fairyTracker.onEntityJoinWorld(event);
         dungeonTweaks.onEntityJoinWorld(event);
+        slayerTweaks.onEntityJoinWorld(event);
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)

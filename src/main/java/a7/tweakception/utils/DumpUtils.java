@@ -3,6 +3,7 @@ package a7.tweakception.utils;
 import a7.tweakception.Tweakception;
 import com.google.common.base.Optional;
 import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.PropertyMap;
 import net.minecraft.block.Block;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.IBlockState;
@@ -247,7 +248,9 @@ public class DumpUtils
                 lines.add("Entity has NetworkPlayerInfo");
                 lines.add("Name: " + profile.getName());
                 lines.add("Id: " + profile.getId());
-                lines.add("Properties: " + profile.getProperties().toString());
+                lines.add("Properties:");
+                lines.add(prettifyJson(
+                        new PropertyMap.Serializer().serialize(profile.getProperties(), null, null).toString()));
             }
             else
                 lines.add("AbstractClientPlayer doesn't have NetworkPlayerInfo");

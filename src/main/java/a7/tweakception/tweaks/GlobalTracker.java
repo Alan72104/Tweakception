@@ -3,15 +3,23 @@ package a7.tweakception.tweaks;
 import a7.tweakception.config.Configuration;
 import a7.tweakception.events.IslandChangedEvent;
 import a7.tweakception.utils.DumpUtils;
+import a7.tweakception.utils.McUtils;
+import a7.tweakception.utils.RenderUtils;
+import a7.tweakception.utils.Utils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.client.renderer.entity.Render;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.item.EntityArmorStand;
+import net.minecraft.entity.passive.EntityPig;
 import net.minecraft.inventory.Slot;
 import net.minecraft.scoreboard.Score;
 import net.minecraft.scoreboard.ScoreObjective;
 import net.minecraft.scoreboard.ScorePlayerTeam;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraftforge.client.event.GuiScreenEvent;
+import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
@@ -29,6 +37,8 @@ public class GlobalTracker extends Tweak
     {
         public boolean devMode = false;
         public String rightCtrlCopyType = "nbt";
+        public boolean highlightShinyPigs = false;
+        public String shinyPigName = "";
     }
     private static final HashMap<String, SkyblockIsland> SUBPLACE_TO_ISLAND_MAP = new HashMap<>();
     private static int ticks = 0;
@@ -98,6 +108,36 @@ public class GlobalTracker extends Tweak
                             sendChat("GT: copied item tooltip to clipboard");
                             break;
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    public void onLivingSpecialRenderPre(RenderLivingEvent.Specials.Pre event)
+    {
+        if (c.highlightShinyPigs && getCurrentIsland() == SkyblockIsland.HUB)
+        {
+            Entity entity = event.entity;
+            if (entity instanceof EntityArmorStand &&
+                McUtils.cleanColor(entity.getName()).equalsIgnoreCase(c.shinyPigName))
+            {
+                List<Entity> pig = getWorld().getEntitiesWithinAABB(EntityPig.class,
+                        entity.getEntityBoundingBox().expand(0.0, 2.5, 0.0));
+                List<EntityArmorStand> armorStands = getWorld().getEntitiesWithinAABB(EntityArmorStand.class,
+                        entity.getEntityBoundingBox().expand(0.2, 2.5, 0.2));
+
+                if (pig.size() > 0)
+                    RenderUtils.drawDefaultHighlightBoxForEntity(pig.get(0), RenderUtils.DEFAULT_HIGHLIGHT_COLOR, false);
+
+                for (EntityArmorStand armorStand : armorStands)
+                {
+                    String shinyOrbTexture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODJjZGUwNjhlOTlhNGY5OGMzMWY4N2I0Y2MwNmJlMTRiMjI5YWNhNGY3MjgxYTQxNmM3ZTJmNTUzMjIzZGI3NCJ9fX0=";
+                    String tex = McUtils.getArmorStandHeadTexture(armorStand);
+                    if (tex != null && tex.equals(shinyOrbTexture))
+                    {
+                        RenderUtils.drawDefaultHighlightBoxUnderEntity(entity, -1, RenderUtils.DEFAULT_HIGHLIGHT_COLOR, false);
+                        break;
                     }
                 }
             }
@@ -270,5 +310,20 @@ public class GlobalTracker extends Tweak
     {
         c.rightCtrlCopyType = type;
         sendChat("GT-RightCtrlCopy: set to " + c.rightCtrlCopyType);
+    }
+
+    public void toggleHighlightShinyPigs()
+    {
+        c.highlightShinyPigs = !c.highlightShinyPigs;
+        sendChat("GT-HighlightShinyPigs: toggled" + c.highlightShinyPigs);
+    }
+
+    public void setHighlightShinyPigsName(String name)
+    {
+        c.shinyPigName = name;
+        if (name.equals(""))
+            sendChat("GT-HighlightShinyPigs: removed name");
+        else
+            sendChat("GT-HighlightShinyPigs: set name to " + name);
     }
 }

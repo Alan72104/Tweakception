@@ -2,6 +2,7 @@ package a7.tweakception.tweaks;
 
 import a7.tweakception.Tweakception;
 import a7.tweakception.config.Configuration;
+import a7.tweakception.utils.McUtils;
 import a7.tweakception.utils.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
@@ -136,23 +137,19 @@ public class FairyTracker extends Tweak
     {
         if (e instanceof EntityArmorStand)
         {
-            EntityArmorStand armorStand = (EntityArmorStand) e;
-            ItemStack head = armorStand.getCurrentArmor(3);
-            try
+            EntityArmorStand armorStand = (EntityArmorStand)e;
+
+            String fairyTexture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjk2OTIzYWQyNDczMTAwMDdmNmFlNWQzMjZkODQ3YWQ1Mzg2NGNmMTZjMzU2NWExODFkYzhlNmIyMGJlMjM4NyJ9fX0=";
+
+            String tex = McUtils.getArmorStandHeadTexture(armorStand);
+            if (tex.equals(fairyTexture))
             {
-                String fairyTexture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjk2OTIzYWQyNDczMTAwMDdmNmFlNWQzMjZkODQ3YWQ1Mzg2NGNmMTZjMzU2NWExODFkYzhlNmIyMGJlMjM4NyJ9fX0=";
-                if (head != null && head.getTagCompound().getCompoundTag("SkullOwner").
-                        getCompoundTag("Properties").getTagList("textures", Constants.NBT.TAG_COMPOUND).
-                        getCompoundTagAt(0).getString("Value").equals(fairyTexture)) {
-                    FairyPos pos = new FairyPos(armorStand.posX - 1, armorStand.posY + 2, armorStand.posZ - 1);
-                    if (!set.contains(pos)) {
-                        sendChat("Fairy: found new " + pos.x + ", " + pos.y + ", " + pos.z);
-                        set.add(pos);
-                    }
+                FairyPos pos = new FairyPos(armorStand.posX - 1, armorStand.posY + 2, armorStand.posZ - 1);
+                if (!set.contains(pos))
+                {
+                    sendChat("Fairy: found new " + pos.x + ", " + pos.y + ", " + pos.z);
+                    set.add(pos);
                 }
-            }
-            catch (NullPointerException ignored)
-            {
             }
         }
     }

@@ -28,10 +28,7 @@ public class Utils
 
     public static String stringRepeat(String s, int c)
     {
-        StringBuilder sb = new StringBuilder();
-        while (c-- > 0)
-            sb.append(s);
-        return sb.toString();
+        return new String(new char[c]).replace("\0", s);
     }
 
     public static String formatCommas(long n)

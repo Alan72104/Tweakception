@@ -3,6 +3,7 @@ package a7.tweakception.mixin;
 import a7.tweakception.Tweakception;
 import a7.tweakception.tweaks.SkyblockIsland;
 import a7.tweakception.utils.McUtils;
+import a7.tweakception.utils.Utils;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.audio.SoundCategory;
@@ -39,7 +40,7 @@ public abstract class MixinGuiContainer extends GuiScreen
             slot.getStack() != null)
         {
             ItemStack stack = slot.getStack();
-            String id = getSkyblockItemId(stack);
+            String id = Utils.getSkyblockItemId(stack);
             if (id != null && Tweakception.dungeonTweaks.isMaskUsed(id))
             {
                 GlStateManager.pushMatrix();

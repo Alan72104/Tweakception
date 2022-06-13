@@ -1,18 +1,25 @@
 package a7.tweakception.utils;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityArmorStand;
+import net.minecraft.entity.monster.EntityEnderman;
+import net.minecraft.entity.monster.EntitySkeleton;
+import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChatComponentText;
 import net.minecraftforge.common.util.Constants;
 
 
+import java.util.List;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -73,34 +80,6 @@ public class McUtils
         return null;
     }
 
-    public static String getSkyblockItemId(ItemStack item)
-    {
-        NBTTagCompound tag = item.getTagCompound();
-        if (tag != null)
-        {
-            NBTTagCompound extra = tag.getCompoundTag("ExtraAttributes");
-            if (extra != null)
-            {
-                return extra.getString("id");
-            }
-        }
-        return null;
-    }
-
-    public static String getSkyblockItemUuid(ItemStack item)
-    {
-        NBTTagCompound tag = item.getTagCompound();
-        if (tag != null)
-        {
-            NBTTagCompound extra = tag.getCompoundTag("ExtraAttributes");
-            if (extra != null)
-            {
-                return extra.getString("uuid");
-            }
-        }
-        return null;
-    }
-
     public static String getArmorStandHeadTexture(EntityArmorStand armorStand)
     {
         ItemStack head = armorStand.getCurrentArmor(3);
@@ -125,6 +104,23 @@ public class McUtils
         if (list.tagCount() == 0)
             return null;
         return list.getCompoundTagAt(0).getString("Value");
+    }
+
+    public static Entity getNearestEntityInAABB(Entity entity, AxisAlignedBB bb, Predicate<? super Entity> predicate)
+    {
+        Entity nearest = null;
+        double nearestDis = Double.MAX_VALUE;
+        List<Entity> entities = getWorld().getEntitiesInAABBexcluding(entity, bb, predicate::test);
+        for (Entity e : entities)
+        {
+            double dis = e.getDistanceSqToEntity(entity);
+            if (dis < nearestDis)
+            {
+                nearestDis = dis;
+                nearest = e;
+            }
+        }
+        return nearest;
     }
 
     public static String cleanColor(String s)

@@ -6,9 +6,12 @@ import a7.tweakception.utils.McUtils;
 import a7.tweakception.utils.Pair;
 import a7.tweakception.utils.RenderUtils;
 import a7.tweakception.utils.Utils;
+import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityArmorStand;
+import net.minecraft.entity.monster.*;
+import net.minecraft.entity.passive.EntityWolf;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
@@ -21,6 +24,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,7 +50,7 @@ public class SlayerTweaks extends Tweak
     private List<BlockPos> glyphsTemp = new ArrayList<>();
     private BlockSearchThread searchThread;
     private boolean autoThrowFishingRod = false;
-    private final LinkedList<Pair<Integer, Entity>> nameTagsTemp = new LinkedList<>();
+    private final LinkedList<Pair<Integer, Entity>> armorStandsTemp = new LinkedList<>();
     // Supports all these:
     // §5Voidling Devotee §a11M§c❤
     // §c☠ §bVoidgloom Seraph §e97M§c❤
@@ -57,16 +61,17 @@ public class SlayerTweaks extends Tweak
     private final Set<SlayerRecord> slayerMinibossCache = new HashSet<>();
     private static class SlayerRecord
     {
+        public Entity nameTag;
         public Entity entity;
         public int type;
         public float maxHealth;
         public boolean voidgloomFirstHitPhase = false;
         public boolean fishingRodThrown = false;
-        public SlayerRecord(Entity e, int t, float mh) { entity = e; type = t; maxHealth = mh; }
+        public SlayerRecord(Entity n, Entity e, int t, float mh) { nameTag = n; entity = e; type = t; maxHealth = mh; }
         @Override
-        public int hashCode() { return entity.hashCode(); }
+        public int hashCode() { return nameTag.hashCode(); }
         @Override
-        public boolean equals(Object o) { return o instanceof SlayerRecord && ((SlayerRecord)o).entity.equals(this.entity); }
+        public boolean equals(Object o) { return o instanceof SlayerRecord && ((SlayerRecord)o).nameTag.equals(this.nameTag); }
     }
 
     static
@@ -126,40 +131,17 @@ public class SlayerTweaks extends Tweak
 
         if (c.highlightSlayers || c.highlightSlayerMiniboss || autoThrowFishingRod)
         {
-            removeWhile(nameTagsTemp, ele -> getTicks() - ele.a > 5,
+            removeWhile(armorStandsTemp, ele -> getTicks() - ele.a > 5,
                 ele ->
                 {
-                    Entity entity = ele.b;
-                    String name = entity.getName();
-                    float hp;
-
-                    for (Pair<String, Integer> type : SLAYER_TYPES)
-                        if (name.contains(type.a))
-                        {
-                            hp = parseHealth(name);
-                            if (hp != -1.0f)
-                            {
-                                boolean hitPhase = slayerNameTagMatcher.group(3) != null;
-
-                                SlayerRecord record = new SlayerRecord(entity, type.b, hp);
-                                record.voidgloomFirstHitPhase = hitPhase;
-                                slayersCache.add(record);
-                                return;
-                            }
-                        }
-                    if (c.highlightSlayerMiniboss)
-                        for (Pair<String, Integer> type : MINIBOSS_TYPES)
-                            if (name.contains(type.a) && (hp = parseHealth(name)) != -1.0f)
-                            {
-                                SlayerRecord record = new SlayerRecord(entity, type.b, hp);
-                                slayerMinibossCache.add(record);
-                                return;
-                            }
-
+                    Entity stand = ele.b;
+                    if (!tryDetectAndAddSlayerFromNameTag(SLAYER_TYPES, stand, slayersCache))
+                        if (c.highlightSlayerMiniboss)
+                            tryDetectAndAddSlayerFromNameTag(MINIBOSS_TYPES, stand, slayerMinibossCache);
                 });
 
-            slayersCache.removeIf(ele -> ele.entity.isDead);
-            slayerMinibossCache.removeIf(ele -> ele.entity.isDead);
+            slayersCache.removeIf(ele -> ele.nameTag.isDead);
+            slayerMinibossCache.removeIf(ele -> ele.nameTag.isDead);
 
             if (autoThrowFishingRod)
             {
@@ -168,7 +150,7 @@ public class SlayerTweaks extends Tweak
                 float nearestDis = Float.MAX_VALUE;
                 for (SlayerRecord record : slayersCache)
                 {
-                    float dis = record.entity.getDistanceToEntity(getPlayer());
+                    float dis = record.nameTag.getDistanceToEntity(getPlayer());
                     if (dis <= 15.0f && dis < nearestDis)
                     {
                         nearestDis = dis;
@@ -180,9 +162,9 @@ public class SlayerTweaks extends Tweak
                 {
                     float health;
 
-                    if (!currentSlayer.entity.isDead &&
+                    if (!currentSlayer.nameTag.isDead &&
                         !currentSlayer.fishingRodThrown &&
-                        (health = parseHealth(currentSlayer.entity.getName())) != -1.0f)
+                        (health = parseHealth(currentSlayer.nameTag.getName())) != -1.0f)
                     {
                         if (currentSlayer.voidgloomFirstHitPhase)
                         {
@@ -210,6 +192,40 @@ public class SlayerTweaks extends Tweak
         }
     }
 
+    private boolean tryDetectAndAddSlayerFromNameTag(List<Pair<String, Integer>> targets, Entity stand, Set<SlayerRecord> targetSet)
+    {
+        String name = stand.getName();
+        float hp;
+        for (Pair<String, Integer> type : targets)
+            if (name.contains(type.a))
+            {
+                hp = parseHealth(name);
+                if (hp != -1.0f)
+                {
+                    boolean hitPhase = slayerNameTagMatcher.group(3) != null;
+
+                    Entity nearest = McUtils.getNearestEntityInAABB(stand,
+                            stand.getEntityBoundingBox().expand(1.0, 2.5, 1.0),
+                            e -> e instanceof EntityZombie ||
+                                    e instanceof EntitySpider ||
+                                    e instanceof EntityWolf ||
+                                    e instanceof EntityEnderman ||
+                                    e instanceof EntityBlaze);
+
+                    if (nearest != null)
+                    {
+                        SlayerRecord record = new SlayerRecord(stand, nearest, type.b, hp);
+                        record.voidgloomFirstHitPhase = hitPhase;
+                        targetSet.add(record);
+                        return true;
+                    }
+                    else
+                        return false;
+                }
+            }
+        return false;
+    }
+
     public void onRenderLast(RenderWorldLastEvent event)
     {
         if (getCurrentIsland() == SkyblockIsland.THE_END)
@@ -221,12 +237,10 @@ public class SlayerTweaks extends Tweak
 
         if (c.highlightSlayers)
             for(SlayerRecord record : slayersCache)
-                RenderUtils.drawDefaultHighlightBoxUnderEntity(
-                        record.entity, record.type, RenderUtils.DEFAULT_HIGHLIGHT_COLOR, false);
+                RenderUtils.drawDefaultHighlightBoxForEntity(record.entity, RenderUtils.DEFAULT_HIGHLIGHT_COLOR, false);
         if (c.highlightSlayerMiniboss)
             for(SlayerRecord record : slayerMinibossCache)
-                RenderUtils.drawDefaultHighlightBoxUnderEntity(
-                        record.entity, record.type, RenderUtils.DEFAULT_HIGHLIGHT_COLOR, false);
+                RenderUtils.drawDefaultHighlightBoxForEntity(record.entity, RenderUtils.DEFAULT_HIGHLIGHT_COLOR, false);
     }
 
     public void onEntityJoinWorld(EntityJoinWorldEvent event)
@@ -234,7 +248,7 @@ public class SlayerTweaks extends Tweak
         if (c.highlightSlayers || c.highlightSlayerMiniboss || autoThrowFishingRod)
         {
             if (event.entity instanceof EntityArmorStand)
-                nameTagsTemp.add(new Pair<>(getTicks(), event.entity));
+                armorStandsTemp.add(new Pair<>(getTicks(), event.entity));
         }
     }
 
@@ -251,7 +265,7 @@ public class SlayerTweaks extends Tweak
             ItemStack stack = getPlayer().inventory.getStackInSlot(i);
             if (stack != null && stack.getItem() == Items.fishing_rod)
             {
-                String id = McUtils.getSkyblockItemId(stack);
+                String id = Utils.getSkyblockItemId(stack);
                 if (id == null || !id.equals("GRAPPLING_HOOK"))
                     return i;
             }

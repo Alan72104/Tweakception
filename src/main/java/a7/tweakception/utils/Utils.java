@@ -1,5 +1,8 @@
 package a7.tweakception.utils;
 
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
@@ -136,6 +139,34 @@ public class Utils
     public static String f(String s, Object... args)
     {
         return String.format(s, args);
+    }
+
+    public static String getSkyblockItemId(ItemStack item)
+    {
+        NBTTagCompound tag = item.getTagCompound();
+        if (tag != null)
+        {
+            NBTTagCompound extra = tag.getCompoundTag("ExtraAttributes");
+            if (extra != null)
+            {
+                return extra.getString("id");
+            }
+        }
+        return null;
+    }
+
+    public static String getSkyblockItemUuid(ItemStack item)
+    {
+        NBTTagCompound tag = item.getTagCompound();
+        if (tag != null)
+        {
+            NBTTagCompound extra = tag.getCompoundTag("ExtraAttributes");
+            if (extra != null)
+            {
+                return extra.getString("uuid");
+            }
+        }
+        return null;
     }
 
     public static <T> T setAccessibleAndGetField(Object o, String name) throws NoSuchFieldException, IllegalAccessException

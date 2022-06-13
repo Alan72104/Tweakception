@@ -11,7 +11,6 @@ import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.gui.inventory.GuiChest;
-import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityArmorStand;
@@ -20,7 +19,6 @@ import net.minecraft.entity.monster.EntityEnderman;
 import net.minecraft.entity.monster.EntitySkeleton;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.passive.EntityBat;
-import net.minecraft.entity.passive.EntityPig;
 import net.minecraft.entity.projectile.EntityArrow;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.ContainerChest;
@@ -411,23 +409,12 @@ public class DungeonTweaks extends Tweak
                             boolean isStarred = name.contains("✯");
                             if (isStarred)
                             {
-                                Entity nearest = null;
-                                double nearestDis = Float.MAX_VALUE;
-                                List<Entity> nearEntities = getWorld().getEntitiesWithinAABBExcludingEntity(stand,
-                                        stand.getEntityBoundingBox().expand(0.5, 2.5, 0.5));
-                                for (Entity e : nearEntities)
-                                {
-                                    double dis = e.getDistanceSqToEntity(stand);
-                                    if (dis < nearestDis &&
-                                        (e instanceof EntityOtherPlayerMP ||
+                                Entity nearest = McUtils.getNearestEntityInAABB(stand,
+                                    stand.getEntityBoundingBox().expand(0.5, 2.5, 0.5),
+                                    e -> e instanceof EntityOtherPlayerMP ||
                                         e instanceof EntitySkeleton ||
                                         e instanceof EntityZombie ||
-                                        e instanceof EntityEnderman))
-                                    {
-                                        nearestDis = dis;
-                                        nearest = e;
-                                    }
-                                }
+                                        e instanceof EntityEnderman);
                                 if (nearest != null)
                                 {
                                     starredMobs.add(nearest);
@@ -516,7 +503,7 @@ public class DungeonTweaks extends Tweak
                     ItemStack item = inv.getStackInSlot(9 * 2 + 5 - 1);
                     if (item != null && !salvageClickSent && getTicks() - salvageLastClickTick >= 15)
                     {
-                        String id = getSkyblockItemId(item);
+                        String id = Utils.getSkyblockItemId(item);
                         Item firstPane = inv.getStackInSlot(0).getItem();
                         ItemStack salvageBtn = inv.getStackInSlot(9 * 3 + 5 - 1);
                         if (id != null && TRASH_ITEMS.contains(id) &&
@@ -892,7 +879,7 @@ public class DungeonTweaks extends Tweak
             if (entity instanceof EntityItem)
             {
                 EntityItem itemEntity = (EntityItem)entity;
-                String id = getSkyblockItemId(itemEntity.getEntityItem());
+                String id = Utils.getSkyblockItemId(itemEntity.getEntityItem());
                 if (id != null && FRAGS_AND_NAMES.containsKey(id) && !fragGotten)
                 {
                     fragGotten = true;
@@ -980,7 +967,7 @@ public class DungeonTweaks extends Tweak
             ItemStack head = getPlayer().getCurrentArmor(3);
             if (head != null)
             {
-                String id = getSkyblockItemId(head);
+                String id = Utils.getSkyblockItemId(head);
 //                String uuid = getSkyblockItemUuid(head);
                 if (id != null && MASKS.contains(id))
                 {
@@ -1028,7 +1015,7 @@ public class DungeonTweaks extends Tweak
     {
         if (event.itemStack == null || event.toolTip == null) return;
 
-        String id = getSkyblockItemId(event.itemStack);
+        String id = Utils.getSkyblockItemId(event.itemStack);
         if (id != null && id.endsWith("HEAD") && DUNGEON_FLOOR_HEADS.contains(id))
         {
             for (int i = 0; i < event.toolTip.size(); i++)

@@ -7,14 +7,12 @@ import a7.tweakception.utils.Pair;
 import a7.tweakception.utils.RenderUtils;
 import a7.tweakception.utils.Utils;
 import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
-import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.WorldEvent;
@@ -27,7 +25,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static a7.tweakception.Tweakception.BlockSearchThread;
-import static a7.tweakception.Tweakception.miningTweaks;
 import static a7.tweakception.tweaks.GlobalTracker.getCurrentIsland;
 import static a7.tweakception.tweaks.GlobalTracker.getTicks;
 import static a7.tweakception.utils.McUtils.*;
@@ -50,7 +47,12 @@ public class SlayerTweaks extends Tweak
     private BlockSearchThread searchThread;
     private boolean autoThrowFishingRod = false;
     private final LinkedList<Pair<Integer, Entity>> nameTagsTemp = new LinkedList<>();
-    private final Matcher healthMatcher = Pattern.compile(" §[0-9a-f](\\d+(?:,\\d+)*(?:\\.\\d+)?)([MmKk]?)§c❤").matcher("");
+    // Supports all these:
+    // §5Voidling Devotee §a11M§c❤
+    // §c☠ §bVoidgloom Seraph §e97M§c❤
+    // §c☠ §bVoidgloom Seraph §f§l60 Hits
+    private final Matcher slayerNameTagMatcher = Pattern.compile(
+        "(?:§c☠ )?§[0-9a-f][^§]+(?:§[0-9a-f](\\d+(?:,\\d+)*(?:\\.\\d+)?)([MmKk]?)§c❤|§f§l(\\d+) Hits)").matcher("");
     private final Set<SlayerRecord> slayersCache = new HashSet<>(); // The nametags
     private final Set<SlayerRecord> slayerMinibossCache = new HashSet<>();
     private static class SlayerRecord
@@ -58,6 +60,7 @@ public class SlayerTweaks extends Tweak
         public Entity entity;
         public int type;
         public float maxHealth;
+        public boolean voidgloomFirstHitPhase = false;
         public boolean fishingRodThrown = false;
         public SlayerRecord(Entity e, int t, float mh) { entity = e; type = t; maxHealth = mh; }
         @Override
@@ -131,11 +134,18 @@ public class SlayerTweaks extends Tweak
                     float hp;
 
                     for (Pair<String, Integer> type : SLAYER_TYPES)
-                        if (name.contains(type.a) && (hp = parseHealth(name)) != -1.0f)
+                        if (name.contains(type.a))
                         {
-                            SlayerRecord record = new SlayerRecord(entity, type.b, hp);
-                            slayersCache.add(record);
-                            return;
+                            hp = parseHealth(name);
+                            if (hp != -1.0f)
+                            {
+                                boolean hitPhase = slayerNameTagMatcher.group(3) != null;
+
+                                SlayerRecord record = new SlayerRecord(entity, type.b, hp);
+                                record.voidgloomFirstHitPhase = hitPhase;
+                                slayersCache.add(record);
+                                return;
+                            }
                         }
                     if (c.highlightSlayerMiniboss)
                         for (Pair<String, Integer> type : MINIBOSS_TYPES)
@@ -170,13 +180,16 @@ public class SlayerTweaks extends Tweak
                 {
                     float health;
 
-                    if (!currentSlayer.entity.isDead && !currentSlayer.fishingRodThrown &&
+                    if (!currentSlayer.entity.isDead &&
+                        !currentSlayer.fishingRodThrown &&
                         (health = parseHealth(currentSlayer.entity.getName())) != -1.0f)
                     {
-                        if (GlobalTracker.t)
-                            sendChat("" + health);
-
-                        if (health <= currentSlayer.maxHealth * c.autoThrowFishingRodThreshold / 100)
+                        if (currentSlayer.voidgloomFirstHitPhase)
+                        {
+                            currentSlayer.voidgloomFirstHitPhase = false;
+                            currentSlayer.maxHealth = health;
+                        }
+                        else if (health <= currentSlayer.maxHealth * c.autoThrowFishingRodThreshold / 100)
                         {
                             int slot = findFishingRodSlot();
 
@@ -246,12 +259,21 @@ public class SlayerTweaks extends Tweak
         return -1;
     }
 
+    // If the name has health, returns the health
+    // If the name has no health, returns 0.0f
+    // If the name isn't a slayer name tag, returns -1.0f
     private float parseHealth(String s)
     {
-        if (healthMatcher.reset(s).find())
+        if (slayerNameTagMatcher.reset(s).find())
         {
-            String healthString = healthMatcher.group(1).replace(",", "");
-            String unit = healthMatcher.group(2);
+            // If the group doesn't match then the result will be null
+            // eg. given the pattern (health)|(50 hits) and a string "50 hits", the health group will be null,
+            // but with ((?:health)?)|(50 hits), then it will be an empty string
+            if (slayerNameTagMatcher.group(1) == null)
+                return 0.0f;
+
+            String healthString = slayerNameTagMatcher.group(1).replace(",", "");
+            String unit = slayerNameTagMatcher.group(2);
 
             float health = Float.parseFloat(healthString);
             switch (unit)
@@ -268,7 +290,6 @@ public class SlayerTweaks extends Tweak
 
             return health;
         }
-
         return -1.0f;
     }
 

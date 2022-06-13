@@ -105,14 +105,15 @@ public class InGameEventDispatcher
             tickTimes[2] = tickTimes[2] * 0.2f + (System.nanoTime() - tickStartTimes[2]) * 0.8f;
     }
 
-    @SubscribeEvent
-    public void onLivingRenderPost(RenderLivingEvent.Post event)
+    @SubscribeEvent()
+    public void onLivingRenderPre(RenderLivingEvent.Pre event)
     {
         if (trackTickTime)
             tickStartTimes[3] = System.nanoTime();
         if (!isInSkyblock()) return;
 
-        dungeonTweaks.onLivingRenderPost(event);
+        dungeonTweaks.onLivingRenderPre(event);
+        globalTracker.onLivingRenderPre(event);
 
         if (trackTickTime)
             tickTimes[3] = tickTimes[3] * 0.2f + (System.nanoTime() - tickStartTimes[3]) * 0.8f;

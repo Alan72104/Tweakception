@@ -756,7 +756,7 @@ public class DungeonTweaks extends Tweak
         }
     }
 
-    public void onLivingRenderPost(RenderLivingEvent.Post event)
+    public void onLivingRenderPre(RenderLivingEvent.Pre event)
     {
         if (c.highlightDoorKeys &&
             getCurrentIsland() == SkyblockIsland.DUNGEON &&

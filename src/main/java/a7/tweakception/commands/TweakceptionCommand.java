@@ -159,6 +159,8 @@ public class TweakceptionCommand extends CommandBase
                 args -> Tweakception.globalTracker.toggleHighlightShinyPigs(),
                 new Command("setname",
                     args -> Tweakception.globalTracker.setHighlightShinyPigsName(args.length > 0 ? String.join(" ", args) : ""))),
+            new Command("hideplayers",
+                args -> Tweakception.globalTracker.toggleHidePlayers()),
             new Command("rightctrlcopy",
                 null,
                 new Command("nbt",

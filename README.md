@@ -97,6 +97,7 @@ eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3Rl
 - gt usefallbackdetection - **Toggles slightly slower location detection**
 - gt highlightshinypigs
 - gt highlightshinypigs setname - **Example:** `setname [vip] alan72104`
+- gt hideplayers - **Hides ALL online players**
 - gt rightctrlcopy nbt *(dev)* *(ins)*
 - gt rightctrlcopy tooltip *(dev)* *(ins)*
 ### APIManager

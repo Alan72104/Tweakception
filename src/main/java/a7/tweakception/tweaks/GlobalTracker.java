@@ -7,8 +7,10 @@ import a7.tweakception.utils.McUtils;
 import a7.tweakception.utils.RenderUtils;
 import a7.tweakception.utils.Utils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityArmorStand;
@@ -39,6 +41,7 @@ public class GlobalTracker extends Tweak
         public String rightCtrlCopyType = "nbt";
         public boolean highlightShinyPigs = false;
         public String shinyPigName = "";
+        public boolean hidePlayers = false;
     }
     private static final HashMap<String, SkyblockIsland> SUBPLACE_TO_ISLAND_MAP = new HashMap<>();
     private static int ticks = 0;
@@ -110,6 +113,20 @@ public class GlobalTracker extends Tweak
                         }
                     }
                 }
+            }
+        }
+    }
+
+    public void onLivingRenderPre(RenderLivingEvent.Pre event)
+    {
+        if (c.hidePlayers)
+        {
+            if (event.entity instanceof EntityOtherPlayerMP)
+            {
+                // Check if it's a real online player
+                NetworkPlayerInfo info = getMc().getNetHandler().getPlayerInfo(event.entity.getUniqueID());
+                if (info != null)
+                    event.setCanceled(true);
             }
         }
     }
@@ -325,5 +342,11 @@ public class GlobalTracker extends Tweak
             sendChat("GT-HighlightShinyPigs: removed name");
         else
             sendChat("GT-HighlightShinyPigs: set name to " + name);
+    }
+
+    public void toggleHidePlayers()
+    {
+        c.hidePlayers = !c.hidePlayers;
+        sendChat("GT-HidePlayers: toggled" + c.hidePlayers);
     }
 }

@@ -8,6 +8,8 @@ import a7.tweakception.utils.RenderUtils;
 import a7.tweakception.utils.Utils;
 import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.entity.monster.*;
@@ -16,6 +18,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.WorldEvent;
@@ -32,6 +35,7 @@ import static a7.tweakception.Tweakception.BlockSearchThread;
 import static a7.tweakception.tweaks.GlobalTracker.getCurrentIsland;
 import static a7.tweakception.tweaks.GlobalTracker.getTicks;
 import static a7.tweakception.utils.McUtils.*;
+import static a7.tweakception.utils.Utils.f;
 import static a7.tweakception.utils.Utils.removeWhile;
 
 public class SlayerTweaks extends Tweak
@@ -59,15 +63,17 @@ public class SlayerTweaks extends Tweak
         "(?:§c☠ )?§[0-9a-f][^§]+(?:§[0-9a-f](\\d+(?:,\\d+)*(?:\\.\\d+)?)([MmKk]?)§c❤|§f§l(\\d+) Hits)").matcher("");
     private final Set<SlayerRecord> slayersCache = new HashSet<>(); // The nametags
     private final Set<SlayerRecord> slayerMinibossCache = new HashSet<>();
+    private SlayerRecord currentSlayer = null;
     private static class SlayerRecord
     {
         public Entity nameTag;
         public Entity entity;
-        public int type;
+        public String type;
+        public float health = 0.0f;
         public float maxHealth;
         public boolean voidgloomFirstHitPhase = false;
         public boolean fishingRodThrown = false;
-        public SlayerRecord(Entity n, Entity e, int t, float mh) { nameTag = n; entity = e; type = t; maxHealth = mh; }
+        public SlayerRecord(Entity n, Entity e, String t, float mh) { nameTag = n; entity = e; type = t; maxHealth = mh; }
         @Override
         public int hashCode() { return nameTag.hashCode(); }
         @Override
@@ -142,16 +148,15 @@ public class SlayerTweaks extends Tweak
 
             slayersCache.removeIf(ele -> ele.nameTag.isDead);
             slayerMinibossCache.removeIf(ele -> ele.nameTag.isDead);
+            currentSlayer = null;
 
             if (autoThrowFishingRod)
             {
-                SlayerRecord currentSlayer = null;
-
-                float nearestDis = Float.MAX_VALUE;
+                double nearestDis = Double.MAX_VALUE;
                 for (SlayerRecord record : slayersCache)
                 {
-                    float dis = record.nameTag.getDistanceToEntity(getPlayer());
-                    if (dis <= 15.0f && dis < nearestDis)
+                    double dis = record.nameTag.getDistanceSqToEntity(getPlayer());
+                    if (dis <= 64.0 && dis < nearestDis)
                     {
                         nearestDis = dis;
                         currentSlayer = record;
@@ -160,19 +165,19 @@ public class SlayerTweaks extends Tweak
 
                 if (currentSlayer != null)
                 {
-                    float health;
-
-                    if (!currentSlayer.nameTag.isDead &&
-                        !currentSlayer.fishingRodThrown &&
-                        (health = parseHealth(currentSlayer.nameTag.getName())) != -1.0f)
+                    float health = parseHealth(currentSlayer.nameTag.getName());
+                    if (health != -1.0f && health != 0.0f)
                     {
+                        currentSlayer.health = health;
                         if (currentSlayer.voidgloomFirstHitPhase)
                         {
                             currentSlayer.voidgloomFirstHitPhase = false;
                             currentSlayer.maxHealth = health;
                         }
-                        else if (health <= currentSlayer.maxHealth * c.autoThrowFishingRodThreshold / 100)
+                        else if (!currentSlayer.fishingRodThrown &&
+                                currentSlayer.health <= currentSlayer.maxHealth * c.autoThrowFishingRodThreshold / 100)
                         {
+                            currentSlayer.fishingRodThrown = true;
                             int slot = findFishingRodSlot();
 
                             if (slot == -1)
@@ -183,7 +188,6 @@ public class SlayerTweaks extends Tweak
                                 getPlayer().inventory.currentItem = slot;
                                 Tweakception.scheduler.addDelayed(() -> getMc().rightClickMouse(), 6).
                                         thenDelayed(() -> getPlayer().inventory.currentItem = lastSlot, 8);
-                                currentSlayer.fishingRodThrown = true;
                             }
                         }
                     }
@@ -205,16 +209,17 @@ public class SlayerTweaks extends Tweak
                     boolean hitPhase = slayerNameTagMatcher.group(3) != null;
 
                     Entity nearest = McUtils.getNearestEntityInAABB(stand,
-                            stand.getEntityBoundingBox().expand(1.0, 2.5, 1.0),
-                            e -> e instanceof EntityZombie ||
+                            stand.getEntityBoundingBox().expand(0.5, 2.5, 0.5),
+                            e -> (e instanceof EntityZombie ||
                                     e instanceof EntitySpider ||
                                     e instanceof EntityWolf ||
                                     e instanceof EntityEnderman ||
-                                    e instanceof EntityBlaze);
+                                    e instanceof EntityBlaze) &&
+                                    !e.isDead);
 
                     if (nearest != null)
                     {
-                        SlayerRecord record = new SlayerRecord(stand, nearest, type.b, hp);
+                        SlayerRecord record = new SlayerRecord(stand, nearest, type.a, hp);
                         record.voidgloomFirstHitPhase = hitPhase;
                         targetSet.add(record);
                         return true;
@@ -241,6 +246,29 @@ public class SlayerTweaks extends Tweak
         if (c.highlightSlayerMiniboss)
             for(SlayerRecord record : slayerMinibossCache)
                 RenderUtils.drawDefaultHighlightBoxForEntity(record.entity, RenderUtils.DEFAULT_HIGHLIGHT_COLOR, false);
+    }
+
+    public void onRenderGameOverlayPost(RenderGameOverlayEvent.Post event)
+    {
+        if (autoThrowFishingRod && currentSlayer != null)
+        {
+            ScaledResolution res = new ScaledResolution(getMc());
+            FontRenderer r = getMc().fontRendererObj;
+            int width = res.getScaledWidth();
+
+            String s;
+            if (currentSlayer.voidgloomFirstHitPhase)
+                s = f("Slayer: %s, health: -", currentSlayer.type);
+            else
+                s = f("Slayer: %s, health: %s (%d%%), threshold: %s%d%%",
+                    currentSlayer.type,
+                    Utils.formatMetric((long)currentSlayer.health),
+                    (int)(currentSlayer.health / currentSlayer.maxHealth * 100.0f),
+                    currentSlayer.fishingRodThrown ? "§6" : "",
+                    c.autoThrowFishingRodThreshold);
+
+            r.drawString(s, (width - r.getStringWidth(s)) / 2, 30 + r.FONT_HEIGHT, 0xffffffff);
+        }
     }
 
     public void onEntityJoinWorld(EntityJoinWorldEvent event)

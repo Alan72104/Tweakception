@@ -100,6 +100,7 @@ public class InGameEventDispatcher
         dungeonTweaks.onRenderGameOverlayPost(event);
         crimsonTweaks.onRenderGameOverlayPost(event);
         autoFish.onRenderGameOverlayPost(event);
+        slayerTweaks.onRenderGameOverlayPost(event);
 
         if (trackTickTime)
             tickTimes[2] = tickTimes[2] * 0.2f + (System.nanoTime() - tickStartTimes[2]) * 0.8f;

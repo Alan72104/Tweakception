@@ -11,6 +11,7 @@ import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.gui.inventory.GuiChest;
+import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityArmorStand;
@@ -39,6 +40,7 @@ import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 
@@ -86,7 +88,7 @@ public class DungeonTweaks extends Tweak
         public boolean autoSalvage = false;
         public Map<String, Integer> salvagedEssences = ESSENCES.stream().collect(Collectors.toMap(e -> e, e -> 0));
         public boolean autoJoinParty = false;
-        public Set<String> autoJoinPartyOwners = new HashSet<>(Arrays.asList("alan72104"));
+        public Set<String> autoJoinPartyOwners = new HashSet<>(Collections.singletonList("alan72104"));
         public Map<String, Integer> fragDrops = FRAGS_AND_NAMES.keySet().stream().collect(Collectors.toMap(e -> e, e -> 0));
         public String fragBot = "";
         public long fastestFragrun = 0L;
@@ -100,6 +102,8 @@ public class DungeonTweaks extends Tweak
         public boolean blockOpheliaShopClicks = true;
         public boolean partyFinderDisplayQuickPlayerInfo = false;
         public boolean partyFinderQuickPlayerInfoShowSecretPerExp = false;
+        public Set<String> partyFinderPlayerBlacklist = new HashSet<>();
+        public boolean gyroWandOverlay = false;
     }
     private static final String F5_BOSS_START = "Welcome, you arrive right on time. I am Livid, the Master of Shadows.";
     private static final String F5_BOSS_END = "Impossible! How did you figure out which one I was?";
@@ -166,9 +170,12 @@ public class DungeonTweaks extends Tweak
     private Entity hitDisplayTargetNameTag = null;
     private final Map<String, MaskUsage> maskUsages = new ConcurrentHashMap<>();
     private final Matcher maskCooldownMatcher = Pattern.compile("^§8Cooldown: §a(\\d+)s").matcher("");
-    private final Matcher dungeonItemStatMatcher = Pattern.compile(" §8\\(([-+])?(\\d+(?:,\\d+)*(?:\\.\\d+)?)(%?)\\)(.*)").matcher("");
+    private final Matcher dungeonItemStatMatcher = Pattern.compile(
+            " §8\\(([-+])?(\\d+(?:,\\d+)*(?:\\.\\d+)?)(%?)\\)(.*)").matcher("");
     private final Map<String, DungeonStats> uuidToDungeonStatsMap = new HashMap<>();
-    private final Matcher partyFinderPlayerMatcher = Pattern.compile("^§5§o (?:§[\\da-f])?([\\w\\d]+)§f: §e(\\w+)§b \\(§e(\\d{1,2})§b\\)").matcher("");
+    private final Matcher partyFinderTitleMatcher = Pattern.compile("^§o§6(?:§[\\da-f])?([^']+)'s Party(.*)").matcher("");
+    private final Matcher partyFinderPlayerMatcher = Pattern.compile(
+            "^§5§o (?:§[\\da-f])?([\\w\\d]+)(§f: §e\\w+§b \\(§e\\d{1,2}§b\\))").matcher("");
     private static class DungeonStats
     {
         public float cata = 0.0f;
@@ -788,6 +795,25 @@ public class DungeonTweaks extends Tweak
         }
     }
 
+    public void onRenderBlockOverlay(DrawBlockHighlightEvent event)
+    {
+        if (c.gyroWandOverlay)
+        {
+            ItemStack stack = getPlayer().inventory.getCurrentItem();
+            if (stack != null)
+            {
+                String id = Utils.getSkyblockItemId(stack);
+                if (id != null && id.equals("GYROKINETIC_WAND"))
+                {
+                    RayTraceUtils.RayTraceResult res = RayTraceUtils.rayTraceBlock(
+                        getPlayer(), event.partialTicks, 26.0f, 0.1f);
+                    if (res != null)
+                        RenderUtils.drawBeaconBeamOrBoundingBox(res.pos, new Color(0, 70, 156), event.partialTicks, 1);
+                }
+            }
+        }
+    }
+
     public void onEntityJoinWorld(EntityJoinWorldEvent event)
     {
         if (c.trackDamageTags || c.highlightStarredMobs && getCurrentIsland() == SkyblockIsland.DUNGEON)
@@ -1036,87 +1062,106 @@ public class DungeonTweaks extends Tweak
                 }
             }
         }
-        else if (c.partyFinderDisplayQuickPlayerInfo && getMc().currentScreen instanceof GuiChest)
+        else if (getMc().currentScreen instanceof GuiChest)
         {
             GuiChest chest = (GuiChest) getMc().currentScreen;
             ContainerChest container = (ContainerChest)chest.inventorySlots;
             String containerName = container.getLowerChestInventory().getName();
             if (containerName.equals("Party Finder"))
             {
-                final int spaceWidth = getMc().fontRendererObj.getStringWidth(" ");
-                int maxWidth = 0;
-                // Line, result, width
-                List<TriPair<Integer, MatchResult, Integer>> playerLines = new ArrayList<>(5);
-
-                for (int i = 0; i < event.toolTip.size(); i++)
+                if (c.partyFinderPlayerBlacklist.size() > 0 &&
+                    event.toolTip.size() > 0 && partyFinderTitleMatcher.reset(event.toolTip.get(0)).find())
                 {
-                    String line = event.toolTip.get(i);
-                    if (partyFinderPlayerMatcher.reset(line).matches())
-                    {
-                        int width = getMc().fontRendererObj.getStringWidth(line);
-                        maxWidth = Math.max(maxWidth, width);
-                        playerLines.add(new TriPair<>(i, partyFinderPlayerMatcher.toMatchResult(), width));
-                        if (playerLines.size() == 5)
-                            break;
-                    }
+                    if (c.partyFinderPlayerBlacklist.contains(partyFinderTitleMatcher.group(1).toLowerCase()))
+                        event.toolTip.set(0,
+                            "§o§6§4§m" + partyFinderTitleMatcher.group(1) + "§a's Party" + partyFinderTitleMatcher.group(2));
                 }
 
-                for (TriPair<Integer, MatchResult, Integer> ele : playerLines)
+                if (c.partyFinderDisplayQuickPlayerInfo || c.partyFinderPlayerBlacklist.size() > 0)
                 {
-                    int i = ele.a;
-                    String line = event.toolTip.get(i);
-                    String padding = Utils.stringRepeat(" ", (maxWidth - ele.c) / spaceWidth);
+                    final int spaceWidth = getMc().fontRendererObj.getStringWidth(" ");
+                    int maxWidth = 0;
+                    // Index, result, width
+                    List<TriPair<Integer, MatchResult, Integer>> playerLines = new ArrayList<>(5);
 
-                    if (!Tweakception.apiManager.hasApiKey())
+                    for (int i = 1; i < event.toolTip.size(); i++)
                     {
-                        event.toolTip.set(i, line + padding + " §fNo API key");
-                        break;
-                    }
-
-                    String name = ele.b.group(1);
-                    DungeonStats stats = getPlayerDungeonStats(name);
-
-                    if (stats == null)
-                    {
-                        event.toolTip.set(i, line + padding + " §fGetting info...");
-                        break;
-                    }
-
-                    if (stats == DungeonStats.NOT_AVAILABLE)
-                    {
-                        event.toolTip.set(i, line + padding + " §cFailed resolving user or not available");
-                        continue;
-                    }
-
-                    StringBuilder sb = new StringBuilder(line);
-                    sb.append(padding);
-                    sb.append(f(" §f[%.2f | %.1f/%s",
-                        stats.cata, stats.secretPerRun, Utils.formatMetric(stats.totalSecret)));
-                    if (c.partyFinderQuickPlayerInfoShowSecretPerExp)
-                        sb.append(f("/%.1f", stats.totalSecret / (stats.cataExp / 50000.0f)));
-
-                    if (stats.apiDiabled)
-                        sb.append(" §cAPI disabled");
-                    else
-                    {
-                        if (stats.wBlade > 0)
+                        String line = event.toolTip.get(i);
+                        if (partyFinderPlayerMatcher.reset(line).matches())
                         {
-                            sb.append(" §eWBlade");
-                            if (stats.wBlade > 1)
-                                sb.append("§cx").append(stats.wBlade);
-                        }
-                        if (stats.term > 0)
-                        {
-                            sb.append(" §eTerm");
-                            if (stats.term > 1)
-                                sb.append("§cx").append(stats.term);
+                            int width = getMc().fontRendererObj.getStringWidth(line);
+                            maxWidth = Math.max(maxWidth, width);
+                            playerLines.add(new TriPair<>(i, partyFinderPlayerMatcher.toMatchResult(), width));
+                            if (playerLines.size() == 5)
+                                break;
                         }
                     }
 
-                    sb.append("§r]");
-                    event.toolTip.set(i, sb.toString());
-                }
+                    for (TriPair<Integer, MatchResult, Integer> ele : playerLines)
+                    {
+                        int i = ele.a;
+                        String line = event.toolTip.get(i);
+                        String name = ele.b.group(1);
+                        String padding = Utils.stringRepeat(" ", (maxWidth - ele.c) / spaceWidth);
 
+                        if (c.partyFinderPlayerBlacklist.size() > 0)
+                        {
+                            if (c.partyFinderPlayerBlacklist.contains(name.toLowerCase()))
+                                event.toolTip.set(i, line = "§5§o §4§m" + name + ele.b.group(2));
+                        }
+
+                        if (c.partyFinderDisplayQuickPlayerInfo)
+                        {
+                            if (!Tweakception.apiManager.hasApiKey())
+                            {
+                                event.toolTip.set(i, line + padding + " §fNo API key");
+                                continue;
+                            }
+
+                            DungeonStats stats = getPlayerDungeonStats(name);
+
+                            if (stats == null)
+                            {
+                                event.toolTip.set(i, line + padding + " §fGetting info...");
+                                continue;
+                            }
+
+                            if (stats == DungeonStats.NOT_AVAILABLE)
+                            {
+                                event.toolTip.set(i, line + padding + " §cFailed resolving user or not available");
+                                continue;
+                            }
+
+                            StringBuilder sb = new StringBuilder(line);
+                            sb.append(padding);
+                            sb.append(f(" §f[%.2f | %.1f/%s",
+                                stats.cata, stats.secretPerRun, Utils.formatMetric(stats.totalSecret)));
+                            if (c.partyFinderQuickPlayerInfoShowSecretPerExp)
+                                sb.append(f("/%.1f", stats.totalSecret / (stats.cataExp / 50000.0f)));
+
+                            if (stats.apiDiabled)
+                                sb.append(" §cAPI disabled");
+                            else
+                            {
+                                if (stats.wBlade > 0)
+                                {
+                                    sb.append(" §eWBlade");
+                                    if (stats.wBlade > 1)
+                                        sb.append("§cx").append(stats.wBlade);
+                                }
+                                if (stats.term > 0)
+                                {
+                                    sb.append(" §eTerm");
+                                    if (stats.term > 1)
+                                        sb.append("§cx").append(stats.term);
+                                }
+                            }
+
+                            sb.append("§r]");
+                            event.toolTip.set(i, sb.toString());
+                        }
+                    }
+                }
             }
         }
     }
@@ -1751,9 +1796,40 @@ public class DungeonTweaks extends Tweak
         sendChat("DT-PartyFinderDisplayQuickPlayerInfo: toggled secrets per 50k exp " + c.partyFinderQuickPlayerInfoShowSecretPerExp);
     }
 
+    public void setPartyFinderPlayerBlacklist(String name)
+    {
+        if (name.equals(""))
+        {
+            sendChatf("DT-PartyFinderPlayerBlacklist: there are %d players in the list",
+                    c.partyFinderPlayerBlacklist.size());
+            int i = 1;
+            for (String s : c.partyFinderPlayerBlacklist)
+                sendChatf("%d: %s", i++, s);
+            return;
+        }
+
+        name = name.toLowerCase();
+        if (c.partyFinderPlayerBlacklist.contains(name))
+        {
+            c.partyFinderPlayerBlacklist.remove(name);
+            sendChat("DT-PartyFinderPlayerBlacklist: removed " + name);
+        }
+        else
+        {
+            c.partyFinderPlayerBlacklist.add(name);
+            sendChat("DT-PartyFinderPlayerBlacklist: added " + name);
+        }
+    }
+
     public void freeCaches()
     {
         uuidToDungeonStatsMap.clear();
         sendChat("DT: cleared caches");
+    }
+
+    public void toggleGyroWandOverlay()
+    {
+        c.gyroWandOverlay = !c.gyroWandOverlay;
+        sendChat("DT-GyroWandOverlay: toggled " + c.gyroWandOverlay);
     }
 }

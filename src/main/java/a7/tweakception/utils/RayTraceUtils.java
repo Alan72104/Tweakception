@@ -1,8 +1,14 @@
 package a7.tweakception.utils;
 
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.Entity;
+import net.minecraft.init.Blocks;
 import net.minecraft.util.*;
 import net.minecraft.world.World;
+import org.lwjgl.util.vector.Vector3f;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -13,14 +19,64 @@ import java.util.TreeMap;
 
 public class RayTraceUtils
 {
-    @Nonnull
+    public static class RayTraceResult
+    {
+        public IBlockState state;
+        public BlockPos pos;
+        public RayTraceResult(IBlockState state, BlockPos pos)
+        {
+            this.state = state;
+            this.pos = pos;
+        }
+    }
+    public static RayTraceResult rayTraceBlock(EntityPlayerSP player, float partialTicks, float dist, float step)
+    {
+        Vector3f pos = new Vector3f((float) player.posX, (float) player.posY + player.getEyeHeight(), (float) player.posZ);
+
+        Vec3 lookVec3 = player.getLook(partialTicks);
+
+        Vector3f look = new Vector3f((float) lookVec3.xCoord, (float) lookVec3.yCoord, (float) lookVec3.zCoord);
+        look.scale(step / look.length());
+
+        int stepCount = (int) Math.ceil(dist / step);
+
+        for (int i = 0; i < stepCount; i++)
+        {
+            Vector3f.add(pos, look, pos);
+
+            WorldClient world = Minecraft.getMinecraft().theWorld;
+            BlockPos position = new BlockPos(pos.x, pos.y, pos.z);
+            IBlockState state = world.getBlockState(position);
+
+            if (state.getBlock() != Blocks.air)
+            {
+                Vector3f.sub(pos, look, pos);
+                look.scale(0.1f);
+
+                for (int j = 0; j < 10; j++) {
+                    Vector3f.add(pos, look, pos);
+
+                    BlockPos position2 = new BlockPos(pos.x, pos.y, pos.z);
+                    IBlockState state2 = world.getBlockState(position2);
+
+                    if (state2.getBlock() != Blocks.air) {
+                        return new RayTraceResult(state2, position2);
+                    }
+                }
+
+                return new RayTraceResult(state, position);
+            }
+        }
+
+        return null;
+    }
+
     public static MovingObjectPosition[] getRayTraceFromEntity(World worldIn, Entity entityIn, boolean useLiquids)
     {
         double reach = 5.0;
         return getRayTraceFromEntity(worldIn, entityIn, useLiquids, reach);
     }
 
-    @Nonnull
     public static MovingObjectPosition[] getRayTraceFromEntity(World worldIn, Entity entityIn, boolean useLiquids, double range)
     {
         Vec3 eyePos = new Vec3(entityIn.posX, entityIn.posY + entityIn.getEyeHeight(), entityIn.posZ);

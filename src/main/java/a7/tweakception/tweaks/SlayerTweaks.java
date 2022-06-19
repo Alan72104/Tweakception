@@ -186,8 +186,8 @@ public class SlayerTweaks extends Tweak
                             {
                                 int lastSlot = getPlayer().inventory.currentItem;
                                 getPlayer().inventory.currentItem = slot;
-                                Tweakception.scheduler.addDelayed(() -> getMc().rightClickMouse(), 6).
-                                        thenDelayed(() -> getPlayer().inventory.currentItem = lastSlot, 8);
+                                Tweakception.scheduler.addDelayed(() -> getMc().rightClickMouse(), 4).
+                                        thenDelayed(() -> getPlayer().inventory.currentItem = lastSlot, 6);
                             }
                         }
                     }
@@ -250,7 +250,7 @@ public class SlayerTweaks extends Tweak
 
     public void onRenderGameOverlayPost(RenderGameOverlayEvent.Post event)
     {
-        if (autoThrowFishingRod && currentSlayer != null)
+        if ((c.highlightSlayers || autoThrowFishingRod) && currentSlayer != null)
         {
             ScaledResolution res = new ScaledResolution(getMc());
             FontRenderer r = getMc().fontRendererObj;

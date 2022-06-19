@@ -1,5 +1,6 @@
 package a7.tweakception.tweaks;
 
+import a7.tweakception.Tweakception;
 import a7.tweakception.config.Configuration;
 import a7.tweakception.events.IslandChangedEvent;
 import a7.tweakception.utils.DumpUtils;
@@ -15,22 +16,31 @@ import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.entity.passive.EntityPig;
+import net.minecraft.event.ClickEvent;
 import net.minecraft.inventory.Slot;
+import net.minecraft.item.ItemStack;
 import net.minecraft.scoreboard.Score;
 import net.minecraft.scoreboard.ScoreObjective;
 import net.minecraft.scoreboard.ScorePlayerTeam;
 import net.minecraft.scoreboard.Scoreboard;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.util.IChatComponent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 
+import java.awt.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
 import static a7.tweakception.utils.McUtils.*;
-import static a7.tweakception.utils.Utils.setClipboard;
 
 public class GlobalTracker extends Tweak
 {
@@ -42,6 +52,7 @@ public class GlobalTracker extends Tweak
         public boolean highlightShinyPigs = false;
         public String shinyPigName = "";
         public boolean hidePlayers = false;
+        public boolean enterToCloseNumberTypingSign = false;
     }
     private static final HashMap<String, SkyblockIsland> SUBPLACE_TO_ISLAND_MAP = new HashMap<>();
     private static int ticks = 0;
@@ -54,6 +65,7 @@ public class GlobalTracker extends Tweak
     private static String currentLocationRawCleaned = "";
     private static boolean useFallbackDetection = false;
     public static boolean t = false;
+    private int pendingCopyStartTicks = -1;
 
     public GlobalTracker(Configuration configuration)
     {
@@ -75,6 +87,12 @@ public class GlobalTracker extends Tweak
                 detectSkyblock();
                 checkIslandChange();
             }
+
+            if (pendingCopyStartTicks != -1 && getTicks() - pendingCopyStartTicks >= 10)
+            {
+                pendingCopyStartTicks = -1;
+                doCopy(false);
+            }
         }
     }
 
@@ -82,7 +100,7 @@ public class GlobalTracker extends Tweak
     {
         if (!c.devMode) return;
 
-        if (Keyboard.getEventKey() == Keyboard.KEY_RCONTROL && Keyboard.getEventKeyState())
+        if (Keyboard.getEventKey() == Keyboard.KEY_RCONTROL && Keyboard.getEventKeyState() && !Keyboard.isRepeatEvent())
         {
             GuiScreen screen = event.gui;
 
@@ -93,25 +111,13 @@ public class GlobalTracker extends Tweak
 
                 if (currentSlot != null && currentSlot.getHasStack())
                 {
-                    switch (c.rightCtrlCopyType)
+                    if (pendingCopyStartTicks != -1)
                     {
-                        case "nbt":
-                        {
-                            String nbt = currentSlot.getStack().serializeNBT().toString();
-                            nbt = DumpUtils.prettifyJson(nbt);
-                            setClipboard(nbt);
-                            sendChat("GT: copied item nbt to clipboard");
-                            break;
-                        }
-                        case "tooltip":
-                        {
-                            List<String> tooltip = currentSlot.getStack().getTooltip(getPlayer(), true);
-                            String s = String.join(System.lineSeparator(), tooltip);
-                            setClipboard(s);
-                            sendChat("GT: copied item tooltip to clipboard");
-                            break;
-                        }
+                        pendingCopyStartTicks = -1;
+                        doCopy(true);
                     }
+                    else
+                        pendingCopyStartTicks = getTicks();
                 }
             }
         }
@@ -241,12 +247,83 @@ public class GlobalTracker extends Tweak
         }
     }
 
-    public void checkIslandChange()
+    private void checkIslandChange()
     {
         if (currentIsland != prevIsland)
         {
             MinecraftForge.EVENT_BUS.post(new IslandChangedEvent(prevIsland, currentIsland));
             prevIsland = currentIsland;
+        }
+    }
+
+    private void doCopy(boolean copyToFile)
+    {
+        GuiScreen screen = getMc().currentScreen;
+
+        if (screen instanceof GuiContainer)
+        {
+            GuiContainer container = (GuiContainer)screen;
+            Slot currentSlot = container.getSlotUnderMouse();
+
+            if (currentSlot != null && currentSlot.getHasStack())
+            {
+                ItemStack stack = currentSlot.getStack();
+                String string;
+                String type;
+                switch (c.rightCtrlCopyType)
+                {
+                    default:
+                    case "nbt":
+                        String nbt = stack.serializeNBT().toString();
+                        string = DumpUtils.prettifyJson(nbt);
+                        type = "nbt";
+                        break;
+                    case "tooltip":
+                        List<String> tooltip = stack.getTooltip(getPlayer(), true);
+                        string = String.join(System.lineSeparator(), tooltip);
+                        type = "tooltip";
+                        break;
+                }
+
+                if (copyToFile)
+                {
+                    String itemName = McUtils.cleanColor(stack.getDisplayName());
+                    File file = null;
+                    try
+                    {
+                        file = Tweakception.configuration.createWriteFileWithCurrentDateTime(
+                                type + "_$_" + itemName.substring(0, Math.min(itemName.length(), 20)) + ".txt",
+                                new ArrayList<>(Collections.singleton(string)));
+
+                        IChatComponent fileName = new ChatComponentText(file.getName());
+                        fileName.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, file.getAbsolutePath()));
+                        fileName.getChatStyle().setUnderlined(true);
+
+                        getPlayer().addChatMessage(new ChatComponentTranslation(
+                                "GT: written item %s to file %s", type, fileName));
+                    }
+                    catch (IOException e)
+                    {
+                        e.printStackTrace();
+                        sendChat("GT: exception occurred when creating file");
+                    }
+                    if (file != null)
+                        try
+                        {
+                            Desktop.getDesktop().open(file);
+                        }
+                        catch (Exception e)
+                        {
+                            e.printStackTrace();
+                            sendChat("GT: exception occurred when opening file");
+                        }
+                }
+                else
+                {
+                    Utils.setClipboard(string);
+                    sendChat("GT: copied item " + type + " to clipboard");
+                }
+            }
         }
     }
 
@@ -305,9 +382,14 @@ public class GlobalTracker extends Tweak
         return c.devMode;
     }
 
+    public boolean isEnterToCloseNumberTypingSignOn()
+    {
+        return c.enterToCloseNumberTypingSign;
+    }
+
     public void copyLocation()
     {
-        setClipboard(currentLocationRaw);
+        Utils.setClipboard(currentLocationRaw);
         sendChat("GT: copied raw location line to clipboard (" + currentLocationRaw + "§r)");
     }
 
@@ -332,7 +414,7 @@ public class GlobalTracker extends Tweak
     public void toggleHighlightShinyPigs()
     {
         c.highlightShinyPigs = !c.highlightShinyPigs;
-        sendChat("GT-HighlightShinyPigs: toggled" + c.highlightShinyPigs);
+        sendChat("GT-HighlightShinyPigs: toggled " + c.highlightShinyPigs);
     }
 
     public void setHighlightShinyPigsName(String name)
@@ -347,6 +429,12 @@ public class GlobalTracker extends Tweak
     public void toggleHidePlayers()
     {
         c.hidePlayers = !c.hidePlayers;
-        sendChat("GT-HidePlayers: toggled" + c.hidePlayers);
+        sendChat("GT-HidePlayers: toggled " + c.hidePlayers);
+    }
+
+    public void toggleEnterToCloseNumberTypingSign()
+    {
+        c.enterToCloseNumberTypingSign = !c.enterToCloseNumberTypingSign;
+        sendChat("GT-EnterToCloseNumberTypingSign: toggled " + c.enterToCloseNumberTypingSign);
     }
 }

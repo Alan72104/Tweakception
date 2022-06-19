@@ -106,8 +106,12 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.dungeonTweaks.togglePartyFinderQuickPlayerInfo(),
                     new Command("secretperexp",
                         args -> Tweakception.dungeonTweaks.togglePartyFinderQuickPlayerInfoShowSecretPerExp())),
+                new Command("blacklist",
+                    args -> Tweakception.dungeonTweaks.setPartyFinderPlayerBlacklist(args.length >= 1 ? args[0] : "")),
                 new Command("clearcaches",
-                    args -> Tweakception.dungeonTweaks.freeCaches()))
+                    args -> Tweakception.dungeonTweaks.freeCaches())),
+            new Command("gyrowandoverlay",
+                args -> Tweakception.dungeonTweaks.toggleGyroWandOverlay())
         ));
         addSub(new Command("crimson",
             null,
@@ -161,6 +165,8 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.globalTracker.setHighlightShinyPigsName(args.length > 0 ? String.join(" ", args) : ""))),
             new Command("hideplayers",
                 args -> Tweakception.globalTracker.toggleHidePlayers()),
+            new Command("entertoclosesign",
+                args -> Tweakception.globalTracker.toggleEnterToCloseNumberTypingSign()),
             new Command("rightctrlcopy",
                 null,
                 new Command("nbt",

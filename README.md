@@ -66,6 +66,9 @@ eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3Rl
   - **[35.70 | 11.2/18k/27.1 WBladex2 Term]**
   - **[35.70 | 11.2/18k/27.1 API disabled]** 
 - dungeon partyfinder quickplayerinfo secretperexp
+- dungeon partyfinder blacklist `[string name]`
+  - **Adds or removes the player from the blacklist, blacklisted players will be displayed in dark red strikethrough**
+  - **Leave empty to see the list**
 - dungeon clearcaches
 ### CrimsonTweaks
 - crimson map - **Toggles map**
@@ -98,6 +101,9 @@ eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3Rl
 - gt highlightshinypigs
 - gt highlightshinypigs setname - **Example:** `setname [vip] alan72104`
 - gt hideplayers - **Hides ALL online players**
+- gt entertoclosesign
+  - **Closes number typing signs (auction/bazaar) when enter is pressed, hold left alt to override**
+  - **Don't change the text lines as it's checked again everytime you press enter**
 - gt rightctrlcopy nbt *(dev)* *(ins)*
 - gt rightctrlcopy tooltip *(dev)* *(ins)*
 ### APIManager
@@ -108,7 +114,7 @@ eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3Rl
 <br> </br>
 ## Dev commands
 - dev - **Toggles dev mode**
-  - **Press right ctrl to copy the nbt of current hovered item in a container**
+  - **Press right ctrl to copy the nbt of current hovered item in a container, or double press to save to file**
   - **Enables dev commands' usage**
 - looktrace `[double reach]` `[bool adjacent]` `[bool liquid]` 
   - **Does looktrace for block/entity and dumps data to file**

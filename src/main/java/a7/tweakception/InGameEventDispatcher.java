@@ -136,6 +136,14 @@ public class InGameEventDispatcher
     }
 
     @SubscribeEvent
+    public void onRenderBlockOverlay(DrawBlockHighlightEvent event)
+    {
+        if (!isInSkyblock()) return;
+
+        dungeonTweaks.onRenderBlockOverlay(event);
+    }
+
+    @SubscribeEvent
     public void onInteract(PlayerInteractEvent event)
     {
         if (!isInSkyblock()) return;

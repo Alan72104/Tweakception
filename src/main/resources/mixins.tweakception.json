@@ -9,6 +9,7 @@
   ],
   "client": [
     "MixinGuiContainer",
+    "MixinGuiEditSign",
     "MixinNetHandlerPlayClient"
   ],
   "injectors": {

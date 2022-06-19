@@ -23,11 +23,9 @@ public abstract class MixinRendererLivingEntity<T extends EntityLivingBase> exte
             "Lnet/minecraft/entity/EntityLivingBase;isInvisibleToPlayer(Lnet/minecraft/entity/player/EntityPlayer;)Z"))
     private boolean redirectedIsInvisibleToPlayer(EntityLivingBase living, EntityPlayer player)
     {
-        if (Tweakception.globalTracker.isRenderInvisibleArmorStandsOn())
+        if (living instanceof EntityArmorStand)
         {
-            if (living instanceof EntityArmorStand)
-                return false;
-            else if (Tweakception.globalTracker.isRenderInvisibleEntitiesOn())
+            if (Tweakception.globalTracker.isRenderInvisibleArmorStandsOn())
                 return false;
             else
                 return living.isInvisibleToPlayer(player);

@@ -12,7 +12,6 @@ import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.network.NetworkPlayerInfo;
-import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.entity.passive.EntityPig;
@@ -55,6 +54,7 @@ public class GlobalTracker extends Tweak
         public boolean enterToCloseNumberTypingSign = false;
         public boolean renderInvisibleEntities = false;
         public boolean renderInvisibleArmorStands = false;
+        public boolean skipWorldRendering = false;
     }
     private static final HashMap<String, SkyblockIsland> SUBPLACE_TO_ISLAND_MAP = new HashMap<>();
     private static int ticks = 0;
@@ -399,6 +399,11 @@ public class GlobalTracker extends Tweak
         return c.renderInvisibleArmorStands;
     }
 
+    public boolean isSkipWorldRenderingOn()
+    {
+        return c.skipWorldRendering;
+    }
+
     public void copyLocation()
     {
         Utils.setClipboard(currentLocationRaw);
@@ -460,5 +465,11 @@ public class GlobalTracker extends Tweak
     {
         c.renderInvisibleArmorStands = !c.renderInvisibleArmorStands;
         sendChat("GT-RenderInvisibleArmorStands: toggled " + c.renderInvisibleArmorStands);
+    }
+
+    public void toggleSkipWorldRendering()
+    {
+        c.skipWorldRendering = !c.skipWorldRendering;
+        sendChat("GT-SkipWorldRendering: toggled " + c.skipWorldRendering);
     }
 }

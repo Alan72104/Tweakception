@@ -171,6 +171,8 @@ public class TweakceptionCommand extends CommandBase
                 args -> Tweakception.globalTracker.toggleRenderInvisibleEntities()),
             new Command("renderinvisiblearmorstands",
                 args -> Tweakception.globalTracker.toggleRenderInvisibleArmorStands()),
+            new Command("skipworldrendering",
+                args -> Tweakception.globalTracker.toggleSkipWorldRendering()),
             new Command("rightctrlcopy",
                 null,
                 new Command("nbt",

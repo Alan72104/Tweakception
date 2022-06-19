@@ -53,6 +53,8 @@ public class GlobalTracker extends Tweak
         public String shinyPigName = "";
         public boolean hidePlayers = false;
         public boolean enterToCloseNumberTypingSign = false;
+        public boolean renderInvisibleEntities = false;
+        public boolean renderInvisibleArmorStands = false;
     }
     private static final HashMap<String, SkyblockIsland> SUBPLACE_TO_ISLAND_MAP = new HashMap<>();
     private static int ticks = 0;
@@ -387,6 +389,16 @@ public class GlobalTracker extends Tweak
         return c.enterToCloseNumberTypingSign;
     }
 
+    public boolean isRenderInvisibleEntitiesOn()
+    {
+        return c.renderInvisibleEntities;
+    }
+
+    public boolean isRenderInvisibleArmorStandsOn()
+    {
+        return c.renderInvisibleArmorStands;
+    }
+
     public void copyLocation()
     {
         Utils.setClipboard(currentLocationRaw);
@@ -436,5 +448,17 @@ public class GlobalTracker extends Tweak
     {
         c.enterToCloseNumberTypingSign = !c.enterToCloseNumberTypingSign;
         sendChat("GT-EnterToCloseNumberTypingSign: toggled " + c.enterToCloseNumberTypingSign);
+    }
+
+    public void toggleRenderInvisibleEntities()
+    {
+        c.renderInvisibleEntities = !c.renderInvisibleEntities;
+        sendChat("GT-RenderInvisibleEntities: toggled " + c.renderInvisibleEntities);
+    }
+
+    public void toggleRenderInvisibleArmorStands()
+    {
+        c.renderInvisibleArmorStands = !c.renderInvisibleArmorStands;
+        sendChat("GT-RenderInvisibleArmorStands: toggled " + c.renderInvisibleArmorStands);
     }
 }

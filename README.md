@@ -5,13 +5,6 @@ config path - .minecraft/config/tweakception/config.json
 ## TODO
 - Particle settings profile
 - Gui editor
-- Dungeon key lightlight (armorstand data below)
-```
-wither key:
-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzRkYjRhZGZhOWJmNDhmZjVkNDE3MDdhZTM0ZWE3OGJkMjM3MTY1OWZjZDhjZDg5MzQ3NDlhZjRjY2U5YiJ9fX0=
-blood:
-eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjU2MTU5NWQ5Yzc0NTc3OTZjNzE5ZmFlNDYzYTIyMjcxY2JjMDFjZjEwODA5ZjVhNjRjY2IzZDZhZTdmOGY2In19fQ==
-```
 
 ## Modules/commands
 
@@ -104,6 +97,8 @@ eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3Rl
 - gt entertoclosesign
   - **Closes number typing signs (auction/bazaar) when enter is pressed, hold left alt to override**
   - **Don't change the text lines as it's checked again everytime you press enter**
+- gt renderinvisibleenities
+- gt renderinvisiblearmorstands
 - gt rightctrlcopy nbt *(dev)* *(ins)*
 - gt rightctrlcopy tooltip *(dev)* *(ins)*
 ### APIManager

@@ -808,7 +808,7 @@ public class DungeonTweaks extends Tweak
                     RayTraceUtils.RayTraceResult res = RayTraceUtils.rayTraceBlock(
                         getPlayer(), event.partialTicks, 26.0f, 0.1f);
                     if (res != null)
-                        RenderUtils.drawBeaconBeamOrBoundingBox(res.pos, new Color(0, 70, 156), event.partialTicks, 1);
+                        RenderUtils.drawBeaconBeamOrBoundingBox(res.pos, new Color(0, 70, 156, 96), event.partialTicks, 1);
                 }
             }
         }

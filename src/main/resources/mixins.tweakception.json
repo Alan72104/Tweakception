@@ -10,7 +10,8 @@
   "client": [
     "MixinGuiContainer",
     "MixinGuiEditSign",
-    "MixinNetHandlerPlayClient"
+    "MixinNetHandlerPlayClient",
+    "MixinRendererLivingEntity"
   ],
   "injectors": {
     "defaultRequire": 1

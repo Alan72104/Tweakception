@@ -9,6 +9,7 @@ import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.entity.player.EntityPlayer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(RendererLivingEntity.class)
@@ -34,5 +35,12 @@ public abstract class MixinRendererLivingEntity<T extends EntityLivingBase> exte
             return false;
         else
             return living.isInvisibleToPlayer(player);
+    }
+
+    @ModifyArg(method = "renderModel", at = @At(value = "INVOKE", target =
+            "Lnet/minecraft/client/renderer/GlStateManager;color(FFFF)V"), index = 3)
+    private float modifyInvisibleEntityAlpha(float a)
+    {
+        return Tweakception.globalTracker.getInvisibleEntityAlpha();
     }
 }

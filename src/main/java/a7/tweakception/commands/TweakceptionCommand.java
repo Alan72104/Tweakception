@@ -54,10 +54,10 @@ public class TweakceptionCommand extends CommandBase
                 args -> Tweakception.dungeonTweaks.toggleTrackDamageTags(),
                 new Command("setcount",
                     args -> Tweakception.dungeonTweaks.setDamageTagTrackingCount(
-                            args.length >= 1 ? Integer.parseInt(args[0]) : 0)),
+                            args.length > 0 ? Integer.parseInt(args[0]) : 0)),
                 new Command("sethistorytimeout",
                     args -> Tweakception.dungeonTweaks.setDamageTagHistoryTimeoutTicks(
-                            args.length >= 1 ? Integer.parseInt(args[0]) : 0)),
+                            args.length > 0 ? Integer.parseInt(args[0]) : 0)),
                 new Command("noncrit",
                     args -> Tweakception.dungeonTweaks.toggleTrackNonCritDamageTags()),
                 new Command("wither",
@@ -71,9 +71,9 @@ public class TweakceptionCommand extends CommandBase
                 new Command("list",
                     args -> Tweakception.dungeonTweaks.autoJoinPartyList()),
                 new Command("add",
-                    args -> Tweakception.dungeonTweaks.autoJoinPartyAdd(args.length >= 1 ? args[0] : "")),
+                    args -> Tweakception.dungeonTweaks.autoJoinPartyAdd(args.length > 0 ? args[0] : "")),
                 new Command("remove",
-                    args -> Tweakception.dungeonTweaks.autoJoinPartyRemove(args.length >= 1 ? args[0] : ""))),
+                    args -> Tweakception.dungeonTweaks.autoJoinPartyRemove(args.length > 0 ? args[0] : ""))),
             new Command("frag",
                     args -> Tweakception.dungeonTweaks.listFragCounts(),
                 new Command("startsession",
@@ -83,7 +83,7 @@ public class TweakceptionCommand extends CommandBase
                 new Command("next",
                     args -> Tweakception.dungeonTweaks.fragNext()),
                 new Command("setfragbot",
-                    args -> Tweakception.dungeonTweaks.setFragBot(args.length >= 1 ? args[0] : "")),
+                    args -> Tweakception.dungeonTweaks.setFragBot(args.length > 0 ? args[0] : "")),
                 new Command("stats",
                     null)),
             new Command("trackshootingspeed",
@@ -107,7 +107,7 @@ public class TweakceptionCommand extends CommandBase
                     new Command("secretperexp",
                         args -> Tweakception.dungeonTweaks.togglePartyFinderQuickPlayerInfoShowSecretPerExp())),
                 new Command("blacklist",
-                    args -> Tweakception.dungeonTweaks.setPartyFinderPlayerBlacklist(args.length >= 1 ? args[0] : "")),
+                    args -> Tweakception.dungeonTweaks.setPartyFinderPlayerBlacklist(args.length > 0 ? args[0] : "")),
                 new Command("clearcaches",
                     args -> Tweakception.dungeonTweaks.freeCaches())),
             new Command("gyrowandoverlay",
@@ -171,6 +171,9 @@ public class TweakceptionCommand extends CommandBase
                 args -> Tweakception.globalTracker.toggleRenderInvisibleEntities()),
             new Command("renderinvisiblearmorstands",
                 args -> Tweakception.globalTracker.toggleRenderInvisibleArmorStands()),
+            new Command("setinvisibleentityalphapercentage",
+                args -> Tweakception.globalTracker.setInvisibleEntityAlphaPercentage(
+                    args.length > 0 ? Integer.parseInt(args[0]) : 0)),
             new Command("skipworldrendering",
                 args -> Tweakception.globalTracker.toggleSkipWorldRendering()),
             new Command("rightctrlcopy",
@@ -261,11 +264,11 @@ public class TweakceptionCommand extends CommandBase
             new Command("toggledebug",
                 args -> Tweakception.autoFish.toggleDebugInfo()),
             new Command("setheadmovingticks",
-                args -> Tweakception.autoFish.setHeadMovingTicks(args.length >= 1 ? Integer.parseInt(args[0]) : 0)),
+                args -> Tweakception.autoFish.setHeadMovingTicks(args.length > 0 ? Integer.parseInt(args[0]) : 0)),
             new Command("setheadmovingyawrange",
-                args -> Tweakception.autoFish.setHeadMovingYawRange(args.length >= 1 ? Float.parseFloat(args[0]) : 0.0f)),
+                args -> Tweakception.autoFish.setHeadMovingYawRange(args.length > 0 ? Float.parseFloat(args[0]) : 0.0f)),
             new Command("setheadmovingpitchrange",
-                args -> Tweakception.autoFish.setHeadMovingPitchRange(args.length >= 1 ? Float.parseFloat(args[0]) : 0.0f)),
+                args -> Tweakception.autoFish.setHeadMovingPitchRange(args.length > 0 ? Float.parseFloat(args[0]) : 0.0f)),
             new Command("toggleslugfish",
                 args -> Tweakception.autoFish.toggleSlugfish())
             ).setVisibility(false));
@@ -281,7 +284,7 @@ public class TweakceptionCommand extends CommandBase
             }).setVisibility(false));
         addSub(new Command("dumpentityinrange",
             args -> DumpUtils.dumpEntitiesInRange(getWorld(), McUtils.getPlayer(),
-                    args.length >= 1 ? Double.parseDouble(args[0]) : 5.0)).setVisibility(false));
+                    args.length > 0 ? Double.parseDouble(args[0]) : 5.0)).setVisibility(false));
         addSub(new Command("clientsetblock",
             args ->
             {

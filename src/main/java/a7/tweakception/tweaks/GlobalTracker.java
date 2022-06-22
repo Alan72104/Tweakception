@@ -54,6 +54,7 @@ public class GlobalTracker extends Tweak
         public boolean enterToCloseNumberTypingSign = false;
         public boolean renderInvisibleEntities = false;
         public boolean renderInvisibleArmorStands = false;
+        public int invisibleEntityAlphaPercentage = 15;
         public boolean skipWorldRendering = false;
     }
     private static final HashMap<String, SkyblockIsland> SUBPLACE_TO_ISLAND_MAP = new HashMap<>();
@@ -399,6 +400,11 @@ public class GlobalTracker extends Tweak
         return c.renderInvisibleArmorStands;
     }
 
+    public float getInvisibleEntityAlpha()
+    {
+        return c.invisibleEntityAlphaPercentage / 100.0f;
+    }
+
     public boolean isSkipWorldRenderingOn()
     {
         return c.skipWorldRendering;
@@ -465,6 +471,15 @@ public class GlobalTracker extends Tweak
     {
         c.renderInvisibleArmorStands = !c.renderInvisibleArmorStands;
         sendChat("GT-RenderInvisibleArmorStands: toggled " + c.renderInvisibleArmorStands);
+    }
+
+    public void setInvisibleEntityAlphaPercentage(int p)
+    {
+        if (p <= 0 || p > 100)
+            c.invisibleEntityAlphaPercentage = 15;
+        else
+            c.invisibleEntityAlphaPercentage = p;
+        sendChat("GT-RenderInvisibleEntities: set alpha percentage to " + c.invisibleEntityAlphaPercentage);
     }
 
     public void toggleSkipWorldRendering()

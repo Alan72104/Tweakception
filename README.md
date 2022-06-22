@@ -99,6 +99,7 @@ config path - .minecraft/config/tweakception/config.json
   - **Don't change the text lines as it's checked again everytime you press enter**
 - gt renderinvisibleenities
 - gt renderinvisiblearmorstands
+- gt setinvisibleentityalphapercentage `int percentage`
 - gt skipworldrendering
 - gt rightctrlcopy nbt *(dev)* *(ins)*
 - gt rightctrlcopy tooltip *(dev)* *(ins)*

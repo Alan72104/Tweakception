@@ -21,14 +21,14 @@ public class MixinGuiEditSign extends GuiScreen
     private TileEntitySign tileSign;
     @Shadow
     private GuiButton doneBtn;
-    private static final String[][] numberTypingSigns =
-    {
-        {"^^^^^^^^^^^^^^^", "Enter amount", "to order"},
-        {"^^^^^^^^^^^^^^^", "Enter price", "big nerd"},
-        {"^^^^^^^^^^^^^^^", "Enter amount", "to sell"},
-        {"^^^^^^^^^^^^^^^", "Enter price", "per unit"},
-        {"^^^^^^^^^^^^^^^", "Your auction", "starting bid"}
-    };
+//    private static final String[][] numberTypingSigns =
+//    {
+//        {"^^^^^^^^^^^^^^^", "Enter amount", "to order"},
+//        {"^^^^^^^^^^^^^^^", "Enter price", "big nerd"},
+//        {"^^^^^^^^^^^^^^^", "Enter amount", "to sell"},
+//        {"^^^^^^^^^^^^^^^", "Enter price", "per unit"},
+//        {"^^^^^^^^^^^^^^^", "Your auction", "starting bid"}
+//    };
 
     @Inject(method = "keyTyped", at = @At("HEAD"), cancellable = true)
     protected void keyTyped(char chr, int key, CallbackInfo ci) throws IOException
@@ -39,17 +39,23 @@ public class MixinGuiEditSign extends GuiScreen
             if (Keyboard.isKeyDown(Keyboard.KEY_LMENU))
                 return;
 
-            for (String[] ele : numberTypingSigns)
+            if (this.tileSign.signText[1].getUnformattedText().equals("^^^^^^^^^^^^^^^"))
             {
-                if (this.tileSign.signText[1].getUnformattedText().equals(ele[0]) &&
-                    this.tileSign.signText[2].getUnformattedText().equals(ele[1]) &&
-                    this.tileSign.signText[3].getUnformattedText().equals(ele[2]))
-                {
-                    this.actionPerformed(this.doneBtn);
-                    ci.cancel();
-                    return;
-                }
+                this.actionPerformed(this.doneBtn);
+                ci.cancel();
             }
+
+//            for (String[] ele : numberTypingSigns)
+//            {
+//                if (this.tileSign.signText[1].getUnformattedText().equals(ele[0]) &&
+//                    this.tileSign.signText[2].getUnformattedText().equals(ele[1]) &&
+//                    this.tileSign.signText[3].getUnformattedText().equals(ele[2]))
+//                {
+//                    this.actionPerformed(this.doneBtn);
+//                    ci.cancel();
+//                    return;
+//                }
+//            }
         }
     }
 }

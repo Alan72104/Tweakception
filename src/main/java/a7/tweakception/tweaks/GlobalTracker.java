@@ -1,5 +1,6 @@
 package a7.tweakception.tweaks;
 
+import a7.tweakception.Scheduler;
 import a7.tweakception.Tweakception;
 import a7.tweakception.config.Configuration;
 import a7.tweakception.events.IslandChangedEvent;
@@ -34,9 +35,7 @@ import org.lwjgl.input.Keyboard;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
 
 import static a7.tweakception.utils.McUtils.*;
@@ -67,6 +66,7 @@ public class GlobalTracker extends Tweak
     private static String currentLocationRaw = "";
     private static String currentLocationRawCleaned = "";
     private static boolean useFallbackDetection = false;
+    private static final Map<String, Runnable> chatActionMap = new HashMap<>();
     public static boolean t = false;
     private int pendingCopyStartTicks = -1;
 
@@ -408,6 +408,34 @@ public class GlobalTracker extends Tweak
     public boolean isSkipWorldRenderingOn()
     {
         return c.skipWorldRendering;
+    }
+
+    public String registerChatAction(Runnable action, int timeoutTicks, Runnable timeoutAction)
+    {
+        String uuid = UUID.randomUUID().toString();
+
+        Scheduler.ScheduledTask deletionTask = Tweakception.scheduler.addDelayed(() ->
+        {
+            chatActionMap.remove(uuid);
+            if (timeoutAction != null)
+                timeoutAction.run();
+        }, Math.max(timeoutTicks, 20));
+
+        chatActionMap.put(uuid, () ->
+        {
+            action.run();
+            Tweakception.scheduler.remove(deletionTask);
+        });
+
+        return uuid;
+    }
+
+    public void doChatAction(String uuid)
+    {
+        if (chatActionMap.containsKey(uuid))
+        {
+            chatActionMap.get(uuid).run();
+        }
     }
 
     public void copyLocation()

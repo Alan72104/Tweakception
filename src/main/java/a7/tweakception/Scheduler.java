@@ -47,6 +47,11 @@ public class Scheduler
         return scheduledTask;
     }
 
+    public void remove(ScheduledTask task)
+    {
+        tasks.remove(task);
+    }
+
     public static class ScheduledTask
     {
         private final Scheduler scheduler;

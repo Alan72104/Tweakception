@@ -95,8 +95,8 @@ config path - .minecraft/config/tweakception/config.json
 - gt highlightshinypigs setname - **Example:** `setname [vip] alan72104`
 - gt hideplayers - **Hides ALL online players**
 - gt entertoclosesign
-  - **Closes number typing signs (auction/bazaar) when enter is pressed, hold left alt to override**
-  - **Don't change the text lines as it's checked again everytime you press enter**
+  - **Closes number typing signs when enter is pressed, hold left alt to override**
+  - **It only activates if the second line equals "^^^^^^^^^^^^^^^"**
 - gt renderinvisibleenities
 - gt renderinvisiblearmorstands
 - gt setinvisibleentityalphapercentage `int percentage`

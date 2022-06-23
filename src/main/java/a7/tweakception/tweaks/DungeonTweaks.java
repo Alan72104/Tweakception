@@ -21,6 +21,7 @@ import net.minecraft.entity.monster.EntitySkeleton;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.passive.EntityBat;
 import net.minecraft.entity.projectile.EntityArrow;
+import net.minecraft.event.ClickEvent;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.IInventory;
@@ -32,7 +33,9 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.play.server.S0DPacketCollectItem;
 import net.minecraft.network.play.server.S19PacketEntityStatus;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.IChatComponent;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
@@ -1452,13 +1455,37 @@ public class DungeonTweaks extends Tweak
         if (c.blockRightClickItemNames.contains(name))
         {
             c.blockRightClickItemNames.remove(name);
-            sendChat("DT-BlockRightClick: removed item (" + name + EnumChatFormatting.RESET + ") from block list");
+            sendChat("DT-BlockRightClick: removed item \"" + name  + "§r\" from block list");
         }
         else
         {
             c.blockRightClickItemNames.add(name);
-            sendChat("DT-BlockRightClick: added item (" + name + EnumChatFormatting.RESET + ") to block list");
+            sendChat("DT-BlockRightClick: added item \"" + name  + "§r\" to block list");
         }
+    }
+
+    public void blockRightClickRemove(int i)
+    {
+        if (i < 1 || i > c.blockRightClickItemNames.size())
+        {
+            sendChat("DT-BlockRightClick: index out of bounds");
+            return;
+        }
+        String ele = c.blockRightClickItemNames.toArray(new String[0])[i - 1];
+        String chatActionUuid = Tweakception.globalTracker.registerChatAction(() ->
+        {
+            if (c.blockRightClickItemNames.contains(ele))
+            {
+                c.blockRightClickItemNames.remove(ele);
+                sendChat("DT-BlockRightClick: removed \"" + ele + "§r\" from the list");
+            }
+        }, 20 * 5, null);
+
+        IChatComponent nice = new ChatComponentText(
+            "DT-BlockRightClick: you really wanna remove \"" + ele + "§r\" from the list? Click here in 5 seconds to continue");
+        nice.getChatStyle().setChatClickEvent(
+            new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tc action " + chatActionUuid));
+        getPlayer().addChatMessage(nice);
     }
 
     public void blockRightClickList()

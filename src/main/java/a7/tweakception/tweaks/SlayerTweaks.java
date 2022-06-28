@@ -128,7 +128,7 @@ public class SlayerTweaks extends Tweak
                         EntityPlayerSP p = getPlayer();
                         glyphs = glyphsTemp;
                         glyphsTemp = new ArrayList<>(20);
-                        searchThread = new BlockSearchThread((int)p.posX, (int)p.posY, (int)p.posZ, 15, 10, getWorld(), Blocks.beacon, glyphsTemp);
+                        searchThread = new BlockSearchThread((int)p.posX, (int)p.posY, (int)p.posZ, 30, 15, getWorld(), Blocks.beacon, glyphsTemp);
                         Tweakception.threadPool.execute(searchThread);
                     }
                 }
@@ -150,45 +150,43 @@ public class SlayerTweaks extends Tweak
             slayerMinibossCache.removeIf(ele -> ele.nameTag.isDead);
             currentSlayer = null;
 
-            if (autoThrowFishingRod)
+            double nearestDis = Double.MAX_VALUE;
+            for (SlayerRecord record : slayersCache)
             {
-                double nearestDis = Double.MAX_VALUE;
-                for (SlayerRecord record : slayersCache)
+                double dis = record.nameTag.getDistanceSqToEntity(getPlayer());
+                if (dis <= 64.0 && dis < nearestDis)
                 {
-                    double dis = record.nameTag.getDistanceSqToEntity(getPlayer());
-                    if (dis <= 64.0 && dis < nearestDis)
-                    {
-                        nearestDis = dis;
-                        currentSlayer = record;
-                    }
+                    nearestDis = dis;
+                    currentSlayer = record;
                 }
+            }
 
-                if (currentSlayer != null)
+            if (currentSlayer != null)
+            {
+                float health = parseHealth(currentSlayer.nameTag.getName());
+                if (health != -1.0f && health != 0.0f)
                 {
-                    float health = parseHealth(currentSlayer.nameTag.getName());
-                    if (health != -1.0f && health != 0.0f)
+                    currentSlayer.health = health;
+                    if (currentSlayer.voidgloomFirstHitPhase)
                     {
-                        currentSlayer.health = health;
-                        if (currentSlayer.voidgloomFirstHitPhase)
-                        {
-                            currentSlayer.voidgloomFirstHitPhase = false;
-                            currentSlayer.maxHealth = health;
-                        }
-                        else if (!currentSlayer.fishingRodThrown &&
-                                currentSlayer.health <= currentSlayer.maxHealth * c.autoThrowFishingRodThreshold / 100)
-                        {
-                            currentSlayer.fishingRodThrown = true;
-                            int slot = findFishingRodSlot();
+                        currentSlayer.voidgloomFirstHitPhase = false;
+                        currentSlayer.maxHealth = health;
+                    }
+                    else if (autoThrowFishingRod &&
+                            !currentSlayer.fishingRodThrown &&
+                            currentSlayer.health <= currentSlayer.maxHealth * c.autoThrowFishingRodThreshold / 100)
+                    {
+                        currentSlayer.fishingRodThrown = true;
+                        int slot = findFishingRodSlot();
 
-                            if (slot == -1)
-                                sendChat("ST-AutoThrowFishingRod: cannot find any fishing rod in your hotbar!");
-                            else
-                            {
-                                int lastSlot = getPlayer().inventory.currentItem;
-                                getPlayer().inventory.currentItem = slot;
-                                Tweakception.scheduler.addDelayed(() -> getMc().rightClickMouse(), 4).
-                                        thenDelayed(() -> getPlayer().inventory.currentItem = lastSlot, 6);
-                            }
+                        if (slot == -1)
+                            sendChat("ST-AutoThrowFishingRod: cannot find any fishing rod in your hotbar!");
+                        else
+                        {
+                            int lastSlot = getPlayer().inventory.currentItem;
+                            getPlayer().inventory.currentItem = slot;
+                            Tweakception.scheduler.addDelayed(() -> getMc().rightClickMouse(), 4).
+                                    thenDelayed(() -> getPlayer().inventory.currentItem = lastSlot, 6);
                         }
                     }
                 }

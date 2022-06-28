@@ -13,7 +13,6 @@ import net.minecraft.util.ResourceLocation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.stream.Collectors;
 
 import static a7.tweakception.utils.McUtils.*;
@@ -96,11 +95,11 @@ public class TweakceptionCommand extends CommandBase
             new Command("trackshootingspeed",
                 args -> Tweakception.dungeonTweaks.toggleTrackShootingSpeed(),
                     new Command("setsamplesecs",
-                            args -> Tweakception.dungeonTweaks.setShootingSpeedTrackingSampleSecs(
-                                    args.length >= 1 ? Integer.parseInt(args[0]) : 0)),
+                        args -> Tweakception.dungeonTweaks.setShootingSpeedTrackingSampleSecs(
+                                args.length >= 1 ? Integer.parseInt(args[0]) : 0)),
                     new Command("setspawnrange",
-                            args -> Tweakception.dungeonTweaks.setShootingSpeedTrackingRange(
-                                    args.length >= 1 ? Integer.parseInt(args[0]) : 0))
+                        args -> Tweakception.dungeonTweaks.setShootingSpeedTrackingRange(
+                                args.length >= 1 ? Integer.parseInt(args[0]) : 0))
             ),
             new Command("displaymobnametag",
                 args -> Tweakception.dungeonTweaks.toggleDisplayMobNameTag()),
@@ -111,12 +110,14 @@ public class TweakceptionCommand extends CommandBase
             new Command("partyfinder",
                 null,
                 new Command("quickplayerinfo",
-                    args -> Tweakception.dungeonTweaks.togglePartyFinderQuickPlayerInfo(),
+                    args -> Tweakception.dungeonTweaks.partyFinderQuickPlayerInfoToggle(),
                     new Command("secretperexp",
-                        args -> Tweakception.dungeonTweaks.togglePartyFinderQuickPlayerInfoShowSecretPerExp())
+                        args -> Tweakception.dungeonTweaks.partyFinderQuickPlayerInfoToggleShowSecretPerExp())
                 ),
                 new Command("blacklist",
-                    args -> Tweakception.dungeonTweaks.setPartyFinderPlayerBlacklist(args.length > 0 ? args[0] : "")),
+                    args -> Tweakception.dungeonTweaks.partyFinderPlayerBlacklistSet(
+                            args.length > 0 ? args[0] : "",
+                            args.length > 1 ? String.join(" ", Arrays.copyOfRange(args, 1, args.length)) : "")),
                 new Command("clearcaches",
                     args -> Tweakception.dungeonTweaks.freeCaches())
             ),

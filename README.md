@@ -59,8 +59,8 @@ config path - .minecraft/config/tweakception/config.json
   - **[35.70 | 11.2/18k/27.1 WBladex2 Term]**
   - **[35.70 | 11.2/18k/27.1 API disabled]** 
 - dungeon partyfinder quickplayerinfo secretperexp
-- dungeon partyfinder blacklist `[string name]`
-  - **Adds or removes the player from the blacklist, blacklisted players will be displayed in dark red strikethrough**
+- dungeon partyfinder blacklist `[string name]` `[string reason...]`
+  - **Adds or removes the player from the blacklist, blacklisted players will be displayed in dark red strikethrough, hold left ctrl to see the reason**
   - **Leave empty to see the list**
 - dungeon clearcaches
 ### CrimsonTweaks

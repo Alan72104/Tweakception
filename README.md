@@ -123,8 +123,9 @@ config path - .minecraft/config/tweakception/config.json
 - clientsetblock `string blockName`
   - **Sets the block at foot level**
   - **blockName is the registry name in net.minecraft.init.Blocks**
-- trackticktime
-  - **Toggles tick times tracking, in microseconds**
+- notifylagspike *(ins)* - **Toggles lag spike notifying**
+  - setthreshold `[float threshold]` *(ins)* - **Sets the threshold at which to notify, defaults to 1000.0x**
+  - setaggregation `[float aggregation]` *(ins)* - **Sets the aggregation of average tick time, defaults to 0.4 new**
 ### AutoFish
 - autofish - **Toggles auto fish**
 - autofish setretrievedelay `[int min]` `[int max]` - **Leave 1 or more empty to reset**

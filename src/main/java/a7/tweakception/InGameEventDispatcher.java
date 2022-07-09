@@ -1,6 +1,8 @@
 package a7.tweakception;
 
 import a7.tweakception.events.IslandChangedEvent;
+import a7.tweakception.utils.Utils;
+import net.minecraft.util.ChatComponentText;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
@@ -14,29 +16,102 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
+import java.text.DecimalFormat;
+
 import static a7.tweakception.Tweakception.*;
 import static a7.tweakception.tweaks.GlobalTracker.getTicks;
 import static a7.tweakception.tweaks.GlobalTracker.isInSkyblock;
-import static a7.tweakception.utils.McUtils.isInGame;
-import static a7.tweakception.utils.McUtils.sendChat;
+import static a7.tweakception.utils.McUtils.*;
 
 public class InGameEventDispatcher
 {
-    private boolean trackTickTime = false;
-    private final long[] tickStartTimes = new long[5];
-    private final float[] tickTimes = new float[5];
-    private final float[] lastTickTimes = new float[5];
-
-    public void toggleTickTimeTracking()
+    private static final String[] TICK_TYPES =
     {
-        trackTickTime = !trackTickTime;
+        "Tick",
+        "World",
+        "Overlay",
+        "Living",
+        "LivingSpe"
+    };
+    private boolean notifyLagSpike = false;
+    private float notifyThreshold = 1000.0f;
+    private float avgAggregationValue = 0.4f;
+    private final DecimalFormat format = new DecimalFormat("#.##");
+    private final long[] tickStartTimes = new long[TICK_TYPES.length];
+    private final float[] startPhaseTickTimes = new float[TICK_TYPES.length];
+    private final float[] fullTickTimes = new float[TICK_TYPES.length];
+    private final float[] lastFullTickTimes = new float[TICK_TYPES.length];
+
+    public void toggleNotifyLagSpike()
+    {
+        notifyLagSpike = !notifyLagSpike;
+    }
+
+    public void setNotifyThreshold(float f)
+    {
+        if (f < 1.0f)
+            f = 1000.0f;
+        notifyThreshold = f;
+        sendChat("TC: set lag spike notify threshold to " + format.format(notifyThreshold));
+    }
+
+    public void setAggregationValue(float f)
+    {
+        f = Utils.clamp(f, 0.0f, 1.0f);
+        if (f == 0.0f)
+            f = 0.4f;
+        avgAggregationValue = f;
+        sendChatf("TC: set tick time avg value aggregation to %.1f old, %.1f new",
+                1.0f - avgAggregationValue, avgAggregationValue);
+    }
+
+    private void startFunc(int i)
+    {
+        tickStartTimes[i] = System.nanoTime();
+    }
+
+    private void endFuncAndAddNum(TickEvent.Phase phase, int i)
+    {
+        long end = System.nanoTime();
+
+        if (phase == TickEvent.Phase.START)
+        {
+            startPhaseTickTimes[i] = end - tickStartTimes[i];
+            return;
+        }
+
+        fullTickTimes[i] = fullTickTimes[i] * (1.0f - avgAggregationValue) +
+                ((end - tickStartTimes[i]) + startPhaseTickTimes[i]) * avgAggregationValue;
+
+        if (notifyLagSpike && fullTickTimes[i] > lastFullTickTimes[i] * notifyThreshold && getPlayer() != null)
+        {
+            getPlayer().addChatMessage(new ChatComponentText(
+                "TC: " + TICK_TYPES[i] + " is taking " + format.format(notifyThreshold) + "x longer than usual! (" +
+                        format.format(fullTickTimes[i]/1000.0f) + " us)"));
+        }
+        lastFullTickTimes[i] = fullTickTimes[i];
+    }
+
+    private void endFuncAndAddNum(int i)
+    {
+        long end = System.nanoTime();
+
+        fullTickTimes[i] = fullTickTimes[i] * (1.0f - avgAggregationValue) +
+                (end - tickStartTimes[i]) * avgAggregationValue;
+
+        if (notifyLagSpike && fullTickTimes[i] > lastFullTickTimes[i] * notifyThreshold && getPlayer() != null)
+        {
+            getPlayer().addChatMessage(new ChatComponentText(
+                "TC: " + TICK_TYPES[i] + " is taking " + format.format(notifyThreshold) + "x longer than usual! (" +
+                        format.format(fullTickTimes[i]/1000.0f) + " us)"));
+        }
+        lastFullTickTimes[i] = fullTickTimes[i];
     }
 
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event)
     {
-        if (trackTickTime)
-            tickStartTimes[0] = System.nanoTime();
+        startFunc(0);
         if (!isInGame()) return;
 
         globalTracker.onTick(event);
@@ -49,18 +124,7 @@ public class InGameEventDispatcher
         slayerTweaks.onTick(event);
         miningTweaks.onTick(event);
 
-        if (trackTickTime)
-        {
-            tickTimes[0] = tickTimes[0] * 0.2f + (System.nanoTime() - tickStartTimes[0]) * 0.8f;
-            if (event.phase == TickEvent.Phase.END && getTicks() % 20 == 0)
-            {
-                sendChat("Client tick: " + tickTimes[0] / 1000.0f + " us");
-                sendChat("World render: " + tickTimes[1] / 1000.0f + " us");
-                sendChat("Overlay render: " + tickTimes[2] / 1000.0f + " us");
-                sendChat("Living Render: " + tickTimes[3] / 1000.0f + " us");
-                sendChat("Living special render: " + tickTimes[4] / 1000.0f + " us");
-            }
-        }
+        endFuncAndAddNum(event.phase, 0);
     }
 
     @SubscribeEvent
@@ -74,8 +138,7 @@ public class InGameEventDispatcher
     @SubscribeEvent
     public void onRenderLast(RenderWorldLastEvent event)
     {
-        if (trackTickTime)
-            tickStartTimes[1] = System.nanoTime();
+        startFunc(1);
         if (!isInGame()) return;
         if (!isInSkyblock()) return;
 
@@ -85,15 +148,13 @@ public class InGameEventDispatcher
         slayerTweaks.onRenderLast(event);
         miningTweaks.onRenderLast(event);
 
-        if (trackTickTime)
-            tickTimes[1] = tickTimes[1] * 0.2f + (System.nanoTime() - tickStartTimes[1]) * 0.8f;
+        endFuncAndAddNum(1);
     }
 
     @SubscribeEvent
     public void onRenderGameOverlayPost(RenderGameOverlayEvent.Post event)
     {
-        if (trackTickTime)
-            tickStartTimes[2] = System.nanoTime();
+        startFunc(2);
         if (!isInGame()) return;
         if (!isInSkyblock()) return;
 
@@ -102,37 +163,32 @@ public class InGameEventDispatcher
         autoFish.onRenderGameOverlayPost(event);
         slayerTweaks.onRenderGameOverlayPost(event);
 
-        if (trackTickTime)
-            tickTimes[2] = tickTimes[2] * 0.2f + (System.nanoTime() - tickStartTimes[2]) * 0.8f;
+        endFuncAndAddNum(2);
     }
 
     @SubscribeEvent()
     public void onLivingRenderPre(RenderLivingEvent.Pre event)
     {
-        if (trackTickTime)
-            tickStartTimes[3] = System.nanoTime();
+        startFunc(3);
         if (!isInSkyblock()) return;
 
         dungeonTweaks.onLivingRenderPre(event);
         globalTracker.onLivingRenderPre(event);
 
-        if (trackTickTime)
-            tickTimes[3] = tickTimes[3] * 0.2f + (System.nanoTime() - tickStartTimes[3]) * 0.8f;
+        endFuncAndAddNum(3);
     }
 
     // Called on RenderLivingEntity.renderName()
     @SubscribeEvent
     public void onLivingSpecialRenderPre(RenderLivingEvent.Specials.Pre event)
     {
-        if (trackTickTime)
-            tickStartTimes[4] = System.nanoTime();
+        startFunc(4);
         if (!isInSkyblock()) return;
 
         dungeonTweaks.onLivingSpecialRenderPre(event);
         globalTracker.onLivingSpecialRenderPre(event);
 
-        if (trackTickTime)
-            tickTimes[4] = tickTimes[4] * 0.2f + (System.nanoTime() - tickStartTimes[4]) * 0.8f;
+        endFuncAndAddNum(4);
     }
 
     @SubscribeEvent

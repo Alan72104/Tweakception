@@ -313,8 +313,15 @@ public class TweakceptionCommand extends CommandBase
                 else
                     sendChat("Give me 1 arg");
             }).setVisibility(false));
-        addSub(new Command("trackticktime",
-            args -> Tweakception.inGameEventDispatcher.toggleTickTimeTracking()).setVisibility(false));
+        addSub(new Command("notifylagspike",
+            args -> Tweakception.inGameEventDispatcher.toggleNotifyLagSpike(),
+            new Command("setthreshold",
+                args -> Tweakception.inGameEventDispatcher.setNotifyThreshold(
+                        args.length > 0 ? Float.parseFloat(args[0]) : 0.0f)),
+            new Command("setaggregation",
+                args -> Tweakception.inGameEventDispatcher.setAggregationValue(
+                        args.length > 0 ? Float.parseFloat(args[0]) : 0.0f))
+        ).setVisibility(false));
         addSub(new Command("dev",
             args -> Tweakception.globalTracker.toggleDevMode()));
         addSub(new Command("t",
@@ -399,7 +406,7 @@ public class TweakceptionCommand extends CommandBase
 
     private static List<String> getPossibleCompletions(String arg, List<String> opts)
     {
-        List<String> list = new ArrayList<String>();
+        List<String> list = new ArrayList<>();
 
         for (String opt : opts)
             if (opt.startsWith(arg))

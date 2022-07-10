@@ -6,6 +6,7 @@ import a7.tweakception.utils.McUtils;
 import a7.tweakception.utils.Pair;
 import a7.tweakception.utils.RenderUtils;
 import a7.tweakception.utils.Utils;
+import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
@@ -17,6 +18,7 @@ import net.minecraft.entity.passive.EntityWolf;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
@@ -282,6 +284,8 @@ public class SlayerTweaks extends Tweak
     {
         if (searchThread != null)
             searchThread.cancel = true;
+        slayersCache.clear();
+        slayerMinibossCache.clear();
     }
 
     private int findFishingRodSlot()
@@ -370,5 +374,29 @@ public class SlayerTweaks extends Tweak
     {
         c.highlightSlayerMiniboss = !c.highlightSlayerMiniboss;
         sendChat("ST-HighlightSlayerMiniboss: toggled " + c.highlightSlayerMiniboss);
+    }
+
+    public void getPlayerCountInArea(int type)
+    {
+        String areaName;
+        List<Entity> entities;
+
+        switch (type)
+        {
+            default:
+            case 0:
+                areaName = "park";
+                String shamanSkin = "minecraft:skins/57a517865b820a4451cd3cc6765f370fd0522b6489c9c94fb345fdee2689451a";
+                entities = getWorld().getEntitiesWithinAABB(EntityOtherPlayerMP.class,
+                        new AxisAlignedBB(-351, 78, -102, -399, 49, 36),
+                        e ->
+                        {
+                            String skin = ((AbstractClientPlayer)e).getLocationSkin().toString();
+                            return !skin.equals(shamanSkin);
+                        });
+                break;
+        }
+
+        sendChat("ST: there are " + entities.size() + " players in the " + areaName + " area");
     }
 }

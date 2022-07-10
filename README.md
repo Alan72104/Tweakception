@@ -75,6 +75,7 @@ config path - .minecraft/config/tweakception/config.json
 ### SlayerTweaks
 - slayer autothrowfishingrod *(ins)* - **Automatically throws fishing rod in hotbar when slayer boss hp goes below a threshold percent**
 - slayer autothrowfishingrod setthreshold `[int percent]` - **Defaults to 15%**
+- slayer playercount park - **Displays the "loaded" player count in the slayer area of park in the current world**
 - slayer eman highlightglyph
 ### FairyTracker
 - fairy - **Toggles fairy scanner**

@@ -236,6 +236,11 @@ public class TweakceptionCommand extends CommandBase
                 new Command("setthreshold",
                     args -> Tweakception.slayerTweaks.setAutoThrowFishingRodThreshold(
                             args.length >= 1 ? Integer.parseInt(args[0]) : -1))
+            ),
+            new Command("playercount",
+                null,
+                new Command("park",
+                    args -> Tweakception.slayerTweaks.getPlayerCountInArea(0))
             )
         ));
         addSub(new Command("tuning",

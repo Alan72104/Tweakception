@@ -106,7 +106,8 @@ public class AutoFish extends Tweak
             {
                 case NOTHING:
                 case WAITING:
-                    if (!waitForSlugfish || System.currentTimeMillis() - neuLastRodCastMillis > 32 * 1000)
+                    if ((!waitForSlugfish || System.currentTimeMillis() - neuLastRodCastMillis > 32 * 1000) &&
+                        getTicks() - lastRetrieveClickTicks > 5)
                     {
                         state = FishingState.values()[neuState.ordinal()];
 

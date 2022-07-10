@@ -236,6 +236,11 @@ public class TweakceptionCommand extends CommandBase
                             args.length >= 1 ? Integer.parseInt(args[0]) : -1))
             )
         ));
+        addSub(new Command("tuning",
+            null,
+            new Command("toggletemplate",
+                args -> Tweakception.tuningTweaks.toggleTemplate())
+        ));
         addSub(new Command("api",
             null,
             new Command("set",

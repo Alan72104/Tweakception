@@ -17,6 +17,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import org.lwjgl.input.Keyboard;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -57,31 +58,53 @@ public abstract class MixinGuiContainer extends GuiScreen
     @Inject(method = "handleMouseClick", at = @At("HEAD"), cancellable = true)
     public void handleMouseClick(Slot slot, int slotId, int button, int mode, CallbackInfo ci)
     {
+        if (!(slot != null && this.inventorySlots instanceof ContainerChest))
+            return;
+
+        ContainerChest chest = (ContainerChest)this.inventorySlots;
+        IInventory inv = chest.getLowerChestInventory();
+        String name = inv.getName();
         if (Tweakception.dungeonTweaks.isBlockingOpheliaShopClicks() &&
-            slot != null && this.inventorySlots instanceof ContainerChest)
+            inv.getSizeInventory() == 54 &&
+            name.equals("Ophelia"))
         {
-            ContainerChest chest = (ContainerChest)this.inventorySlots;
-            IInventory inv = chest.getLowerChestInventory();
-            String name = inv.getName();
-            if (inv.getSizeInventory() == 54 &&
-                name.equals("Ophelia"))
+            int column = slotId % 9;
+            int row = slotId / 9;
+            if (column >= 2 - 1 && column <= 8 - 1 &&
+                row >= 2 - 1 && row <= 5 - 1)
             {
-                int column = slotId % 9;
-                int row = slotId / 9;
-                if (column >= 2 - 1 && column <= 8 - 1 &&
-                    row >= 2 - 1 && row <= 5 - 1)
+                EntityPlayerSP p = McUtils.getPlayer();
+                ISound sound = new PositionedSoundRecord(new ResourceLocation("random.orb"),
+                        1.0f, 0.943f, (float)p.posX, (float)p.posY, (float)p.posZ);
+
+                float oldLevel = getMc().gameSettings.getSoundLevel(SoundCategory.PLAYERS);
+                getMc().gameSettings.setSoundLevel(SoundCategory.PLAYERS, 1);
+                getMc().getSoundHandler().playSound(sound);
+                getMc().gameSettings.setSoundLevel(SoundCategory.PLAYERS, oldLevel);
+
+                ci.cancel();
+            }
+        }
+        else if (Tweakception.tuningTweaks.isTemplatesEnabled() &&
+                inv.getSizeInventory() == 54 &&
+                name.equals("Stats Tuning") &&
+                slot.getStack() != null)
+        {
+            int index = Tweakception.tuningTweaks.getTemplateSlotFromStack(slot.getStack());
+            if (index != -1)
+            {
+                if (mode == 1)
                 {
-                    EntityPlayerSP p = McUtils.getPlayer();
-                    ISound sound = new PositionedSoundRecord(new ResourceLocation("random.orb"),
-                            1.0f, 0.943f, (float)p.posX, (float)p.posY, (float)p.posZ);
-
-                    float oldLevel = getMc().gameSettings.getSoundLevel(SoundCategory.PLAYERS);
-                    getMc().gameSettings.setSoundLevel(SoundCategory.PLAYERS, 1);
-                    getMc().getSoundHandler().playSound(sound);
-                    getMc().gameSettings.setSoundLevel(SoundCategory.PLAYERS, oldLevel);
-
-                    ci.cancel();
+                    if (button == 0)
+                        Tweakception.tuningTweaks.useTemplate(index);
+                    else if (button == 1)
+                        Tweakception.tuningTweaks.setTemplate(index);
                 }
+                else if (mode == 0 && button == 0 && Keyboard.isKeyDown(Keyboard.KEY_LCONTROL))
+                {
+                    Tweakception.tuningTweaks.removeTemplate(index);
+                }
+                ci.cancel();
             }
         }
     }

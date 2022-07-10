@@ -39,6 +39,7 @@ public class Tweakception
     public static AutoFish autoFish;
     public static MiningTweaks miningTweaks;
     public static APIManager apiManager;
+    public static TuningTweaks tuningTweaks;
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) throws Exception
@@ -58,6 +59,7 @@ public class Tweakception
         autoFish = new AutoFish(configuration);
         miningTweaks = new MiningTweaks(configuration);
         apiManager = new APIManager(configuration);
+        tuningTweaks = new TuningTweaks(configuration);
 
         proxy.registerClientCommands();
         proxy.registerClientEventHandlers();
@@ -68,8 +70,6 @@ public class Tweakception
             {
                 configuration.writeConfig();
                 threadPool.shutdownNow();
-                while (!threadPool.isTerminated())
-                    ;
             }
             catch (Exception ignored)
             {

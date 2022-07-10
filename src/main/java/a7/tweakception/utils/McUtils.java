@@ -59,6 +59,8 @@ public class McUtils
 
     public static String[] getDisplayLore(ItemStack stack)
     {
+        if (stack == null)
+            return null;
         NBTTagCompound nbt = stack.getTagCompound();
         if (nbt != null)
         {
@@ -82,14 +84,17 @@ public class McUtils
 
     public static String getArmorStandHeadTexture(EntityArmorStand armorStand)
     {
-        ItemStack head = armorStand.getCurrentArmor(3);
+        return getSkullTexture(armorStand.getCurrentArmor(3));
+    }
 
-        if (head == null)
+    public static String getSkullTexture(ItemStack stack)
+    {
+        if (stack == null)
             return null;
-        if (head.getItem() != Items.skull)
+        if (stack.getItem() != Items.skull)
             return null;
 
-        NBTTagCompound tag = head.getTagCompound();
+        NBTTagCompound tag = stack.getTagCompound();
         if (tag == null)
             return null;
         if (!tag.hasKey("SkullOwner"))

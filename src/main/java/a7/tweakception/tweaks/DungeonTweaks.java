@@ -1065,7 +1065,7 @@ public class DungeonTweaks extends Tweak
         }
         else if (getMc().currentScreen instanceof GuiChest)
         {
-            GuiChest chest = (GuiChest) getMc().currentScreen;
+            GuiChest chest = (GuiChest)getMc().currentScreen;
             ContainerChest container = (ContainerChest)chest.inventorySlots;
             String containerName = container.getLowerChestInventory().getName();
             if (containerName.equals("Party Finder"))

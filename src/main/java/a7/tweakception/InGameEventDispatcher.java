@@ -123,6 +123,7 @@ public class InGameEventDispatcher
         crimsonTweaks.onTick(event);
         slayerTweaks.onTick(event);
         miningTweaks.onTick(event);
+        tuningTweaks.onTick(event);
 
         endFuncAndAddNum(event.phase, 0);
     }
@@ -269,6 +270,7 @@ public class InGameEventDispatcher
         if (!isInSkyblock()) return;
 
         dungeonTweaks.onItemTooltip(event);
+        tuningTweaks.onItemTooltip(event);
     }
 
     @SubscribeEvent

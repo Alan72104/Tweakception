@@ -108,6 +108,8 @@ config path - .minecraft/config/tweakception/config.json
 - api clearcaches
 - api debug *(dev)* - **Toggles request printing**
 - api copyprofile `[string playerName]` *(dev)* - **Copies/gets the player info of the most recently used profile**
+### TuningTweaks
+- tuning toggletemplate - **Toggles free QOL tuning points templates**
 <br> </br>
 ## Dev commands
 - dev - **Toggles dev mode**

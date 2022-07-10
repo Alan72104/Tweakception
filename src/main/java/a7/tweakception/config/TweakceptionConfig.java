@@ -12,4 +12,5 @@ public class TweakceptionConfig
     public AutoFish.AutoFishConfig autoFish = new AutoFish.AutoFishConfig();
     public MiningTweaks.MiningTweaksConfig miningTweaks = new MiningTweaks.MiningTweaksConfig();
     public APIManager.APIManagerConfig apiManager = new APIManager.APIManagerConfig();
+    public TuningTweaks.TuningTweaksConfig tuningTweaks = new TuningTweaks.TuningTweaksConfig();
 }

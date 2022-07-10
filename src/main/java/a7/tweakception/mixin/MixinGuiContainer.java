@@ -11,6 +11,7 @@ import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.init.Blocks;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.IInventory;
@@ -64,7 +65,22 @@ public abstract class MixinGuiContainer extends GuiScreen
         ContainerChest chest = (ContainerChest)this.inventorySlots;
         IInventory inv = chest.getLowerChestInventory();
         String name = inv.getName();
-        if (Tweakception.dungeonTweaks.isBlockingOpheliaShopClicks() &&
+
+        if (Tweakception.dungeonTweaks.isPartyFinderRefreshCooldownEnbaled() &&
+            inv.getSizeInventory() == 54 &&
+            name.equals("Party Finder") &&
+            slot.getHasStack() && slot.getStack().getItem() == Blocks.emerald_block.getItem(null, null))
+        {
+            long cd = Tweakception.dungeonTweaks.getPartyFinderRefreshCooldown();
+            if (cd > 0L)
+            {
+                McUtils.playCoolDing();
+                ci.cancel();
+            }
+            else
+                Tweakception.dungeonTweaks.setPartyFinderRefreshCooldown();
+        }
+        else if (Tweakception.dungeonTweaks.isBlockingOpheliaShopClicks() &&
             inv.getSizeInventory() == 54 &&
             name.equals("Ophelia"))
         {
@@ -73,15 +89,7 @@ public abstract class MixinGuiContainer extends GuiScreen
             if (column >= 2 - 1 && column <= 8 - 1 &&
                 row >= 2 - 1 && row <= 5 - 1)
             {
-                EntityPlayerSP p = McUtils.getPlayer();
-                ISound sound = new PositionedSoundRecord(new ResourceLocation("random.orb"),
-                        1.0f, 0.943f, (float)p.posX, (float)p.posY, (float)p.posZ);
-
-                float oldLevel = getMc().gameSettings.getSoundLevel(SoundCategory.PLAYERS);
-                getMc().gameSettings.setSoundLevel(SoundCategory.PLAYERS, 1);
-                getMc().getSoundHandler().playSound(sound);
-                getMc().gameSettings.setSoundLevel(SoundCategory.PLAYERS, oldLevel);
-
+                McUtils.playCoolDing();
                 ci.cancel();
             }
         }

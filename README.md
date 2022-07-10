@@ -62,6 +62,7 @@ config path - .minecraft/config/tweakception/config.json
 - dungeon partyfinder blacklist `[string name]` `[string reason...]`
   - **Adds or removes the player from the blacklist, blacklisted players will be displayed in dark red strikethrough, hold left ctrl to see the reason**
   - **Leave empty to see the list**
+- dungeon partyfinder refreshcooldown - **Toggles the refresh cooldown display, blocks click if in cooldown**
 - dungeon clearcaches
 ### CrimsonTweaks
 - crimson map - **Toggles map**

@@ -1,6 +1,9 @@
 package a7.tweakception.utils;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.ISound;
+import net.minecraft.client.audio.PositionedSoundRecord;
+import net.minecraft.client.audio.SoundCategory;
 import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.WorldClient;
@@ -15,6 +18,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.Constants;
 
 
@@ -156,5 +160,17 @@ public class McUtils
             }
         }
         return sb.toString();
+    }
+
+    public static void playCoolDing()
+    {
+        EntityPlayerSP p = McUtils.getPlayer();
+        ISound sound = new PositionedSoundRecord(new ResourceLocation("random.orb"),
+                1.0f, 0.943f, (float)p.posX, (float)p.posY, (float)p.posZ);
+
+        float oldLevel = getMc().gameSettings.getSoundLevel(SoundCategory.PLAYERS);
+        getMc().gameSettings.setSoundLevel(SoundCategory.PLAYERS, 1);
+        getMc().getSoundHandler().playSound(sound);
+        getMc().gameSettings.setSoundLevel(SoundCategory.PLAYERS, oldLevel);
     }
 }

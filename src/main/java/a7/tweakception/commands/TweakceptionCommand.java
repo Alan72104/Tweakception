@@ -118,6 +118,8 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.dungeonTweaks.partyFinderPlayerBlacklistSet(
                             args.length > 0 ? args[0] : "",
                             args.length > 1 ? String.join(" ", Arrays.copyOfRange(args, 1, args.length)) : "")),
+                new Command("refreshcooldown",
+                    args -> Tweakception.dungeonTweaks.partyFinderRefreshCooldownToggle()),
                 new Command("clearcaches",
                     args -> Tweakception.dungeonTweaks.freeCaches())
             ),

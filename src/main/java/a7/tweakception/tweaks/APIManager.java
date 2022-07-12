@@ -31,6 +31,7 @@ public class APIManager extends Tweak
         public String apiKey = "";
     }
     // Value can be "null" indicating the name is invalid
+    // Name should always be all lower case
     private static final Map<String, String> NAME_TO_UUID = new HashMap<>();
     private static final Map<String, JsonObject> UUID_TO_HYPIXEL_PLAYER_INFO = new HashMap<>();
     private static final Map<String, JsonObject> UUID_TO_SKYBLOCK_PLAYER_INFO = new HashMap<>();
@@ -52,18 +53,27 @@ public class APIManager extends Tweak
     // Gets the player uuid instantly or queue up a request if there isn't an active request
     public String getPlayerUUID(String name)
     {
-        String nameL = name.toLowerCase();
+        return getPlayerUUID(name, null);
+    }
 
-        String uuid = NAME_TO_UUID.get(nameL);
+    // Gets the player uuid instantly or queue up a request if there isn't an active request
+    // onRequestComplete only fires if the data isn't in cache and needs to request
+    public String getPlayerUUID(String name, Consumer<String> onRequestComplete)
+    {
+        String nameLower = name.toLowerCase();
+
+        String uuid = NAME_TO_UUID.get(nameLower);
 
         if (uuid != null)
             return uuid;
 
-        getPlayerUUIDAsync(nameL, result ->
+        getPlayerUUIDAsync(nameLower, result ->
         {
             if (result != null)
             {
-                NAME_TO_UUID.put(nameL, result);
+                NAME_TO_UUID.put(nameLower, result);
+                if (onRequestComplete != null)
+                    onRequestComplete.accept(result);
             }
         });
         return null;
@@ -73,15 +83,28 @@ public class APIManager extends Tweak
     // and there isn't an ongoing request for the player
     public JsonObject getHypixelPlayerInfo(String name)
     {
+        return getHypixelPlayerInfo(name, null);
+    }
+
+    // Queues up a request if it's been HYPIXEL_REQUEST_COOLDOWN since the last request,
+    // and there isn't an ongoing request for the player
+    // onRequestComplete only fires if the data isn't in cache and needs to request
+    public JsonObject getHypixelPlayerInfo(String name, Consumer<JsonObject> onRequestComplete)
+    {
         name = name.toLowerCase();
         String uuid = NAME_TO_UUID.get(name);
 
         if (uuid == null)
         {
-            getPlayerUUID(name);
+            getPlayerUUID(name, res -> getHypixelPlayerInfoInternal(res, onRequestComplete));
             return null;
         }
 
+        return getHypixelPlayerInfoInternal(uuid, onRequestComplete);
+    }
+
+    private JsonObject getHypixelPlayerInfoInternal(String uuid, Consumer<JsonObject> onRequestComplete)
+    {
         if (uuid.equals(UUID_NOT_AVAILABLE))
             return INFO_NOT_AVAILABLE;
 
@@ -114,6 +137,8 @@ public class APIManager extends Tweak
 
                     JsonObject player = result.get("player").getAsJsonObject();
                     UUID_TO_HYPIXEL_PLAYER_INFO.put(uuid, player);
+                    if (onRequestComplete != null)
+                        onRequestComplete.accept(player);
                 }
                 else
                     UUID_TO_HYPIXEL_PLAYER_INFO.put(uuid, INFO_NOT_AVAILABLE);
@@ -122,18 +147,32 @@ public class APIManager extends Tweak
         return null;
     }
 
-    // Same as above
+    // Queues up a request if it's been HYPIXEL_REQUEST_COOLDOWN since the last request,
+    // and there isn't an ongoing request for the player
     public JsonObject getSkyblockPlayerInfo(String name)
+    {
+        return getSkyblockPlayerInfo(name, null);
+    }
+
+    // Queues up a request if it's been HYPIXEL_REQUEST_COOLDOWN since the last request,
+    // and there isn't an ongoing request for the player
+    // onRequestComplete only fires if the data isn't in cache and needs to request
+    public JsonObject getSkyblockPlayerInfo(String name, Consumer<JsonObject> onRequestComplete)
     {
         name = name.toLowerCase();
         String uuid = NAME_TO_UUID.get(name);
 
         if (uuid == null)
         {
-            getPlayerUUID(name);
+            getPlayerUUID(name, res -> getSkyblockPlayerInfoInternal(res, onRequestComplete));
             return null;
         }
 
+        return getSkyblockPlayerInfoInternal(uuid, onRequestComplete);
+    }
+
+    private JsonObject getSkyblockPlayerInfoInternal(String uuid, Consumer<JsonObject> onRequestComplete)
+    {
         if (uuid.equals(UUID_NOT_AVAILABLE))
             return INFO_NOT_AVAILABLE;
 
@@ -189,6 +228,8 @@ public class APIManager extends Tweak
                     }
 
                     UUID_TO_SKYBLOCK_PLAYER_INFO.put(uuid, selectedProfileMember);
+                    if (onRequestComplete != null)
+                        onRequestComplete.accept(selectedProfileMember);
                 }
                 else
                     UUID_TO_SKYBLOCK_PLAYER_INFO.put(uuid, INFO_NOT_AVAILABLE);
@@ -371,6 +412,18 @@ public class APIManager extends Tweak
             c.apiKey = key;
             sendChat("AM: set api key to: " + key);
         }
+    }
+
+    public void removeCache(String name)
+    {
+        name = name.toLowerCase();
+        String key = NAME_TO_UUID.get(name);
+        if (key != null && !key.equals(UUID_NOT_AVAILABLE))
+        {
+            UUID_TO_HYPIXEL_PLAYER_INFO.remove(key);
+            UUID_TO_SKYBLOCK_PLAYER_INFO.remove(key);
+        }
+        NAME_TO_UUID.remove(name);
     }
 
     public void freeCaches()

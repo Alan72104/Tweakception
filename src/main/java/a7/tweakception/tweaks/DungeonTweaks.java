@@ -110,7 +110,6 @@ public class DungeonTweaks extends Tweak
     }
     private static final String F5_BOSS_START = "Welcome, you arrive right on time. I am Livid, the Master of Shadows.";
     private static final String F5_BOSS_END = "Impossible! How did you figure out which one I was?";
-    private static final Map<String, String> LIVID_PREFIX_TO_COLOR_MAP = new HashMap<>();
     private static final EnumChatFormatting[] KOOL_COLORS =
     {
         EnumChatFormatting.WHITE,
@@ -130,7 +129,6 @@ public class DungeonTweaks extends Tweak
             "STARRED_BONZO_MASK", "SPIRIT_MASK"));
 
     private static boolean isDamageFormattingExceptionNotified = false;
-    private static boolean isGetFieldExceptionNotified = false;
     private boolean wasNoFogAutoToggled = false;
     private boolean isInF5Bossfight = false;
     private String realLividName;
@@ -203,15 +201,6 @@ public class DungeonTweaks extends Tweak
 
     static
     {
-        LIVID_PREFIX_TO_COLOR_MAP.put("Arcade", "§e");
-        LIVID_PREFIX_TO_COLOR_MAP.put("Crossed", "§d");
-        LIVID_PREFIX_TO_COLOR_MAP.put("Doctor", "§7");
-        LIVID_PREFIX_TO_COLOR_MAP.put("Frog", "§2");
-        LIVID_PREFIX_TO_COLOR_MAP.put("Hockey", "§c");
-        LIVID_PREFIX_TO_COLOR_MAP.put("Purple", "§5");
-        LIVID_PREFIX_TO_COLOR_MAP.put("Scream", "§1");
-        LIVID_PREFIX_TO_COLOR_MAP.put("Smile", "§a");
-        LIVID_PREFIX_TO_COLOR_MAP.put("Vendetta", "§f");
         SECRET_CHEST_ITEMS.add("§5Health Potion VIII Splash Potion");
         SECRET_CHEST_ITEMS.add("§9Spirit Leap");
         SECRET_CHEST_ITEMS.add("§aDecoy");
@@ -1915,5 +1904,34 @@ public class DungeonTweaks extends Tweak
     {
         c.gyroWandOverlay = !c.gyroWandOverlay;
         sendChat("DT-GyroWandOverlay: toggled " + c.gyroWandOverlay);
+    }
+
+    public void getDailyRuns(String name)
+    {
+        if (name.equals(""))
+            name = getPlayer().getName();
+        String finalName = name;
+
+        Tweakception.apiManager.removeCache(name);
+        JsonObject sbInfo = Tweakception.apiManager.getSkyblockPlayerInfo(name,
+                res -> getDailyRunsInternal(finalName, res));
+
+        if (sbInfo == APIManager.INFO_NOT_AVAILABLE)
+            sendChat("DT: info is not available");
+        else if (sbInfo == null)
+            sendChat("DT: getting data");
+        else
+            getDailyRunsInternal(name, sbInfo); // Should never run
+    }
+
+    private void getDailyRunsInternal(String name, JsonObject sbInfo)
+    {
+        JsonObject dungeons = sbInfo.get("dungeons").getAsJsonObject();
+        if (dungeons.has("daily_runs"))
+        {
+            JsonObject daily = dungeons.get("daily_runs").getAsJsonObject();
+            int count = daily.get("completed_runs_count").getAsInt();
+            sendChat("DT: daily runs count of " + name + " is " + count);
+        }
     }
 }

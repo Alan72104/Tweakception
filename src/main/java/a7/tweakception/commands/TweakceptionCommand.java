@@ -124,7 +124,9 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.dungeonTweaks.freeCaches())
             ),
             new Command("gyrowandoverlay",
-                args -> Tweakception.dungeonTweaks.toggleGyroWandOverlay())
+                args -> Tweakception.dungeonTweaks.toggleGyroWandOverlay()),
+            new Command("dailyruns",
+                args -> Tweakception.dungeonTweaks.getDailyRuns(args.length > 0 ? args[0] : ""))
         ));
         addSub(new Command("crimson",
             null,

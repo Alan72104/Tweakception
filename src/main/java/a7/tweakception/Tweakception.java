@@ -1,7 +1,6 @@
 package a7.tweakception;
 
 import a7.tweakception.config.Configuration;
-import a7.tweakception.properties.ProjectInfo;
 import a7.tweakception.proxies.IProxy;
 import a7.tweakception.tweaks.*;
 import net.minecraft.block.Block;
@@ -18,11 +17,14 @@ import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-@Mod(modid = ProjectInfo.MOD_ID, version = ProjectInfo.MOD_VERSION, name = ProjectInfo.MOD_NAME,
+@Mod(modid = Tweakception.MOD_ID, version = Tweakception.MOD_VERSION, name = Tweakception.MOD_NAME,
     acceptedMinecraftVersions = "1.8.9")
 public class Tweakception
 {
-    @Mod.Instance(ProjectInfo.MOD_ID)
+    public static final String MOD_ID = "tweakception";
+    public static final String MOD_NAME = "Tweakception";
+    public static final String MOD_VERSION = "@MOD_VERSION@";
+    @Mod.Instance(MOD_ID)
     public static Tweakception instance;
     @SidedProxy(clientSide = "a7.tweakception.proxies.ClientProxy", serverSide = "a7.tweakception.proxies.ServerProxy")
     public static IProxy proxy;
@@ -46,7 +48,7 @@ public class Tweakception
     {
         instance = this;
         logger = event.getModLog();
-        configuration = new Configuration(event.getModConfigurationDirectory().getAbsolutePath() + "/" + ProjectInfo.MOD_ID + "/");
+        configuration = new Configuration(event.getModConfigurationDirectory().getAbsolutePath() + "/" + MOD_ID + "/");
 
         inGameEventDispatcher = new InGameEventDispatcher();
         threadPool = Executors.newFixedThreadPool(3);

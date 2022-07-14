@@ -27,6 +27,7 @@ public class TuningTweaks extends Tweak
     {
         public boolean enableTemplates = false;
         public Tuning[] tuningTemplates = new Tuning[4];
+        public int tuningClickDelayTicks = 5;
     }
     private final Matcher tuningMatcher = Pattern.compile("^§7Stat has: §[0-9a-f](\\d+) points").matcher("");
     private Tuning remainingToSwitch = null;
@@ -102,7 +103,7 @@ public class TuningTweaks extends Tweak
             String containerName = container.getLowerChestInventory().getName();
             if (containerName.equals("Stats Tuning") && remainingToSwitch != null)
             {
-                if (getTicks() - lastClickTicks >= 5)
+                if (getTicks() - lastClickTicks >= c.tuningClickDelayTicks)
                 {
                     lastClickTicks = getTicks();
                     for (int i = 0; i < 8; i++)
@@ -283,5 +284,12 @@ public class TuningTweaks extends Tweak
     {
         c.enableTemplates = !c.enableTemplates;
         sendChat("TT: toggled templates " + c.enableTemplates);
+    }
+
+    public void setTuningClickDelay(int ticks)
+    {
+        c.tuningClickDelayTicks = ticks < 1 ?
+                new TuningTweaksConfig().tuningClickDelayTicks : Utils.clamp(ticks, 3, 10);
+        sendChat("TT: set tuning click delay to " + c.tuningClickDelayTicks + " ticks");
     }
 }

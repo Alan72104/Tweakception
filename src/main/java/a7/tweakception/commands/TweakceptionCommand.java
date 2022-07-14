@@ -248,7 +248,10 @@ public class TweakceptionCommand extends CommandBase
         addSub(new Command("tuning",
             null,
             new Command("toggletemplate",
-                args -> Tweakception.tuningTweaks.toggleTemplate())
+                args -> Tweakception.tuningTweaks.toggleTemplate()),
+            new Command("clickdelayticks",
+                args -> Tweakception.tuningTweaks.setTuningClickDelay(
+                        args.length > 0 ? Integer.parseInt(args[0]) : 0))
         ));
         addSub(new Command("api",
             null,

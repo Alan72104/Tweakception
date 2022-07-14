@@ -398,5 +398,7 @@ public class SlayerTweaks extends Tweak
         }
 
         sendChat("ST: there are " + entities.size() + " players in the " + areaName + " area");
+        for (int i = 0; i < entities.size(); i++)
+            sendChat((i + 1) + ": " + entities.get(i));
     }
 }

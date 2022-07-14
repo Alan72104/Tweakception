@@ -222,6 +222,7 @@ public class InGameEventDispatcher
 
         dungeonTweaks.onChatReceived(event);
         autoFish.onChatReceived(event);
+        slayerTweaks.onChatReceived(event);
     }
 
     @SubscribeEvent

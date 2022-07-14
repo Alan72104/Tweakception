@@ -237,7 +237,13 @@ public class TweakceptionCommand extends CommandBase
                 args -> Tweakception.slayerTweaks.toggleAutoThrowFishingRod(),
                 new Command("setthreshold",
                     args -> Tweakception.slayerTweaks.setAutoThrowFishingRodThreshold(
-                            args.length >= 1 ? Integer.parseInt(args[0]) : -1))
+                            args.length >= 1 ? Integer.parseInt(args[0]) : 0))
+            ),
+            new Command("autohealwand",
+                args -> Tweakception.slayerTweaks.toggleAutoHealWand(),
+                new Command("setthreshold",
+                    args -> Tweakception.slayerTweaks.setAutoHealWandHealthThreshold(
+                            args.length >= 1 ? Integer.parseInt(args[0]) : 0))
             ),
             new Command("playercount",
                 null,

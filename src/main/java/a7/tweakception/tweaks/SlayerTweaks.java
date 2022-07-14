@@ -20,6 +20,7 @@ import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
+import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
@@ -29,7 +30,6 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
-import java.util.function.BiFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -49,13 +49,15 @@ public class SlayerTweaks extends Tweak
         public int autoThrowFishingRodThreshold = 20;
         public boolean highlightSlayers = false;
         public boolean highlightSlayerMiniboss = false;
+        public int autoHealWandHealthThreshold = 50;
     }
     private static final List<Pair<String, Integer>> SLAYER_TYPES = new ArrayList<>(); // Name, type
     private static final List<Pair<String, Integer>> MINIBOSS_TYPES = new ArrayList<>();
+    private boolean autoThrowFishingRod = false;
+    private boolean autoHealWand = false;
     private List<BlockPos> glyphs = new ArrayList<>();
     private List<BlockPos> glyphsTemp = new ArrayList<>();
     private BlockSearchThread searchThread;
-    private boolean autoThrowFishingRod = false;
     private final LinkedList<Pair<Integer, Entity>> armorStandsTemp = new LinkedList<>();
     // Supports all these:
     // §5Voidling Devotee §a11M§c❤
@@ -66,6 +68,13 @@ public class SlayerTweaks extends Tweak
     private final Set<SlayerRecord> slayersCache = new HashSet<>(); // The nametags
     private final Set<SlayerRecord> slayerMinibossCache = new HashSet<>();
     private SlayerRecord currentSlayer = null;
+    private final Matcher healthMatcher = Pattern.compile(
+        "^(?<health>[0-9]+)/(?<maxHealth>[0-9]+)❤(?<wand>\\+(?<wandHeal>[0-9]+)[▆▅▄▃▂▁])?").matcher("");
+    private int currentHealth = 0;
+    private int maxHealth = 0;
+    private int lastHealWandTicks = 0;
+    private int healWandRandomDelay = 0;
+    private boolean switchingSlot = false;
     private static class SlayerRecord
     {
         public Entity nameTag;
@@ -176,7 +185,8 @@ public class SlayerTweaks extends Tweak
                     }
                     else if (autoThrowFishingRod &&
                             !currentSlayer.fishingRodThrown &&
-                            currentSlayer.health <= currentSlayer.maxHealth * c.autoThrowFishingRodThreshold / 100)
+                            currentSlayer.health <= currentSlayer.maxHealth * c.autoThrowFishingRodThreshold / 100 &&
+                            !switchingSlot)
                     {
                         currentSlayer.fishingRodThrown = true;
                         int slot = findFishingRodSlot();
@@ -185,12 +195,44 @@ public class SlayerTweaks extends Tweak
                             sendChat("ST-AutoThrowFishingRod: cannot find any fishing rod in your hotbar!");
                         else
                         {
+                            switchingSlot = true;
                             int lastSlot = getPlayer().inventory.currentItem;
                             getPlayer().inventory.currentItem = slot;
                             Tweakception.scheduler.addDelayed(() -> getMc().rightClickMouse(), 4).
-                                    thenDelayed(() -> getPlayer().inventory.currentItem = lastSlot, 6);
+                                    thenDelayed(() ->
+                                    {
+                                        getPlayer().inventory.currentItem = lastSlot;
+                                        switchingSlot = false;
+                                    }, 6);
                         }
                     }
+                }
+            }
+        }
+
+        if (autoHealWand)
+        {
+            if (currentHealth > 100 && maxHealth > 100 && getTicks() > 600 &&
+                currentHealth <= maxHealth * c.autoHealWandHealthThreshold / 100 &&
+                getTicks() - lastHealWandTicks >= 20 * 7 + 10 + healWandRandomDelay &&
+                !switchingSlot)
+            {
+                lastHealWandTicks = getTicks();
+                healWandRandomDelay = getWorld().rand.nextInt(10);
+                int wandSlot = findHealWandSlot();
+                if (wandSlot == -1)
+                    sendChat("ST-AutoHealWand: cannot find any healing wands in your hotbar!");
+                else
+                {
+                    switchingSlot = true;
+                    int lastSlot = getPlayer().inventory.currentItem;
+                    getPlayer().inventory.currentItem = wandSlot;
+                    Tweakception.scheduler.addDelayed(() -> getMc().rightClickMouse(), 3).
+                            thenDelayed(() ->
+                            {
+                                getPlayer().inventory.currentItem = lastSlot;
+                                switchingSlot = false;
+                            }, 5);
                 }
             }
         }
@@ -280,6 +322,23 @@ public class SlayerTweaks extends Tweak
         }
     }
 
+    public void onChatReceived(ClientChatReceivedEvent event)
+    {
+        if (autoHealWand && event.type == 2)
+        {
+            String[] sections = McUtils.cleanColor(event.message.getFormattedText()).split(" {3,}");
+            for (String sec : sections)
+            {
+                if (healthMatcher.reset(sec).matches())
+                {
+                    currentHealth = Integer.parseInt(healthMatcher.group("health"));
+                    maxHealth = Integer.parseInt(healthMatcher.group("maxHealth"));
+                    break;
+                }
+            }
+        }
+    }
+
     public void onWorldUnload(WorldEvent.Unload event)
     {
         if (searchThread != null)
@@ -297,6 +356,23 @@ public class SlayerTweaks extends Tweak
             {
                 String id = Utils.getSkyblockItemId(stack);
                 if (id == null || !id.equals("GRAPPLING_HOOK"))
+                    return i;
+            }
+        }
+        return -1;
+    }
+
+    private int findHealWandSlot()
+    {
+        Set<String> healWands = new HashSet<>(Arrays.asList("WAND_OF_HEALING", "WAND_OF_MENDING",
+                "WAND_OF_RESTORATION", "WAND_OF_ATONEMENT"));
+        for (int i = 0; i < 9; i++)
+        {
+            ItemStack stack = getPlayer().inventory.getStackInSlot(i);
+            if (stack != null && stack.getItem() == Items.stick)
+            {
+                String id = Utils.getSkyblockItemId(stack);
+                if (id == null || healWands.contains(id))
                     return i;
             }
         }
@@ -357,7 +433,7 @@ public class SlayerTweaks extends Tweak
 
     public void setAutoThrowFishingRodThreshold(int percent)
     {
-        if (percent == -1)
+        if (percent <= 0)
             c.autoThrowFishingRodThreshold = new SlayerTweaksConfig().autoThrowFishingRodThreshold;
         else
             c.autoThrowFishingRodThreshold = Utils.clamp(percent, 0, 100);
@@ -400,5 +476,20 @@ public class SlayerTweaks extends Tweak
         sendChat("ST: there are " + entities.size() + " players in the " + areaName + " area");
         for (int i = 0; i < entities.size(); i++)
             sendChat((i + 1) + ": " + entities.get(i));
+    }
+
+    public void toggleAutoHealWand()
+    {
+        autoHealWand = !autoHealWand;
+        sendChat("ST-AutoHealWand: toggled " + autoHealWand);
+    }
+
+    public void setAutoHealWandHealthThreshold(int percent)
+    {
+        if (percent <= 0)
+            c.autoHealWandHealthThreshold = new SlayerTweaksConfig().autoHealWandHealthThreshold;
+        else
+            c.autoHealWandHealthThreshold = Utils.clamp(percent, 10, 90);
+        sendChat("ST-AutoHealWand: set health threshold to " + c.autoHealWandHealthThreshold);
     }
 }

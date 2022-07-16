@@ -2,20 +2,18 @@ package a7.tweakception.commands;
 
 import a7.tweakception.Tweakception;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static a7.tweakception.utils.McUtils.sendChat;
 
-public class Command
+public class Command implements Comparable<Command>
 {
     protected final String name;
     protected Consumer<String[]> func;
-    protected final List<Command> subCommands = new ArrayList<Command>();
-    protected boolean visibility = true; // Whether this command can be used or not, overriden by global tracker devMode
+    protected final Set<Command> subCommands = new TreeSet<>();
+    protected boolean visible = true; // Whether this command can be used or not, overriden by global tracker devMode
 
     public Command(String name, Consumer<String[]> func, Command... subs)
     {
@@ -32,14 +30,14 @@ public class Command
 
     public boolean isVisible()
     {
-        return visibility || Tweakception.globalTracker.isInDevMode();
+        return visible || Tweakception.globalTracker.isInDevMode();
     }
 
     public void processCommands(String[] args)
     {
         if (args.length > 0)
             for (Command sub : subCommands)
-                if (sub.isVisible() && args[0].equals(sub.getName()))
+                if (sub.isVisible() && args[0].equalsIgnoreCase(sub.getName()))
                 {
                     sub.processCommands(Arrays.copyOfRange(args, 1, args.length));
                     return;
@@ -63,9 +61,9 @@ public class Command
         return null;
     }
 
-    protected Command setVisibility(boolean visibility)
+    protected Command setVisibility(boolean visible)
     {
-        this.visibility = visibility;
+        this.visible = visible;
         return this;
     }
 
@@ -91,6 +89,11 @@ public class Command
                 list.add(opt);
 
         return list;
+    }
+
+    public int compareTo(Command that)
+    {
+        return this.name.compareTo(that.name);
     }
 
     protected void sendCommandNotFound()

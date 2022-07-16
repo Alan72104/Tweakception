@@ -21,77 +21,104 @@ public class TweakceptionCommand extends CommandBase
 {
     private final List<Command> subCommands = new ArrayList<>();
 
+    @SuppressWarnings("SpellCheckingInspection")
     public TweakceptionCommand()
     {
         addSub(new Command("dungeon",
             null,
-            new Command("nofog",
-                args -> Tweakception.dungeonTweaks.toggleNoFog(),
-                new Command("auto",
-                    args -> Tweakception.dungeonTweaks.toggleNoFogAutoToggle())
+            new Command("autoclosesecretchest",
+                args -> Tweakception.dungeonTweaks.toggleAutoCloseSecretChest()),
+            new Command("autojoinparty",
+                args -> Tweakception.dungeonTweaks.toggleAutoJoinParty(),
+                new Command("add",
+                    args -> Tweakception.dungeonTweaks.autoJoinPartyAdd(args.length > 0 ? args[0] : "")),
+                new Command("list",
+                    args -> Tweakception.dungeonTweaks.autoJoinPartyList()),
+                new Command("remove",
+                    args -> Tweakception.dungeonTweaks.autoJoinPartyRemove(args.length > 0 ? args[0] : ""))
             ),
-            new Command("hidename",
-                args -> Tweakception.dungeonTweaks.toggleHideName()),
-            new Command("hidedamagetags",
-                args -> Tweakception.dungeonTweaks.toggleHideDamageTags()),
-            new Command("highlightstarredmobs",
-                args -> Tweakception.dungeonTweaks.toggleHighlightStarredMobs()),
-            new Command("highlightbats",
-                args -> Tweakception.dungeonTweaks.toggleHighlightBats()),
-            new Command("highlightspiritbear",
-                args -> Tweakception.dungeonTweaks.toggleHighlightSpiritBear()),
-            new Command("highlightshadowsssassin",
-                args -> Tweakception.dungeonTweaks.toggleHighlightShadowAssassin()),
-            new Command("highlightdoorkeys",
-                args -> Tweakception.dungeonTweaks.toggleHighlightDoorKeys()),
+            new Command("autosalvage",
+                args -> Tweakception.dungeonTweaks.toggleAutoSalvage()),
+            new Command("blockopheliaclicks",
+                args -> Tweakception.dungeonTweaks.toggleBlockOpheliaShopClicks()),
             new Command("blockrightclick",
                 null,
-                new Command("set",
-                    args -> Tweakception.dungeonTweaks.blockRightClickSet()),
                 new Command("list",
                     args -> Tweakception.dungeonTweaks.blockRightClickList()),
+                new Command("set",
+                    args -> Tweakception.dungeonTweaks.blockRightClickSet()),
                 new Command("remove",
                     args -> Tweakception.dungeonTweaks.blockRightClickRemove(
                             args.length >= 1 ? Integer.parseInt(args[0]) : 0))
             ),
-            new Command("trackdamage",
-                args -> Tweakception.dungeonTweaks.toggleTrackDamageTags(),
-                new Command("setcount",
-                    args -> Tweakception.dungeonTweaks.setDamageTagTrackingCount(
-                            args.length > 0 ? Integer.parseInt(args[0]) : 0)),
-                new Command("sethistorytimeout",
-                    args -> Tweakception.dungeonTweaks.setDamageTagHistoryTimeoutTicks(
-                            args.length > 0 ? Integer.parseInt(args[0]) : 0)),
-                new Command("noncrit",
-                    args -> Tweakception.dungeonTweaks.toggleTrackNonCritDamageTags()),
-                new Command("wither",
-                    args -> Tweakception.dungeonTweaks.toggleTrackWitherDamageTags())
-            ),
-            new Command("autoclosesecretchest",
-                args -> Tweakception.dungeonTweaks.toggleAutoCloseSecretChest()),
-            new Command("autosalvage",
-                args -> Tweakception.dungeonTweaks.toggleAutoSalvage()),
-            new Command("autojoinparty",
-                args -> Tweakception.dungeonTweaks.toggleAutoJoinParty(),
-                new Command("list",
-                    args -> Tweakception.dungeonTweaks.autoJoinPartyList()),
-                new Command("add",
-                    args -> Tweakception.dungeonTweaks.autoJoinPartyAdd(args.length > 0 ? args[0] : "")),
-                new Command("remove",
-                    args -> Tweakception.dungeonTweaks.autoJoinPartyRemove(args.length > 0 ? args[0] : ""))
-            ),
+            new Command("dailyruns",
+                args -> Tweakception.dungeonTweaks.getDailyRuns(args.length > 0 ? args[0] : "")),
+            new Command("displaymobnametag",
+                args -> Tweakception.dungeonTweaks.toggleDisplayMobNameTag()),
             new Command("frag",
                     args -> Tweakception.dungeonTweaks.listFragCounts(),
-                new Command("startsession",
-                    args -> Tweakception.dungeonTweaks.fragStartSession()),
                 new Command("endsession",
                     args -> Tweakception.dungeonTweaks.fragEndSession()),
                 new Command("next",
                     args -> Tweakception.dungeonTweaks.fragNext()),
                 new Command("setfragbot",
                     args -> Tweakception.dungeonTweaks.setFragBot(args.length > 0 ? args[0] : "")),
+                new Command("startsession",
+                    args -> Tweakception.dungeonTweaks.fragStartSession()),
                 new Command("stats", null)
             ),
+            new Command("gyrowandoverlay",
+                args -> Tweakception.dungeonTweaks.toggleGyroWandOverlay()),
+            new Command("hidedamagetags",
+                args -> Tweakception.dungeonTweaks.toggleHideDamageTags()),
+            new Command("hidename",
+                args -> Tweakception.dungeonTweaks.toggleHideName()),
+            new Command("highlightbats",
+                args -> Tweakception.dungeonTweaks.toggleHighlightBats()),
+            new Command("highlightdoorkeys",
+                args -> Tweakception.dungeonTweaks.toggleHighlightDoorKeys()),
+            new Command("highlightshadowsssassin",
+                args -> Tweakception.dungeonTweaks.toggleHighlightShadowAssassin()),
+            new Command("highlightspiritbear",
+                args -> Tweakception.dungeonTweaks.toggleHighlightSpiritBear()),
+            new Command("highlightstarredmobs",
+                args -> Tweakception.dungeonTweaks.toggleHighlightStarredMobs()),
+            new Command("nofog",
+                args -> Tweakception.dungeonTweaks.toggleNoFog(),
+                new Command("auto",
+                    args -> Tweakception.dungeonTweaks.toggleNoFogAutoToggle())
+            ),
+            new Command("partyfinder",
+                null,
+                new Command("blacklist",
+                    args -> Tweakception.dungeonTweaks.partyFinderPlayerBlacklistSet(
+                            args.length > 0 ? args[0] : "",
+                            args.length > 1 ? String.join(" ", Arrays.copyOfRange(args, 1, args.length)) : "")),
+                new Command("clearcaches",
+                    args -> Tweakception.dungeonTweaks.freeCaches()),
+                new Command("quickplayerinfo",
+                    args -> Tweakception.dungeonTweaks.partyFinderQuickPlayerInfoToggle(),
+                    new Command("secretperexp",
+                        args -> Tweakception.dungeonTweaks.partyFinderQuickPlayerInfoToggleShowSecretPerExp())
+                ),
+                new Command("refreshcooldown",
+                    args -> Tweakception.dungeonTweaks.partyFinderRefreshCooldownToggle())
+            ),
+            new Command("trackdamage",
+                args -> Tweakception.dungeonTweaks.toggleTrackDamageTags(),
+                new Command("noncrit",
+                    args -> Tweakception.dungeonTweaks.toggleTrackNonCritDamageTags()),
+                new Command("setcount",
+                    args -> Tweakception.dungeonTweaks.setDamageTagTrackingCount(
+                            args.length > 0 ? Integer.parseInt(args[0]) : 0)),
+                new Command("sethistorytimeout",
+                    args -> Tweakception.dungeonTweaks.setDamageTagHistoryTimeoutTicks(
+                            args.length > 0 ? Integer.parseInt(args[0]) : 0)),
+                new Command("wither",
+                    args -> Tweakception.dungeonTweaks.toggleTrackWitherDamageTags())
+            ),
+            new Command("trackmask",
+                args -> Tweakception.dungeonTweaks.toggleTrackMaskUsage()),
             new Command("trackshootingspeed",
                 args -> Tweakception.dungeonTweaks.toggleTrackShootingSpeed(),
                     new Command("setsamplesecs",
@@ -100,62 +127,22 @@ public class TweakceptionCommand extends CommandBase
                     new Command("setspawnrange",
                         args -> Tweakception.dungeonTweaks.setShootingSpeedTrackingRange(
                                 args.length >= 1 ? Integer.parseInt(args[0]) : 0))
-            ),
-            new Command("displaymobnametag",
-                args -> Tweakception.dungeonTweaks.toggleDisplayMobNameTag()),
-            new Command("trackmask",
-                args -> Tweakception.dungeonTweaks.toggleTrackMaskUsage()),
-            new Command("blockopheliaclicks",
-                args -> Tweakception.dungeonTweaks.toggleBlockOpheliaShopClicks()),
-            new Command("partyfinder",
-                null,
-                new Command("quickplayerinfo",
-                    args -> Tweakception.dungeonTweaks.partyFinderQuickPlayerInfoToggle(),
-                    new Command("secretperexp",
-                        args -> Tweakception.dungeonTweaks.partyFinderQuickPlayerInfoToggleShowSecretPerExp())
-                ),
-                new Command("blacklist",
-                    args -> Tweakception.dungeonTweaks.partyFinderPlayerBlacklistSet(
-                            args.length > 0 ? args[0] : "",
-                            args.length > 1 ? String.join(" ", Arrays.copyOfRange(args, 1, args.length)) : "")),
-                new Command("refreshcooldown",
-                    args -> Tweakception.dungeonTweaks.partyFinderRefreshCooldownToggle()),
-                new Command("clearcaches",
-                    args -> Tweakception.dungeonTweaks.freeCaches())
-            ),
-            new Command("gyrowandoverlay",
-                args -> Tweakception.dungeonTweaks.toggleGyroWandOverlay()),
-            new Command("dailyruns",
-                args -> Tweakception.dungeonTweaks.getDailyRuns(args.length > 0 ? args[0] : ""))
+            )
         ));
         addSub(new Command("crimson",
             null,
             new Command("map",
                 args -> Tweakception.crimsonTweaks.toggleMap(),
-                new Command("pos",
-                    args ->
-                    {
-                        if (args.length >= 2)
-                            Tweakception.crimsonTweaks.setMapPos(Integer.parseInt(args[0]), Integer.parseInt(args[1]));
-                        else
-                            sendCommandNotFound();
-                    }),
-                new Command("scale",
-                    args ->
-                    {
-                        if (args.length >= 1)
-                            Tweakception.crimsonTweaks.setMapScale(Float.parseFloat(args[0]));
-                        else
-                            sendCommandNotFound();
-                    }),
                 new Command("markerscale",
-                    args ->
-                    {
-                        if (args.length >= 1)
-                            Tweakception.crimsonTweaks.setMapMarkerScale(Float.parseFloat(args[0]));
-                        else
-                            sendCommandNotFound();
-                    })
+                    args -> Tweakception.crimsonTweaks.setMapMarkerScale(
+                            args.length > 0 ? Float.parseFloat(args[0]) : 0.0f)),
+                new Command("pos",
+                    args -> Tweakception.crimsonTweaks.setMapPos(
+                            args.length > 0 ? Integer.parseInt(args[0]) : -1,
+                            args.length > 1 ? Integer.parseInt(args[1]) : -1)),
+                new Command("scale",
+                    args -> Tweakception.crimsonTweaks.setMapScale(
+                            args.length > 0 ? Float.parseFloat(args[0]) : 0.0f))
             ),
             new Command("sulfur",
                 args -> Tweakception.crimsonTweaks.toggleSulfurHighlight())
@@ -167,32 +154,38 @@ public class TweakceptionCommand extends CommandBase
         ));
         addSub(new Command("gt",
             null,
-            new Command("island",
-                args -> Tweakception.globalTracker.printIsland()),
-            new Command("forcesetisland",
-                args -> Tweakception.globalTracker.forceSetIsland(args.length > 0 ? String.join(" ", args) : "")),
+            new Command("blockquickcraft",
+                args -> Tweakception.globalTracker.toggleBlockQuickCraft(),
+                new Command("remove",
+                    args -> Tweakception.globalTracker.removeBlockQuickCraftWhitelist(
+                            args.length > 0 ? Integer.parseInt(args[0]) : 0))
+            ),
             new Command("copylocation",
                 args -> Tweakception.globalTracker.copyLocation()),
-            new Command("usefallbackdetection",
-                args -> Tweakception.globalTracker.toggleFallbackDetection()),
+            new Command("entertoclosesign",
+                args -> Tweakception.globalTracker.toggleEnterToCloseNumberTypingSign()),
+            new Command("forcesetisland",
+                args -> Tweakception.globalTracker.forceSetIsland(args.length > 0 ? String.join(" ", args) : "")),
+            new Command("hideplayers",
+                args -> Tweakception.globalTracker.toggleHidePlayers()),
             new Command("highlightshinypigs",
                 args -> Tweakception.globalTracker.toggleHighlightShinyPigs(),
                 new Command("setname",
                     args -> Tweakception.globalTracker.setHighlightShinyPigsName(args.length > 0 ? String.join(" ", args) : ""))
             ),
-            new Command("hideplayers",
-                args -> Tweakception.globalTracker.toggleHidePlayers()),
-            new Command("entertoclosesign",
-                args -> Tweakception.globalTracker.toggleEnterToCloseNumberTypingSign()),
-            new Command("renderinvisibleenities",
-                args -> Tweakception.globalTracker.toggleRenderInvisibleEntities()),
+            new Command("island",
+                args -> Tweakception.globalTracker.printIsland()),
             new Command("renderinvisiblearmorstands",
                 args -> Tweakception.globalTracker.toggleRenderInvisibleArmorStands()),
+            new Command("renderinvisibleenities",
+                args -> Tweakception.globalTracker.toggleRenderInvisibleEntities()),
             new Command("setinvisibleentityalphapercentage",
                 args -> Tweakception.globalTracker.setInvisibleEntityAlphaPercentage(
                     args.length > 0 ? Integer.parseInt(args[0]) : 0)),
             new Command("skipworldrendering",
                 args -> Tweakception.globalTracker.toggleSkipWorldRendering()),
+            new Command("usefallbackdetection",
+                args -> Tweakception.globalTracker.toggleFallbackDetection()),
             new Command("rightctrlcopy",
                 null,
                 new Command("nbt",
@@ -201,50 +194,29 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.globalTracker.rightCtrlCopySet("tooltip"))
             ).setVisibility(false)
         ));
-        addSub(new Command("fairy",
-            args -> Tweakception.fairyTracker.toggle(),
-            new Command("trackonce",
-                args -> Tweakception.fairyTracker.trackOnce()),
-            new Command("toggleauto",
-                args -> Tweakception.fairyTracker.toggleAutoTracking()),
-            new Command("setdelay",
-                args -> Tweakception.fairyTracker.setDelay(args.length > 0 ? Integer.parseInt(args[0]) : 0)),
-            new Command("setnotfound",
-                args -> Tweakception.fairyTracker.setNotFound()),
-            new Command("count",
-                args -> Tweakception.fairyTracker.count()),
-            new Command("list",
-                args -> Tweakception.fairyTracker.list()),
-            new Command("dump",
-                args -> Tweakception.fairyTracker.dump()),
-            new Command("import",
-                args -> Tweakception.fairyTracker.load()),
-            new Command("reset",
-                args -> Tweakception.fairyTracker.reset())
-        ));
         addSub(new Command("slayer",
             null,
-            new Command("eman",
-                null,
-                new Command("highlightglyph",
-                    args -> Tweakception.slayerTweaks.toggleHighlightGlyph())
-            ),
-            new Command("highlightslayers",
-                args -> Tweakception.slayerTweaks.toggleHighlightSlayers()),
-            new Command("highlightslayerminiboss",
-                args -> Tweakception.slayerTweaks.toggleHighlightSlayerMiniboss()),
-            new Command("autothrowfishingrod",
-                args -> Tweakception.slayerTweaks.toggleAutoThrowFishingRod(),
-                new Command("setthreshold",
-                    args -> Tweakception.slayerTweaks.setAutoThrowFishingRodThreshold(
-                            args.length >= 1 ? Integer.parseInt(args[0]) : 0))
-            ),
             new Command("autohealwand",
                 args -> Tweakception.slayerTweaks.toggleAutoHealWand(),
                 new Command("setthreshold",
                     args -> Tweakception.slayerTweaks.setAutoHealWandHealthThreshold(
                             args.length >= 1 ? Integer.parseInt(args[0]) : 0))
             ),
+            new Command("autothrowfishingrod",
+                args -> Tweakception.slayerTweaks.toggleAutoThrowFishingRod(),
+                new Command("setthreshold",
+                    args -> Tweakception.slayerTweaks.setAutoThrowFishingRodThreshold(
+                            args.length >= 1 ? Integer.parseInt(args[0]) : 0))
+            ),
+            new Command("eman",
+                null,
+                new Command("highlightglyph",
+                    args -> Tweakception.slayerTweaks.toggleHighlightGlyph())
+            ),
+            new Command("highlightslayerminiboss",
+                args -> Tweakception.slayerTweaks.toggleHighlightSlayerMiniboss()),
+            new Command("highlightslayers",
+                args -> Tweakception.slayerTweaks.toggleHighlightSlayers()),
             new Command("playercount",
                 null,
                 new Command("park",
@@ -253,11 +225,32 @@ public class TweakceptionCommand extends CommandBase
         ));
         addSub(new Command("tuning",
             null,
-            new Command("toggletemplate",
-                args -> Tweakception.tuningTweaks.toggleTemplate()),
             new Command("clickdelayticks",
                 args -> Tweakception.tuningTweaks.setTuningClickDelay(
-                        args.length > 0 ? Integer.parseInt(args[0]) : 0))
+                        args.length > 0 ? Integer.parseInt(args[0]) : 0)),
+            new Command("toggletemplate",
+                args -> Tweakception.tuningTweaks.toggleTemplate())
+        ));
+        addSub(new Command("fairy",
+            args -> Tweakception.fairyTracker.toggle(),
+            new Command("count",
+                args -> Tweakception.fairyTracker.count()),
+            new Command("dump",
+                args -> Tweakception.fairyTracker.dump()),
+            new Command("import",
+                args -> Tweakception.fairyTracker.load()),
+            new Command("list",
+                args -> Tweakception.fairyTracker.list()),
+            new Command("reset",
+                args -> Tweakception.fairyTracker.reset()),
+            new Command("setdelay",
+                args -> Tweakception.fairyTracker.setDelay(args.length > 0 ? Integer.parseInt(args[0]) : 0)),
+            new Command("setnotfound",
+                args -> Tweakception.fairyTracker.setNotFound()),
+            new Command("toggleauto",
+                args -> Tweakception.fairyTracker.toggleAutoTracking()),
+            new Command("trackonce",
+                args -> Tweakception.fairyTracker.trackOnce())
         ));
         addSub(new Command("api",
             null,
@@ -265,50 +258,39 @@ public class TweakceptionCommand extends CommandBase
                 args -> Tweakception.apiManager.setApiKey(args.length > 0 ? args[0] : "")),
             new Command("clearcaches",
                 args -> Tweakception.apiManager.freeCaches()),
+            new Command("copyprofile",
+                args -> Tweakception.apiManager.copySkyblockProfile(args.length > 0 ? args[0] : "")
+            ).setVisibility(false),
             new Command("debug",
                 args -> Tweakception.apiManager.toggleDebug()).setVisibility(false),
             new Command("printcaches",
-                args -> Tweakception.apiManager.printCaches()).setVisibility(false),
-            new Command("copyprofile",
-                args -> Tweakception.apiManager.copySkyblockProfile(args.length > 0 ? args[0] : "")
-            ).setVisibility(false)
+                args -> Tweakception.apiManager.printCaches()).setVisibility(false)
         ));
         addSub(new Command("next",
             args -> Tweakception.dungeonTweaks.fragNext()));
         addSub(new Command("autofish",
             args -> Tweakception.autoFish.toggleAutoFish(),
-            new Command("setretrievedelay",
-                args ->
-                {
-                    if (args.length >= 2)
-                        Tweakception.autoFish.setRetrieveDelay(Integer.parseInt(args[0]), Integer.parseInt(args[1]));
-                    else
-                        Tweakception.autoFish.setRetrieveDelay(-1, -1);
-                }),
-            new Command("setrecastdelay",
-                args ->
-                {
-                    if (args.length >= 2)
-                        Tweakception.autoFish.setRecastDelay(Integer.parseInt(args[0]), Integer.parseInt(args[1]));
-                    else
-                        Tweakception.autoFish.setRecastDelay(-1, -1);
-                }),
             new Command("setcatchestomove",
-                args ->
-                {
-                    if (args.length >= 2)
-                        Tweakception.autoFish.setCatchesToMove(Integer.parseInt(args[0]), Integer.parseInt(args[1]));
-                    else
-                        Tweakception.autoFish.setCatchesToMove(-1, -1);
-                }),
-            new Command("toggledebug",
-                args -> Tweakception.autoFish.toggleDebugInfo()),
+                args -> Tweakception.autoFish.setCatchesToMove(
+                        args.length > 0 ? Integer.parseInt(args[0]) : -1,
+                        args.length > 1 ? Integer.parseInt(args[1]) : -1)),
+            new Command("setheadmovingpitchrange",
+                args -> Tweakception.autoFish.setHeadMovingPitchRange(
+                        args.length > 0 ? Float.parseFloat(args[0]) : 0.0f)),
             new Command("setheadmovingticks",
                 args -> Tweakception.autoFish.setHeadMovingTicks(args.length > 0 ? Integer.parseInt(args[0]) : 0)),
             new Command("setheadmovingyawrange",
                 args -> Tweakception.autoFish.setHeadMovingYawRange(args.length > 0 ? Float.parseFloat(args[0]) : 0.0f)),
-            new Command("setheadmovingpitchrange",
-                args -> Tweakception.autoFish.setHeadMovingPitchRange(args.length > 0 ? Float.parseFloat(args[0]) : 0.0f)),
+            new Command("setrecastdelay",
+                args -> Tweakception.autoFish.setRecastDelay(
+                        args.length > 0 ? Integer.parseInt(args[0]) : -1,
+                        args.length > 1 ? Integer.parseInt(args[1]) : -1)),
+            new Command("setretrievedelay",
+                args -> Tweakception.autoFish.setRetrieveDelay(
+                        args.length > 0 ? Integer.parseInt(args[0]) : -1,
+                        args.length > 1 ? Integer.parseInt(args[1]) : -1)),
+            new Command("toggledebug",
+                args -> Tweakception.autoFish.toggleDebugInfo()),
             new Command("toggleslugfish",
                 args -> Tweakception.autoFish.toggleSlugfish())
             ).setVisibility(false));

@@ -33,6 +33,7 @@ public abstract class MixinGuiContainer extends GuiScreen
 {
     @Shadow public Container inventorySlots;
     private static final ResourceLocation ITEM_RED_X = new ResourceLocation("tweakception:item_red_x.png");
+//    public Slot getSlotUnderMouse() { return this.theSlot; }
 
     @Inject(method = "drawSlot", at = @At("TAIL"))
     public void slotDrawn(Slot slot, CallbackInfo ci)
@@ -114,6 +115,52 @@ public abstract class MixinGuiContainer extends GuiScreen
                 }
                 ci.cancel();
             }
+        }
+        else if (Tweakception.globalTracker.isBlockingQuickCraft() &&
+                inv.getSizeInventory() == 54 &&
+                name.equals("Craft Item") &&
+                slot.getStack() != null && slot.slotNumber % 9 == 7 &&
+                slot.slotNumber / 9 >= 1 && slot.slotNumber / 9 <= 3)
+        {
+            String id = Utils.getSkyblockItemId(slot.getStack());
+            if (id != null && !Tweakception.globalTracker.isIdInQuickCraftWhitelist(id))
+            {
+                McUtils.playCoolDing();
+                ci.cancel();
+            }
+        }
+    }
+
+    @Inject(method = "keyTyped", at = @At("TAIL"))
+    protected void keyTyped(char chr, int key, CallbackInfo ci)
+    {
+        if (!(this.inventorySlots instanceof ContainerChest))
+            return;
+
+        if (Keyboard.isRepeatEvent())
+            return;
+
+        ContainerChest chest = (ContainerChest)this.inventorySlots;
+        IInventory inv = chest.getLowerChestInventory();
+        String name = inv.getName();
+
+        if (Tweakception.globalTracker.isBlockingQuickCraft() &&
+            inv.getSizeInventory() == 54 &&
+            name.equals("Craft Item"))
+        {
+            Slot slot = ((GuiContainer)(GuiScreen)this).getSlotUnderMouse();
+            if (slot != null && slot.getHasStack() && slot.slotNumber % 9 == 7 &&
+                slot.slotNumber / 9 >= 1 && slot.slotNumber / 9 <= 3 &&
+                key == Keyboard.KEY_LMENU)
+            {
+                String id = Utils.getSkyblockItemId(slot.getStack());
+                if (id != null)
+                {
+                    Tweakception.globalTracker.toggleQuickCraftWhitelist(id);
+                    McUtils.playCoolDing();
+                }
+            }
+
         }
     }
 }

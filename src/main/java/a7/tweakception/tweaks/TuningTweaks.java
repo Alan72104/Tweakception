@@ -288,8 +288,8 @@ public class TuningTweaks extends Tweak
 
     public void setTuningClickDelay(int ticks)
     {
-        c.tuningClickDelayTicks = ticks < 1 ?
-                new TuningTweaksConfig().tuningClickDelayTicks : Utils.clamp(ticks, 3, 10);
+        c.tuningClickDelayTicks = ticks > 0 ? Utils.clamp(ticks, 3, 10) :
+                new TuningTweaksConfig().tuningClickDelayTicks;
         sendChat("TT: set tuning click delay to " + c.tuningClickDelayTicks + " ticks");
     }
 }

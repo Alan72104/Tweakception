@@ -55,6 +55,8 @@ public class GlobalTracker extends Tweak
         public boolean renderInvisibleArmorStands = false;
         public int invisibleEntityAlphaPercentage = 15;
         public boolean skipWorldRendering = false;
+        public boolean blockQuickCraft = false;
+        public TreeSet<String> quickCraftWhitelist = new TreeSet<>();
     }
     private static final HashMap<String, SkyblockIsland> SUBPLACE_TO_ISLAND_MAP = new HashMap<>();
     private static int ticks = 0;
@@ -410,6 +412,25 @@ public class GlobalTracker extends Tweak
         return c.skipWorldRendering;
     }
 
+    public boolean isBlockingQuickCraft()
+    {
+        return c.blockQuickCraft;
+    }
+
+    public boolean isIdInQuickCraftWhitelist(String id)
+    {
+        return c.quickCraftWhitelist.contains(id);
+    }
+
+    public void toggleQuickCraftWhitelist(String id)
+    {
+        if (c.quickCraftWhitelist.contains(id))
+            c.quickCraftWhitelist.remove(id);
+        else
+            c.quickCraftWhitelist.add(id);
+        McUtils.playCoolDing();
+    }
+
     public String registerChatAction(Runnable action, int timeoutTicks, Runnable timeoutAction)
     {
         String uuid = UUID.randomUUID().toString();
@@ -514,5 +535,33 @@ public class GlobalTracker extends Tweak
     {
         c.skipWorldRendering = !c.skipWorldRendering;
         sendChat("GT-SkipWorldRendering: toggled " + c.skipWorldRendering);
+    }
+
+    public void toggleBlockQuickCraft()
+    {
+        c.blockQuickCraft = !c.blockQuickCraft;
+        sendChat("GT-BlockQuickCraft: toggled " + c.blockQuickCraft);
+    }
+
+    public void removeBlockQuickCraftWhitelist(int i)
+    {
+        if (i < 1)
+        {
+            sendChat("GT-BlockQuickCraft: there are " + c.quickCraftWhitelist.size() + " whitelisted IDs");
+            int ii = 1;
+            for (String id : c.quickCraftWhitelist)
+                sendChat(ii++ + ": " + id);
+        }
+        else
+        {
+            if (i > c.quickCraftWhitelist.size())
+                sendChat("GT-BlockQuickCraft: index is out of bounds!");
+            else
+            {
+                String id = c.quickCraftWhitelist.toArray(new String[0])[i - 1];
+                c.quickCraftWhitelist.remove(id);
+                sendChat("GT-BlockQuickCraft: removed " + id);
+            }
+        }
     }
 }

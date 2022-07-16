@@ -142,20 +142,20 @@ public class CrimsonTweaks extends Tweak
 
     public void setMapPos(int x, int y)
     {
-        c.mapPosX = x;
-        c.mapPosY = y;
+        c.mapPosX = x >= 0 ? x : new CrimsonTweaksConfig().mapPosX;
+        c.mapPosY = y >= 0 ? y : new CrimsonTweaksConfig().mapPosY;
         sendChat("CT-Map: set pos to " + c.mapPosX + ", " + c.mapPosY);
     }
 
     public void setMapScale(float scale)
     {
-        c.mapScale = scale;
+        c.mapScale = scale > 0.0f ? scale : new CrimsonTweaksConfig().mapScale;
         sendChat("CT-Map: set scale to " + c.mapScale);
     }
 
     public void setMapMarkerScale(float scale)
     {
-        c.mapMarkerScale = scale;
+        c.mapMarkerScale = scale > 0.0f ? scale : new CrimsonTweaksConfig().mapMarkerScale;
         sendChat("CT-Map: set marker scale to " + c.mapMarkerScale);
     }
 

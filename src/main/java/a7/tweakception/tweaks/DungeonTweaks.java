@@ -80,7 +80,7 @@ public class DungeonTweaks extends Tweak
         public boolean highlightSpiritBear = true;
         public boolean highlightShadowAssassins = true;
         public boolean highlightDoorKeys = true;
-        public Set<String> blockRightClickItemNames = new HashSet<>();
+        public TreeSet<String> blockRightClickItemNames = new TreeSet<>();
         public boolean trackDamageTags = false;
         public int damageTagTrackingCount = 10;
         public boolean trackNonCritDamageTags = false;
@@ -90,7 +90,7 @@ public class DungeonTweaks extends Tweak
         public boolean autoSalvage = false;
         public Map<String, Integer> salvagedEssences = ESSENCES.stream().collect(Collectors.toMap(e -> e, e -> 0));
         public boolean autoJoinParty = false;
-        public Set<String> autoJoinPartyOwners = new HashSet<>(Collections.singletonList("alan72104"));
+        public TreeSet<String> autoJoinPartyOwners = new TreeSet<>(Collections.singletonList("alan72104"));
         public Map<String, Integer> fragDrops = FRAGS_AND_NAMES.keySet().stream().collect(Collectors.toMap(e -> e, e -> 0));
         public String fragBot = "";
         public long fastestFragrun = 0L;
@@ -105,7 +105,7 @@ public class DungeonTweaks extends Tweak
         public boolean partyFinderDisplayQuickPlayerInfo = false;
         public boolean partyFinderQuickPlayerInfoShowSecretPerExp = false;
         public boolean partyFinderRefreshCooldown = true;
-        public Map<String, String> partyFinderPlayerBlacklist = new HashMap<>();
+        public TreeMap<String, String> partyFinderPlayerBlacklist = new TreeMap<>();
         public boolean gyroWandOverlay = false;
     }
     private static final String F5_BOSS_START = "Welcome, you arrive right on time. I am Livid, the Master of Shadows.";
@@ -308,15 +308,16 @@ public class DungeonTweaks extends Tweak
         {
             if (c.enableNoFogAutoToggle)
             {
-                if (getCurrentIsland() == SkyblockIsland.DUNGEON &&
-                        (getCurrentLocationRaw().contains("(F5)") || getCurrentLocationRaw().contains("(M5)")))
+                boolean f5 = getCurrentLocationRaw().contains("(F5)") || getCurrentLocationRaw().contains("(M5)");
+                boolean f7 = getCurrentLocationRaw().contains("(F7)") || getCurrentLocationRaw().contains("(M7)");
+                if (getCurrentIsland() == SkyblockIsland.DUNGEON && (f5 || f7))
                 {
                     if (!wasNoFogAutoToggled)
                         if (!c.enableNoFog)
                         {
                             c.enableNoFog = true;
                             wasNoFogAutoToggled = true;
-                            sendChat("DT-NoFog: dungeon floor 5 detected, auto toggled on");
+                            sendChat("DT-NoFog: dungeon floor 5/7 detected, auto toggled on");
                         }
                         else
                             wasNoFogAutoToggled = false;
@@ -868,7 +869,7 @@ public class DungeonTweaks extends Tweak
                 ItemStack item = getPlayer().inventory.getCurrentItem();
                 if (item != null)
                 {
-                    String name = item.getDisplayName();
+                    String name = McUtils.cleanColor(item.getDisplayName());
                     if (c.blockRightClickItemNames.contains(name))
                     {
                         if (Keyboard.isKeyDown(Keyboard.KEY_LMENU))
@@ -1491,7 +1492,7 @@ public class DungeonTweaks extends Tweak
             sendChat("DT-BlockRightClick: current selected item is empty");
             return;
         }
-        String name = item.getDisplayName();
+        String name = McUtils.cleanColor(item.getDisplayName());
         if (c.blockRightClickItemNames.contains(name))
         {
             c.blockRightClickItemNames.remove(name);

@@ -433,10 +433,8 @@ public class SlayerTweaks extends Tweak
 
     public void setAutoThrowFishingRodThreshold(int percent)
     {
-        if (percent <= 0)
-            c.autoThrowFishingRodThreshold = new SlayerTweaksConfig().autoThrowFishingRodThreshold;
-        else
-            c.autoThrowFishingRodThreshold = Utils.clamp(percent, 0, 100);
+        c.autoThrowFishingRodThreshold = percent > 0 ? Utils.clamp(percent, 1, 100) :
+                new SlayerTweaksConfig().autoThrowFishingRodThreshold;
         sendChat("ST-AutoThrowFishingRod: set threshold to " + c.autoThrowFishingRodThreshold);
     }
 
@@ -486,10 +484,8 @@ public class SlayerTweaks extends Tweak
 
     public void setAutoHealWandHealthThreshold(int percent)
     {
-        if (percent <= 0)
-            c.autoHealWandHealthThreshold = new SlayerTweaksConfig().autoHealWandHealthThreshold;
-        else
-            c.autoHealWandHealthThreshold = Utils.clamp(percent, 10, 90);
+        c.autoHealWandHealthThreshold = percent > 0 ? Utils.clamp(percent, 10, 90) :
+                new SlayerTweaksConfig().autoHealWandHealthThreshold;
         sendChat("ST-AutoHealWand: set health threshold to " + c.autoHealWandHealthThreshold);
     }
 }

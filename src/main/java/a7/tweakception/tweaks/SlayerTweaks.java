@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static a7.tweakception.Tweakception.BlockSearchThread;
+import static a7.tweakception.Tweakception.BlockSearchTask;
 import static a7.tweakception.tweaks.GlobalTracker.getCurrentIsland;
 import static a7.tweakception.tweaks.GlobalTracker.getTicks;
 import static a7.tweakception.utils.McUtils.*;
@@ -57,7 +57,7 @@ public class SlayerTweaks extends Tweak
     private boolean autoHealWand = false;
     private List<BlockPos> glyphs = new ArrayList<>();
     private List<BlockPos> glyphsTemp = new ArrayList<>();
-    private BlockSearchThread searchThread;
+    private BlockSearchTask searchThread;
     private final LinkedList<Pair<Integer, Entity>> armorStandsTemp = new LinkedList<>();
     // Supports all these:
     // §5Voidling Devotee §a11M§c❤
@@ -139,7 +139,7 @@ public class SlayerTweaks extends Tweak
                         EntityPlayerSP p = getPlayer();
                         glyphs = glyphsTemp;
                         glyphsTemp = new ArrayList<>(20);
-                        searchThread = new BlockSearchThread((int)p.posX, (int)p.posY, (int)p.posZ, 30, 15, getWorld(), Blocks.beacon, glyphsTemp);
+                        searchThread = new BlockSearchTask((int)p.posX, (int)p.posY, (int)p.posZ, 30, 15, getWorld(), Blocks.beacon, glyphsTemp);
                         Tweakception.threadPool.execute(searchThread);
                     }
                 }

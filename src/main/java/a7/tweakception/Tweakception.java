@@ -72,6 +72,7 @@ public class Tweakception
             {
                 configuration.writeConfig();
                 threadPool.shutdownNow();
+                LagSpikeWatcher.stopWatcher();
             }
             catch (Exception ignored)
             {
@@ -85,7 +86,7 @@ public class Tweakception
     }
 
     // Not mutable
-    public static final class BlockSearchThread implements Runnable
+    public static final class BlockSearchTask implements Runnable
     {
         private final int posX;
         private final int posY;
@@ -101,7 +102,7 @@ public class Tweakception
         public long executeNanoTime;
 
 
-        public BlockSearchThread(int posX, int posY, int posZ, int range, int rangeY, World world, Block targetBlock, Collection<BlockPos> targetCollection)
+        public BlockSearchTask(int posX, int posY, int posZ, int range, int rangeY, World world, Block targetBlock, Collection<BlockPos> targetCollection)
         {
             this.posX = posX - range;
             this.posY = posY - rangeY;
@@ -114,7 +115,7 @@ public class Tweakception
             this.targetCollection = targetCollection;
         }
 
-        public BlockSearchThread(int posX, int posY, int posZ, int toPosX, int toPosY, int toPosZ, World world, Block targetBlock, Collection<BlockPos> targetCollection)
+        public BlockSearchTask(int posX, int posY, int posZ, int toPosX, int toPosY, int toPosZ, World world, Block targetBlock, Collection<BlockPos> targetCollection)
         {
             this.posX = Math.min(posX, toPosX);
             this.posY = Math.min(posY, toPosY);

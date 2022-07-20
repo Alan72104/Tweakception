@@ -111,6 +111,8 @@ public class InGameEventDispatcher
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event)
     {
+        if (event.phase == TickEvent.Phase.START)
+            LagSpikeWatcher.newTick();
         startFunc(0);
         if (!isInGame()) return;
 

@@ -1,5 +1,6 @@
 package a7.tweakception.commands;
 
+import a7.tweakception.LagSpikeWatcher;
 import a7.tweakception.Tweakception;
 import a7.tweakception.tweaks.GlobalTracker;
 import a7.tweakception.utils.DumpUtils;
@@ -8,14 +9,17 @@ import net.minecraft.block.Block;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.ResourceLocation;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static a7.tweakception.utils.McUtils.*;
+import static a7.tweakception.utils.McUtils.getPlayer;
 
 public class TweakceptionCommand extends CommandBase
 {
@@ -329,6 +333,82 @@ public class TweakceptionCommand extends CommandBase
         ).setVisibility(false));
         addSub(new Command("dev",
             args -> Tweakception.globalTracker.toggleDevMode()));
+        addSub(new Command("lagspikewatcher",
+            null,
+            new Command("start",
+                args ->
+                {
+                    if (LagSpikeWatcher.isWatcherOn())
+                        sendChat("TC: watcher is currently on");
+                    else
+                    {
+                        LagSpikeWatcher.startWatcher();
+                        sendChat("TC: watcher turned on");
+                    }
+                }),
+            new Command("stop",
+                args ->
+                {
+                    if (LagSpikeWatcher.isWatcherOn())
+                    {
+                        LagSpikeWatcher.stopWatcher();
+                        sendChat("TC: watcher turned off");
+                    }
+                    else
+                        sendChat("TC: watcher is currently off");
+                }),
+            new Command("setthreshold",
+                args ->
+                {
+                    int t = LagSpikeWatcher.setThreshold(args.length > 0 ? Integer.parseInt(args[0]) : 0);
+                    sendChat("TC: set threshold to " + t);
+                }),
+            new Command("dump",
+                args ->
+                {
+                    if (LagSpikeWatcher.isWatcherOn())
+                    {
+                        File file = LagSpikeWatcher.dump();
+                        if (file != null)
+                            McUtils.getPlayer().addChatMessage(new ChatComponentTranslation("Output written to file %s",
+                                    McUtils.makeFileLink(file)));
+                        else
+                            sendChat("Cannot create file");
+                    }
+                    else
+                        sendChat("TC: watcher is currently off");
+                }),
+            new Command("fakelag",
+                args ->
+                {
+                    try
+                    {
+                        int ms = args.length > 0 ? Integer.parseInt(args[0]) : 1000;
+                        Thread.sleep(ms);
+                        sendChat("TC: slept the thread for " + ms + " ms");
+                    }
+                    catch (InterruptedException e)
+                    {
+                        sendChat("TC: interrupted");
+                    }
+                }),
+            new Command("togglekeepdetecting",
+                args ->
+                {
+                    boolean b = LagSpikeWatcher.toggleKeepDetectingOnLag();
+                    sendChat("TC: toggled keep detecting on lag " + b);
+                }),
+            new Command("dumpthreads",
+                args ->
+                {
+                    File file = LagSpikeWatcher.dumpThreads();
+                    if (file != null)
+                        McUtils.getPlayer().addChatMessage(new ChatComponentTranslation("Output written to file %s",
+                                McUtils.makeFileLink(file)));
+                    else
+                        sendChat("Cannot create file");
+                }))
+        );
         addSub(new Command("t",
             args ->
             {

@@ -175,12 +175,9 @@ public class DumpUtils
             File file = Tweakception.configuration.createWriteFileWithCurrentDateTime("block_$_" +
                     displayName.substring(0, Math.min(displayName.length(), 20)) + ".txt", lines);
 
-            IChatComponent fileName = new ChatComponentText(file.getName());
-            fileName.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, file.getAbsolutePath()));
-            fileName.getChatStyle().setUnderlined(true);
-
             sendChat("Dumped block (" + displayName + "§r)");
-            getPlayer().addChatMessage(new ChatComponentTranslation("Output written to file %s", fileName));
+            getPlayer().addChatMessage(new ChatComponentTranslation("Output written to file %s",
+                    McUtils.makeFileLink(file)));
         }
         catch (IOException e)
         {
@@ -263,12 +260,9 @@ public class DumpUtils
             File file = Tweakception.configuration.createWriteFileWithCurrentDateTime("entity_$_" +
                     name.substring(0, Math.min(name.length(), 20)) + ".txt", lines);
 
-            IChatComponent fileName = new ChatComponentText(file.getName());
-            fileName.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, file.getAbsolutePath()));
-            fileName.getChatStyle().setUnderlined(true);
-
             sendChat("Dumped entity (" + entity.getName() + "§r)");
-            getPlayer().addChatMessage(new ChatComponentTranslation("Output written to file %s", fileName));
+            getPlayer().addChatMessage(new ChatComponentTranslation("Output written to file %s",
+                    McUtils.makeFileLink(file)));
         }
         catch (IOException e)
         {

@@ -12,16 +12,19 @@ import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.entity.monster.EntityEnderman;
 import net.minecraft.entity.monster.EntitySkeleton;
 import net.minecraft.entity.monster.EntityZombie;
+import net.minecraft.event.ClickEvent;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.IChatComponent;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.Constants;
 
 
+import java.io.File;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -172,5 +175,13 @@ public class McUtils
         getMc().gameSettings.setSoundLevel(SoundCategory.PLAYERS, 1);
         getMc().getSoundHandler().playSound(sound);
         getMc().gameSettings.setSoundLevel(SoundCategory.PLAYERS, oldLevel);
+    }
+
+    public static IChatComponent makeFileLink(File file)
+    {
+        IChatComponent link = new ChatComponentText(file.getName());
+        link.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, file.getAbsolutePath()));
+        link.getChatStyle().setUnderlined(true);
+        return link;
     }
 }

@@ -18,7 +18,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import static a7.tweakception.Tweakception.BlockSearchThread;
+import static a7.tweakception.Tweakception.BlockSearchTask;
 import static a7.tweakception.tweaks.GlobalTracker.getCurrentIsland;
 import static a7.tweakception.tweaks.GlobalTracker.getTicks;
 import static a7.tweakception.utils.McUtils.*;
@@ -54,7 +54,7 @@ public class CrimsonTweaks extends Tweak
     private final float WORLD_TO_MAP_SCALE = (MAP_SPAWNPOINT_X - MAP_RIGHTMOST_X) / (WORLD_SPAWNPOINT_X - WORLD_RIGHTMOST_X);
     private List<BlockPos> sponges = new ArrayList<>(25);
     private List<BlockPos> spongesTemp = new ArrayList<>(25);
-    private BlockSearchThread searchThread;
+    private BlockSearchTask searchThread;
 
     public CrimsonTweaks(Configuration configuration)
     {
@@ -75,7 +75,7 @@ public class CrimsonTweaks extends Tweak
                     EntityPlayerSP p = getPlayer();
                     sponges = spongesTemp;
                     spongesTemp = new ArrayList<>(20);
-                    searchThread = new BlockSearchThread((int)p.posX - 64, 70, (int)p.posZ - 64,
+                    searchThread = new BlockSearchTask((int)p.posX - 64, 70, (int)p.posZ - 64,
                             (int)p.posX + 64, 150, (int)p.posZ + 64, getWorld(), Blocks.sponge, spongesTemp);
                     Tweakception.threadPool.execute(searchThread);
                 }

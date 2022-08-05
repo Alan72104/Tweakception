@@ -14,7 +14,7 @@ public class Command implements Comparable<Command>
     protected Consumer<String[]> func;
     protected final Set<Command> subCommands = new TreeSet<>();
     protected boolean visible = true; // Whether this command can be used or not, overriden by global tracker devMode
-
+    
     public Command(String name, Consumer<String[]> func, Command... subs)
     {
         this.name = name;
@@ -22,17 +22,17 @@ public class Command implements Comparable<Command>
         for (Command sub : subs)
             addSub(sub);
     }
-
+    
     public String getName()
     {
         return name;
     }
-
+    
     public boolean isVisible()
     {
         return visible || Tweakception.globalTracker.isInDevMode();
     }
-
+    
     public void processCommands(String[] args)
     {
         if (args.length > 0)
@@ -47,7 +47,7 @@ public class Command implements Comparable<Command>
         else
             func.accept(args);
     }
-
+    
     public List<String> getTabCompletions(String[] args)
     {
         if (args.length == 0)
@@ -60,42 +60,42 @@ public class Command implements Comparable<Command>
                     return sub.getTabCompletions(Arrays.copyOfRange(args, 1, args.length));
         return null;
     }
-
+    
     protected Command setVisibility(boolean visible)
     {
         this.visible = visible;
         return this;
     }
-
+    
     protected void addSub(Command cmd)
     {
         subCommands.add(cmd);
     }
-
+    
     private List<String> getVisibleSubCommandNames()
     {
         return subCommands.stream().
-                filter(Command::isVisible).
-                map(Command::getName).
-                collect(Collectors.toList());
+            filter(Command::isVisible).
+            map(Command::getName).
+            collect(Collectors.toList());
     }
-
+    
     private static List<String> getPossibleCompletions(String arg, List<String> opts)
     {
         List<String> list = new ArrayList<String>();
-
+        
         for (String opt : opts)
             if (opt.startsWith(arg))
                 list.add(opt);
-
+        
         return list;
     }
-
+    
     public int compareTo(Command that)
     {
         return this.name.compareTo(that.name);
     }
-
+    
     protected void sendCommandNotFound()
     {
         sendChat("Tweakception: command not found or wrong syntax");

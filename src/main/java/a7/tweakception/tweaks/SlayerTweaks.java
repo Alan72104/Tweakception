@@ -2,6 +2,8 @@ package a7.tweakception.tweaks;
 
 import a7.tweakception.Tweakception;
 import a7.tweakception.config.Configuration;
+import a7.tweakception.overlay.Anchor;
+import a7.tweakception.overlay.TextOverlay;
 import a7.tweakception.utils.McUtils;
 import a7.tweakception.utils.Pair;
 import a7.tweakception.utils.RenderUtils;
@@ -43,6 +45,7 @@ import static a7.tweakception.utils.Utils.removeWhile;
 public class SlayerTweaks extends Tweak
 {
     private final SlayerTweaksConfig c;
+    
     public static class SlayerTweaksConfig
     {
         public boolean highlightGlyph = false;
@@ -51,6 +54,7 @@ public class SlayerTweaks extends Tweak
         public boolean highlightSlayerMiniboss = false;
         public int autoHealWandHealthThreshold = 50;
     }
+    
     private static final List<Pair<String, Integer>> SLAYER_TYPES = new ArrayList<>(); // Name, type
     private static final List<Pair<String, Integer>> MINIBOSS_TYPES = new ArrayList<>();
     private boolean autoThrowFishingRod = false;
@@ -75,6 +79,7 @@ public class SlayerTweaks extends Tweak
     private int lastHealWandTicks = 0;
     private int healWandRandomDelay = 0;
     private boolean switchingSlot = false;
+    
     private static class SlayerRecord
     {
         public Entity nameTag;
@@ -84,13 +89,22 @@ public class SlayerTweaks extends Tweak
         public float maxHealth;
         public boolean voidgloomFirstHitPhase = false;
         public boolean fishingRodThrown = false;
-        public SlayerRecord(Entity n, Entity e, String t, float mh) { nameTag = n; entity = e; type = t; maxHealth = mh; }
+        
+        public SlayerRecord(Entity n, Entity e, String t, float mh)
+        {
+            nameTag = n;
+            entity = e;
+            type = t;
+            maxHealth = mh;
+        }
+        
         @Override
-        public int hashCode() { return nameTag.hashCode(); }
+        public int hashCode() {return nameTag.hashCode();}
+        
         @Override
-        public boolean equals(Object o) { return o instanceof SlayerRecord && ((SlayerRecord)o).nameTag.equals(this.nameTag); }
+        public boolean equals(Object o) {return o instanceof SlayerRecord && ((SlayerRecord)o).nameTag.equals(this.nameTag);}
     }
-
+    
     static
     {
         SLAYER_TYPES.add(new Pair<>("Revenant Horror", 0));
@@ -117,17 +131,18 @@ public class SlayerTweaks extends Tweak
         MINIBOSS_TYPES.add(new Pair<>("Kindleheart Demon", 4));
         MINIBOSS_TYPES.add(new Pair<>("Burningsoul Demon", 4));
     }
-
+    
     public SlayerTweaks(Configuration configuration)
     {
         super(configuration);
         c = configuration.config.slayerTweaks;
+        Tweakception.overlayManager.addOverlay(new SlayerOverlay());
     }
-
+    
     public void onTick(TickEvent.ClientTickEvent event)
     {
         if (event.phase != TickEvent.Phase.END) return;
-
+        
         if (getTicks() % 5 == 4)
         {
             if (getCurrentIsland() == SkyblockIsland.THE_END)
@@ -145,7 +160,7 @@ public class SlayerTweaks extends Tweak
                 }
             }
         }
-
+        
         if (c.highlightSlayers || c.highlightSlayerMiniboss || autoThrowFishingRod)
         {
             removeWhile(armorStandsTemp, ele -> getTicks() - ele.a > 5,
@@ -156,11 +171,11 @@ public class SlayerTweaks extends Tweak
                         if (c.highlightSlayerMiniboss)
                             tryDetectAndAddSlayerFromNameTag(MINIBOSS_TYPES, stand, slayerMinibossCache);
                 });
-
+            
             slayersCache.removeIf(ele -> ele.nameTag.isDead);
             slayerMinibossCache.removeIf(ele -> ele.nameTag.isDead);
             currentSlayer = null;
-
+            
             double nearestDis = Double.MAX_VALUE;
             for (SlayerRecord record : slayersCache)
             {
@@ -171,9 +186,10 @@ public class SlayerTweaks extends Tweak
                     currentSlayer = record;
                 }
             }
-
+            
             if (currentSlayer != null)
             {
+                Tweakception.overlayManager.enable(SlayerOverlay.NAME);
                 float health = parseHealth(currentSlayer.nameTag.getName());
                 if (health != -1.0f && health != 0.0f)
                 {
@@ -184,13 +200,13 @@ public class SlayerTweaks extends Tweak
                         currentSlayer.maxHealth = health;
                     }
                     else if (autoThrowFishingRod &&
-                            !currentSlayer.fishingRodThrown &&
-                            currentSlayer.health <= currentSlayer.maxHealth * c.autoThrowFishingRodThreshold / 100 &&
-                            !switchingSlot)
+                        !currentSlayer.fishingRodThrown &&
+                        currentSlayer.health <= currentSlayer.maxHealth * c.autoThrowFishingRodThreshold / 100 &&
+                        !switchingSlot)
                     {
                         currentSlayer.fishingRodThrown = true;
                         int slot = findFishingRodSlot();
-
+                        
                         if (slot == -1)
                             sendChat("ST-AutoThrowFishingRod: cannot find any fishing rod in your hotbar!");
                         else
@@ -199,17 +215,19 @@ public class SlayerTweaks extends Tweak
                             int lastSlot = getPlayer().inventory.currentItem;
                             getPlayer().inventory.currentItem = slot;
                             Tweakception.scheduler.addDelayed(() -> getMc().rightClickMouse(), 4).
-                                    thenDelayed(() ->
-                                    {
-                                        getPlayer().inventory.currentItem = lastSlot;
-                                        switchingSlot = false;
-                                    }, 6);
+                                thenDelayed(() ->
+                                {
+                                    getPlayer().inventory.currentItem = lastSlot;
+                                    switchingSlot = false;
+                                }, 6);
                         }
                     }
                 }
             }
+            else
+                Tweakception.overlayManager.disable(SlayerOverlay.NAME);
         }
-
+        
         if (autoHealWand)
         {
             if (currentHealth > 100 && maxHealth > 100 && getTicks() > 600 &&
@@ -228,16 +246,16 @@ public class SlayerTweaks extends Tweak
                     int lastSlot = getPlayer().inventory.currentItem;
                     getPlayer().inventory.currentItem = wandSlot;
                     Tweakception.scheduler.addDelayed(() -> getMc().rightClickMouse(), 3).
-                            thenDelayed(() ->
-                            {
-                                getPlayer().inventory.currentItem = lastSlot;
-                                switchingSlot = false;
-                            }, 5);
+                        thenDelayed(() ->
+                        {
+                            getPlayer().inventory.currentItem = lastSlot;
+                            switchingSlot = false;
+                        }, 5);
                 }
             }
         }
     }
-
+    
     private boolean tryDetectAndAddSlayerFromNameTag(List<Pair<String, Integer>> targets, Entity stand, Set<SlayerRecord> targetSet)
     {
         String name = stand.getName();
@@ -249,16 +267,16 @@ public class SlayerTweaks extends Tweak
                 if (hp != -1.0f)
                 {
                     boolean hitPhase = slayerNameTagMatcher.group(3) != null;
-
+                    
                     Entity nearest = McUtils.getNearestEntityInAABB(stand,
-                            stand.getEntityBoundingBox().expand(0.5, 2.5, 0.5),
-                            e -> (e instanceof EntityZombie ||
-                                    e instanceof EntitySpider ||
-                                    e instanceof EntityWolf ||
-                                    e instanceof EntityEnderman ||
-                                    e instanceof EntityBlaze) &&
-                                    !e.isDead);
-
+                        stand.getEntityBoundingBox().expand(0.5, 2.5, 0.5),
+                        e -> (e instanceof EntityZombie ||
+                            e instanceof EntitySpider ||
+                            e instanceof EntityWolf ||
+                            e instanceof EntityEnderman ||
+                            e instanceof EntityBlaze) &&
+                            !e.isDead);
+                    
                     if (nearest != null)
                     {
                         SlayerRecord record = new SlayerRecord(stand, nearest, type.a, hp);
@@ -272,47 +290,24 @@ public class SlayerTweaks extends Tweak
             }
         return false;
     }
-
+    
     public void onRenderLast(RenderWorldLastEvent event)
     {
         if (getCurrentIsland() == SkyblockIsland.THE_END)
         {
             if (c.highlightGlyph)
                 for (BlockPos p : glyphs)
-                    RenderUtils.drawBeaconBeamOrBoundingBox(p, new Color(255, 0, 106, (int)(255 * 0.9f)), event.partialTicks, 1);
+                    RenderUtils.drawFilledBoundingBox(p, new Color(255, 0, 106, (int)(255 * 0.9f)), event.partialTicks);
         }
-
+        
         if (c.highlightSlayers)
-            for(SlayerRecord record : slayersCache)
+            for (SlayerRecord record : slayersCache)
                 RenderUtils.drawDefaultHighlightBoxForEntity(record.entity, RenderUtils.DEFAULT_HIGHLIGHT_COLOR, false);
         if (c.highlightSlayerMiniboss)
-            for(SlayerRecord record : slayerMinibossCache)
+            for (SlayerRecord record : slayerMinibossCache)
                 RenderUtils.drawDefaultHighlightBoxForEntity(record.entity, RenderUtils.DEFAULT_HIGHLIGHT_COLOR, false);
     }
-
-    public void onRenderGameOverlayPost(RenderGameOverlayEvent.Post event)
-    {
-        if ((c.highlightSlayers || autoThrowFishingRod) && currentSlayer != null)
-        {
-            ScaledResolution res = new ScaledResolution(getMc());
-            FontRenderer r = getMc().fontRendererObj;
-            int width = res.getScaledWidth();
-
-            String s;
-            if (currentSlayer.voidgloomFirstHitPhase)
-                s = f("Slayer: %s, health: -", currentSlayer.type);
-            else
-                s = f("Slayer: %s, health: %s (%d%%), threshold: %s%d%%",
-                    currentSlayer.type,
-                    Utils.formatMetric((long)currentSlayer.health),
-                    (int)(currentSlayer.health / currentSlayer.maxHealth * 100.0f),
-                    currentSlayer.fishingRodThrown ? "§6" : "",
-                    c.autoThrowFishingRodThreshold);
-
-            r.drawString(s, (width - r.getStringWidth(s)) / 2, 30 + r.FONT_HEIGHT, 0xffffffff);
-        }
-    }
-
+    
     public void onEntityJoinWorld(EntityJoinWorldEvent event)
     {
         if (c.highlightSlayers || c.highlightSlayerMiniboss || autoThrowFishingRod)
@@ -321,7 +316,7 @@ public class SlayerTweaks extends Tweak
                 armorStandsTemp.add(new Pair<>(getTicks(), event.entity));
         }
     }
-
+    
     public void onChatReceived(ClientChatReceivedEvent event)
     {
         if (autoHealWand && event.type == 2)
@@ -338,7 +333,7 @@ public class SlayerTweaks extends Tweak
             }
         }
     }
-
+    
     public void onWorldUnload(WorldEvent.Unload event)
     {
         if (searchThread != null)
@@ -346,7 +341,7 @@ public class SlayerTweaks extends Tweak
         slayersCache.clear();
         slayerMinibossCache.clear();
     }
-
+    
     private int findFishingRodSlot()
     {
         for (int i = 0; i < 9; i++)
@@ -361,11 +356,11 @@ public class SlayerTweaks extends Tweak
         }
         return -1;
     }
-
+    
     private int findHealWandSlot()
     {
         Set<String> healWands = new HashSet<>(Arrays.asList("WAND_OF_HEALING", "WAND_OF_MENDING",
-                "WAND_OF_RESTORATION", "WAND_OF_ATONEMENT"));
+            "WAND_OF_RESTORATION", "WAND_OF_ATONEMENT"));
         for (int i = 0; i < 9; i++)
         {
             ItemStack stack = getPlayer().inventory.getStackInSlot(i);
@@ -378,7 +373,7 @@ public class SlayerTweaks extends Tweak
         }
         return -1;
     }
-
+    
     // If the name has health, returns the health
     // If the name has no health, returns 0.0f
     // If the name isn't a slayer name tag, returns -1.0f
@@ -391,10 +386,10 @@ public class SlayerTweaks extends Tweak
             // but with ((?:health)?)|(50 hits), then it will be an empty string
             if (slayerNameTagMatcher.group(1) == null)
                 return 0.0f;
-
+            
             String healthString = slayerNameTagMatcher.group(1).replace(",", "");
             String unit = slayerNameTagMatcher.group(2);
-
+            
             float health = Float.parseFloat(healthString);
             switch (unit)
             {
@@ -407,12 +402,55 @@ public class SlayerTweaks extends Tweak
                     health *= 1000000;
                     break;
             }
-
+            
             return health;
         }
         return -1.0f;
     }
-
+    
+    private class SlayerOverlay extends TextOverlay
+    {
+        public static final String NAME = "SlayerOverlay";
+        
+        public SlayerOverlay()
+        {
+            super(NAME);
+            setAnchor(Anchor.TopCenter);
+            setOrigin(Anchor.TopCenter);
+            setY(40);
+        }
+        
+        @Override
+        public void update()
+        {
+            super.update();
+            List<String> list = new ArrayList<>();
+            
+            list.add("Current slayer:");
+            String s;
+            if (currentSlayer.voidgloomFirstHitPhase)
+                s = f("Slayer: %s, health: -", currentSlayer.type);
+            else
+                s = f("Slayer: %s, health: %s (%d%%), threshold: %s%d%%",
+                    currentSlayer.type,
+                    Utils.formatMetric((long)currentSlayer.health),
+                    (int)(currentSlayer.health / currentSlayer.maxHealth * 100.0f),
+                    currentSlayer.fishingRodThrown ? "§6" : "",
+                    c.autoThrowFishingRodThreshold);
+            list.add(s);
+            setContent(list);
+        }
+        
+        @Override
+        public List<String> getDefaultContent()
+        {
+            List<String> list = new ArrayList<>();
+            list.add("slayer");
+            list.add("overlay");
+            return list;
+        }
+    }
+    
     public void toggleHighlightGlyph()
     {
         c.highlightGlyph = !c.highlightGlyph;
@@ -424,68 +462,42 @@ public class SlayerTweaks extends Tweak
             searchThread = null;
         }
     }
-
+    
     public void toggleAutoThrowFishingRod()
     {
         autoThrowFishingRod = !autoThrowFishingRod;
         sendChat("ST-AutoThrowFishingRod: toggled " + autoThrowFishingRod);
     }
-
+    
     public void setAutoThrowFishingRodThreshold(int percent)
     {
         c.autoThrowFishingRodThreshold = percent > 0 ? Utils.clamp(percent, 1, 100) :
-                new SlayerTweaksConfig().autoThrowFishingRodThreshold;
+            new SlayerTweaksConfig().autoThrowFishingRodThreshold;
         sendChat("ST-AutoThrowFishingRod: set threshold to " + c.autoThrowFishingRodThreshold);
     }
-
+    
     public void toggleHighlightSlayers()
     {
         c.highlightSlayers = !c.highlightSlayers;
         sendChat("ST-HighlightSlayers: toggled " + c.highlightSlayers);
     }
-
+    
     public void toggleHighlightSlayerMiniboss()
     {
         c.highlightSlayerMiniboss = !c.highlightSlayerMiniboss;
         sendChat("ST-HighlightSlayerMiniboss: toggled " + c.highlightSlayerMiniboss);
     }
-
-    public void getPlayerCountInArea(int type)
-    {
-        String areaName;
-        List<Entity> entities;
-
-        switch (type)
-        {
-            default:
-            case 0:
-                areaName = "park";
-                String shamanSkin = "minecraft:skins/57a517865b820a4451cd3cc6765f370fd0522b6489c9c94fb345fdee2689451a";
-                entities = getWorld().getEntitiesWithinAABB(EntityOtherPlayerMP.class,
-                        new AxisAlignedBB(-351, 78, -102, -399, 49, 36),
-                        e ->
-                        {
-                            String skin = ((AbstractClientPlayer)e).getLocationSkin().toString();
-                            return !skin.equals(shamanSkin);
-                        });
-                break;
-        }
-
-        sendChat("ST: there are " + entities.size() + " players in the " + areaName + " area");
-        for (int i = 0; i < entities.size(); i++)
-            sendChat((i + 1) + ": " + entities.get(i));
-    }
-
+    
     public void toggleAutoHealWand()
     {
         autoHealWand = !autoHealWand;
         sendChat("ST-AutoHealWand: toggled " + autoHealWand);
     }
-
+    
     public void setAutoHealWandHealthThreshold(int percent)
     {
         c.autoHealWandHealthThreshold = percent > 0 ? Utils.clamp(percent, 10, 90) :
-                new SlayerTweaksConfig().autoHealWandHealthThreshold;
+            new SlayerTweaksConfig().autoHealWandHealthThreshold;
         sendChat("ST-AutoHealWand: set health threshold to " + c.autoHealWandHealthThreshold);
     }
 }

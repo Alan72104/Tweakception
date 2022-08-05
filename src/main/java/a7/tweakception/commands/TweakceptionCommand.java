@@ -18,13 +18,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static a7.tweakception.utils.McUtils.*;
-import static a7.tweakception.utils.McUtils.getPlayer;
+import static a7.tweakception.utils.McUtils.getWorld;
+import static a7.tweakception.utils.McUtils.sendChat;
 
 public class TweakceptionCommand extends CommandBase
 {
     private final List<Command> subCommands = new ArrayList<>();
-
+    
     @SuppressWarnings("SpellCheckingInspection")
     public TweakceptionCommand()
     {
@@ -53,14 +53,14 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.dungeonTweaks.blockRightClickSet()),
                 new Command("remove",
                     args -> Tweakception.dungeonTweaks.blockRightClickRemove(
-                            args.length >= 1 ? Integer.parseInt(args[0]) : 0))
+                        args.length >= 1 ? toInt(args[0]) : 0))
             ),
             new Command("dailyruns",
                 args -> Tweakception.dungeonTweaks.getDailyRuns(args.length > 0 ? args[0] : "")),
             new Command("displaymobnametag",
                 args -> Tweakception.dungeonTweaks.toggleDisplayMobNameTag()),
             new Command("frag",
-                    args -> Tweakception.dungeonTweaks.listFragCounts(),
+                args -> Tweakception.dungeonTweaks.listFragCounts(),
                 new Command("endsession",
                     args -> Tweakception.dungeonTweaks.fragEndSession()),
                 new Command("next",
@@ -96,8 +96,8 @@ public class TweakceptionCommand extends CommandBase
                 null,
                 new Command("blacklist",
                     args -> Tweakception.dungeonTweaks.partyFinderPlayerBlacklistSet(
-                            args.length > 0 ? args[0] : "",
-                            args.length > 1 ? String.join(" ", Arrays.copyOfRange(args, 1, args.length)) : "")),
+                        args.length > 0 ? args[0] : "",
+                        args.length > 1 ? String.join(" ", Arrays.copyOfRange(args, 1, args.length)) : "")),
                 new Command("clearcaches",
                     args -> Tweakception.dungeonTweaks.freeCaches()),
                 new Command("quickplayerinfo",
@@ -114,10 +114,10 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.dungeonTweaks.toggleTrackNonCritDamageTags()),
                 new Command("setcount",
                     args -> Tweakception.dungeonTweaks.setDamageTagTrackingCount(
-                            args.length > 0 ? Integer.parseInt(args[0]) : 0)),
+                        args.length > 0 ? toInt(args[0]) : 0)),
                 new Command("sethistorytimeout",
                     args -> Tweakception.dungeonTweaks.setDamageTagHistoryTimeoutTicks(
-                            args.length > 0 ? Integer.parseInt(args[0]) : 0)),
+                        args.length > 0 ? toInt(args[0]) : 0)),
                 new Command("wither",
                     args -> Tweakception.dungeonTweaks.toggleTrackWitherDamageTags())
             ),
@@ -125,12 +125,12 @@ public class TweakceptionCommand extends CommandBase
                 args -> Tweakception.dungeonTweaks.toggleTrackMaskUsage()),
             new Command("trackshootingspeed",
                 args -> Tweakception.dungeonTweaks.toggleTrackShootingSpeed(),
-                    new Command("setsamplesecs",
-                        args -> Tweakception.dungeonTweaks.setShootingSpeedTrackingSampleSecs(
-                                args.length >= 1 ? Integer.parseInt(args[0]) : 0)),
-                    new Command("setspawnrange",
-                        args -> Tweakception.dungeonTweaks.setShootingSpeedTrackingRange(
-                                args.length >= 1 ? Integer.parseInt(args[0]) : 0))
+                new Command("setsamplesecs",
+                    args -> Tweakception.dungeonTweaks.setShootingSpeedTrackingSampleSecs(
+                        args.length >= 1 ? toInt(args[0]) : 0)),
+                new Command("setspawnrange",
+                    args -> Tweakception.dungeonTweaks.setShootingSpeedTrackingRange(
+                        args.length >= 1 ? toInt(args[0]) : 0))
             )
         ));
         addSub(new Command("crimson",
@@ -139,14 +139,14 @@ public class TweakceptionCommand extends CommandBase
                 args -> Tweakception.crimsonTweaks.toggleMap(),
                 new Command("markerscale",
                     args -> Tweakception.crimsonTweaks.setMapMarkerScale(
-                            args.length > 0 ? Float.parseFloat(args[0]) : 0.0f)),
+                        args.length > 0 ? toFloat(args[0]) : 0.0f)),
                 new Command("pos",
                     args -> Tweakception.crimsonTweaks.setMapPos(
-                            args.length > 0 ? Integer.parseInt(args[0]) : -1,
-                            args.length > 1 ? Integer.parseInt(args[1]) : -1)),
+                        args.length > 0 ? toInt(args[0]) : -1,
+                        args.length > 1 ? toInt(args[1]) : -1)),
                 new Command("scale",
                     args -> Tweakception.crimsonTweaks.setMapScale(
-                            args.length > 0 ? Float.parseFloat(args[0]) : 0.0f))
+                        args.length > 0 ? toFloat(args[0]) : 0.0f))
             ),
             new Command("sulfur",
                 args -> Tweakception.crimsonTweaks.toggleSulfurHighlight())
@@ -158,14 +158,58 @@ public class TweakceptionCommand extends CommandBase
         ));
         addSub(new Command("gt",
             null,
+            new Command("areaedit",
+                args -> Tweakception.globalTracker.toggleAreaEdit(),
+                new Command("print",
+                    args -> Tweakception.globalTracker.printArea()),
+                new Command("reset",
+                    args -> Tweakception.globalTracker.resetArea()),
+                new Command("setpoint",
+                    args ->
+                    {
+                        if (args.length >= 4)
+                            Tweakception.globalTracker.setAreaPoint(args[0].equals("2") ? 1 : 0,
+                                toInt(args[1]), toInt(args[2]), toInt(args[3]));
+                        else
+                            sendChat("Give me 4 args");
+                    }),
+                new Command("setarea",
+                    args ->
+                    {
+                        if (args.length >= 6)
+                        {
+                            Tweakception.globalTracker.setAreaPoint(0,
+                                toInt(args[0]), toInt(args[1]), toInt(args[2]));
+                            Tweakception.globalTracker.setAreaPoint(1,
+                                toInt(args[3]), toInt(args[4]), toInt(args[5]));
+                        }
+                        else
+                            sendChat("Give me 6 args");
+                    })
+            ),
             new Command("blockquickcraft",
                 args -> Tweakception.globalTracker.toggleBlockQuickCraft(),
                 new Command("remove",
                     args -> Tweakception.globalTracker.removeBlockQuickCraftWhitelist(
-                            args.length > 0 ? Integer.parseInt(args[0]) : 0))
+                        args.length > 0 ? toInt(args[0]) : 0))
             ),
             new Command("copylocation",
                 args -> Tweakception.globalTracker.copyLocation()),
+            new Command("drawselectedentityoutline",
+                args -> Tweakception.globalTracker.toggleDrawSelectedEntityOutline(),
+                new Command("width",
+                    args -> Tweakception.globalTracker.setSelectedEntityOutlineWidth(
+                        args.length >= 1 ? toFloat(args[0]) : 0.0f)),
+                new Command("color",
+                    args ->
+                    {
+                        if (args.length >= 4)
+                            Tweakception.globalTracker.setSelectedEntityOutlineColor(
+                                toInt(args[0]), toInt(args[1]), toInt(args[2]), toInt(args[3]));
+                        else
+                            Tweakception.globalTracker.setSelectedEntityOutlineColor(-1, 0, 0, 0);
+                    })
+            ),
             new Command("entertoclosesign",
                 args -> Tweakception.globalTracker.toggleEnterToCloseNumberTypingSign()),
             new Command("forcesetisland",
@@ -185,11 +229,34 @@ public class TweakceptionCommand extends CommandBase
                 args -> Tweakception.globalTracker.toggleRenderInvisibleEntities()),
             new Command("setinvisibleentityalphapercentage",
                 args -> Tweakception.globalTracker.setInvisibleEntityAlphaPercentage(
-                    args.length > 0 ? Integer.parseInt(args[0]) : 0)),
+                    args.length > 0 ? toInt(args[0]) : 0)),
             new Command("skipworldrendering",
                 args -> Tweakception.globalTracker.toggleSkipWorldRendering()),
             new Command("usefallbackdetection",
                 args -> Tweakception.globalTracker.toggleFallbackDetection()),
+            new Command("playercount",
+                null,
+                new Command("park",
+                    args -> Tweakception.globalTracker.getPlayerCountInArea(0)),
+                new Command("crimson",
+                    null,
+                    new Command("stronghold",
+                        null,
+                        new Command("back",
+                            null,
+                            new Command("topright",
+                                args -> Tweakception.globalTracker.getPlayerCountInArea(1))
+                        ),
+                        new Command("front",
+                            null,
+                            new Command("topright",
+                                args -> Tweakception.globalTracker.getPlayerCountInArea(2))
+                        )
+                    )
+                )
+            ),
+            new Command("playersinareas",
+                args -> Tweakception.globalTracker.togglePlayersInAreasDisplay()),
             new Command("rightctrlcopy",
                 null,
                 new Command("nbt",
@@ -204,13 +271,13 @@ public class TweakceptionCommand extends CommandBase
                 args -> Tweakception.slayerTweaks.toggleAutoHealWand(),
                 new Command("setthreshold",
                     args -> Tweakception.slayerTweaks.setAutoHealWandHealthThreshold(
-                            args.length >= 1 ? Integer.parseInt(args[0]) : 0))
+                        args.length >= 1 ? toInt(args[0]) : 0))
             ),
             new Command("autothrowfishingrod",
                 args -> Tweakception.slayerTweaks.toggleAutoThrowFishingRod(),
                 new Command("setthreshold",
                     args -> Tweakception.slayerTweaks.setAutoThrowFishingRodThreshold(
-                            args.length >= 1 ? Integer.parseInt(args[0]) : 0))
+                        args.length >= 1 ? toInt(args[0]) : 0))
             ),
             new Command("eman",
                 null,
@@ -220,18 +287,13 @@ public class TweakceptionCommand extends CommandBase
             new Command("highlightslayerminiboss",
                 args -> Tweakception.slayerTweaks.toggleHighlightSlayerMiniboss()),
             new Command("highlightslayers",
-                args -> Tweakception.slayerTweaks.toggleHighlightSlayers()),
-            new Command("playercount",
-                null,
-                new Command("park",
-                    args -> Tweakception.slayerTweaks.getPlayerCountInArea(0))
-            )
+                args -> Tweakception.slayerTweaks.toggleHighlightSlayers())
         ));
         addSub(new Command("tuning",
             null,
             new Command("clickdelayticks",
                 args -> Tweakception.tuningTweaks.setTuningClickDelay(
-                        args.length > 0 ? Integer.parseInt(args[0]) : 0)),
+                    args.length > 0 ? toInt(args[0]) : 0)),
             new Command("toggletemplate",
                 args -> Tweakception.tuningTweaks.toggleTemplate())
         ));
@@ -248,13 +310,16 @@ public class TweakceptionCommand extends CommandBase
             new Command("reset",
                 args -> Tweakception.fairyTracker.reset()),
             new Command("setdelay",
-                args -> Tweakception.fairyTracker.setDelay(args.length > 0 ? Integer.parseInt(args[0]) : 0)),
+                args -> Tweakception.fairyTracker.setDelay(args.length > 0 ? toInt(args[0]) : 0)),
             new Command("setnotfound",
                 args -> Tweakception.fairyTracker.setNotFound()),
             new Command("toggleauto",
                 args -> Tweakception.fairyTracker.toggleAutoTracking()),
             new Command("trackonce",
                 args -> Tweakception.fairyTracker.trackOnce())
+        ));
+        addSub(new Command("overlay",
+            args -> Tweakception.overlayManager.editOverlays()
         ));
         addSub(new Command("api",
             null,
@@ -272,53 +337,66 @@ public class TweakceptionCommand extends CommandBase
         ));
         addSub(new Command("next",
             args -> Tweakception.dungeonTweaks.fragNext()));
-        addSub(new Command("autofish",
-            args -> Tweakception.autoFish.toggleAutoFish(),
+        addSub(new Command("fish",
+            args -> Tweakception.fishingTweaks.toggleAutoFish(),
             new Command("setcatchestomove",
-                args -> Tweakception.autoFish.setCatchesToMove(
-                        args.length > 0 ? Integer.parseInt(args[0]) : -1,
-                        args.length > 1 ? Integer.parseInt(args[1]) : -1)),
+                args -> Tweakception.fishingTweaks.setCatchesToMove(
+                    args.length > 0 ? toInt(args[0]) : -1,
+                    args.length > 1 ? toInt(args[1]) : -1)),
             new Command("setheadmovingpitchrange",
-                args -> Tweakception.autoFish.setHeadMovingPitchRange(
-                        args.length > 0 ? Float.parseFloat(args[0]) : 0.0f)),
+                args -> Tweakception.fishingTweaks.setHeadMovingPitchRange(
+                    args.length > 0 ? toFloat(args[0]) : 0.0f)),
             new Command("setheadmovingticks",
-                args -> Tweakception.autoFish.setHeadMovingTicks(args.length > 0 ? Integer.parseInt(args[0]) : 0)),
+                args -> Tweakception.fishingTweaks.setHeadMovingTicks(args.length > 0 ? toInt(args[0]) : 0)),
             new Command("setheadmovingyawrange",
-                args -> Tweakception.autoFish.setHeadMovingYawRange(args.length > 0 ? Float.parseFloat(args[0]) : 0.0f)),
+                args -> Tweakception.fishingTweaks.setHeadMovingYawRange(args.length > 0 ? toFloat(args[0]) : 0.0f)),
             new Command("setrecastdelay",
-                args -> Tweakception.autoFish.setRecastDelay(
-                        args.length > 0 ? Integer.parseInt(args[0]) : -1,
-                        args.length > 1 ? Integer.parseInt(args[1]) : -1)),
+                args -> Tweakception.fishingTweaks.setRecastDelay(
+                    args.length > 0 ? toInt(args[0]) : -1,
+                    args.length > 1 ? toInt(args[1]) : -1)),
             new Command("setretrievedelay",
-                args -> Tweakception.autoFish.setRetrieveDelay(
-                        args.length > 0 ? Integer.parseInt(args[0]) : -1,
-                        args.length > 1 ? Integer.parseInt(args[1]) : -1)),
+                args -> Tweakception.fishingTweaks.setRetrieveDelay(
+                    args.length > 0 ? toInt(args[0]) : -1,
+                    args.length > 1 ? toInt(args[1]) : -1)),
             new Command("toggledebug",
-                args -> Tweakception.autoFish.toggleDebugInfo()),
-            new Command("toggleslugfish",
-                args -> Tweakception.autoFish.toggleSlugfish())
-            ).setVisibility(false));
+                args -> Tweakception.fishingTweaks.toggleDebugInfo()),
+            new Command("slugfish",
+                args -> Tweakception.fishingTweaks.toggleSlugfish()),
+            new Command("thunderbottleoverlay",
+                args -> Tweakception.fishingTweaks.toggleThunderBottleOverlay(),
+                new Command("incrementresetdelay",
+                    args -> Tweakception.fishingTweaks.setThunderBottleChargeIncrementResetDuration(
+                        args.length > 0 ? toInt(args[0]) : 0)))
+        ).setVisibility(false));
+        addSub(new Command("foraging",
+            null,
+            new Command("tree",
+                args -> Tweakception.foragingTweaks.toggleTreeIndicator()),
+            new Command("debug",
+                args -> Tweakception.foragingTweaks.debugTreeIndicator(
+                    args.length > 0 ? toInt(args[0]) : -1))
+        ));
         addSub(new Command("looktrace",
             args ->
             {
                 // /tc looktrace reach adjacent liquid
                 // /tc looktrace 5.0   false    false
                 DumpUtils.doLookTrace(getWorld(), McUtils.getPlayer(),
-                        args.length >= 1 ? Double.parseDouble(args[0]) : 5.0,
-                        args.length >= 2 && args[1].equals("true"),
-                        args.length >= 3 && args[2].equals("true"));
+                    args.length >= 1 ? toDouble(args[0]) : 5.0,
+                    args.length >= 2 && args[1].equals("true"),
+                    args.length >= 3 && args[2].equals("true"));
             }).setVisibility(false));
         addSub(new Command("dumpentityinrange",
             args -> DumpUtils.dumpEntitiesInRange(getWorld(), McUtils.getPlayer(),
-                    args.length > 0 ? Double.parseDouble(args[0]) : 5.0)
+                args.length > 0 ? toDouble(args[0]) : 5.0)
         ).setVisibility(false));
         addSub(new Command("clientsetblock",
             args ->
             {
                 if (args.length == 1)
                     getWorld().setBlockState(McUtils.getPlayer().getPosition(),
-                            Block.blockRegistry.getObject(new ResourceLocation(args[0])).getDefaultState(),
-                            1);
+                        Block.blockRegistry.getObject(new ResourceLocation(args[0])).getDefaultState(),
+                        1);
                 else
                     sendChat("Give me 1 arg");
             }).setVisibility(false));
@@ -326,10 +404,10 @@ public class TweakceptionCommand extends CommandBase
             args -> Tweakception.inGameEventDispatcher.toggleNotifyLagSpike(),
             new Command("setthreshold",
                 args -> Tweakception.inGameEventDispatcher.setNotifyThreshold(
-                        args.length > 0 ? Float.parseFloat(args[0]) : 0.0f)),
+                    args.length > 0 ? toFloat(args[0]) : 0.0f)),
             new Command("setaggregation",
                 args -> Tweakception.inGameEventDispatcher.setAggregationValue(
-                        args.length > 0 ? Float.parseFloat(args[0]) : 0.0f))
+                    args.length > 0 ? toFloat(args[0]) : 0.0f))
         ).setVisibility(false));
         addSub(new Command("dev",
             args -> Tweakception.globalTracker.toggleDevMode()));
@@ -360,7 +438,7 @@ public class TweakceptionCommand extends CommandBase
             new Command("setthreshold",
                 args ->
                 {
-                    int t = LagSpikeWatcher.setThreshold(args.length > 0 ? Integer.parseInt(args[0]) : 0);
+                    int t = LagSpikeWatcher.setThreshold(args.length > 0 ? toInt(args[0]) : 0);
                     sendChat("TC: set threshold to " + t);
                 }),
             new Command("dump",
@@ -371,7 +449,7 @@ public class TweakceptionCommand extends CommandBase
                         File file = LagSpikeWatcher.dump();
                         if (file != null)
                             McUtils.getPlayer().addChatMessage(new ChatComponentTranslation("Output written to file %s",
-                                    McUtils.makeFileLink(file)));
+                                McUtils.makeFileLink(file)));
                         else
                             sendChat("Cannot create file");
                     }
@@ -383,7 +461,7 @@ public class TweakceptionCommand extends CommandBase
                 {
                     try
                     {
-                        int ms = args.length > 0 ? Integer.parseInt(args[0]) : 1000;
+                        int ms = args.length > 0 ? toInt(args[0]) : 1000;
                         Thread.sleep(ms);
                         sendChat("TC: slept the thread for " + ms + " ms");
                     }
@@ -392,11 +470,11 @@ public class TweakceptionCommand extends CommandBase
                         sendChat("TC: interrupted");
                     }
                 }),
-            new Command("togglekeepdetecting",
+            new Command("keeplogging",
                 args ->
                 {
-                    boolean b = LagSpikeWatcher.toggleKeepDetectingOnLag();
-                    sendChat("TC: toggled keep detecting on lag " + b);
+                    boolean b = LagSpikeWatcher.toggleKeepLoggingOnLag();
+                    sendChat("TC: toggled keep logging on lag " + b);
                 }),
             new Command("dumpthreads",
                 args ->
@@ -404,7 +482,7 @@ public class TweakceptionCommand extends CommandBase
                     File file = LagSpikeWatcher.dumpThreads();
                     if (file != null)
                         McUtils.getPlayer().addChatMessage(new ChatComponentTranslation("Output written to file %s",
-                                McUtils.makeFileLink(file)));
+                            McUtils.makeFileLink(file)));
                     else
                         sendChat("Cannot create file");
                 }))
@@ -420,27 +498,29 @@ public class TweakceptionCommand extends CommandBase
             {
                 if (args.length == 1)
                     Tweakception.globalTracker.doChatAction(args[0]);
+                else
+                    sendChat("Don't use this command!");
             }));
     }
-
+    
     @Override
     public String getCommandName()
     {
         return "tc";
     }
-
+    
     @Override
     public String getCommandUsage(ICommandSender icommandsender)
     {
         return "/tc help";
     }
-
+    
     @Override
     public int getRequiredPermissionLevel()
     {
         return 0;
     }
-
+    
     @Override
     public void processCommand(ICommandSender sender, String[] args)
     {
@@ -461,7 +541,7 @@ public class TweakceptionCommand extends CommandBase
             sendCommandNotFound();
         }
     }
-
+    
     @Override
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos)
     {
@@ -475,33 +555,48 @@ public class TweakceptionCommand extends CommandBase
                     return sub.getTabCompletions(Arrays.copyOfRange(args, 1, args.length));
         return null;
     }
-
+    
     private List<String> getVisibleSubCommandNames()
     {
         return subCommands.stream().
-                filter(Command::isVisible).
-                map(Command::getName).
-                collect(Collectors.toList());
+            filter(Command::isVisible).
+            map(Command::getName).
+            collect(Collectors.toList());
     }
-
+    
     private void addSub(Command cmd)
     {
         subCommands.add(cmd);
     }
-
+    
     private static List<String> getPossibleCompletions(String arg, List<String> opts)
     {
         List<String> list = new ArrayList<>();
-
+        
         for (String opt : opts)
             if (opt.startsWith(arg))
                 list.add(opt);
-
+        
         return list;
     }
-
+    
     private static void sendCommandNotFound()
     {
         sendChat("Tweakception: command not found or wrong syntax");
+    }
+    
+    private static int toInt(String s)
+    {
+        return Integer.parseInt(s.replaceAll(",$", ""));
+    }
+    
+    private static float toFloat(String s)
+    {
+        return Float.parseFloat(s.replaceAll(",$", ""));
+    }
+    
+    private static double toDouble(String s)
+    {
+        return Double.parseDouble(s.replaceAll(",$", ""));
     }
 }

@@ -3,7 +3,8 @@ package a7.tweakception.utils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.lang.reflect.Field;
@@ -11,6 +12,9 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.List;
+
+import static a7.tweakception.utils.McUtils.getMc;
 
 public class Utils
 {
@@ -18,17 +22,17 @@ public class Utils
     {
         return Math.max(Math.min(n, max), min);
     }
-
+    
     public static float clamp(float n, float min, float max)
     {
         return Math.max(Math.min(n, max), min);
     }
-
+    
     public static double clamp(double n, double min, double max)
     {
         return Math.max(Math.min(n, max), min);
     }
-
+    
     public static String stringRepeat(String s, int c)
     {
         StringBuilder sb = new StringBuilder();
@@ -36,7 +40,7 @@ public class Utils
             sb.append(s);
         return sb.toString();
     }
-
+    
     public static String formatCommas(long n)
     {
         String s = String.valueOf(n);
@@ -47,19 +51,19 @@ public class Utils
             sb.append(a[0]);
         for (int i = 1; i < l; i++)
         {
-            if ((l-i) % 3 == 0)
+            if ((l - i) % 3 == 0)
                 sb.append(',');
             sb.append(a[i]);
         }
         return sb.toString();
     }
-
+    
     public static String formatCommas(float n)
     {
         String s = String.valueOf(n);
         return formatCommas(s);
     }
-
+    
     // Input string could be "1234" or "1234.5"
     public static String formatCommas(String s)
     {
@@ -71,7 +75,7 @@ public class Utils
             sb.append(a[0]);
         for (int i = 1; i < l; i++)
         {
-            if ((l-i) % 3 == 0)
+            if ((l - i) % 3 == 0)
                 sb.append(',');
             sb.append(a[i]);
         }
@@ -79,7 +83,7 @@ public class Utils
             sb.append('.').append(split[1]);
         return sb.toString();
     }
-
+    
     public static String formatMetric(long n)
     {
         if (n >= 1_000_000_000)
@@ -96,29 +100,29 @@ public class Utils
         }
         return String.valueOf(n);
     }
-
+    
     public static String msToHHMMSSmmm(long ms)
     {
         return String.format("%d:%02d:%02d.%03d",
-                ms / 3_600_000,
-                ms % 3_600_000 / 60_000,
-                ms % 60_000 / 1_000,
-                ms % 1_000);
+            ms / 3_600_000,
+            ms % 3_600_000 / 60_000,
+            ms % 60_000 / 1_000,
+            ms % 1_000);
     }
-
+    
     public static String msToMMSSmmm(long ms)
     {
         return String.format("%02d:%02d.%03d",
-                ms / 60_000,
-                ms % 60_000 / 1_000,
-                ms % 1_000);
+            ms / 60_000,
+            ms % 60_000 / 1_000,
+            ms % 1_000);
     }
-
+    
     public static <T> void removeWhile(Collection<T> queue, Predicate<T> predicate)
     {
         removeWhile(queue, predicate, null);
     }
-
+    
     public static <T> void removeWhile(Collection<T> queue, Predicate<T> predicate, Consumer<T> beforeRemove)
     {
         Iterator<T> it2 = queue.iterator();
@@ -135,40 +139,78 @@ public class Utils
                 break;
         }
     }
-
+    
     public static String f(String s, Object... args)
     {
         return String.format(s, args);
     }
-
+    
+    public static NBTTagCompound getExtraAttributes(ItemStack item)
+    {
+        if (item == null)
+            return null;
+        
+        NBTTagCompound tag = item.getTagCompound();
+        if (tag != null)
+        {
+            return tag.getCompoundTag("ExtraAttributes");
+        }
+        return null;
+    }
+    
     public static String getSkyblockItemId(ItemStack item)
     {
+        if (item == null)
+            return null;
+    
         NBTTagCompound tag = item.getTagCompound();
         if (tag != null)
         {
             NBTTagCompound extra = tag.getCompoundTag("ExtraAttributes");
             if (extra != null)
-            {
                 return extra.getString("id");
-            }
         }
         return null;
     }
-
+    
     public static String getSkyblockItemUuid(ItemStack item)
     {
+        if (item == null)
+            return null;
+    
         NBTTagCompound tag = item.getTagCompound();
         if (tag != null)
         {
             NBTTagCompound extra = tag.getCompoundTag("ExtraAttributes");
             if (extra != null)
-            {
                 return extra.getString("uuid");
-            }
         }
         return null;
     }
-
+    
+    public static int[] makeColorArray(int r, int g, int b, int a)
+    {
+        int[] arr = new int[4];
+        arr[0] = Utils.clamp(r, 0, 255);
+        arr[1] = Utils.clamp(g, 0, 255);
+        arr[2] = Utils.clamp(b, 0, 255);
+        arr[3] = Utils.clamp(a, 0, 255);
+        return arr;
+    }
+    
+    public static Color colorArrayToColor(int[] a)
+    {
+        return new Color(a[0], a[1], a[2], a[3]);
+    }
+    
+    public static int getMaxStringWidth(List<String> list)
+    {
+        int max = 0;
+        for (String s : list)
+            max = Math.max(max, getMc().fontRendererObj.getStringWidth(s));
+        return max;
+    }
+    
     public static <T> T setAccessibleAndGetField(Object o, String name) throws NoSuchFieldException, IllegalAccessException
     {
         Field field = o.getClass().getDeclaredField(name);
@@ -176,13 +218,13 @@ public class Utils
         //noinspection unchecked
         return (T)field.get(o);
     }
-
+    
     public static void setClipboard(String s)
     {
         StringSelection ss = new StringSelection(s);
         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(ss, ss);
     }
-
+    
     public static String getClipboard()
     {
         String s;

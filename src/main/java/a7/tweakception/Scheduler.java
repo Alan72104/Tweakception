@@ -11,7 +11,7 @@ public class Scheduler
 {
     private final Queue<ScheduledTask> tasks = new ConcurrentLinkedQueue<>();
     private int ticks = 0;
-
+    
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event)
     {
@@ -32,26 +32,26 @@ public class Scheduler
             }
         }
     }
-
+    
     public ScheduledTask add(Runnable task)
     {
         ScheduledTask scheduledTask = new ScheduledTask(this, task, ticks, 0);
         tasks.add(scheduledTask);
         return scheduledTask;
     }
-
+    
     public ScheduledTask addDelayed(Runnable task, int delayTicks)
     {
         ScheduledTask scheduledTask = new ScheduledTask(this, task, ticks, delayTicks);
         tasks.add(scheduledTask);
         return scheduledTask;
     }
-
+    
     public void remove(ScheduledTask task)
     {
         tasks.remove(task);
     }
-
+    
     public static class ScheduledTask
     {
         private final Scheduler scheduler;
@@ -59,6 +59,7 @@ public class Scheduler
         public Runnable andThen;
         public int startTicks;
         public int delay;
+        
         public ScheduledTask(Scheduler scheduler, Runnable task, int startTicks, int delay)
         {
             this.scheduler = scheduler;
@@ -68,11 +69,13 @@ public class Scheduler
                 delay = 0;
             this.delay = delay;
         }
+        
         public ScheduledTask then(Runnable task)
         {
             andThen = () -> scheduler.add(task);
             return this;
         }
+        
         public ScheduledTask thenDelayed(Runnable task, int delayTicks)
         {
             andThen = () -> scheduler.addDelayed(task, delayTicks);

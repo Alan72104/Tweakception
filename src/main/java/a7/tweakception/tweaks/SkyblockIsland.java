@@ -1,5 +1,10 @@
 package a7.tweakception.tweaks;
 
+import net.minecraft.util.AxisAlignedBB;
+
+import java.util.ArrayList;
+import java.util.List;
+
 public enum SkyblockIsland
 {
     HUB("Hub", new String[]
@@ -69,6 +74,14 @@ public enum SkyblockIsland
         "Scarleton",
         "Stronghold",
         "The Wasteland"
+    }, new SubArea[]
+    {
+        new SubArea("Stronghold back right", "BackRight", "fishing",
+            new AxisAlignedBB(-367, 178, -486, -332, 130, -462)),
+        new SubArea("Stronghold back left", "BackLeft", "fishing",
+            new AxisAlignedBB(-393, 178, -488, -332, 130, -462)),
+        new SubArea("Stronghold front right", "FrontRight", "fishing",
+            new AxisAlignedBB(-319, 132, -534, -267, 153, -591))
     }),
     CRYSTAL_HOLLOWS("Crystal Hollows", new String[]
     {
@@ -86,13 +99,48 @@ public enum SkyblockIsland
         "Mithril Deposits",
         "Precursor Remnants"
     });
-
-    public String name;
-    public String[] places;
-
-    SkyblockIsland(String name, String[] places)
+    
+    public final String name;
+    public final String[] areas;
+    public final SubArea[] subAreas;
+    
+    SkyblockIsland(String name, String[] areas)
     {
         this.name = name;
-        this.places = places;
+        this.areas = areas;
+        this.subAreas = null;
+    }
+    
+    SkyblockIsland(String name, String[] areas, SubArea[] subAreas)
+    {
+        this.name = name;
+        this.areas = areas;
+        this.subAreas = subAreas;
+        for (SubArea area : subAreas)
+            area.setIsland(this);
+    }
+    
+    public static class SubArea
+    {
+        public final String name;
+        public final String shortName;
+        public final String type;
+        public final AxisAlignedBB box;
+        public SkyblockIsland island = null;
+        
+        public SubArea(String name, String shortName, String type, AxisAlignedBB box)
+        {
+            this.name = name;
+            this.shortName = shortName;
+            this.type = type;
+            // Block range to bounding box
+            box = box.addCoord(1, 1, 1);
+            this.box = box;
+        }
+        
+        public void setIsland(SkyblockIsland island)
+        {
+            this.island = island;
+        }
     }
 }

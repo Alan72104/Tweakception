@@ -25,7 +25,6 @@ import static a7.tweakception.utils.McUtils.*;
 
 public class CrimsonTweaks extends Tweak
 {
-    private final CrimsonTweaksConfig c;
     public static class CrimsonTweaksConfig
     {
         public boolean enableMap = false;
@@ -35,6 +34,7 @@ public class CrimsonTweaks extends Tweak
         public float mapMarkerScale = 1.0f;
         public boolean highlightSulfur = false;
     }
+    private final CrimsonTweaksConfig c;
     private final ResourceLocation MAP_TEXTURE = new ResourceLocation("tweakception:crimson_map.png");
     private final ResourceLocation MAP_PLAYER_MARKER_TEXTURE = new ResourceLocation("tweakception:map_player_marker.png");
     private final float MAP_WIDTH = 1200.0f;
@@ -55,17 +55,17 @@ public class CrimsonTweaks extends Tweak
     private List<BlockPos> sponges = new ArrayList<>(25);
     private List<BlockPos> spongesTemp = new ArrayList<>(25);
     private BlockSearchTask searchThread;
-
+    
     public CrimsonTweaks(Configuration configuration)
     {
         super(configuration);
         c = configuration.config.crimsonTweaks;
     }
-
+    
     public void onTick(TickEvent.ClientTickEvent event)
     {
         if (getCurrentIsland() != SkyblockIsland.CRIMSON_ISLE) return;
-
+        
         if (getTicks() % 20 == 5)
         {
             if (c.highlightSulfur)
@@ -76,29 +76,29 @@ public class CrimsonTweaks extends Tweak
                     sponges = spongesTemp;
                     spongesTemp = new ArrayList<>(20);
                     searchThread = new BlockSearchTask((int)p.posX - 64, 70, (int)p.posZ - 64,
-                            (int)p.posX + 64, 150, (int)p.posZ + 64, getWorld(), Blocks.sponge, spongesTemp);
+                        (int)p.posX + 64, 150, (int)p.posZ + 64, getWorld(), Blocks.sponge, spongesTemp);
                     Tweakception.threadPool.execute(searchThread);
                 }
             }
         }
     }
-
+    
     public void onRenderLast(RenderWorldLastEvent event)
     {
         if (getCurrentIsland() != SkyblockIsland.CRIMSON_ISLE) return;
-
+        
         if (c.highlightSulfur)
         {
             for (BlockPos pos : sponges)
                 RenderUtils.drawBeaconBeamOrBoundingBox(pos, new Color(168, 157, 50, 127), event.partialTicks, 0);
         }
     }
-
+    
     public void onRenderGameOverlayPost(RenderGameOverlayEvent.Post event)
     {
         if (event.type != RenderGameOverlayEvent.ElementType.ALL) return;
         if (getCurrentIsland() != SkyblockIsland.CRIMSON_ISLE) return;
-
+        
         if (c.enableMap)
         {
             GlStateManager.pushMatrix();
@@ -108,57 +108,57 @@ public class CrimsonTweaks extends Tweak
             GlStateManager.scale(MAP_SCALE * c.mapScale, MAP_SCALE * c.mapScale, 1);
             RenderUtils.drawTexturedRect(0.0f, 0.0f, MAP_WIDTH, MAP_HEIGHT, GL11.GL_NEAREST);
             GlStateManager.popMatrix();
-
+            
             float playerX = (float)getPlayer().posX;
 //            float playerX = WORLD_SPAWNPOINT_X;
             float playerZ = (float)getPlayer().posZ;
 //            float playerZ = WORLD_SPAWNPOINT_Z;
             getMc().getTextureManager().bindTexture(MAP_PLAYER_MARKER_TEXTURE);
             GlStateManager.translate(
-                    (MAP_SPAWNPOINT_X + (playerX - WORLD_SPAWNPOINT_X) * WORLD_TO_MAP_SCALE) * MAP_SCALE * c.mapScale,
-                    (MAP_SPAWNPOINT_Z + (playerZ - WORLD_SPAWNPOINT_Z) * WORLD_TO_MAP_SCALE) * MAP_SCALE * c.mapScale, 0);
+                (MAP_SPAWNPOINT_X + (playerX - WORLD_SPAWNPOINT_X) * WORLD_TO_MAP_SCALE) * MAP_SCALE * c.mapScale,
+                (MAP_SPAWNPOINT_Z + (playerZ - WORLD_SPAWNPOINT_Z) * WORLD_TO_MAP_SCALE) * MAP_SCALE * c.mapScale, 0);
             GlStateManager.pushMatrix();
             GlStateManager.rotate(getPlayer().rotationYaw, 0, 0, 1);
             GlStateManager.scale(MAP_PLAYER_MARKER_SCALE * c.mapMarkerScale, MAP_PLAYER_MARKER_SCALE * c.mapMarkerScale, 1);
             RenderUtils.drawTexturedRect(
-                    -MAP_PLAYER_MARKER_WIDTH / 2.0f, -MAP_PLAYER_MARKER_HEIGHT / 2.0f,
-                    MAP_PLAYER_MARKER_WIDTH, MAP_PLAYER_MARKER_HEIGHT, GL11.GL_NEAREST);
+                -MAP_PLAYER_MARKER_WIDTH / 2.0f, -MAP_PLAYER_MARKER_HEIGHT / 2.0f,
+                MAP_PLAYER_MARKER_WIDTH, MAP_PLAYER_MARKER_HEIGHT, GL11.GL_NEAREST);
             GlStateManager.popMatrix();
             GlStateManager.popMatrix();
         }
     }
-
+    
     public void onWorldUnload(WorldEvent.Unload event)
     {
         if (searchThread != null)
             searchThread.cancel = true;
     }
-
+    
     public void toggleMap()
     {
         c.enableMap = !c.enableMap;
         sendChat("CT-Map: toggled " + c.enableMap);
     }
-
+    
     public void setMapPos(int x, int y)
     {
         c.mapPosX = x >= 0 ? x : new CrimsonTweaksConfig().mapPosX;
         c.mapPosY = y >= 0 ? y : new CrimsonTweaksConfig().mapPosY;
         sendChat("CT-Map: set pos to " + c.mapPosX + ", " + c.mapPosY);
     }
-
+    
     public void setMapScale(float scale)
     {
         c.mapScale = scale > 0.0f ? scale : new CrimsonTweaksConfig().mapScale;
         sendChat("CT-Map: set scale to " + c.mapScale);
     }
-
+    
     public void setMapMarkerScale(float scale)
     {
         c.mapMarkerScale = scale > 0.0f ? scale : new CrimsonTweaksConfig().mapMarkerScale;
         sendChat("CT-Map: set marker scale to " + c.mapMarkerScale);
     }
-
+    
     public void toggleSulfurHighlight()
     {
         c.highlightSulfur = !c.highlightSulfur;

@@ -1,14 +1,16 @@
 package a7.tweakception;
 
+import a7.tweakception.commands.TweakceptionCommand;
 import a7.tweakception.config.Configuration;
-import a7.tweakception.proxies.IProxy;
+import a7.tweakception.overlay.OverlayManager;
 import a7.tweakception.tweaks.*;
 import net.minecraft.block.Block;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.client.ClientCommandHandler;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
-import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import org.apache.logging.log4j.Logger;
@@ -18,7 +20,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @Mod(modid = Tweakception.MOD_ID, version = Tweakception.MOD_VERSION, name = Tweakception.MOD_NAME,
-    acceptedMinecraftVersions = "1.8.9")
+    acceptedMinecraftVersions = "1.8.9", clientSideOnly = true)
 public class Tweakception
 {
     public static final String MOD_ID = "tweakception";
@@ -26,46 +28,49 @@ public class Tweakception
     public static final String MOD_VERSION = "@MOD_VERSION@";
     @Mod.Instance(MOD_ID)
     public static Tweakception instance;
-    @SidedProxy(clientSide = "a7.tweakception.proxies.ClientProxy", serverSide = "a7.tweakception.proxies.ServerProxy")
-    public static IProxy proxy;
     public static Logger logger;
     public static Configuration configuration;
     public static ExecutorService threadPool;
     public static Scheduler scheduler;
     public static InGameEventDispatcher inGameEventDispatcher;
+    public static APIManager apiManager;
     public static GlobalTracker globalTracker;
+    public static OverlayManager overlayManager;
+    public static TuningTweaks tuningTweaks;
     public static FairyTracker fairyTracker;
     public static DungeonTweaks dungeonTweaks;
+    public static MiningTweaks miningTweaks;
+    public static ForagingTweaks foragingTweaks;
     public static CrimsonTweaks crimsonTweaks;
     public static SlayerTweaks slayerTweaks;
-    public static AutoFish autoFish;
-    public static MiningTweaks miningTweaks;
-    public static APIManager apiManager;
-    public static TuningTweaks tuningTweaks;
-
+    public static FishingTweaks fishingTweaks;
+    
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) throws Exception
     {
         instance = this;
         logger = event.getModLog();
         configuration = new Configuration(event.getModConfigurationDirectory().getAbsolutePath() + "/" + MOD_ID + "/");
-
+        
         inGameEventDispatcher = new InGameEventDispatcher();
         threadPool = Executors.newFixedThreadPool(3);
         scheduler = new Scheduler();
+        apiManager = new APIManager(configuration);
+        overlayManager = new OverlayManager(configuration);
         globalTracker = new GlobalTracker(configuration);
+        tuningTweaks = new TuningTweaks(configuration);
         fairyTracker = new FairyTracker(configuration);
         dungeonTweaks = new DungeonTweaks(configuration);
+        miningTweaks = new MiningTweaks(configuration);
+        foragingTweaks = new ForagingTweaks(configuration);
         crimsonTweaks = new CrimsonTweaks(configuration);
         slayerTweaks = new SlayerTweaks(configuration);
-        autoFish = new AutoFish(configuration);
-        miningTweaks = new MiningTweaks(configuration);
-        apiManager = new APIManager(configuration);
-        tuningTweaks = new TuningTweaks(configuration);
-
-        proxy.registerClientCommands();
-        proxy.registerClientEventHandlers();
-
+        fishingTweaks = new FishingTweaks(configuration);
+        
+        ClientCommandHandler.instance.registerCommand(new TweakceptionCommand());
+        MinecraftForge.EVENT_BUS.register(inGameEventDispatcher);
+        MinecraftForge.EVENT_BUS.register(scheduler);
+        
         Runtime.getRuntime().addShutdownHook(new Thread(() ->
         {
             try
@@ -79,12 +84,12 @@ public class Tweakception
             }
         }));
     }
-
+    
     @EventHandler
     public void serverStarting(FMLServerStartingEvent event)
     {
     }
-
+    
     // Not mutable
     public static final class BlockSearchTask implements Runnable
     {
@@ -100,8 +105,8 @@ public class Tweakception
         public boolean done = false;
         public boolean cancel = false;
         public long executeNanoTime;
-
-
+        
+        
         public BlockSearchTask(int posX, int posY, int posZ, int range, int rangeY, World world, Block targetBlock, Collection<BlockPos> targetCollection)
         {
             this.posX = posX - range;
@@ -114,7 +119,7 @@ public class Tweakception
             this.targetBlock = targetBlock;
             this.targetCollection = targetCollection;
         }
-
+        
         public BlockSearchTask(int posX, int posY, int posZ, int toPosX, int toPosY, int toPosZ, World world, Block targetBlock, Collection<BlockPos> targetCollection)
         {
             this.posX = Math.min(posX, toPosX);
@@ -127,7 +132,7 @@ public class Tweakception
             this.targetBlock = targetBlock;
             this.targetCollection = targetCollection;
         }
-
+        
         public void run()
         {
 //            long startNano = System.nanoTime();
@@ -135,18 +140,18 @@ public class Tweakception
 //            for (int x = posX; x < toPosX; x++)
 //                for (int y = posY; y < toPosY; y++)
 //                    for (int z = posZ; z < toPosZ; z++)
-                    for (BlockPos pos : BlockPos.getAllInBox(new BlockPos(posX, posY, posZ), new BlockPos(toPosX, toPosY, toPosZ)))
-                    {
-                        if (cancel)
-                        {
-                            done = true;
-                            return;
-                        }
+            for (BlockPos pos : BlockPos.getAllInBox(new BlockPos(posX, posY, posZ), new BlockPos(toPosX, toPosY, toPosZ)))
+            {
+                if (cancel)
+                {
+                    done = true;
+                    return;
+                }
 
 //                        BlockPos pos = new BlockPos(posX, posY, posZ);
-                        if (world.getBlockState(pos).getBlock() == targetBlock)
-                            targetCollection.add(pos);
-                    }
+                if (world.getBlockState(pos).getBlock() == targetBlock)
+                    targetCollection.add(pos);
+            }
 //            executeNanoTime = System.nanoTime() - startNano;
             done = true;
         }

@@ -29,7 +29,7 @@ public class MixinGuiEditSign extends GuiScreen
 //        {"^^^^^^^^^^^^^^^", "Enter price", "per unit"},
 //        {"^^^^^^^^^^^^^^^", "Your auction", "starting bid"}
 //    };
-
+    
     @Inject(method = "keyTyped", at = @At("HEAD"), cancellable = true)
     protected void keyTyped(char chr, int key, CallbackInfo ci) throws IOException
     {
@@ -38,7 +38,7 @@ public class MixinGuiEditSign extends GuiScreen
         {
             if (Keyboard.isKeyDown(Keyboard.KEY_LMENU))
                 return;
-
+            
             if (this.tileSign.signText[1].getUnformattedText().equals("^^^^^^^^^^^^^^^"))
             {
                 this.actionPerformed(this.doneBtn);

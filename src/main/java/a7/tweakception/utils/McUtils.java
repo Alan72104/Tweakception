@@ -33,37 +33,37 @@ import java.util.regex.Pattern;
 public class McUtils
 {
     private static final Matcher colorMatcher = Pattern.compile("§.").matcher("");
-
+    
     public static Minecraft getMc()
     {
         return Minecraft.getMinecraft();
     }
-
+    
     public static EntityPlayerSP getPlayer()
     {
         return getMc().thePlayer;
     }
-
+    
     public static WorldClient getWorld()
     {
         return getMc().theWorld;
     }
-
+    
     public static boolean isInGame()
     {
         return getWorld() != null && getPlayer() != null;
     }
-
+    
     public static void sendChat(String s)
     {
         getPlayer().addChatMessage(new ChatComponentText(s));
     }
-
+    
     public static void sendChatf(String s, Object... args)
     {
         getPlayer().addChatMessage(new ChatComponentText(String.format(s, args)));
     }
-
+    
     public static String[] getDisplayLore(ItemStack stack)
     {
         if (stack == null)
@@ -88,19 +88,19 @@ public class McUtils
         }
         return null;
     }
-
+    
     public static String getArmorStandHeadTexture(EntityArmorStand armorStand)
     {
         return getSkullTexture(armorStand.getCurrentArmor(3));
     }
-
+    
     public static String getSkullTexture(ItemStack stack)
     {
         if (stack == null)
             return null;
         if (stack.getItem() != Items.skull)
             return null;
-
+        
         NBTTagCompound tag = stack.getTagCompound();
         if (tag == null)
             return null;
@@ -117,7 +117,7 @@ public class McUtils
             return null;
         return list.getCompoundTagAt(0).getString("Value");
     }
-
+    
     public static Entity getNearestEntityInAABB(Entity entity, AxisAlignedBB bb, Predicate<? super Entity> predicate)
     {
         Entity nearest = null;
@@ -134,49 +134,58 @@ public class McUtils
         }
         return nearest;
     }
-
+    
     public static String cleanColor(String s)
     {
         return colorMatcher.reset(s).replaceAll("");
     }
-
-    public static String cleanDuplicateColorCodes(String line) {
+    
+    public static String cleanDuplicateColorCodes(String line)
+    {
         StringBuilder sb = new StringBuilder();
         char currentColourCode = 'r';
         boolean sectionSymbolLast = false;
-        for (char c : line.toCharArray()) {
-            if ((int) c > 50000) continue;
-
-            if (c == '\u00a7') {
+        for (char c : line.toCharArray())
+        {
+            if ((int)c > 50000) continue;
+            
+            if (c == '\u00a7')
+            {
                 sectionSymbolLast = true;
-            } else {
-                if (sectionSymbolLast) {
-                    if (currentColourCode != c) {
+            }
+            else
+            {
+                if (sectionSymbolLast)
+                {
+                    if (currentColourCode != c)
+                    {
                         sb.append('\u00a7');
                         sb.append(c);
                         currentColourCode = c;
                     }
                     sectionSymbolLast = false;
-                } else {
+                }
+                else
+                {
                     sb.append(c);
                 }
             }
         }
         return sb.toString();
     }
-
+    
     public static void playCoolDing()
     {
         EntityPlayerSP p = McUtils.getPlayer();
         ISound sound = new PositionedSoundRecord(new ResourceLocation("random.orb"),
-                1.0f, 0.943f, (float)p.posX, (float)p.posY, (float)p.posZ);
-
+            1.0f, 0.943f, (float)p.posX, (float)p.posY, (float)p.posZ);
+        
         float oldLevel = getMc().gameSettings.getSoundLevel(SoundCategory.PLAYERS);
         getMc().gameSettings.setSoundLevel(SoundCategory.PLAYERS, 1);
         getMc().getSoundHandler().playSound(sound);
         getMc().gameSettings.setSoundLevel(SoundCategory.PLAYERS, oldLevel);
     }
-
+    
     public static IChatComponent makeFileLink(File file)
     {
         IChatComponent link = new ChatComponentText(file.getName());

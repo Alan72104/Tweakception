@@ -11,6 +11,7 @@
     "MixinEntityRenderer",
     "MixinGuiContainer",
     "MixinGuiEditSign",
+    "MixinMinecraft",
     "MixinNetHandlerPlayClient",
     "MixinRendererLivingEntity"
   ],

@@ -7,18 +7,18 @@ public class IslandChangedEvent extends Event
 {
     private final SkyblockIsland prevIsland;
     private final SkyblockIsland newIsland;
-
+    
     public IslandChangedEvent(SkyblockIsland prev, SkyblockIsland $new)
     {
         prevIsland = prev;
         newIsland = $new;
     }
-
+    
     public SkyblockIsland getPrevIsland()
     {
         return prevIsland;
     }
-
+    
     public SkyblockIsland getNewIsland()
     {
         return newIsland;

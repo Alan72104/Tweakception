@@ -31,10 +31,11 @@ import static a7.tweakception.utils.McUtils.*;
 @Mixin(GuiContainer.class)
 public abstract class MixinGuiContainer extends GuiScreen
 {
-    @Shadow public Container inventorySlots;
+    @Shadow
+    public Container inventorySlots;
     private static final ResourceLocation ITEM_RED_X = new ResourceLocation("tweakception:item_red_x.png");
 //    public Slot getSlotUnderMouse() { return this.theSlot; }
-
+    
     @Inject(method = "drawSlot", at = @At("TAIL"))
     public void slotDrawn(Slot slot, CallbackInfo ci)
     {
@@ -56,17 +57,17 @@ public abstract class MixinGuiContainer extends GuiScreen
             }
         }
     }
-
+    
     @Inject(method = "handleMouseClick", at = @At("HEAD"), cancellable = true)
     public void handleMouseClick(Slot slot, int slotId, int button, int mode, CallbackInfo ci)
     {
         if (!(slot != null && this.inventorySlots instanceof ContainerChest))
             return;
-
+        
         ContainerChest chest = (ContainerChest)this.inventorySlots;
         IInventory inv = chest.getLowerChestInventory();
         String name = inv.getName();
-
+        
         if (Tweakception.dungeonTweaks.isPartyFinderRefreshCooldownEnbaled() &&
             inv.getSizeInventory() == 54 &&
             name.equals("Party Finder") &&
@@ -95,9 +96,9 @@ public abstract class MixinGuiContainer extends GuiScreen
             }
         }
         else if (Tweakception.tuningTweaks.isTemplatesEnabled() &&
-                inv.getSizeInventory() == 54 &&
-                name.equals("Stats Tuning") &&
-                slot.getStack() != null)
+            inv.getSizeInventory() == 54 &&
+            name.equals("Stats Tuning") &&
+            slot.getStack() != null)
         {
             int index = Tweakception.tuningTweaks.getTemplateSlotFromStack(slot.getStack());
             if (index != -1)
@@ -117,10 +118,10 @@ public abstract class MixinGuiContainer extends GuiScreen
             }
         }
         else if (Tweakception.globalTracker.isBlockingQuickCraft() &&
-                inv.getSizeInventory() == 54 &&
-                name.equals("Craft Item") &&
-                slot.getStack() != null && slot.slotNumber % 9 == 7 &&
-                slot.slotNumber / 9 >= 1 && slot.slotNumber / 9 <= 3)
+            inv.getSizeInventory() == 54 &&
+            name.equals("Craft Item") &&
+            slot.getStack() != null && slot.slotNumber % 9 == 7 &&
+            slot.slotNumber / 9 >= 1 && slot.slotNumber / 9 <= 3)
         {
             String id = Utils.getSkyblockItemId(slot.getStack());
             if (id != null && !Tweakception.globalTracker.isIdInQuickCraftWhitelist(id))
@@ -130,20 +131,20 @@ public abstract class MixinGuiContainer extends GuiScreen
             }
         }
     }
-
+    
     @Inject(method = "keyTyped", at = @At("TAIL"))
     protected void keyTyped(char chr, int key, CallbackInfo ci)
     {
         if (!(this.inventorySlots instanceof ContainerChest))
             return;
-
+        
         if (Keyboard.isRepeatEvent())
             return;
-
+        
         ContainerChest chest = (ContainerChest)this.inventorySlots;
         IInventory inv = chest.getLowerChestInventory();
         String name = inv.getName();
-
+        
         if (Tweakception.globalTracker.isBlockingQuickCraft() &&
             inv.getSizeInventory() == 54 &&
             name.equals("Craft Item"))
@@ -160,7 +161,7 @@ public abstract class MixinGuiContainer extends GuiScreen
                     McUtils.playCoolDing();
                 }
             }
-
+            
         }
     }
 }

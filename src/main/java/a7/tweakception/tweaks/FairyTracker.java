@@ -28,31 +28,31 @@ import static a7.tweakception.utils.Utils.setClipboard;
 
 public class FairyTracker extends Tweak
 {
-    private final FairyTrackerConfig c;
     public static class FairyTrackerConfig
     {
         public boolean enabled = false;
         public boolean autoTracking = false;
         public int autoTrackingDelayTicks = 20;
     }
+    private final FairyTrackerConfig c;
     private final TreeSet<FairyPos> set = new TreeSet<FairyPos>();
     private long lastSneakTime = 0;
     private boolean wasSneaking = false;
-
+    
     public FairyTracker(Configuration configuration)
     {
         super(configuration);
         c = configuration.config.fairyTracker;
     }
-
+    
     public void onEntityJoinWorld(EntityJoinWorldEvent event)
     {
     }
-
+    
     public void onTick(TickEvent.ClientTickEvent event)
     {
         if (!c.autoTracking || !isInGame()) return;
-
+        
         if (event.phase == TickEvent.Phase.END)
         {
             if (getTicks() % c.autoTrackingDelayTicks == 0)
@@ -61,13 +61,13 @@ public class FairyTracker extends Tweak
             }
         }
     }
-
+    
     public void onRenderLast(RenderWorldLastEvent event)
     {
         if (!c.enabled) return;
-
+        
         if (set.isEmpty()) return;
-
+        
         for (FairyPos pos : set)
         {
             Color color;
@@ -78,12 +78,12 @@ public class FairyTracker extends Tweak
             RenderUtils.drawBeaconBeamOrBoundingBox(new BlockPos(pos.x, pos.y, pos.z), color, event.partialTicks, 0);
         }
     }
-
+    
     public void onKeyInput(InputEvent.KeyInputEvent event)
     {
         if (!c.enabled) return;
-
-        if (FMLClientHandler.instance().getClient().gameSettings.keyBindSneak.isPressed())
+        
+        if (getMc().gameSettings.keyBindSneak.isPressed())
         {
             if (!wasSneaking)
             {
@@ -100,7 +100,7 @@ public class FairyTracker extends Tweak
         else
             wasSneaking = false;
     }
-
+    
     public FairyPos findClosest(double x, double y, double z, double range)
     {
         for (FairyPos pos : set)
@@ -109,13 +109,14 @@ public class FairyTracker extends Tweak
             double dY = pos.y - y;
             double dZ = pos.z - z;
             double distanceSq = dX * dX + dY * dY + dZ * dZ;
-            if (distanceSq <= range * range) {
+            if (distanceSq <= range * range)
+            {
                 return pos;
             }
         }
         return null;
     }
-
+    
     public void trackOnce()
     {
         if (!c.enabled)
@@ -123,24 +124,25 @@ public class FairyTracker extends Tweak
         else
         {
             World world = Minecraft.getMinecraft().theWorld;
-
+            
             int oldSize = set.size();
-            for (Entity e : world.getLoadedEntityList()) {
+            for (Entity e : world.getLoadedEntityList())
+            {
                 tryAddFairy(e);
             }
             if (set.size() != oldSize)
                 sendChat("Fairy: new count: " + set.size());
         }
     }
-
+    
     public void tryAddFairy(Entity e)
     {
         if (e instanceof EntityArmorStand)
         {
             EntityArmorStand armorStand = (EntityArmorStand)e;
-
+            
             String fairyTexture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjk2OTIzYWQyNDczMTAwMDdmNmFlNWQzMjZkODQ3YWQ1Mzg2NGNmMTZjMzU2NWExODFkYzhlNmIyMGJlMjM4NyJ9fX0=";
-
+            
             String tex = McUtils.getArmorStandHeadTexture(armorStand);
             if (tex.equals(fairyTexture))
             {
@@ -153,42 +155,42 @@ public class FairyTracker extends Tweak
             }
         }
     }
-
+    
     public void toggle()
     {
         c.enabled = !c.enabled;
         sendChat("Fairy: toggled " + c.enabled + ", count: " + set.size());
     }
-
+    
     public void toggleAutoTracking()
     {
         c.autoTracking = !c.autoTracking;
         sendChat("Fairy: auto tracking toggled " + c.enabled + ", count: " + set.size());
     }
-
+    
     public void setDelay(int newDelay)
     {
         c.autoTrackingDelayTicks = newDelay > 0 ? newDelay : new FairyTrackerConfig().autoTrackingDelayTicks;
         sendChat("Fairy: delay set to " + newDelay);
     }
-
+    
     public void setNotFound()
     {
         FairyPos pos = findClosest(getPlayer().posX, getPlayer().posY, getPlayer().posZ, 4.0);
         if (pos != null)
             pos.isFound = false;
     }
-
+    
     public void reset()
     {
         set.clear();
     }
-
+    
     public void count()
     {
         sendChat("Fairy: count: " + set.size());
     }
-
+    
     public void list()
     {
         sendChat("Fairy: printing list to console, count: " + set.size());
@@ -198,7 +200,7 @@ public class FairyTracker extends Tweak
         Tweakception.logger.info("Fairy: list end ====================");
         dump();
     }
-
+    
     public void dump()
     {
         Tweakception.logger.info("Fairy: dumping");
@@ -217,8 +219,9 @@ public class FairyTracker extends Tweak
         sendChat("Fairy: copied dump to clipboard");
         Tweakception.logger.info("Fairy: dumping finished");
     }
-
-    public void load() {
+    
+    public void load()
+    {
         String data = getClipboard();
         if (data == null)
         {
@@ -248,43 +251,49 @@ public class FairyTracker extends Tweak
         set.addAll(positions);
         sendChat("Fairy: imported " + set.size() + " locations from clipboard");
     }
-
+    
     private static class FairyPos extends PosI
     {
         public boolean isFound = false;
+        
         public FairyPos(int x, int y, int z)
         {
             super(x, y, z);
         }
+        
         public FairyPos(double x, double y, double z)
         {
             super(x, y, z);
         }
     }
-
+    
     private static class PosI implements Comparable<PosI>
     {
         public int x;
         public int y;
         public int z;
+        
         public PosI(int x, int y, int z)
         {
             this.x = x;
             this.y = y;
             this.z = z;
         }
+        
         public PosI(float x, float y, float z)
         {
             this.x = (int)x;
             this.y = (int)y;
             this.z = (int)z;
         }
+        
         public PosI(double x, double y, double z)
         {
             this.x = (int)x;
             this.y = (int)y;
             this.z = (int)z;
         }
+        
         @Override
         public boolean equals(Object o)
         {
@@ -293,16 +302,19 @@ public class FairyTracker extends Tweak
             PosI p = (PosI)o;
             return this.x == p.x && this.y == p.y && this.z == p.z;
         }
+        
         @Override
         public int hashCode()
         {
             return x + y + z;
         }
+        
         @Override
         public String toString()
         {
             return x + ", " + y + ", " + z;
         }
+        
         @Override
         public int compareTo(PosI o)
         {

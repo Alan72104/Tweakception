@@ -39,7 +39,7 @@ public class DumpUtils
     public static void doLookTrace(World world, EntityPlayer entity, double range, boolean adjacent, boolean useLiquids)
     {
         MovingObjectPosition[] traces = RayTraceUtils.getRayTraceFromEntity(world, entity, useLiquids, range);
-
+        
         if (traces[0].typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK)
         {
             BlockPos pos = adjacent ? traces[0].getBlockPos().offset(traces[0].sideHit) : traces[0].getBlockPos();
@@ -55,7 +55,7 @@ public class DumpUtils
             sendChat("Not currently looking at anything within range");
         }
     }
-
+    
     public static void dumpEntitiesInRange(World world, EntityPlayer entity, double range)
     {
         try
@@ -73,15 +73,15 @@ public class DumpUtils
             e.printStackTrace();
         }
     }
-
+    
     public static void dumpBlock(World world, EntityPlayer entity, BlockPos pos)
     {
         ArrayList<String> lines = new ArrayList<>();
-
+        
         IBlockState blockState = world.getBlockState(pos);
         IBlockState actualState = blockState.getBlock().getActualState(blockState, world, pos);
         Block block = actualState.getBlock();
-
+        
         int id = Block.getIdFromBlock(block);
         int meta = block.getMetaFromState(actualState);
         ItemStack stack = block.getPickBlock(RayTraceUtils.getRayTraceFromEntity(world, entity, true)[0], world, pos, entity);
@@ -89,18 +89,18 @@ public class DumpUtils
         if (registryName == null)
             registryName = "<null>";
         String displayName;
-
+        
         if (stack == null)
             // Blocks that are not obtainable/don't have an ItemBlock
             displayName = registryName;
         else
             displayName = stack.getDisplayName();
-
-
+        
+        
         String teInfo = "";
         boolean teInWorld = world.getTileEntity(pos) != null;
         boolean shouldHaveTE = block.hasTileEntity(actualState);
-
+        
         if (teInWorld == shouldHaveTE)
         {
             teInfo = teInWorld ? "has a TileEntity" : "no TileEntity";
@@ -108,22 +108,22 @@ public class DumpUtils
         else
         {
             teInfo = teInWorld ? "!! is not supposed to have a TileEntity, but there is one in the world !!" :
-                    "!! is supposed to have a TileEntity, but there isn't one in the world !!";
+                "!! is supposed to have a TileEntity, but there isn't one in the world !!";
         }
-
+        
         lines.add(String.format("%s (%s - %d:%d) %s", displayName, registryName, id, meta, teInfo));
-
+        
         lines.add(String.format("Full block state: %s", actualState));
         lines.add(String.format("Hardness: %.4f, Explosion resistance: %.4f, Material: %s",
-                block.getBlockHardness(world, pos),
-                block.getExplosionResistance(world, pos, null, new Explosion(world, null, pos.getX(), pos.getY(), pos.getZ(), 2, true, true)),
-                block.getMaterial().getClass().getName()));
+            block.getBlockHardness(world, pos),
+            block.getExplosionResistance(world, pos, null, new Explosion(world, null, pos.getX(), pos.getY(), pos.getZ(), 2, true, true)),
+            block.getMaterial().getClass().getName()));
         lines.add("Block class: " + block.getClass().getName());
-
+        
         if (actualState.getProperties().size() > 0)
         {
             lines.add("IBlockState properties, including getActualState():");
-
+            
             for (Map.Entry<IProperty, Comparable> entry : actualState.getProperties().entrySet())
                 lines.add(entry.getKey().toString() + ": " + entry.getValue().toString());
         }
@@ -131,7 +131,7 @@ public class DumpUtils
         {
             lines.add("IBlockState properties: <none>");
         }
-
+        
         IBlockState anotherState = actualState;
         try
         {
@@ -141,25 +141,25 @@ public class DumpUtils
         {
             Tweakception.logger.error("getFullBlockInfo(): Exception while calling getExtendedState() on the block");
         }
-
+        
         if (anotherState instanceof IExtendedBlockState)
         {
             IExtendedBlockState extendedState = (IExtendedBlockState)anotherState;
-
+            
             if (extendedState.getUnlistedProperties().size() > 0)
             {
                 lines.add("IExtendedBlockState properties:");
-
+                
                 for (Map.Entry<IUnlistedProperty<?>, Optional<?>> entry : extendedState.getUnlistedProperties().entrySet())
                     lines.add(entry.getKey() + "[" +
-                            "name=" + entry.getKey().getName() + "," +
-                            "clazz=" + entry.getKey().getType() + "," +
-                            "value=" + entry.getValue().toString() + "]");
+                        "name=" + entry.getKey().getName() + "," +
+                        "clazz=" + entry.getKey().getType() + "," +
+                        "value=" + entry.getValue().toString() + "]");
             }
         }
-
+        
         TileEntity te = world.getTileEntity(pos);
-
+        
         if (te != null)
         {
             NBTTagCompound nbt = new NBTTagCompound();
@@ -169,15 +169,15 @@ public class DumpUtils
             lines.add("TileEntity NBT (from TileEntity#writeToNBT()):");
             lines.add(prettifyJson(nbt.toString()));
         }
-
+        
         try
         {
             File file = Tweakception.configuration.createWriteFileWithCurrentDateTime("block_$_" +
-                    displayName.substring(0, Math.min(displayName.length(), 20)) + ".txt", lines);
-
+                displayName.substring(0, Math.min(displayName.length(), 20)) + ".txt", lines);
+            
             sendChat("Dumped block (" + displayName + "§r)");
             getPlayer().addChatMessage(new ChatComponentTranslation("Output written to file %s",
-                    McUtils.makeFileLink(file)));
+                McUtils.makeFileLink(file)));
         }
         catch (IOException e)
         {
@@ -185,31 +185,31 @@ public class DumpUtils
             Tweakception.logger.error("Exception occurred when writing block dump file", e);
         }
     }
-
+    
     public static void dumpEntity(Entity entity)
     {
         ArrayList<String> lines = new ArrayList<String>();
-
+        
         String regName = EntityList.getEntityString(entity);
         if (regName == null)
             regName = "null";
-
+        
         lines.add(String.format("Entity: %s [registry name: %s] (entityId: %d)", entity.getName(), regName, entity.getEntityId()));
-
+        
         NBTTagCompound nbt = new NBTTagCompound();
-
+        
         if (!entity.writeToNBTOptional(nbt))
         {
             entity.writeToNBT(nbt);
         }
-
+        
         lines.add("Entity class: " + entity.getClass().getName());
         lines.add("");
-
+        
         if (entity instanceof EntityLivingBase)
         {
             Collection<PotionEffect> effects = ((EntityLivingBase)entity).getActivePotionEffects();
-
+            
             if (!effects.isEmpty())
             {
                 lines.add("Potion effects of current entity:");
@@ -217,9 +217,9 @@ public class DumpUtils
                 for (PotionEffect effect : effects)
                 {
                     ResourceLocation rl = GameData.getPotionRegistry().getNameForObject(Potion.potionTypes[effect.getPotionID()]);
-
+                    
                     lines.add(
-                            (rl != null ? rl.toString() : effect.getClass().getName()) + ", " +
+                        (rl != null ? rl.toString() : effect.getClass().getName()) + ", " +
                             effect.getAmplifier() + ", " +
                             effect.getDuration() + ", " +
                             effect.getIsAmbient());
@@ -227,17 +227,17 @@ public class DumpUtils
             }
             lines.add("");
         }
-
+        
         lines.add(prettifyJson(nbt.toString()));
         lines.add("");
-
+        
         if (entity instanceof AbstractClientPlayer)
         {
             lines.add("Entity is of AbstractClientPlayer");
             AbstractClientPlayer player = (AbstractClientPlayer)entity;
             ResourceLocation skinLocation = player.getLocationSkin();
             lines.add("Skin location: " + skinLocation.toString());
-
+            
             NetworkPlayerInfo info = getMc().getNetHandler().getPlayerInfo(player.getUniqueID());
             if (info != null)
             {
@@ -247,22 +247,22 @@ public class DumpUtils
                 lines.add("Id: " + profile.getId());
                 lines.add("Properties:");
                 lines.add(prettifyJson(
-                        new PropertyMap.Serializer().serialize(profile.getProperties(), null, null).toString()));
+                    new PropertyMap.Serializer().serialize(profile.getProperties(), null, null).toString()));
             }
             else
                 lines.add("AbstractClientPlayer doesn't have NetworkPlayerInfo");
             lines.add("");
         }
-
+        
         try
         {
             String name = McUtils.cleanColor(entity.getName());
             File file = Tweakception.configuration.createWriteFileWithCurrentDateTime("entity_$_" +
-                    name.substring(0, Math.min(name.length(), 20)) + ".txt", lines);
-
+                name.substring(0, Math.min(name.length(), 20)) + ".txt", lines);
+            
             sendChat("Dumped entity (" + entity.getName() + "§r)");
             getPlayer().addChatMessage(new ChatComponentTranslation("Output written to file %s",
-                    McUtils.makeFileLink(file)));
+                McUtils.makeFileLink(file)));
         }
         catch (IOException e)
         {
@@ -270,7 +270,7 @@ public class DumpUtils
             Tweakception.logger.error("Exception occurred when writing block dump file", e);
         }
     }
-
+    
     public static String prettifyJson(String s)
     {
         StringBuilder sb = new StringBuilder(s);
@@ -282,7 +282,7 @@ public class DumpUtils
         String sep = System.lineSeparator();
         int lastProcessedIndex = 0;
         int stringQuoteType = 0; // 1 = single quote
-
+        
         try
         {
             for (int i = 0; i < sb.length(); )
@@ -369,14 +369,14 @@ public class DumpUtils
             e.printStackTrace(new PrintWriter(writer));
             String trace = writer.toString();
             return "Failed to prettify json, failed at pos " + lastProcessedIndex + sep +
-                    "==========" + sep +
-                    trace +
-                    "==========" + sep +
-                    "Original string and failed pos:" + sep +
-                    s + sep +
-                    Utils.stringRepeat(" ", lastProcessedIndex) + "^";
+                "==========" + sep +
+                trace +
+                "==========" + sep +
+                "Original string and failed pos:" + sep +
+                s + sep +
+                Utils.stringRepeat(" ", lastProcessedIndex) + "^";
         }
-
+        
         return sb.toString();
     }
 }

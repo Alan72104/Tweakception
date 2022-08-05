@@ -13,43 +13,52 @@ import static a7.tweakception.tweaks.GlobalTracker.isInSkyblock;
 @Mixin(NetHandlerPlayClient.class)
 public class MixinNetHandlerPlayClient
 {
-    @Inject(method = "handleBlockChange", at = @At(value="HEAD"))
+    @Inject(method = "handleBlockChange", at = @At(value = "RETURN"))
     public void handleBlockChange(S23PacketBlockChange packet, CallbackInfo ci)
     {
         if (!isInSkyblock()) return;
-
+        
         Tweakception.miningTweaks.onPacketBlockChange(packet);
     }
-
-    @Inject(method = "handleMultiBlockChange", at = @At(value="HEAD"))
+    
+    @Inject(method = "handleMultiBlockChange", at = @At(value = "RETURN"))
     public void handleMultiBlockChange(S22PacketMultiBlockChange packet, CallbackInfo ci)
     {
         if (!isInSkyblock()) return;
-
+        
         Tweakception.miningTweaks.onPacketMultiBlockChange(packet);
     }
-
-    @Inject(method = "handleBlockAction", at = @At(value="HEAD"))
+    
+    @Inject(method = "handleBlockAction", at = @At(value = "RETURN"))
     public void handleBlockAction(S24PacketBlockAction packet, CallbackInfo ci)
     {
         if (!isInSkyblock()) return;
-
+        
         Tweakception.miningTweaks.onPacketBlockAction(packet);
     }
-
-    @Inject(method = "handleCollectItem", at = @At(value="HEAD"))
+    
+    @Inject(method = "handleCollectItem", at = @At(value = "RETURN"))
     public void handleCollectItem(S0DPacketCollectItem packet, CallbackInfo ci)
     {
         if (!isInSkyblock()) return;
-
+        
         Tweakception.dungeonTweaks.onPacketCollectItem(packet);
     }
-
-    @Inject(method = "handleEntityStatus", at = @At(value="HEAD"))
+    
+    @Inject(method = "handleEntityStatus", at = @At(value = "RETURN"))
     public void handleEntityStatus(S19PacketEntityStatus packet, CallbackInfo ci)
     {
         if (!isInSkyblock()) return;
-
+        
         Tweakception.dungeonTweaks.onPacketEntityStatus(packet);
     }
+    
+//    @Inject(method = "handleSetSlot", at = @At(value = "RETURN"))
+//    public void handleSetSlot(S2FPacketSetSlot packet, CallbackInfo ci)
+//    {
+//        if (!isInSkyblock()) return;
+//
+//        if (Tweakception.fishingTweaks.isDisplayThunderBottleChargeOn() &&
+//            packet.)
+//    }
 }

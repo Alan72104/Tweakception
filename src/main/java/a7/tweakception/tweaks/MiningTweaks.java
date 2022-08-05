@@ -27,23 +27,23 @@ import static a7.tweakception.utils.McUtils.sendChat;
 
 public class MiningTweaks extends Tweak
 {
-    private final MiningTweaksConfig c;
     public static class MiningTweaksConfig
     {
         public boolean highlightChests = false;
     }
+    private final MiningTweaksConfig c;
     private final Set<TreasureChest> treasureChests = new ConcurrentSkipListSet<>(Comparator.comparing(a -> a.pos));
-
+    
     public MiningTweaks(Configuration configuration)
     {
         super(configuration);
         c = configuration.config.miningTweaks;
     }
-
+    
     public void onTick(TickEvent.ClientTickEvent event)
     {
         if (event.phase == TickEvent.Phase.END) return;
-
+        
         if (getCurrentIsland() == SkyblockIsland.CRYSTAL_HOLLOWS)
         {
             if (!treasureChests.isEmpty())
@@ -66,11 +66,11 @@ public class MiningTweaks extends Tweak
             }
         }
     }
-
+    
     private static final Color CHEST_COLOR_OPENED = new Color(0, 255, 0, 255 / 6);
     private static final Color CHEST_COLOR_CLOSED = new Color(255, 0, 0, 255 / 6);
     private static final Color CHEST_COLOR_WARNING = new Color(255, 255, 0, 255 / 6);
-
+    
     public void onRenderLast(RenderWorldLastEvent event)
     {
         if (getCurrentIsland() == SkyblockIsland.CRYSTAL_HOLLOWS)
@@ -78,7 +78,7 @@ public class MiningTweaks extends Tweak
             if (!treasureChests.isEmpty())
             {
                 RenderUtils.Vector3d pos = RenderUtils.getInterpolatedViewingPos(event.partialTicks);
-
+                
                 for (TreasureChest chest : treasureChests)
                 {
                     BlockPos bp = chest.pos;
@@ -100,41 +100,41 @@ public class MiningTweaks extends Tweak
                         else
                             color = CHEST_COLOR_CLOSED;
                     }
-                    RenderUtils.renderBoundingBoxChestSize(bp.getX() - pos.x, bp.getY() - pos.y, bp.getZ() - pos.z, color);
+                    RenderUtils.renderFilledBoundingBoxChestSize(bp.getX() - pos.x, bp.getY() - pos.y, bp.getZ() - pos.z, color);
                 }
             }
         }
     }
-
+    
     public void onPacketMultiBlockChange(S22PacketMultiBlockChange packet)
     {
         if (getCurrentIsland() != SkyblockIsland.CRYSTAL_HOLLOWS) return;
-
+        
         for (S22PacketMultiBlockChange.BlockUpdateData change : packet.getChangedBlocks())
         {
             Block block = change.getBlockState().getBlock();
             BlockPos pos = change.getPos();
-
+            
             if (block == Blocks.chest)
                 treasureChests.add(new TreasureChest(pos, getTicks()));
             else if (block == Blocks.air)
                 treasureChests.remove(new TreasureChest(pos));
         }
     }
-
+    
     public void onPacketBlockChange(S23PacketBlockChange packet)
     {
         if (getCurrentIsland() != SkyblockIsland.CRYSTAL_HOLLOWS) return;
-
+        
         Block block = packet.getBlockState().getBlock();
         BlockPos pos = packet.getBlockPosition();
-
+        
         if (block == Blocks.chest)
             treasureChests.add(new TreasureChest(pos, getTicks()));
         else if (block == Blocks.air)
             treasureChests.remove(new TreasureChest(pos));
     }
-
+    
     public void onPacketBlockAction(S24PacketBlockAction packet)
     {
 //        if (getCurrentIsland() != SkyblockIsland.CRYSTAL_HOLLOWS) return;
@@ -146,27 +146,29 @@ public class MiningTweaks extends Tweak
 //                treasureChests.remove(pos);
 //        }
     }
-
+    
     public void onWorldUnload(WorldEvent.Unload event)
     {
         treasureChests.clear();
     }
-
+    
     public void toggleHighlightChests()
     {
         c.highlightChests = !c.highlightChests;
         sendChat("MT-HighlightChests: toggled " + c.highlightChests);
     }
-
+    
     private static class TreasureChest
     {
         public BlockPos pos;
         public int spawnTicks = 0;
         public boolean opened = false;
+        
         public TreasureChest(BlockPos pos)
         {
             this.pos = pos;
         }
+        
         public TreasureChest(BlockPos pos, int spawnTicks)
         {
             this.pos = pos;

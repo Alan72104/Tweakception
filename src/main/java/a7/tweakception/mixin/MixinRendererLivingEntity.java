@@ -19,9 +19,9 @@ public abstract class MixinRendererLivingEntity<T extends EntityLivingBase> exte
     {
         super(p_i46179_1_);
     }
-
+    
     @Redirect(method = "renderModel", at = @At(value = "INVOKE", target =
-            "Lnet/minecraft/entity/EntityLivingBase;isInvisibleToPlayer(Lnet/minecraft/entity/player/EntityPlayer;)Z"))
+        "Lnet/minecraft/entity/EntityLivingBase;isInvisibleToPlayer(Lnet/minecraft/entity/player/EntityPlayer;)Z"))
     private boolean redirectedIsInvisibleToPlayer(EntityLivingBase living, EntityPlayer player)
     {
         if (living instanceof EntityArmorStand)
@@ -36,9 +36,9 @@ public abstract class MixinRendererLivingEntity<T extends EntityLivingBase> exte
         else
             return living.isInvisibleToPlayer(player);
     }
-
+    
     @ModifyArg(method = "renderModel", at = @At(value = "INVOKE", target =
-            "Lnet/minecraft/client/renderer/GlStateManager;color(FFFF)V"), index = 3)
+        "Lnet/minecraft/client/renderer/GlStateManager;color(FFFF)V"), index = 3)
     private float modifyInvisibleEntityAlpha(float a)
     {
         return Tweakception.globalTracker.getInvisibleEntityAlpha();

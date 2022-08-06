@@ -232,11 +232,11 @@ public class SlayerTweaks extends Tweak
         {
             if (currentHealth > 100 && maxHealth > 100 && getTicks() > 600 &&
                 currentHealth <= maxHealth * c.autoHealWandHealthThreshold / 100 &&
-                getTicks() - lastHealWandTicks >= 20 * 7 + 10 + healWandRandomDelay &&
+                getTicks() - lastHealWandTicks >= 20 * 7 + 5 + healWandRandomDelay &&
                 !switchingSlot)
             {
                 lastHealWandTicks = getTicks();
-                healWandRandomDelay = getWorld().rand.nextInt(10);
+                healWandRandomDelay = getWorld().rand.nextInt(5);
                 int wandSlot = findHealWandSlot();
                 if (wandSlot == -1)
                     sendChat("ST-AutoHealWand: cannot find any healing wands in your hotbar!");

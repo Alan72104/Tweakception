@@ -406,12 +406,12 @@ public class FishingTweaks extends Tweak
                 String s;
                 if (thunderBottleCharge < 0) // Dark red
                     s = "Charge: §4?" + thunderBottleCharge + "?§r/50000";
-                else if (thunderBottleCharge < 10000) // Green
+                else if (thunderBottleCharge < 10000) // Gray
+                    s = "Charge: §7" + thunderBottleCharge + "§r/50000";
+                else if (thunderBottleCharge < 20000) // Green
                     s = "Charge: §a" + thunderBottleCharge + "§r/50000";
-                else if (thunderBottleCharge < 20000) // Dark green
+                else if (thunderBottleCharge < 30000) // Dark green
                     s = "Charge: §2" + thunderBottleCharge + "§r/50000";
-                else if (thunderBottleCharge < 30000) // Dark aqua
-                    s = "Charge: §3" + thunderBottleCharge + "§r/50000";
                 else if (thunderBottleCharge < 40000) // Yellow
                     s = "Charge: §e" + thunderBottleCharge + "§r/50000";
                 else if (thunderBottleCharge < 45000) // Gold

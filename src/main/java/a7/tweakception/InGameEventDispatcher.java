@@ -113,10 +113,10 @@ public class InGameEventDispatcher
         if (event.phase == TickEvent.Phase.START)
             LagSpikeWatcher.newTick();
         startFunc(0);
-        if (!isInGame()) return;
         
         globalTracker.onTick(event);
         
+        if (!isInGame()) return;
         if (!isInSkyblock()) return;
         
         fairyTracker.onTick(event);

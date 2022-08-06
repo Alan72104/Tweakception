@@ -33,6 +33,18 @@ public class Utils
         return Math.max(Math.min(n, max), min);
     }
     
+    public static double roundToDigits(double d, int di)
+    {
+        double t = Math.pow(10, di);
+        return Math.round(d * t) / t;
+    }
+    
+    public static float roundToDigits(float f, int d)
+    {
+        float t = (float)Math.pow(10, d);
+        return Math.round(f * t) / t;
+    }
+    
     public static String stringRepeat(String s, int c)
     {
         StringBuilder sb = new StringBuilder();

@@ -1,6 +1,8 @@
 package a7.tweakception.mixin;
 
 import a7.tweakception.Tweakception;
+import a7.tweakception.tweaks.GlobalTracker;
+import a7.tweakception.utils.McUtils;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.network.play.server.*;
 import org.spongepowered.asm.mixin.Mixin;
@@ -43,6 +45,8 @@ public class MixinNetHandlerPlayClient
         if (!isInSkyblock()) return;
         
         Tweakception.dungeonTweaks.onPacketCollectItem(packet);
+        if (GlobalTracker.t)
+            McUtils.sendChat("collected " + Thread.currentThread().getName());
     }
     
     @Inject(method = "handleEntityStatus", at = @At(value = "RETURN"))
@@ -53,12 +57,15 @@ public class MixinNetHandlerPlayClient
         Tweakception.dungeonTweaks.onPacketEntityStatus(packet);
     }
     
-//    @Inject(method = "handleSetSlot", at = @At(value = "RETURN"))
-//    public void handleSetSlot(S2FPacketSetSlot packet, CallbackInfo ci)
-//    {
-//        if (!isInSkyblock()) return;
-//
-//        if (Tweakception.fishingTweaks.isDisplayThunderBottleChargeOn() &&
-//            packet.)
-//    }
+    @Inject(method = "handleJoinGame", at = @At(value = "RETURN"))
+    public void handleJoinGame(S01PacketJoinGame packet, CallbackInfo ci)
+    {
+        Tweakception.globalTracker.pingReset();
+    }
+    
+    @Inject(method = "handleStatistics", at = @At(value = "RETURN"))
+    public void handleStatistics(S37PacketStatistics packet, CallbackInfo ci)
+    {
+        Tweakception.globalTracker.pingDone();
+    }
 }

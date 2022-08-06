@@ -21,8 +21,8 @@ import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.entity.passive.EntityPig;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.inventory.Slot;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.play.client.C16PacketClientStatus;
 import net.minecraft.scoreboard.Score;
 import net.minecraft.scoreboard.ScoreObjective;
 import net.minecraft.scoreboard.ScorePlayerTeam;
@@ -66,6 +66,7 @@ public class GlobalTracker extends Tweak
         public float selectedEntityOutlineWidth = 3.0f;
         public int[] selectedEntityOutlineColor = {0, 0, 255, 128};
         public boolean displayPlayersInArea = false;
+        public boolean enablePingOverlay = false;
     }
     private final GlobalTrackerConfig c;
 //    private static final HashMap<String, SkyblockIsland> SUBPLACE_TO_ISLAND_MAP = new HashMap<>();
@@ -87,6 +88,9 @@ public class GlobalTracker extends Tweak
     private int selectedAreaPointIndex = 0;
     private BlockPos[] areaPoints = null;
     private final HashMap<String, SkyblockIsland.SubArea> playersInAreas = new HashMap<>();
+    private long pingNanos = 0;
+    private double ping = 0.0f;
+    private boolean pingingFromCommand = false;
     
     public GlobalTracker(Configuration configuration)
     {
@@ -100,12 +104,23 @@ public class GlobalTracker extends Tweak
 //                SUBPLACE_TO_ISLAND_MAP.put(subPlace, island);
         }
         Tweakception.overlayManager.addOverlay(new PlayersInAreasDisplayOverlay());
+        Tweakception.overlayManager.addOverlay(new PingOverlay());
         npcSkins.add("minecraft:skins/57a517865b820a4451cd3cc6765f370fd0522b6489c9c94fb345fdee2689451a"); // Shaman
         npcSkins.add("minecraft:skins/1642a06cd75ef307c1913ba7a224fb2082d8a2c5254fd1bf006125a087a9a868"); // Taurus
     }
     
     public void onTick(TickEvent.ClientTickEvent event)
     {
+        if (pingNanos != 0L && System.nanoTime() - pingNanos >= 1000_000_000L * 10)
+        {
+            pingNanos = 0L;
+            if (pingingFromCommand && isInGame())
+                sendChat("GT: ping exceeded 10 secs");
+        }
+        
+        if (!isInGame())
+            return;
+        
         if (event.phase == TickEvent.Phase.START)
         {
             ticks++;
@@ -594,6 +609,35 @@ public class GlobalTracker extends Tweak
         }
     }
     
+    public void pingSend()
+    {
+        if (pingNanos == 0L)
+        {
+            getMc().getNetHandler().addToSendQueue(
+                new C16PacketClientStatus(C16PacketClientStatus.EnumState.REQUEST_STATS));
+            pingNanos = System.nanoTime();
+        }
+    }
+    
+    public void pingReset()
+    {
+        pingNanos = 0L;
+    }
+    
+    public void pingDone()
+    {
+        if (pingNanos != 0L)
+        {
+            ping = Utils.roundToDigits((System.nanoTime() - pingNanos) / 1000_000.0, 2);
+            pingNanos = 0L;
+            if (isInGame() && pingingFromCommand)
+            {
+                pingingFromCommand = false;
+                sendChat("GT: ping = " + ping + " ms");
+            }
+        }
+    }
+    
     private class PlayersInAreasDisplayOverlay extends TextOverlay
     {
         public static final String NAME = "PlayersInAreasDisplayOverlay";
@@ -625,6 +669,46 @@ public class GlobalTracker extends Tweak
             List<String> list = new ArrayList<>();
             list.add("player: area name");
             list.add("player2: area name");
+            return list;
+        }
+    }
+    
+    private class PingOverlay extends TextOverlay
+    {
+        public static final String NAME = "PingOverlay";
+        private long lastPingMillis = 0;
+        
+        public PingOverlay()
+        {
+            super(NAME);
+            setAnchor(Anchor.BottomCenter);
+            setOrigin(Anchor.BottomRight);
+            setX(-200);
+            setY(-10);
+        }
+        
+        @Override
+        public void update()
+        {
+            super.update();
+            
+            long millis = System.currentTimeMillis();
+            if (millis - lastPingMillis >= 2500)
+            {
+                lastPingMillis = millis;
+                pingSend();
+            }
+            
+            List<String> list = new ArrayList<>();
+            list.add("Ping: " + ping + " ms");
+            setContent(list);
+        }
+        
+        @Override
+        public List<String> getDefaultContent()
+        {
+            List<String> list = new ArrayList<>();
+            list.add("ping is lS.o ms");
             return list;
         }
     }
@@ -877,6 +961,30 @@ public class GlobalTracker extends Tweak
             playersInAreas.clear();
             Tweakception.overlayManager.disable(PlayersInAreasDisplayOverlay.NAME);
         }
+    }
+    
+    public void pingServer()
+    {
+        if (c.enablePingOverlay)
+            sendChat("GT: you have overlay on!");
+        else
+        {
+            if (pingNanos != 0L)
+                sendChat("GT: still pinging");
+            else
+            {
+                pingingFromCommand = true;
+                pingSend();
+                sendChat("GT: pinging");
+            }
+        }
+    }
+    
+    public void pingOverlay()
+    {
+        c.enablePingOverlay = !c.enablePingOverlay;
+        Tweakception.overlayManager.setEnable(PingOverlay.NAME, c.enablePingOverlay);
+        sendChat("GT: toggled ping overlay " + c.enablePingOverlay);
     }
     
     // endregion

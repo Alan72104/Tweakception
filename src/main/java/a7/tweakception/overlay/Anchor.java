@@ -30,6 +30,6 @@ public class Anchor
             y += height / 2;
         else if ((anchor & Anchor.y2) != 0)
             y += height;
-        return new int[]{x, y};
+        return new int[] {x, y};
     }
 }

@@ -43,9 +43,9 @@ public class TextOverlay extends Overlay
         for (String s : list)
         {
             if (config.textAlignment == 1)
-                r.drawString(s, x + (width - r.getStringWidth(s)), y, 0xffffffff);
+                r.drawStringWithShadow(s, x + (width - r.getStringWidth(s)), y, 0xffffffff);
             else
-                r.drawString(s, x, y, 0xffffffff);
+                r.drawStringWithShadow(s, x, y, 0xffffffff);
             y += r.FONT_HEIGHT;
         }
     }

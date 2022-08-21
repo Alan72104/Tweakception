@@ -5,6 +5,7 @@
   "refmap": "mixins.tweakception.refmap.json",
   "minVersion": "0.6",
   "mixins": [
+    "MixinNetworkManager",
     "MixinUtil"
   ],
   "client": [
@@ -13,7 +14,8 @@
     "MixinGuiEditSign",
     "MixinMinecraft",
     "MixinNetHandlerPlayClient",
-    "MixinRendererLivingEntity"
+    "MixinRendererLivingEntity",
+    "MixinRenderItem"
   ],
   "injectors": {
     "defaultRequire": 1

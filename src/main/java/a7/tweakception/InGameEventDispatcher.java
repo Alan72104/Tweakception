@@ -1,6 +1,7 @@
 package a7.tweakception;
 
 import a7.tweakception.events.IslandChangedEvent;
+import a7.tweakception.events.PacketReceiveEvent;
 import a7.tweakception.utils.Utils;
 import net.minecraft.util.ChatComponentText;
 import net.minecraftforge.client.event.*;
@@ -15,6 +16,7 @@ import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 
 import java.text.DecimalFormat;
 
@@ -108,10 +110,14 @@ public class InGameEventDispatcher
     }
     
     @SubscribeEvent
+    public void onPacket(PacketReceiveEvent event)
+    {
+        globalTracker.onPacket(event);
+    }
+    
+    @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event)
     {
-        if (event.phase == TickEvent.Phase.START)
-            LagSpikeWatcher.newTick();
         startFunc(0);
         
         globalTracker.onTick(event);
@@ -127,6 +133,7 @@ public class InGameEventDispatcher
         tuningTweaks.onTick(event);
         foragingTweaks.onTick(event);
         fishingTweaks.onTick(event);
+        enchantingTweaks.onTick(event);
         overlayManager.onTick(event);
         
         endFuncAndAddNum(event.phase, 0);
@@ -239,6 +246,13 @@ public class InGameEventDispatcher
     }
     
     @SubscribeEvent
+    public void onWorldLoad(WorldEvent.Load event)
+    {
+        globalTracker.onWorldLoad(event);
+        dungeonTweaks.onWorldLoad(event);
+    }
+    
+    @SubscribeEvent
     public void onWorldUnload(WorldEvent.Unload event)
     {
         dungeonTweaks.onWorldUnload(event);
@@ -267,6 +281,15 @@ public class InGameEventDispatcher
         if (!isInSkyblock()) return;
         
         dungeonTweaks.onGuiOpen(event);
+        enchantingTweaks.onGuiOpen(event);
+    }
+    
+    @SubscribeEvent
+    public void onGuiDrawPost(GuiScreenEvent.DrawScreenEvent.Post event)
+    {
+        if (!isInSkyblock()) return;
+    
+        enchantingTweaks.onGuiDrawPost(event);
     }
     
     @SubscribeEvent(priority = EventPriority.LOWEST)
@@ -276,6 +299,7 @@ public class InGameEventDispatcher
         
         dungeonTweaks.onItemTooltip(event);
         tuningTweaks.onItemTooltip(event);
+        globalTracker.onItemTooltip(event);
     }
     
     @SubscribeEvent

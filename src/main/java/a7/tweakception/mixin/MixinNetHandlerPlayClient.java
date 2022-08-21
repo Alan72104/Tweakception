@@ -57,6 +57,14 @@ public class MixinNetHandlerPlayClient
         Tweakception.dungeonTweaks.onPacketEntityStatus(packet);
     }
     
+    @Inject(method = "handleEntityEquipment", at = @At(value = "RETURN"))
+    public void handleEntityEquipment(S04PacketEntityEquipment packet, CallbackInfo ci)
+    {
+        if (!isInSkyblock()) return;
+        
+        Tweakception.dungeonTweaks.onPacketEntityEquipment(packet);
+    }
+    
     @Inject(method = "handleJoinGame", at = @At(value = "RETURN"))
     public void handleJoinGame(S01PacketJoinGame packet, CallbackInfo ci)
     {
@@ -67,5 +75,11 @@ public class MixinNetHandlerPlayClient
     public void handleStatistics(S37PacketStatistics packet, CallbackInfo ci)
     {
         Tweakception.globalTracker.pingDone();
+    }
+    
+    @Inject(method = "handleSetSlot", at = @At(value = "RETURN"))
+    public void handleSetSlot(S2FPacketSetSlot p_handleSetSlot_1_, CallbackInfo ci)
+    {
+        Tweakception.enchantingTweaks.updateContents(true);
     }
 }

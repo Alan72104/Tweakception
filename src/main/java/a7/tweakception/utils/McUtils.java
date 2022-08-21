@@ -4,14 +4,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.audio.SoundCategory;
-import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityArmorStand;
-import net.minecraft.entity.monster.EntityEnderman;
-import net.minecraft.entity.monster.EntitySkeleton;
-import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
@@ -25,6 +21,7 @@ import net.minecraftforge.common.util.Constants;
 
 
 import java.io.File;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -32,7 +29,7 @@ import java.util.regex.Pattern;
 
 public class McUtils
 {
-    private static final Matcher colorMatcher = Pattern.compile("§.").matcher("");
+    private static final Matcher COLOR_MATCHER = Pattern.compile("§[\\da-f]").matcher("");
     
     public static Minecraft getMc()
     {
@@ -89,6 +86,19 @@ public class McUtils
         return null;
     }
     
+    public static NBTTagCompound getExtraAttributes(ItemStack item)
+    {
+        if (item == null)
+            return null;
+        
+        NBTTagCompound tag = item.getTagCompound();
+        if (tag != null)
+        {
+            return tag.getCompoundTag("ExtraAttributes");
+        }
+        return null;
+    }
+    
     public static String getArmorStandHeadTexture(EntityArmorStand armorStand)
     {
         return getSkullTexture(armorStand.getCurrentArmor(3));
@@ -118,6 +128,23 @@ public class McUtils
         return list.getCompoundTagAt(0).getString("Value");
     }
     
+    public static Entity getNewestEntityInAABB(Entity entity, AxisAlignedBB bb, Predicate<? super Entity> predicate)
+    {
+        Entity newest = null;
+        int newestId = -1;
+        List<Entity> entities = getWorld().getEntitiesInAABBexcluding(entity, bb, predicate::test);
+        for (Entity e : entities)
+        {
+            int id = e.getEntityId();
+            if (id > newestId)
+            {
+                newestId = id;
+                newest = e;
+            }
+        }
+        return newest;
+    }
+    
     public static Entity getNearestEntityInAABB(Entity entity, AxisAlignedBB bb, Predicate<? super Entity> predicate)
     {
         Entity nearest = null;
@@ -135,9 +162,31 @@ public class McUtils
         return nearest;
     }
     
+    public static Entity getNearestEntityInAABBFromCollection(Collection<Entity> collection,
+                                                              Entity entity,
+                                                              AxisAlignedBB bb,
+                                                              Predicate<? super Entity> predicate)
+    {
+        Entity nearest = null;
+        double nearestDis = Double.MAX_VALUE;
+        for (Entity e : collection)
+        {
+            if (e.getEntityBoundingBox().intersectsWith(bb))
+            {
+                double dis = e.getDistanceSqToEntity(entity);
+                if (dis < nearestDis)
+                {
+                    nearestDis = dis;
+                    nearest = e;
+                }
+            }
+        }
+        return nearest;
+    }
+    
     public static String cleanColor(String s)
     {
-        return colorMatcher.reset(s).replaceAll("");
+        return COLOR_MATCHER.reset(s).replaceAll("");
     }
     
     public static String cleanDuplicateColorCodes(String line)

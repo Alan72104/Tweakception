@@ -23,7 +23,7 @@ public class OverlayManager extends Tweak
         public TreeMap<String, OverlayConfig> configs = new TreeMap<>();
     }
     
-    private List<Overlay> overlays = new ArrayList<>();
+    private final List<Overlay> overlays = new ArrayList<>();
     
     public OverlayManager(Configuration configuration)
     {
@@ -95,38 +95,19 @@ public class OverlayManager extends Tweak
     public class OverlayEditScreen extends GuiScreen
     {
         private Overlay selectedOverlay = null;
-        private boolean draggedAnchor = false;
-        private boolean draggedOrigin = false;
+        private boolean anchorDragged = false;
+        private boolean originDragged = false;
+        private int[] anchorPos = {0, 0};
+        private int[] originPos = {0, 0};
         private int[] originalOverlayPos = {0, 0};
         private int[] dragStartPos = {0, 0};
-        // A quality addition that allows dragging the origin after mouse left the parent overlay which isn't selected,
-        // in other words, keeps the overlay hovered when its origin is kept hovered
-        private Overlay originHoveredOverlay = null;
         
         @Override
         public void drawScreen(int mouseX, int mouseY, float partialTicks) // a.k.a update()
         {
             drawDefaultBackground();
             boolean oneIsHovered = false;
-            
-            if (originHoveredOverlay != null)
-            {
-                int x = originHoveredOverlay.getDrawX();
-                int y = originHoveredOverlay.getDrawY();
-                int w = originHoveredOverlay.getWidth();
-                int h = originHoveredOverlay.getHeight();
-                int[] originPos = Anchor.apply(x, y, w, h, originHoveredOverlay.getOrigin());
-                // Check it again
-                boolean hovered = inBox(mouseX, mouseY, originPos[0] - 3, originPos[1] - 3, 6, 6);
-                if (hovered)
-                    oneIsHovered = true;
-                else
-                    originHoveredOverlay = null;
-                
-                if (originHoveredOverlay != null)
-                    drawOverlayState(originHoveredOverlay, mouseX, mouseY);
-            }
-            
+    
             for (Overlay overlay : overlays)
             {
                 overlay.draw();
@@ -134,21 +115,15 @@ public class OverlayManager extends Tweak
                 int y = overlay.getDrawY();
                 int w = overlay.getWidth();
                 int h = overlay.getHeight();
-                if (!oneIsHovered)
-                {
-                    boolean hovered = inBox(mouseX, mouseY, x, y, w, h);
-                    boolean displayState = hovered || selectedOverlay == overlay;
-                    if (displayState)
-                    {
-                        oneIsHovered = true;
-                        drawOverlayState(overlay, mouseX, mouseY);
-                    }
-                    
-                    int[] originPos = Anchor.apply(x, y, w, h, overlay.getOrigin());
-                    hovered = inBox(mouseX, mouseY, originPos[0] - 3, originPos[1] - 3, 6, 6);
-                    if (hovered)
-                        originHoveredOverlay = overlay;
-                }
+                
+                boolean hovered = inBox(mouseX, mouseY, x, y, w, h);
+                boolean displayState = (!oneIsHovered && hovered) || selectedOverlay == overlay;
+                
+                if (displayState)
+                    drawOverlayState(overlay, mouseX, mouseY);
+                
+                if (hovered)
+                    oneIsHovered = true;
             }
         }
         
@@ -158,52 +133,29 @@ public class OverlayManager extends Tweak
             if (btn != 0)
                 return;
             
-            if (originHoveredOverlay != null)
-            {
-                int x = originHoveredOverlay.getDrawX();
-                int y = originHoveredOverlay.getDrawY();
-                int w = originHoveredOverlay.getWidth();
-                int h = originHoveredOverlay.getHeight();
-                int[] originPos = Anchor.apply(x, y, w, h, originHoveredOverlay.getOrigin());
-                // Check it again
-                boolean hovered = inBox(mouseX, mouseY, originPos[0] - 3, originPos[1] - 3, 6, 6);
-                if (hovered)
-                {
-                    draggedOrigin = true;
-                    return;
-                }
-                else
-                    originHoveredOverlay = null;
-            }
+            ScaledResolution res = new ScaledResolution(getMc());
             
             if (selectedOverlay != null)
             {
-                draggedAnchor = false;
-                draggedOrigin = false;
-                int x = selectedOverlay.getDrawX();
-                int y = selectedOverlay.getDrawY();
-                int w = selectedOverlay.getWidth();
-                int h = selectedOverlay.getHeight();
-                int origin = selectedOverlay.getOrigin();
-                int anchor = selectedOverlay.getAnchor();
-                ScaledResolution res = new ScaledResolution(getMc());
+                anchorDragged = false;
+                originDragged = false;
                 
-                int[] anchorPos = Anchor.apply(0, 0, res.getScaledWidth(), res.getScaledHeight(), anchor);
                 boolean hovered = inBox(mouseX, mouseY, anchorPos[0] - 4, anchorPos[1] - 4, 8, 8);
                 if (hovered)
                 {
-                    draggedAnchor = true;
+                    anchorDragged = true;
                     return;
                 }
                 
-                int[] originPos = Anchor.apply(x, y, w, h, origin);
                 hovered = inBox(mouseX, mouseY, originPos[0] - 3, originPos[1] - 3, 6, 6);
                 if (hovered)
                 {
-                    draggedOrigin = true;
+                    originDragged = true;
                     return;
                 }
             }
+    
+            selectedOverlay = null;
             
             // Nothing was hovered or selected, find the selected overlay
             for (Overlay overlay : overlays)
@@ -216,13 +168,13 @@ public class OverlayManager extends Tweak
                 if (hovered)
                 {
                     selectedOverlay = overlay;
-                    originalOverlayPos = new int[]{overlay.getX(), overlay.getY()};
-                    dragStartPos = new int[]{mouseX, mouseY};
+                    originalOverlayPos = new int[] {overlay.getX(), overlay.getY()};
+                    dragStartPos = new int[] {mouseX, mouseY};
+                    originPos = overlay.getOriginPos();
+                    anchorPos = overlay.getAnchorPos();
                     return;
                 }
             }
-            
-            selectedOverlay = null;
         }
         
         @Override
@@ -231,17 +183,11 @@ public class OverlayManager extends Tweak
             if (btn != 0)
                 return;
             
-            if (originHoveredOverlay != null)
-            {
-                originHoveredOverlay.moveOrigin(findClosestOrigin(mouseX, mouseY, originHoveredOverlay));
-                return;
-            }
-            
             if (selectedOverlay != null)
             {
-                if (draggedAnchor)
+                if (anchorDragged)
                     selectedOverlay.moveAnchor(findClosestAnchor(mouseX, mouseY));
-                else if (draggedOrigin)
+                else if (originDragged)
                     selectedOverlay.moveOrigin(findClosestOrigin(mouseX, mouseY, selectedOverlay));
                 else // Dragged item is the overlay
                 {
@@ -251,8 +197,10 @@ public class OverlayManager extends Tweak
                     selectedOverlay.moveAnchor(findClosestAnchor(mouseX, mouseY));
                     if (selectedOverlay.getAnchor() != oldAnchor)
                     {
-                        originalOverlayPos = new int[]{selectedOverlay.getX(), selectedOverlay.getY()};
-                        dragStartPos = new int[]{mouseX, mouseY};
+                        originalOverlayPos = new int[] {selectedOverlay.getX(), selectedOverlay.getY()};
+                        dragStartPos = new int[] {mouseX, mouseY};
+                        originPos = selectedOverlay.getOriginPos();
+                        anchorPos = selectedOverlay.getAnchorPos();
                     }
                 }
             }
@@ -261,9 +209,8 @@ public class OverlayManager extends Tweak
         @Override
         protected void mouseReleased(int mouseX, int mouseY, int btn)
         {
-            draggedOrigin = false;
-            draggedAnchor = false;
-            originHoveredOverlay = null;
+            originDragged = false;
+            anchorDragged = false;
         }
         
         @Override
@@ -274,33 +221,51 @@ public class OverlayManager extends Tweak
         
         private void drawOverlayState(Overlay overlay, int mouseX, int mouseY)
         {
+            drawOverlayBackground(overlay, mouseX, mouseY);
+            drawOverlayOrigin(overlay, mouseX, mouseY);
+            drawOverlayAnchor(overlay, mouseX, mouseY);
+        }
+        
+        private void drawOverlayBackground(Overlay overlay, int mouseX, int mouseY)
+        {
+            int x = overlay.getDrawX();
+            int y = overlay.getDrawY();
+            int w = overlay.getWidth();
+            int h = overlay.getHeight();
+    
+            Color overlayBgColor = new Color(255, 255, 255, 64);
+            Color overlayBgColorHovered = new Color(255, 255, 255, 128);
+            boolean hovered = inBox(mouseX, mouseY, x, y, w, h);
+            drawRect(x, y, x + w, y + h, (hovered ? overlayBgColorHovered : overlayBgColor).getRGB());
+        }
+        
+        private void drawOverlayOrigin(Overlay overlay, int mouseX, int mouseY)
+        {
             int x = overlay.getDrawX();
             int y = overlay.getDrawY();
             int w = overlay.getWidth();
             int h = overlay.getHeight();
             int origin = overlay.getOrigin();
-            int anchor = overlay.getAnchor();
-            ScaledResolution res = new ScaledResolution(getMc());
-            
-            Color overlayBgColor = new Color(255, 255, 255, 64);
-            Color overlayBgColorHovered = new Color(255, 255, 255, 128);
-            boolean hovered = inBox(mouseX, mouseY, x, y, w, h);
-            drawRect(x, y, x + w, y + h, (hovered ? overlayBgColorHovered : overlayBgColor).getRGB());
-            
+    
             Color originColor = new Color(0, 255, 0, 128);
             Color originColorHovered = new Color(0, 255, 0, 192);
             int[] originPos = Anchor.apply(x, y, w, h, origin);
-            hovered = inBox(mouseX, mouseY, originPos[0] - 3, originPos[1] - 3, 6, 6);
+            boolean hovered = inBox(mouseX, mouseY, originPos[0] - 3, originPos[1] - 3, 6, 6);
             drawRect(originPos[0] - 3, originPos[1] - 3, originPos[0] + 3, originPos[1] + 3,
                 (hovered ? originColorHovered : originColor).getRGB());
-            
+        }
+        
+        private void drawOverlayAnchor(Overlay overlay, int mouseX, int mouseY)
+        {
+            int anchor = overlay.getAnchor();
+            ScaledResolution res = new ScaledResolution(getMc());
+    
             Color anchorColor = new Color(255, 0, 0, 128);
             Color anchorColorHovered = new Color(255, 0, 0, 192);
             int[] anchorPos = Anchor.apply(0, 0, res.getScaledWidth(), res.getScaledHeight(), anchor);
-            hovered = inBox(mouseX, mouseY, anchorPos[0] - 4, anchorPos[1] - 4, 8, 8);
+            boolean hovered = inBox(mouseX, mouseY, anchorPos[0] - 4, anchorPos[1] - 4, 8, 8);
             drawRect(anchorPos[0] - 4, anchorPos[1] - 4, anchorPos[0] + 4, anchorPos[1] + 4,
                 (hovered ? anchorColorHovered : anchorColor).getRGB());
-            
         }
         
         private boolean inRange(int i, int a, int l)
@@ -315,7 +280,7 @@ public class OverlayManager extends Tweak
         
         private int findClosestOrigin(int mouseX, int mouseY, Overlay overlay)
         {
-            return findClosestAnchor(mouseX, mouseY, overlay.getX(), overlay.getY(),
+            return findClosestAnchor(mouseX, mouseY, overlay.getDrawX(), overlay.getDrawY(),
                 overlay.getWidth(), overlay.getHeight());
         }
         

@@ -2,7 +2,6 @@ package a7.tweakception.tweaks;
 
 import a7.tweakception.Tweakception;
 import a7.tweakception.config.Configuration;
-import a7.tweakception.events.IslandChangedEvent;
 import a7.tweakception.overlay.Anchor;
 import a7.tweakception.overlay.TextOverlay;
 import a7.tweakception.utils.*;
@@ -14,7 +13,6 @@ import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityArmorStand;
-import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.monster.EntityEnderman;
 import net.minecraft.entity.monster.EntitySkeleton;
 import net.minecraft.entity.monster.EntityZombie;
@@ -30,6 +28,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.network.play.server.S04PacketEntityEquipment;
 import net.minecraft.network.play.server.S0DPacketCollectItem;
 import net.minecraft.network.play.server.S19PacketEntityStatus;
 import net.minecraft.util.*;
@@ -45,6 +44,7 @@ import org.lwjgl.input.Keyboard;
 
 import java.awt.*;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.List;
@@ -67,55 +67,56 @@ public class DungeonTweaks extends Tweak
 {
     public static class DungeonTweaksConfig
     {
+        public Map<String, Integer> fragDrops = FRAGS_AND_NAMES.keySet().stream().collect(Collectors.toMap(e -> e, e -> 0));
+        public Map<String, Integer> salvagedEssences = ESSENCES.stream().collect(Collectors.toMap(e -> e, e -> 0));
+        public String fragBot = "";
+        public TreeMap<String, String> partyFinderPlayerBlacklist = new TreeMap<>();
+        public TreeSet<String> autoJoinPartyOwners = new TreeSet<>(Collections.singletonList("alan72104"));
+        public TreeSet<String> blockRightClickItemNames = new TreeSet<>();
+        public boolean autoCloseSecretChest = false;
+        public boolean autoJoinParty = false;
+        public boolean autoSalvage = false;
+        public boolean blockOpheliaShopClicks = true;
+//        public boolean displaySoulName = false;
+        public boolean displayTargetMobNameTag = false;
         public boolean enableNoFog = false;
         public boolean enableNoFogAutoToggle = false;
-        public boolean hideNonStarredMobsName = true;
+        public boolean gyroWandOverlay = false;
         public boolean hideDamageTags = false;
-        public boolean highlightStarredMobs = false;
+        public boolean hideNonStarredMobsName = true;
         public boolean highlightBats = true;
-        public boolean highlightSpiritBear = true;
-        public boolean highlightShadowAssassins = true;
         public boolean highlightDoorKeys = true;
-        public TreeSet<String> blockRightClickItemNames = new TreeSet<>();
-        public boolean trackDamageTags = false;
-        public int damageTagTrackingCount = 10;
-        public boolean trackNonCritDamageTags = false;
-        public boolean trackWitherDamageTags = false;
-        public int damageTagHistoryTimeoutTicks = 20 * 30;
-        public boolean autoCloseSecretChest = false;
-        public boolean autoSalvage = false;
-        public Map<String, Integer> salvagedEssences = ESSENCES.stream().collect(Collectors.toMap(e -> e, e -> 0));
-        public boolean autoJoinParty = false;
-        public TreeSet<String> autoJoinPartyOwners = new TreeSet<>(Collections.singletonList("alan72104"));
-        public Map<String, Integer> fragDrops = FRAGS_AND_NAMES.keySet().stream().collect(Collectors.toMap(e -> e, e -> 0));
-        public String fragBot = "";
-        public long fastestFragrun = 0L;
-        public int totalFragruns = 0;
-        public long fastestBloodRush = 0L;
-        public boolean trackShootingSpeed = false;
-        public int shootingSpeedTrackingSampleSecs = 2;
-        public int shootingSpeedTrackingRange = 4;
-        public boolean displayTargetMobNameTag = false;
-        public boolean trackMaskUsage = true;
-        public boolean blockOpheliaShopClicks = true;
+        public boolean highlightShadowAssassins = true;
+        public boolean highlightSpiritBear = true;
+        public boolean highlightStarredMobs = false;
         public boolean partyFinderDisplayQuickPlayerInfo = false;
         public boolean partyFinderQuickPlayerInfoShowSecretPerExp = false;
         public boolean partyFinderRefreshCooldown = true;
-        public TreeMap<String, String> partyFinderPlayerBlacklist = new TreeMap<>();
-        public boolean gyroWandOverlay = false;
+        public boolean trackDamageTags = false;
+        public boolean trackDamageHistory = false;
+        public boolean trackMaskUsage = true;
+        public boolean trackNonCritDamageTags = false;
+        public boolean trackShootingSpeed = false;
+        public boolean trackWitherDamageTags = false;
+        public int damageTagHistoryTimeoutTicks = 20 * 30;
+        public int damageTagTrackingCount = 10;
+        public int damageHistoryOverlayMaxLines = 15;
+        public int shootingSpeedTrackingRange = 4;
+        public int shootingSpeedTrackingSampleSecs = 2;
+        public int totalFragruns = 0;
+        public long fastestBloodRush = 0L;
+        public long fastestFragrun = 0L;
     }
     private final DungeonTweaksConfig c;
-    private static final String F5_BOSS_START = "Welcome, you arrive right on time. I am Livid, the Master of Shadows.";
-    private static final String F5_BOSS_END = "Impossible! How did you figure out which one I was?";
     private static final EnumChatFormatting[] KOOL_COLORS =
-        {
-            EnumChatFormatting.WHITE,
-            EnumChatFormatting.YELLOW,
-            EnumChatFormatting.GOLD,
-            EnumChatFormatting.RED,
-            EnumChatFormatting.RED,
-            EnumChatFormatting.WHITE
-        };
+    {
+        EnumChatFormatting.WHITE,
+        EnumChatFormatting.YELLOW,
+        EnumChatFormatting.GOLD,
+        EnumChatFormatting.RED,
+        EnumChatFormatting.RED,
+        EnumChatFormatting.WHITE
+    };
     private static final Set<String> SECRET_CHEST_ITEMS = new HashSet<>();
     private static final Set<String> TRASH_ITEMS = new HashSet<>();
     private static final Set<String> ESSENCES = new HashSet<>(Arrays.asList("wither", "spider", "undead", "dragon",
@@ -138,9 +139,10 @@ public class DungeonTweaks extends Tweak
     private final Set<Entity> starredMobs = new HashSet<>();
     private Entity spiritBear = null;
     private final Matcher anyDamageTagMatcher = Pattern.compile("^§.✧?(?:(?:§.)?\\d)+.*").matcher("");
-    private final Matcher critTagMatcher = Pattern.compile("^§f✧((?:§.\\d)+)§.✧(.*)").matcher(""); // §f✧§a6§b7§c8§a✧§d♥
-    private final Matcher nonCritTagMatcher = Pattern.compile("^§7(\\d+)(.*)").matcher(""); // §712345
-    private final Matcher witherTagMatcher = Pattern.compile("^§0(\\d+)$").matcher(""); // §012345
+    private final Matcher critTagMatcher = Pattern.compile(
+        "^§f✧((?:(?:§[\\da-f]\\d){1,3}(?:§[\\da-f],)?)+)§[\\da-f]✧(.*)").matcher(""); // §f✧§f1§e3§6,§e7§66§c9§c✧§d♥
+    private final Matcher nonCritTagMatcher = Pattern.compile("^§7((?:\\d{1,3},?)+)(.*)").matcher(""); // §712,345
+    private final Matcher witherTagMatcher = Pattern.compile("^§0((?:\\d{1,3},?)+)$").matcher(""); // §012,345
     private boolean secretChestOpened = false;
     private boolean blacksmithMenuOpened = false;
     private boolean salvageClickSent = false;
@@ -174,6 +176,9 @@ public class DungeonTweaks extends Tweak
     private final Matcher partyFinderPlayerMatcher = Pattern.compile(
         "^§5§o (?:§[\\da-f])?([\\w\\d]+)(§f: §e\\w+§b \\(§e\\d{1,2}§b\\))").matcher("");
     private long partyFinderLastRefreshMillis = 0L;
+    private final HashMap<Long, Long> damageHistoriesMap = new HashMap<>();
+    private final List<Map.Entry<Long, Long>> damageHistoriesSorted = new ArrayList<>();
+    private HashMap<String, Integer> prevInventoryItemCounts = new HashMap<>(); // Items are differentiated by id
     
     private static class DungeonStats
     {
@@ -203,8 +208,8 @@ public class DungeonTweaks extends Tweak
     
     private static class MaskUsage
     {
-        public int useTicks = 0;
-        public int cooldownTicks = 0;
+        public int useTicks;
+        public int cooldownTicks;
         
         public MaskUsage(int u, int c)
         {
@@ -289,10 +294,11 @@ public class DungeonTweaks extends Tweak
         TRASH_ITEMS.add("ZOMBIE_SOLDIER_HELMET");
         TRASH_ITEMS.add("ZOMBIE_SOLDIER_LEGGINGS");
         TRASH_ITEMS.add("BLADE_OF_THE_VOLCANO");
+        TRASH_ITEMS.add("STAFF_OF_THE_VOLCANO");
+        TRASH_ITEMS.add("SWORD_OF_BAD_HEALTH");
         TRASH_ITEMS.add("FLAMING_CHESTPLATE");
         TRASH_ITEMS.add("MOOGMA_LEGGINGS");
         TRASH_ITEMS.add("SLUG_BOOTS");
-        TRASH_ITEMS.add("SWORD_OF_BAD_HEALTH");
         TRASH_ITEMS.add("TAURUS_HELMET");
         FRAGS_AND_NAMES.put("GIANT_FRAGMENT_DIAMOND", "Diamante's Handle");
         FRAGS_AND_NAMES.put("GIANT_FRAGMENT_LASER", "L.A.S.R.'s Eye");
@@ -322,6 +328,7 @@ public class DungeonTweaks extends Tweak
         Tweakception.overlayManager.addOverlay(new DamageTagTrackingOverlay());
         Tweakception.overlayManager.addOverlay(new ShootingSpeedOverlay());
         Tweakception.overlayManager.addOverlay(new TargetMobNametagOverlay());
+        Tweakception.overlayManager.addOverlay(new DamageHistoryOverlay());
     }
     
     public void onTick(TickEvent.ClientTickEvent event)
@@ -355,6 +362,52 @@ public class DungeonTweaks extends Tweak
             }
         }
         
+        if (getTicks() % 5 == 4 &&
+            fragRunTracking &&
+            getCurrentIsland() == SkyblockIsland.DUNGEON &&
+            !fragGotten &&
+            System.currentTimeMillis() - Tweakception.globalTracker.getWorldJoinMillis() >= 5000)
+        {
+            HashMap<String, Integer> curInventoryItemCounts = new HashMap<>();
+            HashSet<String> allItemIds = new HashSet<>(prevInventoryItemCounts.keySet());
+            for (int i = 0; i < 36; i++)
+            {
+                if (i == 9 - 1) // The menu slot
+                    continue;
+                ItemStack stack = getPlayer().inventory.getStackInSlot(i);
+                String id = Utils.getSkyblockItemId(stack);
+                if (id != null)
+                {
+                    curInventoryItemCounts.merge(id, stack.stackSize, Integer::sum);
+                    allItemIds.add(id);
+                }
+            }
+            
+            if (!prevInventoryItemCounts.isEmpty())
+                for (String id : allItemIds)
+                {
+                    if (FRAGS_AND_NAMES.containsKey(id))
+                    {
+                        int oldAmount = 0;
+                        if (prevInventoryItemCounts.containsKey(id))
+                            oldAmount = prevInventoryItemCounts.get(id);
+                        int newAmount = 0;
+                        if (curInventoryItemCounts.containsKey(id))
+                            newAmount = curInventoryItemCounts.get(id);
+                        
+                        if (newAmount - oldAmount == 1)
+                        {
+                            fragGotten = true;
+                            c.fragDrops.merge(id, 1, Integer::sum);
+                            sendChatf("DT-Frag: obtained %s, count: %d", FRAGS_AND_NAMES.get(id), c.fragDrops.get(id));
+                            break;
+                        }
+                    }
+                }
+            
+            prevInventoryItemCounts = curInventoryItemCounts;
+        }
+        
         if (getTicks() % 2 == 1)
         {
             if (c.displayTargetMobNameTag)
@@ -376,7 +429,7 @@ public class DungeonTweaks extends Tweak
                         removeWhile(queue, ele -> getTicks() - ele > 20 * 3);
                         
                         int size = queue.size();
-                        float dis = entry.getKey().getDistanceToEntity(getPlayer());
+                        float dis = entry.getKey().getDistanceToEntity(McUtils.getPlayer());
                         
                         if (size == 0)
                             entityHurtTimes.remove(entity);
@@ -390,8 +443,8 @@ public class DungeonTweaks extends Tweak
                 
                 if (targetMob != null)
                 {
-                    AxisAlignedBB aabb = targetMob.getEntityBoundingBox().addCoord(0.5, 4.0, 0.5);
-                    List<Entity> entities = getWorld().getEntitiesWithinAABB(EntityArmorStand.class, aabb, e -> true);
+                    AxisAlignedBB aabb = targetMob.getEntityBoundingBox().expand(0.5, 4.0, 0.5);
+                    List<Entity> entities = McUtils.getWorld().getEntitiesWithinAABB(EntityArmorStand.class, aabb, e -> true);
                     nearestDistance = Float.MAX_VALUE;
                     for (Entity e : entities)
                     {
@@ -418,7 +471,7 @@ public class DungeonTweaks extends Tweak
             removeWhile(damageTags, ele -> getTicks() - ele.a > c.damageTagHistoryTimeoutTicks);
             starredMobs.removeIf(ele -> ele.isDead);
             
-            removeWhile(armorStandsTemp, ele -> getTicks() - ele.a >= 5,
+            removeWhile(armorStandsTemp, ele -> getTicks() - ele.a >= 3,
                 ele ->
                 {
                     Entity stand = ele.b;
@@ -447,59 +500,59 @@ public class DungeonTweaks extends Tweak
                         return;
                     }
                     
-                    if (c.trackDamageTags)
+                    try
                     {
-                        try
+                        if ((c.trackDamageTags || c.trackDamageHistory) &&
+                            name.startsWith("§f✧") && critTagMatcher.reset(name).matches())
                         {
-                            if (name.startsWith("§f✧") && critTagMatcher.reset(name).matches())
-                            {
-                                int num = Integer.parseInt(cleanColor(critTagMatcher.group(1)));
-                                name = Utils.formatCommas(num);
-                                StringBuilder sb = new StringBuilder(35);
-                                sb.append("§f✧");
-                                int i = 0;
-                                for (char c : name.toCharArray())
-                                {
-                                    if (c == ',')
-                                        sb.append(EnumChatFormatting.GRAY);
-                                    else
-                                        sb.append(KOOL_COLORS[i++ % KOOL_COLORS.length]);
-                                    sb.append(c);
-                                }
-                                sb.append("§f✧");
-                                sb.append(critTagMatcher.group(2));
-                                addDamageInfo(ele.a, sb.toString());
-                            }
-                            else if (c.trackWitherDamageTags && witherTagMatcher.reset(name).matches())
-                            {
-                                int num = Integer.parseInt(cleanColor(witherTagMatcher.group(1)));
-                                name = "§0" + Utils.formatCommas(num);
+                            long num = Long.parseLong(McUtils.cleanColor(critTagMatcher.group(1)).replace(",", ""));
+                            if (c.trackDamageTags)
                                 addDamageInfo(ele.a, name);
-                            }
-                            else if (c.trackNonCritDamageTags && nonCritTagMatcher.reset(name).matches())
-                            {
-                                int num = Integer.parseInt(cleanColor(nonCritTagMatcher.group(1)));
-                                name = "§7" + Utils.formatCommas(num) + nonCritTagMatcher.group(2);
-                                addDamageInfo(ele.a, name);
-                            }
+                            if (c.trackDamageHistory)
+                                damageHistoriesMap.merge(num, 1L, Long::sum);
                         }
-                        catch (Exception e)
+                        if (c.trackDamageTags && c.trackWitherDamageTags && witherTagMatcher.reset(name).matches())
                         {
-                            if (!isDamageFormattingExceptionNotified)
-                            {
-                                isDamageFormattingExceptionNotified = true;
-                                sendChat("DT-TrackDamageTags: formatting failed");
-                                sendChat(e.toString());
-                                e.printStackTrace();
-                            }
+//                            long num = Long.parseLong(McUtils.cleanColor(witherTagMatcher.group(1)));
+//                            name = "§0" + Utils.formatCommas(num);
+                            addDamageInfo(ele.a, name);
+                        }
+                        else if (c.trackDamageTags && c.trackNonCritDamageTags && nonCritTagMatcher.reset(name).matches())
+                        {
+//                            long num = Long.parseLong(McUtils.cleanColor(nonCritTagMatcher.group(1)));
+//                            name = "§7" + Utils.formatCommas(num) + nonCritTagMatcher.group(2);
+                            addDamageInfo(ele.a, name);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        if (!isDamageFormattingExceptionNotified)
+                        {
+                            isDamageFormattingExceptionNotified = true;
+                            sendChat("DT-TrackDamageTags: formatting failed");
+                            sendChat(e.toString());
+                            e.printStackTrace();
                         }
                     }
                 });
         }
         
-        if (getMc().currentScreen instanceof GuiChest)
+        if (c.trackDamageHistory)
         {
-            GuiChest chest = (GuiChest)getMc().currentScreen;
+            damageHistoriesSorted.clear();
+            damageHistoriesSorted.addAll(damageHistoriesMap.entrySet());
+            damageHistoriesSorted.sort((a, b) ->
+            { // Fuck comparators, this is better
+                int r = b.getValue().compareTo(a.getValue());
+                if (r == 0)
+                    return b.getKey().compareTo(a.getKey());
+                return r;
+            });
+        }
+        
+        if (McUtils.getMc().currentScreen instanceof GuiChest)
+        {
+            GuiChest chest = (GuiChest)McUtils.getMc().currentScreen;
             ContainerChest container = (ContainerChest)chest.inventorySlots;
             if (secretChestOpened)
             {
@@ -510,7 +563,7 @@ public class DungeonTweaks extends Tweak
                     ItemStack center = inv.getStackInSlot(9 + 5 - 1);
                     if (center != null && SECRET_CHEST_ITEMS.contains(center.getDisplayName()))
                     {
-                        getPlayer().closeScreen();
+                        McUtils.getPlayer().closeScreen();
                         secretChestOpened = false;
                     }
                 }
@@ -532,11 +585,11 @@ public class DungeonTweaks extends Tweak
                             firstPane != null && Block.getBlockFromItem(firstPane) == Blocks.stained_glass_pane &&
                             salvageBtn != null && salvageBtn.getDisplayName().equals("§aSalvage Item"))
                         {
-                            getMc().playerController.windowClick(container.windowId, 9 * 3 + 5 - 1,
-                                0, 0, getPlayer());
+                            McUtils.getMc().playerController.windowClick(container.windowId, 9 * 3 + 5 - 1,
+                                0, 0, McUtils.getPlayer());
                             salvageClickSent = true;
                             salvageLastClickTick = getTicks();
-                            String[] lore = getDisplayLore(salvageBtn);
+                            String[] lore = McUtils.getDisplayLore(salvageBtn);
                             if (lore != null)
                                 for (String line : lore)
                                 {
@@ -589,8 +642,8 @@ public class DungeonTweaks extends Tweak
                     if (!c.fragBot.equals(""))
                     {
                         sendChat("DT-Frag: repartying " + c.fragBot);
-                        Tweakception.scheduler.addDelayed(() -> getPlayer().sendChatMessage("/p disband"), 20).
-                            thenDelayed(() -> getPlayer().sendChatMessage("/p " + c.fragBot), 20);
+                        Tweakception.scheduler.addDelayed(() -> McUtils.getPlayer().sendChatMessage("/p disband"), 20).
+                            thenDelayed(() -> McUtils.getPlayer().sendChatMessage("/p " + c.fragBot), 20);
                     }
                     else
                         sendChat("DT-Frag: cannot reparty, please set a frag bot using `setfragbot <name>`");
@@ -630,10 +683,8 @@ public class DungeonTweaks extends Tweak
     
     public void onEntityUpdate(LivingEvent.LivingUpdateEvent event)
     {
-        if (getCurrentIsland() != SkyblockIsland.DUNGEON) return;
-        
         EntityLivingBase e = event.entityLiving;
-        if (isInF5Bossfight)
+        if (isInF5Bossfight && getCurrentIsland() == SkyblockIsland.DUNGEON)
         {
             if (e instanceof EntityOtherPlayerMP)
             {
@@ -657,7 +708,7 @@ public class DungeonTweaks extends Tweak
         }
     }
     
-    public void onRenderLast(RenderWorldLastEvent event)
+    public void onRenderLast(RenderWorldLastEvent ignoredEvent)
     {
         if (getCurrentIsland() != SkyblockIsland.DUNGEON) return;
         
@@ -680,27 +731,30 @@ public class DungeonTweaks extends Tweak
                 RenderUtils.drawDefaultHighlightBoxForEntity(e, RenderUtils.DEFAULT_HIGHLIGHT_COLOR, false);
     }
     
-    public void onLivingRenderPre(RenderLivingEvent.Pre event)
+    public void onLivingRenderPre(RenderLivingEvent.Pre<?> event)
     {
-        if (c.highlightDoorKeys &&
-            getCurrentIsland() == SkyblockIsland.DUNGEON &&
-            event.entity instanceof EntityArmorStand)
+        Entity entity = event.entity;
+        
+        if (entity instanceof EntityArmorStand)
         {
-            String tex = McUtils.getArmorStandHeadTexture((EntityArmorStand)event.entity);
+            String tex = McUtils.getArmorStandHeadTexture((EntityArmorStand)entity);
             if (tex != null)
             {
                 String witherKeyTexture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzRkYjRhZGZhOWJmNDhmZjVkNDE3MDdhZTM0ZWE3OGJkMjM3MTY1OWZjZDhjZDg5MzQ3NDlhZjRjY2U5YiJ9fX0=";
                 String bloodKeyTexture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjU2MTU5NWQ5Yzc0NTc3OTZjNzE5ZmFlNDYzYTIyMjcxY2JjMDFjZjEwODA5ZjVhNjRjY2IzZDZhZTdmOGY2In19fQ==";
                 
-                if (tex.equals(witherKeyTexture))
-                    RenderUtils.drawBeaconBeamAtEntity(event.entity, new Color(84, 166, 102, 128));
-                else if (tex.equals(bloodKeyTexture))
-                    RenderUtils.drawBeaconBeamAtEntity(event.entity, new Color(84, 166, 102, 128));
+                if (c.highlightDoorKeys && getCurrentIsland() == SkyblockIsland.DUNGEON)
+                {
+                    if (tex.equals(witherKeyTexture))
+                        RenderUtils.drawBeaconBeamAtEntity(entity, new Color(84, 166, 102, 128));
+                    else if (tex.equals(bloodKeyTexture))
+                        RenderUtils.drawBeaconBeamAtEntity(entity, new Color(84, 166, 102, 128));
+                }
             }
         }
     }
     
-    public void onLivingSpecialRenderPre(RenderLivingEvent.Specials.Pre event)
+    public void onLivingSpecialRenderPre(RenderLivingEvent.Specials.Pre<?> event)
     {
         if (event.entity instanceof EntityArmorStand)
         {
@@ -729,14 +783,14 @@ public class DungeonTweaks extends Tweak
     {
         if (c.gyroWandOverlay)
         {
-            ItemStack stack = getPlayer().inventory.getCurrentItem();
+            ItemStack stack = McUtils.getPlayer().inventory.getCurrentItem();
             if (stack != null)
             {
                 String id = Utils.getSkyblockItemId(stack);
                 if (id != null && id.equals("GYROKINETIC_WAND"))
                 {
                     RayTraceUtils.RayTraceResult res = RayTraceUtils.rayTraceBlock(
-                        getPlayer(), event.partialTicks, 26.0f, 0.1f);
+                        McUtils.getPlayer(), event.partialTicks, 26.0f, 0.1f);
                     if (res != null)
                         RenderUtils.drawFilledBoundingBox(res.pos, new Color(0, 70, 156, 96), event.partialTicks);
                 }
@@ -746,48 +800,50 @@ public class DungeonTweaks extends Tweak
     
     public void onEntityJoinWorld(EntityJoinWorldEvent event)
     {
-        if (c.trackDamageTags || c.highlightStarredMobs && getCurrentIsland() == SkyblockIsland.DUNGEON)
+        Entity entity = event.entity;
+        if (c.trackDamageTags ||
+//            c.displaySoulName ||
+            c.highlightStarredMobs && getCurrentIsland() == SkyblockIsland.DUNGEON)
         {
             // The custom name doesn't come with the first update
-            // So check the name 5 ticks later
-            if (event.entity instanceof EntityArmorStand)
+            // So check the name 3 ticks later
+            if (entity instanceof EntityArmorStand)
             {
-                armorStandsTemp.offer(new Pair<>(getTicks(), event.entity));
-                return;
+                armorStandsTemp.offer(new Pair<>(getTicks(), entity));
             }
         }
         
         if (c.highlightBats && getCurrentIsland() == SkyblockIsland.DUNGEON)
         {
-            if (event.entity instanceof EntityBat)
+            if (entity instanceof EntityBat)
             {
-                bats.add(event.entity);
+                bats.add(entity);
                 return;
             }
         }
         
         if (getCurrentIsland() == SkyblockIsland.DUNGEON &&
-            event.entity instanceof EntityOtherPlayerMP)
+            entity instanceof EntityOtherPlayerMP)
         {
             if (c.highlightShadowAssassins &&
-                event.entity.getName().equals("Shadow Assassin"))
+                entity.getName().equals("Shadow Assassin"))
             {
-                shadowAssassins.add(event.entity);
+                shadowAssassins.add(entity);
                 return;
             }
             if (c.highlightSpiritBear &&
-                event.entity.getName().equals("Spirit Bear"))
+                entity.getName().equals("Spirit Bear"))
             {
-                spiritBear = event.entity;
+                spiritBear = entity;
                 return;
             }
         }
         
         if (c.trackShootingSpeed)
         {
-            if (event.entity instanceof EntityArrow)
+            if (entity instanceof EntityArrow)
             {
-                if (event.entity.getDistanceToEntity(getPlayer()) <= c.shootingSpeedTrackingRange)
+                if (entity.getDistanceToEntity(McUtils.getPlayer()) <= c.shootingSpeedTrackingRange)
                 {
                     arrowSpawnTimes.offer(getTicks());
                 }
@@ -802,7 +858,7 @@ public class DungeonTweaks extends Tweak
         {
             if (!c.blockRightClickItemNames.isEmpty())
             {
-                ItemStack item = getPlayer().inventory.getCurrentItem();
+                ItemStack item = McUtils.getPlayer().inventory.getCurrentItem();
                 if (item != null)
                 {
                     String name = McUtils.cleanColor(item.getDisplayName());
@@ -823,34 +879,15 @@ public class DungeonTweaks extends Tweak
         }
     }
     
-    public void onPacketCollectItem(S0DPacketCollectItem packet)
+    public void onPacketCollectItem(S0DPacketCollectItem ignoredPacket)
     {
-        if (getCurrentIsland() != SkyblockIsland.DUNGEON) return;
-        
-        Entity player = getWorld().getEntityByID(packet.getEntityID());
-        Entity entity = getWorld().getEntityByID(packet.getCollectedItemEntityID());
-        
-        if (fragRunTracking && (player == null || player == getPlayer()))
-        {
-            if (entity instanceof EntityItem)
-            {
-                EntityItem itemEntity = (EntityItem)entity;
-                String id = Utils.getSkyblockItemId(itemEntity.getEntityItem());
-                if (id != null && FRAGS_AND_NAMES.containsKey(id) && !fragGotten)
-                {
-                    fragGotten = true;
-                    c.fragDrops.merge(id, 1, Integer::sum);
-                    sendChatf("DT-Frag: %s obtained, count: %d", FRAGS_AND_NAMES.get(id), c.fragDrops.get(id));
-                }
-            }
-        }
     }
     
     public void onPacketEntityStatus(S19PacketEntityStatus packet)
     {
         if (c.displayTargetMobNameTag && packet.getOpCode() == 2)
         {
-            Entity e = packet.getEntity(getWorld());
+            Entity e = packet.getEntity(McUtils.getWorld());
             if (e != null)
             {
                 if (entityHurtTimes.containsKey(e))
@@ -863,6 +900,10 @@ public class DungeonTweaks extends Tweak
                 }
             }
         }
+    }
+    
+    public void onPacketEntityEquipment(S04PacketEntityEquipment ignoredPacket)
+    {
     }
     
     public void onGuiOpen(GuiOpenEvent event)
@@ -890,11 +931,13 @@ public class DungeonTweaks extends Tweak
         String msg = event.message.getUnformattedText();
         if (getCurrentIsland() == SkyblockIsland.DUNGEON && msg.startsWith("[BOSS]"))
         {
-            if (msg.contains(F5_BOSS_START))
+            String f5BossStart = "Welcome, you arrive right on time. I am Livid, the Master of Shadows.";
+            String f5BossEnd = "Impossible! How did you figure out which one I was?";
+            if (msg.contains(f5BossStart))
             {
                 isInF5Bossfight = true;
             }
-            else if (msg.contains(F5_BOSS_END))
+            else if (msg.contains(f5BossEnd))
             {
                 isInF5Bossfight = false;
                 resetLivid();
@@ -918,16 +961,18 @@ public class DungeonTweaks extends Tweak
                     fragSetBloodRush();
             }
         }
-        else if (getCurrentIsland() == SkyblockIsland.DUNGEON && msg.startsWith("Your ") && msg.endsWith(" saved your life!"))
+        else if (getCurrentIsland() == SkyblockIsland.DUNGEON &&
+            msg.startsWith("Your ") &&
+            msg.endsWith(" saved your life!"))
         {
-            ItemStack head = getPlayer().getCurrentArmor(3);
+            ItemStack head = McUtils.getPlayer().getCurrentArmor(3);
             if (head != null)
             {
                 String id = Utils.getSkyblockItemId(head);
 //                String uuid = getSkyblockItemUuid(head);
                 if (id != null && MASKS.contains(id))
                 {
-                    String[] lore = getDisplayLore(head);
+                    String[] lore = McUtils.getDisplayLore(head);
                     if (lore != null)
                     {
                         int cooldown = 360;
@@ -962,7 +1007,7 @@ public class DungeonTweaks extends Tweak
                 if (c.autoJoinPartyOwners.contains(name))
                 {
                     sendChat("DT-AutoJoinParty: joining " + name + "'s party");
-                    getPlayer().sendChatMessage("/p " + name);
+                    McUtils.getPlayer().sendChatMessage("/p " + name);
                 }
             }
         }
@@ -995,9 +1040,9 @@ public class DungeonTweaks extends Tweak
                 }
             }
         }
-        else if (getMc().currentScreen instanceof GuiChest)
+        else if (McUtils.getMc().currentScreen instanceof GuiChest)
         {
-            GuiChest chest = (GuiChest)getMc().currentScreen;
+            GuiChest chest = (GuiChest)McUtils.getMc().currentScreen;
             ContainerChest container = (ContainerChest)chest.inventorySlots;
             String containerName = container.getLowerChestInventory().getName();
             if (containerName.equals("Party Finder"))
@@ -1020,7 +1065,7 @@ public class DungeonTweaks extends Tweak
                     
                     if (c.partyFinderDisplayQuickPlayerInfo || c.partyFinderPlayerBlacklist.size() > 0)
                     {
-                        final int spaceWidth = getMc().fontRendererObj.getStringWidth(" ");
+                        final int spaceWidth = McUtils.getMc().fontRendererObj.getStringWidth(" ");
                         int maxWidth = 0;
                         // Index, result, width
                         List<TriPair<Integer, MatchResult, Integer>> playerLines = new ArrayList<>(5);
@@ -1030,7 +1075,7 @@ public class DungeonTweaks extends Tweak
                             String line = event.toolTip.get(i);
                             if (partyFinderPlayerMatcher.reset(line).matches())
                             {
-                                int width = getMc().fontRendererObj.getStringWidth(line);
+                                int width = McUtils.getMc().fontRendererObj.getStringWidth(line);
                                 maxWidth = Math.max(maxWidth, width);
                                 playerLines.add(new TriPair<>(i, partyFinderPlayerMatcher.toMatchResult(), width));
                                 if (playerLines.size() == 5)
@@ -1149,7 +1194,13 @@ public class DungeonTweaks extends Tweak
         }
     }
     
-    public void onWorldUnload(WorldEvent.Unload event)
+    public void onWorldLoad(WorldEvent.Load ignoredEvent)
+    {
+        if (fragRunTracking)
+            prevInventoryItemCounts.clear();
+    }
+    
+    public void onWorldUnload(WorldEvent.Unload ignoredEvent)
     {
         if (isInF5Bossfight)
         {
@@ -1170,6 +1221,8 @@ public class DungeonTweaks extends Tweak
             maskUsages.clear();
         if (fragRunTracking)
             fragGotten = false;
+        if (fragRunTracking)
+            prevInventoryItemCounts.clear();
     }
     
     public boolean isTrackingMaskUsage()
@@ -1467,6 +1520,46 @@ public class DungeonTweaks extends Tweak
         }
     }
     
+    private class DamageHistoryOverlay extends TextOverlay
+    {
+        public static final String NAME = "DamageHistoryOverlay";
+        
+        public DamageHistoryOverlay()
+        {
+            super(NAME);
+            setAnchor(Anchor.BottomRight);
+            setOrigin(Anchor.BottomRight);
+            setX(-100);
+            setY(-10);
+            setTextAlignment(1);
+        }
+        
+        @Override
+        public void update()
+        {
+            super.update();
+            List<String> list = new ArrayList<>();
+            int count = 0;
+            for (Map.Entry<Long, Long> entry : damageHistoriesSorted)
+            {
+                list.add(Utils.formatCommas(entry.getKey()) + " - " + entry.getValue());
+                if (++count >= c.damageHistoryOverlayMaxLines)
+                    break;
+            }
+            setContent(list);
+        }
+        
+        @Override
+        public List<String> getDefaultContent()
+        {
+            List<String> list = new ArrayList<>();
+            list.add("6,766 - 6");
+            list.add("65 - 3");
+            list.add("12 - 1");
+            return list;
+        }
+    }
+    
     private class ShootingSpeedOverlay extends TextOverlay
     {
         public static final String NAME = "ShootingSpeedOverlay";
@@ -1583,7 +1676,7 @@ public class DungeonTweaks extends Tweak
         
         if (c.highlightBats)
         {
-            bats.addAll(getWorld().getEntities(EntityBat.class, e -> true));
+            bats.addAll(McUtils.getWorld().getEntities(EntityBat.class, e -> true));
         }
     }
     
@@ -1595,7 +1688,7 @@ public class DungeonTweaks extends Tweak
     
     public void blockRightClickSet()
     {
-        ItemStack item = getPlayer().inventory.getCurrentItem();
+        ItemStack item = McUtils.getPlayer().inventory.getCurrentItem();
         if (item == null)
         {
             sendChat("DT-BlockRightClick: current selected item is empty");
@@ -1635,7 +1728,7 @@ public class DungeonTweaks extends Tweak
             "DT-BlockRightClick: you really wanna remove \"" + ele + "§r\" from the list? Click here in 5 seconds to continue");
         nice.getChatStyle().setChatClickEvent(
             new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tc action " + chatActionUuid));
-        getPlayer().addChatMessage(nice);
+        McUtils.getPlayer().addChatMessage(nice);
     }
     
     public void blockRightClickList()
@@ -1766,10 +1859,24 @@ public class DungeonTweaks extends Tweak
     
     public void listFragCounts()
     {
+        String sep = System.lineSeparator();
+        StringBuilder sb = new StringBuilder();
+        
+        sendChat("Total runs: " + c.totalFragruns);
         for (Map.Entry<String, Integer> e : c.fragDrops.entrySet())
-        {
             sendChatf("§5%s§f: §a%d", FRAGS_AND_NAMES.get(e.getKey()), e.getValue());
-        }
+        
+        // Stupid java crap dog shit ass fuck
+        List<Map.Entry<String, Integer>> sorted = c.fragDrops.entrySet().stream().
+            sorted(Map.Entry.<String, Integer>comparingByValue().reversed()).
+            collect(Collectors.toList());
+    
+        sb.append("Total runs: ").append(c.totalFragruns).append(sep);
+        for (Map.Entry<String, Integer> e : sorted)
+            sb.append(FRAGS_AND_NAMES.get(e.getKey())).append(": ").append(e.getValue()).append(sep);
+        
+        Utils.setClipboard(sb.toString());
+        sendChat("Also copied to clipboard");
     }
     
     public void fragStartSession()
@@ -1847,7 +1954,7 @@ public class DungeonTweaks extends Tweak
         sendChat("DT-Frag: warping back to dhub for next run");
         
         fragPendingEndRunWarp = true;
-        getPlayer().sendChatMessage("/warp dhub");
+        McUtils.getPlayer().sendChatMessage("/warp dhub");
         // Continued at `if (fragPendingEndRunWarp)` in onTick()
     }
     
@@ -2025,7 +2132,7 @@ public class DungeonTweaks extends Tweak
     public void getDailyRuns(String name)
     {
         if (name.equals(""))
-            name = getPlayer().getName();
+            name = McUtils.getPlayer().getName();
         String finalName = name;
         
         Tweakception.apiManager.removeCache(name);
@@ -2048,6 +2155,69 @@ public class DungeonTweaks extends Tweak
             JsonObject daily = dungeons.get("daily_runs").getAsJsonObject();
             int count = daily.get("completed_runs_count").getAsInt();
             sendChat("DT: daily runs count of " + name + " is " + count);
+        }
+    }
+    
+    public void toggleDisplaySoulName()
+    {
+        sendChat("no");
+    }
+    
+    public void toggleTrackDamageHistory()
+    {
+        c.trackDamageHistory = !c.trackDamageHistory;
+        if (!c.trackDamageHistory)
+        {
+            damageHistoriesMap.clear();
+            damageHistoriesSorted.clear();
+        }
+        Tweakception.overlayManager.setEnable(DamageHistoryOverlay.NAME, c.trackDamageHistory);
+        sendChat("DT-TrackDamageHistory: toggled " + c.trackDamageHistory);
+    }
+    
+    public void resetDamageHistories()
+    {
+        damageHistoriesMap.clear();
+        damageHistoriesSorted.clear();
+    }
+    
+    public void setDamageHistoryOverlayMaxLines(int l)
+    {
+        c.damageHistoryOverlayMaxLines = l > 0 ? l : new DungeonTweaksConfig().damageHistoryOverlayMaxLines;
+        sendChat("DT-TrackDamageHistory: set overlay max lines to " + c.damageHistoryOverlayMaxLines);
+    }
+    
+    public void dumpDamageHistories()
+    {
+        if (!c.trackDamageHistory)
+        {
+            sendChat("DT-TrackDamageHistory: feature is off");
+            return;
+        }
+    
+        List<String> list = new ArrayList<>();
+        list.add("With commas");
+        list.add("");
+        for (Map.Entry<Long, Long> entry : damageHistoriesSorted)
+            list.add(Utils.formatCommas(entry.getKey()) + " - " + entry.getValue());
+        list.add("");
+        list.add("No commas");
+        list.add("");
+        for (Map.Entry<Long, Long> entry : damageHistoriesSorted)
+            list.add(entry.getKey() + " - " + entry.getValue());
+    
+        try
+        {
+            File file = Tweakception.configuration.createWriteFileWithCurrentDateTime("damagehistories_$.txt", list);
+            sendChat("Dumped damage histories");
+            getPlayer().addChatMessage(new ChatComponentTranslation("Output written to file %s",
+                McUtils.makeFileLink(file)));
+            Desktop.getDesktop().open(file);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            sendChat("GT: exception occurred when making and opening file");
         }
     }
 }

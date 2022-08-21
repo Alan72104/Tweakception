@@ -76,6 +76,12 @@ public class Utils
         return formatCommas(s);
     }
     
+    public static String formatCommas(double n)
+    {
+        String s = String.valueOf(n);
+        return formatCommas(s);
+    }
+    
     // Input string could be "1234" or "1234.5"
     public static String formatCommas(String s)
     {
@@ -157,19 +163,6 @@ public class Utils
         return String.format(s, args);
     }
     
-    public static NBTTagCompound getExtraAttributes(ItemStack item)
-    {
-        if (item == null)
-            return null;
-        
-        NBTTagCompound tag = item.getTagCompound();
-        if (tag != null)
-        {
-            return tag.getCompoundTag("ExtraAttributes");
-        }
-        return null;
-    }
-    
     public static String getSkyblockItemId(ItemStack item)
     {
         if (item == null)
@@ -221,6 +214,20 @@ public class Utils
         for (String s : list)
             max = Math.max(max, getMc().fontRendererObj.getStringWidth(s));
         return max;
+    }
+    
+    public static String captilize(String s)
+    {
+        if (s.length() == 0)
+            return s;
+        
+        StringBuilder sb = new StringBuilder();
+        sb.append(Character.toUpperCase(s.charAt(0)));
+        char[] a = s.toCharArray();
+        for (int i = 1; i < a.length; i++)
+            sb.append(Character.toLowerCase(a[i]));
+        
+        return sb.toString();
     }
     
     public static <T> T setAccessibleAndGetField(Object o, String name) throws NoSuchFieldException, IllegalAccessException

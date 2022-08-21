@@ -233,6 +233,7 @@ public class SlayerTweaks extends Tweak
             if (currentHealth > 100 && maxHealth > 100 && getTicks() > 600 &&
                 currentHealth <= maxHealth * c.autoHealWandHealthThreshold / 100 &&
                 getTicks() - lastHealWandTicks >= 20 * 7 + 5 + healWandRandomDelay &&
+                System.currentTimeMillis() - Tweakception.globalTracker.getWorldJoinMillis() >= 2000 &&
                 !switchingSlot)
             {
                 lastHealWandTicks = getTicks();
@@ -268,7 +269,7 @@ public class SlayerTweaks extends Tweak
                 {
                     boolean hitPhase = slayerNameTagMatcher.group(3) != null;
                     
-                    Entity nearest = McUtils.getNearestEntityInAABB(stand,
+                    Entity nearest = McUtils.getNewestEntityInAABB(stand,
                         stand.getEntityBoundingBox().expand(0.5, 2.5, 0.5),
                         e -> (e instanceof EntityZombie ||
                             e instanceof EntitySpider ||

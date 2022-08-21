@@ -167,6 +167,17 @@ public class Overlay
         }
     }
     
+    public int[] getOriginPos()
+    {
+        return Anchor.apply(getDrawX(), getDrawY(), getWidth(), getHeight(), getOrigin());
+    }
+    
+    public int[] getAnchorPos()
+    {
+        ScaledResolution res = new ScaledResolution(getMc());
+        return Anchor.apply(0, 0, res.getScaledWidth(), res.getScaledHeight(), getAnchor());
+    }
+    
     // Draws the overlay, subclasses that override this method should call super.draw()
     public void draw()
     {

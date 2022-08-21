@@ -59,6 +59,8 @@ public class TweakceptionCommand extends CommandBase
                 args -> Tweakception.dungeonTweaks.getDailyRuns(args.length > 0 ? args[0] : "")),
             new Command("displaymobnametag",
                 args -> Tweakception.dungeonTweaks.toggleDisplayMobNameTag()),
+            new Command("displaysoulname",
+                args -> Tweakception.dungeonTweaks.toggleDisplaySoulName()),
             new Command("frag",
                 args -> Tweakception.dungeonTweaks.listFragCounts(),
                 new Command("endsession",
@@ -120,6 +122,16 @@ public class TweakceptionCommand extends CommandBase
                         args.length > 0 ? toInt(args[0]) : 0)),
                 new Command("wither",
                     args -> Tweakception.dungeonTweaks.toggleTrackWitherDamageTags())
+            ),
+            new Command("trackdamagehistory",
+                args -> Tweakception.dungeonTweaks.toggleTrackDamageHistory(),
+                new Command("dump",
+                    args -> Tweakception.dungeonTweaks.dumpDamageHistories()),
+                new Command("reset",
+                    args -> Tweakception.dungeonTweaks.resetDamageHistories()),
+                new Command("maxlines",
+                    args -> Tweakception.dungeonTweaks.setDamageHistoryOverlayMaxLines(
+                        args.length > 0 ? toInt(args[0]) : 0))
             ),
             new Command("trackmask",
                 args -> Tweakception.dungeonTweaks.toggleTrackMaskUsage()),
@@ -193,8 +205,16 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.globalTracker.removeBlockQuickCraftWhitelist(
                         args.length > 0 ? toInt(args[0]) : 0))
             ),
+            new Command("championoverlay",
+                args -> Tweakception.globalTracker.toggleChampionOverlay(),
+                new Command("incrementresetdelay",
+                    args -> Tweakception.globalTracker.setChampionOverlayIncrementResetDuration(
+                        args.length > 0 ? toInt(args[0]) : 0))
+            ),
             new Command("copylocation",
                 args -> Tweakception.globalTracker.copyLocation()),
+            new Command("disabletooltips",
+                args -> Tweakception.globalTracker.toggleDisableTooltips()),
             new Command("drawselectedentityoutline",
                 args -> Tweakception.globalTracker.toggleDrawSelectedEntityOutline(),
                 new Command("width",
@@ -227,6 +247,12 @@ public class TweakceptionCommand extends CommandBase
                 args -> Tweakception.globalTracker.toggleRenderInvisibleArmorStands()),
             new Command("renderinvisibleenities",
                 args -> Tweakception.globalTracker.toggleRenderInvisibleEntities()),
+            new Command("renderenchantedbookstype",
+                args -> Tweakception.globalTracker.toggleRenderEnchantedBooksType()),
+            new Command("rendersackstype",
+                args -> Tweakception.globalTracker.toggleRenderSacksType()),
+            new Command("renderpotiontier",
+                args -> Tweakception.globalTracker.toggleRenderPotionTier()),
             new Command("setinvisibleentityalphapercentage",
                 args -> Tweakception.globalTracker.setInvisibleEntityAlphaPercentage(
                     args.length > 0 ? toInt(args[0]) : 0)),
@@ -261,6 +287,17 @@ public class TweakceptionCommand extends CommandBase
             ),
             new Command("playersinareas",
                 args -> Tweakception.globalTracker.togglePlayersInAreasDisplay()),
+            new Command("logpackets",
+                args -> Tweakception.globalTracker.toggleLogPacket(),
+                new Command("setallowed",
+                    args ->
+                    {
+                        if (args.length > 0)
+                            Tweakception.globalTracker.setPacketLogAllowedClass(args[0]);
+                        else
+                            sendChat("Give me 1 arg");
+                    })
+            ).setVisibility(false),
             new Command("rightctrlcopy",
                 null,
                 new Command("nbt",
@@ -321,6 +358,11 @@ public class TweakceptionCommand extends CommandBase
                 args -> Tweakception.fairyTracker.toggleAutoTracking()),
             new Command("trackonce",
                 args -> Tweakception.fairyTracker.trackOnce())
+        ));
+        addSub(new Command("enchanting",
+            null,
+            new Command("autosolve",
+                args -> Tweakception.enchantingTweaks.toggleAutoSolve())
         ));
         addSub(new Command("overlay",
             args -> Tweakception.overlayManager.editOverlays()

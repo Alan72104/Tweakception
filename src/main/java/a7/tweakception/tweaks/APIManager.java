@@ -213,18 +213,21 @@ public class APIManager extends Tweak
                     {
                         JsonObject profile = profiles.get(i).getAsJsonObject();
                         JsonObject members = profile.get("members").getAsJsonObject();
-                        JsonObject member = members.get(uuid).getAsJsonObject();
-                        if (member.has("last_save"))
+                        if (members.has(uuid))
                         {
-                            long lastSave = member.get("last_save").getAsLong();
-                            if (lastSave > biggestLastSave)
+                            JsonObject member = members.get(uuid).getAsJsonObject();
+                            if (member.has("last_save"))
                             {
-                                selectedProfileMember = member;
-                                biggestLastSave = lastSave;
+                                long lastSave = member.get("last_save").getAsLong();
+                                if (lastSave > biggestLastSave)
+                                {
+                                    selectedProfileMember = member;
+                                    biggestLastSave = lastSave;
+                                }
                             }
+                            else
+                                selectedProfileMember = member;
                         }
-                        else
-                            selectedProfileMember = member;
                     }
                     
                     UUID_TO_SKYBLOCK_PLAYER_INFO.put(uuid, selectedProfileMember);

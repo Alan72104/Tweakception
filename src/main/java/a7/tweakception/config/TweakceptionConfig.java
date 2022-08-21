@@ -16,4 +16,5 @@ public class TweakceptionConfig
     public CrimsonTweaks.CrimsonTweaksConfig crimsonTweaks = new CrimsonTweaks.CrimsonTweaksConfig();
     public SlayerTweaks.SlayerTweaksConfig slayerTweaks = new SlayerTweaks.SlayerTweaksConfig();
     public FishingTweaks.AutoFishConfig autoFish = new FishingTweaks.AutoFishConfig();
+    public EnchantingTweaks.EnchantingTweaksConfig enchantingTweaks = new EnchantingTweaks.EnchantingTweaksConfig();
 }

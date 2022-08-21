@@ -79,7 +79,7 @@ public enum SkyblockIsland
         new SubArea("Stronghold back right", "BackRight", "fishing",
             new AxisAlignedBB(-367, 178, -486, -332, 130, -462)),
         new SubArea("Stronghold back left", "BackLeft", "fishing",
-            new AxisAlignedBB(-393, 178, -488, -332, 130, -462)),
+            new AxisAlignedBB(-393, 178, -488, -368, 130, -462)),
         new SubArea("Stronghold front right", "FrontRight", "fishing",
             new AxisAlignedBB(-319, 132, -534, -267, 153, -591))
     }),
@@ -98,6 +98,25 @@ public enum SkyblockIsland
         "Mines of Divan",
         "Mithril Deposits",
         "Precursor Remnants"
+    }),
+    PARK("Park", new String[]
+    {
+        "The Park",
+        "Birch Park",
+        "Spruce Woods",
+        "Dark Thicket",
+        "Savanna Woodland",
+        "Jungle Island",
+        "Howling Cave",
+        "Lonely Island",
+        "Viking Longhouse",
+        "Melody's Plateau"
+    }, new SubArea[]
+    {
+        new SubArea("Dark oak area", "DarkOak", "foraging",
+            new AxisAlignedBB(-316, 98, -15, -374, 111, -120)),
+        new SubArea("Wolf cave", "WolfCave", "slayer",
+            new AxisAlignedBB(-351, 78, -102, -399, 49, 36))
     });
     
     public final String name;

@@ -4,12 +4,11 @@ import a7.tweakception.Scheduler;
 import a7.tweakception.Tweakception;
 import a7.tweakception.config.Configuration;
 import a7.tweakception.events.IslandChangedEvent;
+import a7.tweakception.events.PacketReceiveEvent;
 import a7.tweakception.overlay.Anchor;
 import a7.tweakception.overlay.TextOverlay;
-import a7.tweakception.utils.DumpUtils;
-import a7.tweakception.utils.McUtils;
-import a7.tweakception.utils.RenderUtils;
-import a7.tweakception.utils.Utils;
+import a7.tweakception.utils.*;
+import com.google.gson.Gson;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.entity.EntityOtherPlayerMP;
@@ -22,6 +21,8 @@ import net.minecraft.entity.passive.EntityPig;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.Packet;
 import net.minecraft.network.play.client.C16PacketClientStatus;
 import net.minecraft.scoreboard.Score;
 import net.minecraft.scoreboard.ScoreObjective;
@@ -33,13 +34,14 @@ import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.player.ItemTooltipEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 
 import java.awt.*;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 import java.util.List;
 
@@ -67,6 +69,12 @@ public class GlobalTracker extends Tweak
         public int[] selectedEntityOutlineColor = {0, 0, 255, 128};
         public boolean displayPlayersInArea = false;
         public boolean enablePingOverlay = false;
+        public boolean enableChampionOverlay = false;
+        public int championExpIncrementResetDuration = 30;
+        public boolean disableTooltips = false;
+        public boolean renderEnchantedBooksType = false;
+        public boolean renderSacksType = false;
+        public boolean renderPotionTier = false;
     }
     private final GlobalTrackerConfig c;
 //    private static final HashMap<String, SkyblockIsland> SUBPLACE_TO_ISLAND_MAP = new HashMap<>();
@@ -89,24 +97,59 @@ public class GlobalTracker extends Tweak
     private BlockPos[] areaPoints = null;
     private final HashMap<String, SkyblockIsland.SubArea> playersInAreas = new HashMap<>();
     private long pingNanos = 0;
-    private double ping = 0.0f;
+    private int ping = 0;
     private boolean pingingFromCommand = false;
+    private boolean logPacket = false;
+    private BufferedWriter packetLogWriter = null;
+    private final Object packetLogLock = new Object();
+    private final Gson gson = new Gson();
+    private final Set<String> allowedPacketClasses = new HashSet<>();
+    private long lastWorldJoin = 0;
+    
+    static
+    {
+        for (SkyblockIsland island : SkyblockIsland.values())
+        {
+            if (island.subAreas != null)
+                ISLANDS_THAT_HAS_SUBAREAS.add(island);
+        }
+    }
     
     public GlobalTracker(Configuration configuration)
     {
         super(configuration);
         c = configuration.config.globalTracker;
-        for (SkyblockIsland island : SkyblockIsland.values())
-        {
-            if (island.subAreas != null)
-                ISLANDS_THAT_HAS_SUBAREAS.add(island);
-//            for (String subPlace : island.areas)
-//                SUBPLACE_TO_ISLAND_MAP.put(subPlace, island);
-        }
         Tweakception.overlayManager.addOverlay(new PlayersInAreasDisplayOverlay());
         Tweakception.overlayManager.addOverlay(new PingOverlay());
+        Tweakception.overlayManager.addOverlay(new ChampionOverlay());
         npcSkins.add("minecraft:skins/57a517865b820a4451cd3cc6765f370fd0522b6489c9c94fb345fdee2689451a"); // Shaman
         npcSkins.add("minecraft:skins/1642a06cd75ef307c1913ba7a224fb2082d8a2c5254fd1bf006125a087a9a868"); // Taurus
+    }
+    
+    public void onPacket(PacketReceiveEvent event)
+    {
+        if (logPacket)
+            synchronized (packetLogLock)
+            {
+                Packet<?> packet = event.getPacket();
+                try
+                {
+                    String s = packet.getClass().getSimpleName();
+                    if (allowedPacketClasses.contains(s))
+                    {
+                        packetLogWriter.write(s);
+                        gson.toJson(packet, packetLogWriter);
+                        packetLogWriter.newLine();
+                        packetLogWriter.flush();
+                    }
+                }
+                catch (Exception | StackOverflowError e)
+                {
+                    sendChat("GT: exception on logging packet!");
+                    e.printStackTrace();
+                    toggleLogPacket();
+                }
+            }
     }
     
     public void onTick(TickEvent.ClientTickEvent event)
@@ -280,6 +323,17 @@ public class GlobalTracker extends Tweak
                     break;
             }
         }
+    }
+    
+    public void onItemTooltip(ItemTooltipEvent event)
+    {
+        if (c.disableTooltips)
+            event.toolTip.clear();
+    }
+    
+    public void onWorldLoad(WorldEvent.Load event)
+    {
+        lastWorldJoin = System.currentTimeMillis();
     }
     
     // region Misc
@@ -534,6 +588,21 @@ public class GlobalTracker extends Tweak
         return c.quickCraftWhitelist.contains(id);
     }
     
+    public boolean isRenderEnchantedBooksTypeOn()
+    {
+        return c.renderEnchantedBooksType;
+    }
+    
+    public boolean isRenderSacksTypeOn()
+    {
+        return c.renderSacksType;
+    }
+    
+    public boolean isRenderPotionTierOn()
+    {
+        return c.renderPotionTier;
+    }
+    
     public void toggleQuickCraftWhitelist(String id)
     {
         if (c.quickCraftWhitelist.contains(id))
@@ -628,7 +697,7 @@ public class GlobalTracker extends Tweak
     {
         if (pingNanos != 0L)
         {
-            ping = Utils.roundToDigits((System.nanoTime() - pingNanos) / 1000_000.0, 2);
+            ping = (int)((System.nanoTime() - pingNanos) / 1_000_000L);
             pingNanos = 0L;
             if (isInGame() && pingingFromCommand)
             {
@@ -638,9 +707,15 @@ public class GlobalTracker extends Tweak
         }
     }
     
+    public long getWorldJoinMillis()
+    {
+        return lastWorldJoin;
+    }
+    
     private class PlayersInAreasDisplayOverlay extends TextOverlay
     {
         public static final String NAME = "PlayersInAreasDisplayOverlay";
+        private final List<Map.Entry<String, SkyblockIsland.SubArea>> sorted = new ArrayList<>();
         
         public PlayersInAreasDisplayOverlay()
         {
@@ -656,10 +731,17 @@ public class GlobalTracker extends Tweak
         {
             super.update();
             List<String> list = new ArrayList<>();
-            for (Map.Entry<String, SkyblockIsland.SubArea> entry : playersInAreas.entrySet())
+    
+            sorted.clear();
+            sorted.addAll(playersInAreas.entrySet());
+            sorted.sort((a, b) ->
             {
-                list.add(entry.getKey() + "-" + entry.getValue().shortName);
-            }
+                int r = a.getValue().shortName.compareTo(b.getValue().shortName);
+                if (r == 0)
+                    return a.getKey().compareTo(b.getKey());
+                return r;
+            });
+            sorted.forEach(e -> list.add(e.getKey() + "-" + e.getValue().shortName));
             setContent(list);
         }
         
@@ -667,8 +749,8 @@ public class GlobalTracker extends Tweak
         public List<String> getDefaultContent()
         {
             List<String> list = new ArrayList<>();
-            list.add("player: area name");
-            list.add("player2: area name");
+            list.add("player-area name");
+            list.add("player2-area name");
             return list;
         }
     }
@@ -693,7 +775,7 @@ public class GlobalTracker extends Tweak
             super.update();
             
             long millis = System.currentTimeMillis();
-            if (millis - lastPingMillis >= 2500)
+            if (millis - lastPingMillis >= 3000)
             {
                 lastPingMillis = millis;
                 pingSend();
@@ -708,7 +790,105 @@ public class GlobalTracker extends Tweak
         public List<String> getDefaultContent()
         {
             List<String> list = new ArrayList<>();
-            list.add("ping is lS.o ms");
+            list.add("ping is lSo ms");
+            return list;
+        }
+    }
+    
+    private class ChampionOverlay extends TextOverlay
+    {
+        public static final String NAME = "ChampionOverlay";
+        private String lastItemUuid = "";
+        private long lastExp = 0L;
+        private long increment = 0L;
+        private int lastIncrementTicks = 0;
+        
+        public ChampionOverlay()
+        {
+            super(NAME);
+            setAnchor(Anchor.BottomCenter);
+            setOrigin(Anchor.BottomRight);
+            setX(-200);
+            setY(-20);
+        }
+        
+        @Override
+        public void update()
+        {
+            super.update();
+            List<String> list = new ArrayList<>();
+            
+            ItemStack stack = getPlayer().getHeldItem();
+            if (stack != null)
+            {
+                NBTTagCompound extra = McUtils.getExtraAttributes(stack);
+                String uuid = Utils.getSkyblockItemUuid(stack);
+                
+                // Increment is global, any exp gained on the held item will be added to it,
+                // overlay only shows if a champion item is held
+                if (uuid != null && extra != null && extra.hasKey("champion_combat_xp"))
+                {
+                    if (!uuid.equals(lastItemUuid))
+                    {
+                        lastItemUuid = uuid;
+                        lastExp = 0L;
+                    }
+                    
+                    StringBuilder sb = new StringBuilder();
+                    double xpDouble = extra.getDouble("champion_combat_xp");
+                    int level = -1;
+                    for (int i = 0; i < Constants.CHAMPION_EXPS.length; i++)
+                        if (xpDouble >= Constants.CHAMPION_EXPS[i])
+                            level = i;
+                        else
+                            break;
+                    
+                    long xp = (long)xpDouble;
+                    
+                    if (lastExp == 0L) // Just switched to this item, set the last exp
+                    {
+                        lastExp = xp;
+                    }
+                    else if (xp > lastExp)
+                    {
+                        increment += xp - lastExp;
+                        lastExp = xp;
+                        lastIncrementTicks = getTicks();
+                    }
+                    else if (increment > 0 &&
+                             getTicks() - lastIncrementTicks >= 20 * c.championExpIncrementResetDuration)
+                    {
+                        increment = 0;
+                    }
+                    
+                    
+                    String s = Utils.formatCommas(xp);
+                    if (level + 1 < 10)
+                    {
+                        String ss = Utils.formatCommas(Constants.CHAMPION_EXPS[level + 1]);
+                        sb.append("Champion ").append(Constants.ROMAN_NUMERALS[level]).append(": ")
+                            .append(s).append("/").append(ss);
+                    }
+                    else
+                    {
+                        sb.append("Champion X: ").append(s);
+                    }
+                    
+                    if (increment > 0)
+                        sb.append(" §2+").append(Utils.formatCommas(increment));
+                    
+                    list.add(sb.toString());
+                }
+            }
+            
+            setContent(list);
+        }
+        
+        @Override
+        public List<String> getDefaultContent()
+        {
+            List<String> list = new ArrayList<>();
+            list.add("ping is lSo ms");
             return list;
         }
     }
@@ -985,6 +1165,98 @@ public class GlobalTracker extends Tweak
         c.enablePingOverlay = !c.enablePingOverlay;
         Tweakception.overlayManager.setEnable(PingOverlay.NAME, c.enablePingOverlay);
         sendChat("GT: toggled ping overlay " + c.enablePingOverlay);
+    }
+    
+    public void toggleLogPacket()
+    {
+        logPacket = !logPacket;
+        if (logPacket)
+        {
+            try
+            {
+                File file = Tweakception.configuration.createFileWithCurrentDateTime("packets_$_.txt");
+                synchronized (packetLogLock)
+                {
+                    packetLogWriter = Tweakception.configuration.createWriterFor(file);
+                }
+                McUtils.getPlayer().addChatMessage(new ChatComponentTranslation("Output written to file %s",
+                    McUtils.makeFileLink(file)));
+//                Desktop.getDesktop().open(file);
+                sendChat("GT: toggled on packet log");
+            }
+            catch (IOException e)
+            {
+                sendChat("GT: cannot create file");
+                logPacket = false;
+            }
+        }
+        else
+        {
+            synchronized (packetLogLock)
+            {
+                try
+                {
+                    packetLogWriter.close();
+                    packetLogWriter = null;
+                }
+                catch (IOException ignored)
+                {
+                }
+            }
+            sendChat("GT: toggled off packet log");
+        }
+    }
+    
+    public void setPacketLogAllowedClass(String name)
+    {
+        if (allowedPacketClasses.contains(name))
+        {
+            allowedPacketClasses.remove(name);
+            sendChat("GT: removed " + name);
+        }
+        else
+        {
+            allowedPacketClasses.add(name);
+            sendChat("GT: added " + name);
+        }
+    }
+    
+    public void toggleChampionOverlay()
+    {
+        c.enableChampionOverlay = !c.enableChampionOverlay;
+        Tweakception.overlayManager.setEnable(ChampionOverlay.NAME, c.enableChampionOverlay);
+        sendChat("GT-ChampionOverlay: toggled " + c.enableChampionOverlay);
+    }
+    
+    public void setChampionOverlayIncrementResetDuration(int d)
+    {
+        c.championExpIncrementResetDuration =
+            d > 0 ? d : new GlobalTrackerConfig().championExpIncrementResetDuration;
+        sendChat("FT-ChampionOverlay: set increment reset time to " + c.championExpIncrementResetDuration);
+    }
+    
+    public void toggleDisableTooltips()
+    {
+        c.disableTooltips = !c.disableTooltips;
+        sendChat("GT-DisableTooltips: toggled " + c.disableTooltips);
+    }
+    
+    public void toggleRenderEnchantedBooksType()
+    {
+        c.renderEnchantedBooksType = !c.renderEnchantedBooksType;
+        sendChat("GT-RenderEnchantedBooksType: toggled " + c.renderEnchantedBooksType);
+    }
+    
+    public void toggleRenderSacksType()
+    {
+        c.renderSacksType = !c.renderSacksType;
+        sendChat("GT-RenderSacksType: toggled " + c.renderSacksType);
+    }
+    
+    public void toggleRenderPotionTier()
+    {
+        c.renderPotionTier = !c.renderPotionTier;
+        sendChat("GT-RenderPotionTier: toggled " + c.renderPotionTier);
     }
     
     // endregion

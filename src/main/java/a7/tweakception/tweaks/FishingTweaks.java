@@ -115,7 +115,7 @@ public class FishingTweaks extends Tweak
                     String uuid = Utils.getSkyblockItemUuid(stack);
                     if (id != null && id.equals("THUNDER_IN_A_BOTTLE_EMPTY") && uuid != null)
                     {
-                        int charge = Utils.getExtraAttributes(stack).getInteger("thunder_charge");
+                        int charge = McUtils.getExtraAttributes(stack).getInteger("thunder_charge");
     
                         // Only display the first bottle fill count
                         if (thunderBottleCharge == null)

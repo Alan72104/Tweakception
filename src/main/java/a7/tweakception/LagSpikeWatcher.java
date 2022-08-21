@@ -5,6 +5,11 @@ import a7.tweakception.utils.McUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import static a7.tweakception.utils.Utils.f;
@@ -12,8 +17,8 @@ import static a7.tweakception.utils.Utils.f;
 public class LagSpikeWatcher
 {
     private static LagSpikeWatcherThread watcherThread;
-    private static volatile int threshold = 250;
-    private static boolean keepLoggingOnLag = false;
+    private static volatile int threshold = 150;
+    private static volatile boolean keepLoggingOnLag = false;
     private static final String newline = System.lineSeparator();
     
     public static void startWatcher()
@@ -48,7 +53,7 @@ public class LagSpikeWatcher
     
     public static void newTick()
     {
-        if (watcherThread != null)
+        if (isWatcherOn())
             watcherThread.newTick();
     }
     
@@ -147,12 +152,13 @@ public class LagSpikeWatcher
     private static class LagSpikeWatcherThread extends Thread
     {
         private boolean exit = false;
-        private volatile long tickStartMillis = 0L;
-        private volatile boolean newTick = false;
-        private final Object newTickMonitor = new Object();
+        private final Object sync = new Object();
+        private long tickStartMillis = 0L;
+        private boolean newTick = false;
+        
         private final Thread mainThread;
         private final Map<String, Integer> lagSources = new HashMap<>();
-        
+    
         public LagSpikeWatcherThread(Thread mainThread)
         {
             setName("LagSpikeWatcherThread");
@@ -163,69 +169,80 @@ public class LagSpikeWatcher
         @Override
         public void run()
         {
+            tickStartMillis = System.currentTimeMillis();
+            long lastTimeoutTime = 0L;
+            long millis;
+            boolean repeatTimeout;
+            
             while (!exit)
             {
-                synchronized (newTickMonitor)
+                synchronized (sync)
                 {
-                    try
+                    millis = System.currentTimeMillis();
+                    repeatTimeout = keepLoggingOnLag && millis - lastTimeoutTime >= threshold;
+                    if (millis - tickStartMillis >= threshold && (newTick || repeatTimeout))
                     {
-                        newTickMonitor.wait(threshold);
+                        newTick = false;
+                        lastTimeoutTime = millis;
+                        timedOut(repeatTimeout);
                     }
-                    catch (InterruptedException ignored)
-                    {
-                        break;
-                    }
-                    tickedOrTimedOut();
-                    newTick = false;
+                }
+    
+                Thread.yield();
+                if (Thread.interrupted())
+                {
+                    exit = true;
+                    break;
                 }
             }
         }
         
-        private void tickedOrTimedOut()
+        private void timedOut(boolean repeat)
         {
-            if (System.currentTimeMillis() - tickStartMillis >= threshold && (keepLoggingOnLag || newTick))
+            StackTraceElement[] stack = mainThread.getStackTrace();
+            StringBuilder stackStringBuilder = new StringBuilder();
+            
+            Tweakception.logger.debug("==================================================");
+            if (!repeat)
+                Tweakception.logger.debug("LagSpikeWatcher: this tick has lasted >" + threshold + "ms");
+            else
+                Tweakception.logger.debug("LagSpikeWatcher: this tick has lagged " + threshold + " more ms");
+            
+            for (StackTraceElement ele : stack)
             {
-                StackTraceElement[] stack = mainThread.getStackTrace();
-                StringBuilder stackStringBuilder = new StringBuilder();
+                String at = stackFrameToString(ele);
                 
-                Tweakception.logger.debug("==================================================");
-                Tweakception.logger.debug("LagSpikeWatcher: this tick has lasted >" + threshold + "ms since start");
-                for (StackTraceElement ele : stack)
+                Tweakception.logger.debug("at " + at);
+                stackStringBuilder.append(at);
+                
+                if (ele.getClassName().equals("net.minecraft.client.main.Main") &&
+                    ele.getMethodName().equals("main"))
                 {
-                    String at = stackFrameToString(ele);
-                    
-                    Tweakception.logger.debug("at " + at);
-                    stackStringBuilder.append(at);
-                    
-                    if (ele.getClassName().equals("net.minecraft.client.main.Main") &&
-                        ele.getMethodName().equals("main"))
-                    {
-                        Tweakception.logger.debug("rest omitted...");
-                        break;
-                    }
-                    else
-                        stackStringBuilder.append(newline);
+                    Tweakception.logger.debug("rest omitted...");
+                    break;
                 }
-                Tweakception.logger.debug("==================================================");
-                
-                String stackString = stackStringBuilder.toString();
-                synchronized (lagSources)
-                {
-                    if (lagSources.containsKey(stackString))
-                        lagSources.merge(stackString, 1, Integer::sum);
-                    else
-                        lagSources.put(stackString, 1);
-                }
-                
-                Tweakception.scheduler.add(() ->
-                {
-                    if (McUtils.isInGame())
-                    {
-                        McUtils.sendChat("LagSpikeWatcher: this tick has lasted >" + threshold + "ms since start");
-                        McUtils.sendChat("stack top -> " + stack[0].getMethodName());
-                    }
-                });
+                else
+                    stackStringBuilder.append(newline);
             }
+            Tweakception.logger.debug("==================================================");
+            
+            String stackString = stackStringBuilder.toString();
+            synchronized (lagSources)
+            {
+                if (lagSources.containsKey(stackString))
+                    lagSources.merge(stackString, 1, Integer::sum);
+                else
+                    lagSources.put(stackString, 1);
+            }
+            
+            Tweakception.scheduler.add(() ->
+            {
+                if (McUtils.isInGame())
+                {
+                    McUtils.sendChat("LagSpikeWatcher: this tick has lasted >" + threshold + "ms since start");
+                    McUtils.sendChat("stack top -> " + stack[0].getMethodName());
+                }
+            });
         }
         
         public void exit()
@@ -236,11 +253,10 @@ public class LagSpikeWatcher
         
         public void newTick()
         {
-            synchronized (newTickMonitor)
+            synchronized (sync)
             {
                 tickStartMillis = System.currentTimeMillis();
                 newTick = true;
-                newTickMonitor.notify();
             }
         }
     }

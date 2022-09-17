@@ -5,6 +5,7 @@ import a7.tweakception.config.Configuration;
 import a7.tweakception.overlay.Anchor;
 import a7.tweakception.overlay.TextOverlay;
 import a7.tweakception.utils.*;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.block.Block;
@@ -70,6 +71,7 @@ public class DungeonTweaks extends Tweak
         public Map<String, Integer> fragDrops = FRAGS_AND_NAMES.keySet().stream().collect(Collectors.toMap(e -> e, e -> 0));
         public Map<String, Integer> salvagedEssences = ESSENCES.stream().collect(Collectors.toMap(e -> e, e -> 0));
         public String fragBot = "";
+        public boolean fragAutoReparty = true;
         public TreeMap<String, String> partyFinderPlayerBlacklist = new TreeMap<>();
         public TreeSet<String> autoJoinPartyOwners = new TreeSet<>(Collections.singletonList("alan72104"));
         public TreeSet<String> blockRightClickItemNames = new TreeSet<>();
@@ -188,11 +190,12 @@ public class DungeonTweaks extends Tweak
         public long totalSecret = 0L;
         public int wBlade = 0;
         public int term = 0;
+        public int bestF7RunSecretsFound = 0;
         public boolean apiDiabled = false;
         
         public DungeonStats() {}
         
-        public DungeonStats(float c, float ce, float spr, long ts, int wb, int t, boolean ad)
+        public DungeonStats(float c, float ce, float spr, long ts, int wb, int t, int b, boolean ad)
         {
             cata = c;
             cataExp = ce;
@@ -200,6 +203,7 @@ public class DungeonTweaks extends Tweak
             totalSecret = ts;
             wBlade = wb;
             term = t;
+            bestF7RunSecretsFound = b;
             apiDiabled = ad;
         }
         
@@ -220,13 +224,14 @@ public class DungeonTweaks extends Tweak
     
     static
     {
-        SECRET_CHEST_ITEMS.add("§5Health Potion VIII Splash Potion");
-        SECRET_CHEST_ITEMS.add("§9Spirit Leap");
-        SECRET_CHEST_ITEMS.add("§aDecoy");
-        SECRET_CHEST_ITEMS.add("§aDefuse Kit");
-        SECRET_CHEST_ITEMS.add("§aTraining Weights");
-        SECRET_CHEST_ITEMS.add("§aTrap");
-        SECRET_CHEST_ITEMS.add("§fInflatable Jerry");
+        SECRET_CHEST_ITEMS.add("DEFUSE_KIT");
+        SECRET_CHEST_ITEMS.add("DUNGEON_DECOY");
+        SECRET_CHEST_ITEMS.add("DUNGEON_TRAP");
+        SECRET_CHEST_ITEMS.add("INFLATABLE_JERRY");
+        SECRET_CHEST_ITEMS.add("POTION");
+        SECRET_CHEST_ITEMS.add("REVIVE_STONE");
+        SECRET_CHEST_ITEMS.add("SPIRIT_LEAP");
+        SECRET_CHEST_ITEMS.add("TRAINING_WEIGHTS");
         TRASH_ITEMS.add("BOUNCY_BOOTS");
         TRASH_ITEMS.add("BOUNCY_CHESTPLATE");
         TRASH_ITEMS.add("BOUNCY_HELMET");
@@ -333,7 +338,7 @@ public class DungeonTweaks extends Tweak
     
     public void onTick(TickEvent.ClientTickEvent event)
     {
-        if (event.phase == TickEvent.Phase.END) return;
+        if (event.phase != TickEvent.Phase.END) return;
         
         if (getTicks() % 20 == 0)
         {
@@ -556,19 +561,18 @@ public class DungeonTweaks extends Tweak
             ContainerChest container = (ContainerChest)chest.inventorySlots;
             if (secretChestOpened)
             {
+                secretChestOpened = false;
                 IInventory inv = container.getLowerChestInventory();
-                // Also double chest secret shits
-                if (inv.getSizeInventory() == 27)
+                for (int i = 9 + 5 - 1; i < inv.getSizeInventory(); i += 9 * 3)
                 {
-                    ItemStack center = inv.getStackInSlot(9 + 5 - 1);
-                    if (center != null && SECRET_CHEST_ITEMS.contains(center.getDisplayName()))
+                    ItemStack center = inv.getStackInSlot(i);
+                    String id = Utils.getSkyblockItemId(center);
+                    if (center != null && id != null && SECRET_CHEST_ITEMS.contains(id))
                     {
                         McUtils.getPlayer().closeScreen();
-                        secretChestOpened = false;
+                        break;
                     }
                 }
-                else
-                    secretChestOpened = false;
             }
             else if (blacksmithMenuOpened && container.getLowerChestInventory().getName().equals("Salvage Item"))
             {
@@ -639,14 +643,18 @@ public class DungeonTweaks extends Tweak
                     fragPendingEndRunWarp = false;
                     fragGotten = false;
                     fragEnd();
-                    if (!c.fragBot.equals(""))
+                    if (c.fragAutoReparty)
                     {
-                        sendChat("DT-Frag: repartying " + c.fragBot);
-                        Tweakception.scheduler.addDelayed(() -> McUtils.getPlayer().sendChatMessage("/p disband"), 20).
-                            thenDelayed(() -> McUtils.getPlayer().sendChatMessage("/p " + c.fragBot), 20);
+                        if (!c.fragBot.equals(""))
+                        {
+                            sendChat("DT-Frag: repartying " + c.fragBot);
+                            Tweakception.scheduler.
+                                addDelayed(() -> McUtils.getPlayer().sendChatMessage("/p disband"), 20).
+                                thenDelayed(() -> McUtils.getPlayer().sendChatMessage("/p " + c.fragBot), 20);
+                        }
+                        else
+                            sendChat("DT-Frag: cannot reparty, please set a frag bot using `setfragbot <name>`");
                     }
-                    else
-                        sendChat("DT-Frag: cannot reparty, please set a frag bot using `setfragbot <name>`");
                 }
                 else
                 {
@@ -1123,8 +1131,11 @@ public class DungeonTweaks extends Tweak
                                 sb.append(padding);
                                 sb.append(f(" §f[%.2f | %.1f/%s",
                                     stats.cata, stats.secretPerRun, Utils.formatMetric(stats.totalSecret)));
+                                sb.append('/');
                                 if (c.partyFinderQuickPlayerInfoShowSecretPerExp)
-                                    sb.append(f("/%.1f", stats.totalSecret / (stats.cataExp / 50000.0f)));
+                                    sb.append(f("%.1f", stats.totalSecret / (stats.cataExp / 50000.0f)));
+                                else
+                                    sb.append(stats.bestF7RunSecretsFound);
                                 
                                 if (stats.apiDiabled)
                                     sb.append(" §cAPI disabled");
@@ -1307,6 +1318,7 @@ public class DungeonTweaks extends Tweak
         float toNext = 0.0f;
         float secrets = 0.0f;
         long comps = 0;
+        int bestF7SecretsFound = 0;
         
         if (sbInfo.has("dungeons"))
         {
@@ -1327,6 +1339,20 @@ public class DungeonTweaks extends Tweak
                         break;
                 if (cataLevel < 50)
                     toNext = experience / Constants.CATACOMBS_LEVEL_EXPS[cataLevel];
+            }
+            
+            if (catacombs.has("best_runs"))
+            {
+                JsonObject bestRuns = catacombs.get("best_runs").getAsJsonObject();
+                if (bestRuns.has("7"))
+                {
+                    JsonArray f7 = bestRuns.get("7").getAsJsonArray();
+                    if (f7.size() > 0)
+                    {
+                        JsonObject best = f7.get(f7.size() - 1).getAsJsonObject();
+                        bestF7SecretsFound = best.get("secrets_found").getAsInt();
+                    }
+                }
             }
             
             if (hyInfo.has("achievements"))
@@ -1378,8 +1404,6 @@ public class DungeonTweaks extends Tweak
             {
                 final int TAG_COMPOUND = net.minecraftforge.common.util.Constants.NBT.TAG_COMPOUND;
                 NBTTagList items = invNbt.getTagList("i", TAG_COMPOUND);
-                if (GlobalTracker.t)
-                    Utils.setClipboard(DumpUtils.prettifyJson(items.toString()));
                 for (int i = 0; i < items.tagCount(); i++)
                 {
                     NBTTagCompound item = items.getCompoundTagAt(i);
@@ -1406,7 +1430,8 @@ public class DungeonTweaks extends Tweak
         else
             apiDisabled = true;
         
-        DungeonStats stats = new DungeonStats(cata, cataExp, secretsPerRun, (long)secrets, wBlade, term, apiDisabled);
+        DungeonStats stats = new DungeonStats(cata, cataExp, secretsPerRun, (long)secrets,
+            wBlade, term, bestF7SecretsFound, apiDisabled);
         uuidToDungeonStatsMap.put(uuid, stats);
         return stats;
     }
@@ -2033,6 +2058,12 @@ public class DungeonTweaks extends Tweak
             c.fragBot = name;
             sendChat("DT-Frag: set frag bot to " + name);
         }
+    }
+    
+    public void toggleFragAutoReparty()
+    {
+        c.fragAutoReparty = !c.fragAutoReparty;
+        sendChat("DT-Frag: toggled auto reparty " + c.fragAutoReparty);
     }
     
     public void toggleTrackShootingSpeed()

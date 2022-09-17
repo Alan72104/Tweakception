@@ -15,6 +15,7 @@ import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.network.NetworkPlayerInfo;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.entity.passive.EntityPig;
@@ -39,6 +40,8 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL31;
 
 import java.awt.*;
 import java.io.*;
@@ -105,6 +108,8 @@ public class GlobalTracker extends Tweak
     private final Gson gson = new Gson();
     private final Set<String> allowedPacketClasses = new HashSet<>();
     private long lastWorldJoin = 0;
+    private List<String> lastTooltip = null;
+    private int tooltipUpdateTicks = 0;
     
     static
     {
@@ -203,32 +208,26 @@ public class GlobalTracker extends Tweak
                 Tweakception.overlayManager.setEnable(PlayersInAreasDisplayOverlay.NAME, !playersInAreas.isEmpty());
             }
         }
+        
+        if (lastTooltip != null && getTicks() - tooltipUpdateTicks > 10)
+        {
+            lastTooltip = null;
+        }
     }
     
     public void onGuiKeyInputPre(GuiScreenEvent.KeyboardInputEvent.Pre event)
     {
-        if (!c.devMode) return;
-        
-        if (Keyboard.getEventKey() == Keyboard.KEY_RCONTROL && Keyboard.getEventKeyState() && !Keyboard.isRepeatEvent())
+        if (c.devMode &&
+            Keyboard.getEventKey() == Keyboard.KEY_RCONTROL &&
+            Keyboard.getEventKeyState() && !Keyboard.isRepeatEvent())
         {
-            GuiScreen screen = event.gui;
-            
-            if (screen instanceof GuiContainer)
+            if (pendingCopyStartTicks != -1)
             {
-                GuiContainer container = (GuiContainer)screen;
-                Slot currentSlot = container.getSlotUnderMouse();
-                
-                if (currentSlot != null && currentSlot.getHasStack())
-                {
-                    if (pendingCopyStartTicks != -1)
-                    {
-                        pendingCopyStartTicks = -1;
-                        doCopy(true);
-                    }
-                    else
-                        pendingCopyStartTicks = getTicks();
-                }
+                pendingCopyStartTicks = -1;
+                doCopy(true);
             }
+            else
+                pendingCopyStartTicks = getTicks();
         }
     }
     
@@ -343,6 +342,15 @@ public class GlobalTracker extends Tweak
         sendChat("GT: " + (currentIsland != null ? currentIsland.name : "none"));
     }
     
+    public void updateTooltipToCopy(List<String> list)
+    {
+        if (list.size() > 0 && !list.get(0).isEmpty())
+        {
+            lastTooltip = list;
+            tooltipUpdateTicks = getTicks();
+        }
+    }
+    
     private void detectSkyblock()
     {
         if (overrideIslandDetection)
@@ -429,8 +437,9 @@ public class GlobalTracker extends Tweak
     
     private void doCopy(boolean copyToFile)
     {
-        GuiScreen screen = getMc().currentScreen;
+        ItemStack hoveredStack = null;
         
+        GuiScreen screen = getMc().currentScreen;
         if (screen instanceof GuiContainer)
         {
             GuiContainer container = (GuiContainer)screen;
@@ -438,66 +447,91 @@ public class GlobalTracker extends Tweak
             
             if (currentSlot != null && currentSlot.getHasStack())
             {
-                ItemStack stack = currentSlot.getStack();
-                String string;
-                String type;
-                switch (c.rightCtrlCopyType)
-                {
-                    default:
-                    case "nbt":
-                        String nbt = stack.serializeNBT().toString();
-                        string = DumpUtils.prettifyJson(nbt);
-                        type = "nbt";
-                        break;
-                    case "tooltip":
-                        List<String> tooltip = stack.getTooltip(getPlayer(), true);
-                        string = String.join(System.lineSeparator(), tooltip);
-                        type = "tooltip";
-                        break;
-                }
-                
-                if (copyToFile)
-                {
-                    String itemName = McUtils.cleanColor(stack.getDisplayName());
-                    File file = null;
-                    try
-                    {
-                        file = Tweakception.configuration.createWriteFileWithCurrentDateTime(
-                            type + "_$_" + itemName.substring(0, Math.min(itemName.length(), 20)) + ".txt",
-                            new ArrayList<>(Collections.singleton(string)));
-                        
-                        IChatComponent fileName = new ChatComponentText(file.getName());
-                        fileName.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, file.getAbsolutePath()));
-                        fileName.getChatStyle().setUnderlined(true);
-                        
-                        getPlayer().addChatMessage(new ChatComponentTranslation(
-                            "GT: written item %s to file %s", type, fileName));
-                    }
-                    catch (IOException e)
-                    {
-                        e.printStackTrace();
-                        sendChat("GT: exception occurred when creating file");
-                    }
-                    if (file != null)
-                        try
-                        {
-                            Desktop.getDesktop().open(file);
-                        }
-                        catch (Exception e)
-                        {
-                            e.printStackTrace();
-                            sendChat("GT: exception occurred when opening file");
-                        }
-                }
+                hoveredStack = currentSlot.getStack();
+            }
+        }
+        
+        switch (c.rightCtrlCopyType)
+        {
+            default:
+            case "nbt":
+                if (hoveredStack == null)
+                    return;
+                String nbt = hoveredStack.serializeNBT().toString();
+                doRealCopy(copyToFile,
+                           DumpUtils.prettifyJson(nbt),
+                           "nbt",
+                           McUtils.cleanColor(hoveredStack.getDisplayName()));
+                break;
+            case "tooltip":
+                if (hoveredStack == null)
+                    return;
+                List<String> tooltip = hoveredStack.getTooltip(getPlayer(), true);
+                if (tooltip.size() == 0)
+                    sendChat("Tooltip has 0 line");
                 else
                 {
-                    Utils.setClipboard(string);
-                    sendChat("GT: copied item " + type + " to clipboard");
+                    doRealCopy(copyToFile,
+                               String.join(System.lineSeparator(), tooltip),
+                               "tooltip",
+                               tooltip.get(0));
                 }
-            }
+                break;
+            case "tooltipfinal":
+                if (lastTooltip != null)
+                {
+                    doRealCopy(copyToFile,
+                               String.join(System.lineSeparator(), lastTooltip),
+                               "tooltipfinal",
+                               lastTooltip.get(0));
+                }
+                break;
         }
     }
     
+    private void doRealCopy(boolean copyToFile, String string, String type, String fileSubName)
+    {
+        if (copyToFile)
+        {
+            File file = null;
+            try
+            {
+                file = Tweakception.configuration.createWriteFileWithCurrentDateTime(
+                    type + "_$_" + fileSubName.substring(0, Math.min(fileSubName.length(), 20)) + ".txt",
+                    new ArrayList<>(Collections.singleton(string)));
+                
+                IChatComponent fileName = new ChatComponentText(file.getName());
+                fileName.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, file.getAbsolutePath()));
+                fileName.getChatStyle().setUnderlined(true);
+                
+                getPlayer().addChatMessage(new ChatComponentTranslation("GT: written %s to file %s", type, fileName));
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+                sendChat("GT: exception occurred when creating file");
+            }
+            
+            if (file != null)
+            {
+                try
+                {
+                    Desktop.getDesktop().open(file);
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                    sendChat("GT: exception occurred when opening file");
+                }
+            }
+        }
+        else
+        {
+            Utils.setClipboard(string);
+            sendChat("GT: copied item " + type + " to clipboard");
+        }
+    }
+
     public static boolean isInSkyblock()
     {
         return isInSkyblock;

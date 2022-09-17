@@ -8,8 +8,11 @@ import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.lang.reflect.Field;
+import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.List;
@@ -18,6 +21,47 @@ import static a7.tweakception.utils.McUtils.getMc;
 
 public class Utils
 {
+    private static final NumberFormat NUMBER_FORMAT = NumberFormat.getInstance(Locale.US);
+    
+    // Supports comma
+    public static int parseInt(String s)
+    {
+        try
+        {
+            return NUMBER_FORMAT.parse(s).intValue();
+        }
+        catch (ParseException e)
+        {
+            return 0;
+        }
+    }
+    
+    // Supports comma
+    public static float parseFloat(String s)
+    {
+        try
+        {
+            return NUMBER_FORMAT.parse(s).floatValue();
+        }
+        catch (ParseException e)
+        {
+            return 0.0f;
+        }
+    }
+    
+    // Supports comma
+    public static double parseDouble(String s)
+    {
+        try
+        {
+            return NUMBER_FORMAT.parse(s).doubleValue();
+        }
+        catch (ParseException e)
+        {
+            return 0.0;
+        }
+    }
+    
     public static int clamp(int n, int min, int max)
     {
         return Math.max(Math.min(n, max), min);

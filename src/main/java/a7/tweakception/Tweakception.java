@@ -47,6 +47,7 @@ public class Tweakception
     public static SlayerTweaks slayerTweaks;
     public static FishingTweaks fishingTweaks;
     public static EnchantingTweaks enchantingTweaks;
+    public static BazaarTweaks bazaarTweaks;
     
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) throws Exception
@@ -70,6 +71,7 @@ public class Tweakception
         slayerTweaks = new SlayerTweaks(configuration);
         fishingTweaks = new FishingTweaks(configuration);
         enchantingTweaks = new EnchantingTweaks(configuration);
+        bazaarTweaks = new BazaarTweaks(configuration);
         
         ClientCommandHandler.instance.registerCommand(new TweakceptionCommand());
         MinecraftForge.EVENT_BUS.register(inGameEventDispatcher);

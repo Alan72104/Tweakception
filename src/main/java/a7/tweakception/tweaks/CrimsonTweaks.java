@@ -64,6 +64,7 @@ public class CrimsonTweaks extends Tweak
     
     public void onTick(TickEvent.ClientTickEvent event)
     {
+        if (event.phase != TickEvent.Phase.END) return;
         if (getCurrentIsland() != SkyblockIsland.CRIMSON_ISLE) return;
         
         if (getTicks() % 20 == 5)

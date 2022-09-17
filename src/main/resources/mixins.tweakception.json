@@ -12,10 +12,12 @@
     "MixinEntityRenderer",
     "MixinGuiContainer",
     "MixinGuiEditSign",
+    "MixinGuiScreen",
     "MixinMinecraft",
     "MixinNetHandlerPlayClient",
     "MixinRendererLivingEntity",
-    "MixinRenderItem"
+    "MixinRenderItem",
+    "MixinRenderManager"
   ],
   "injectors": {
     "defaultRequire": 1

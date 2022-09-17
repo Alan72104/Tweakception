@@ -1,6 +1,7 @@
 package a7.tweakception.tweaks;
 
 import a7.tweakception.config.Configuration;
+import a7.tweakception.utils.Pair;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.renderer.GlStateManager;
@@ -14,8 +15,7 @@ import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
-import java.util.ArrayDeque;
-import java.util.Queue;
+import java.util.*;
 
 import static a7.tweakception.utils.McUtils.*;
 
@@ -27,11 +27,12 @@ public class EnchantingTweaks extends Tweak
     }
     private final EnchantingTweaksConfig c;
     private SolverType currentType = SolverType.NONE;
-    private boolean chronoToAdd = false;
-    private final Queue<String> chronoOrderNames = new ArrayDeque<>();
-    private int chronoLastSize = 0;
-    private boolean chronoReplaying = false;
-    private int chronoClickDelayTicks = 0;
+    private boolean hasAdded = false;
+    private int clicks = 0;
+    private long lastClickTime = 0L;
+    private List<Pair<Integer, String>> chronomatronOrder = new ArrayList<>(28);
+    private int lastAdded = 0;
+    private HashMap<Integer, Integer> ultrasequencerOrder = new HashMap<>();
     
     private enum SolverType
     {
@@ -49,20 +50,30 @@ public class EnchantingTweaks extends Tweak
     
     public void onTick(TickEvent.ClientTickEvent event)
     {
-        if (currentType != SolverType.NONE && !(getMc().currentScreen instanceof GuiChest))
-            currentType = SolverType.NONE;
-        
         if (event.phase != TickEvent.Phase.END)
             return;
     
         if (!c.autoSolve)
             return;
-    
-        if (currentType != SolverType.NONE)
+        
+        
+        if (getMc().currentScreen instanceof GuiChest)
         {
-            updateContents(false);
-            updateClicks();
+            GuiChest chest = (GuiChest)getMc().currentScreen;
+            ContainerChest container = (ContainerChest)chest.inventorySlots;
+            IInventory inv = container.getLowerChestInventory();
+            switch (currentType)
+            {
+                case CHRONOMATRON:
+                {
+                    ItemStack stack = inv.getStackInSlot(9 * 5 + 5 - 1);
+//                    if (stack !- null)
+                    break;
+                }
+            }
         }
+        else
+            currentType = SolverType.NONE;
     }
     
     public void onGuiOpen(GuiOpenEvent event)
@@ -78,21 +89,15 @@ public class EnchantingTweaks extends Tweak
             ContainerChest container = (ContainerChest)chest.inventorySlots;
             String name = container.getLowerChestInventory().getDisplayName().getUnformattedText();
             
-            if (container.getLowerChestInventory().getSizeInventory() == 54 &&
-                !name.toLowerCase().contains("stakes"))
+            if (container.getLowerChestInventory().getSizeInventory() == 54)
             {
-                if (name.startsWith("Chronomatron"))
+                if (name.startsWith("Chronomatron ("))
                 {
-                    chronoToAdd = true;
-                    chronoReplaying = false;
-                    chronoLastSize = 0;
-                    chronoClickDelayTicks = 10;
-                    chronoOrderNames.clear();
                     currentType = SolverType.CHRONOMATRON;
                 }
-                else if (name.startsWith("Ultrasequencer"))
+                else if (name.startsWith("Ultrasequencer ("))
                     currentType = SolverType.ULTRASEQUENCER;
-                else if (name.startsWith("Superpairs"))
+                else if (name.startsWith("Superpairs("))
                     currentType = SolverType.SUPERPAIRS;
             }
         }
@@ -114,134 +119,11 @@ public class EnchantingTweaks extends Tweak
         switch (currentType)
         {
             case CHRONOMATRON:
-                r.drawStringWithShadow("chrono", x, y, 0xffffffff); y += r.FONT_HEIGHT;
-                r.drawStringWithShadow("ToAdd: " + chronoToAdd, x, y, 0xffffffff); y += r.FONT_HEIGHT;
-                r.drawStringWithShadow("LastSize: " + chronoLastSize, x, y, 0xffffffff); y += r.FONT_HEIGHT;
-                r.drawStringWithShadow("Replaying: " + chronoReplaying, x, y, 0xffffffff); y += r.FONT_HEIGHT;
-                r.drawStringWithShadow("ClickDelayTicks: " + chronoClickDelayTicks, x, y, 0xffffffff); y += r.FONT_HEIGHT;
-                r.drawStringWithShadow("OrderNames: ", x, y, 0xffffffff); y += r.FONT_HEIGHT;
-                for (String name : chronoOrderNames)
-                {
-                    r.drawStringWithShadow("    " + name, x, y, 0xffffffff); y += r.FONT_HEIGHT;
-                }
                 break;
         }
         
         GlStateManager.popMatrix();
         GlStateManager.enableLighting();
-    }
-    
-    public void updateContents(boolean fromPacket)
-    {
-        if (!c.autoSolve)
-            return;
-    
-        if (currentType == SolverType.NONE)
-            return;
-        
-        GuiChest chest = (GuiChest)getMc().currentScreen;
-        ContainerChest container = (ContainerChest)chest.inventorySlots;
-        IInventory inv = container.getLowerChestInventory();
-        
-        switch (currentType)
-        {
-            case CHRONOMATRON:
-                if (!chronoReplaying)
-                {
-                    String clayName = null;
-                    for (int i = 0; i < inv.getSizeInventory(); i++)
-                    {
-                        ItemStack stack = inv.getStackInSlot(i);
-                        if (stack != null && stack.getItem() == Item.getItemFromBlock(Blocks.stained_hardened_clay))
-                        {
-                            if (stack.getTagCompound() != null && stack.getTagCompound().hasKey("ench"))
-                            {
-                                if (clayName != null &&
-                                    !stack.getDisplayName().equals(clayName))
-                                {
-                                    return;
-                                }
-                                clayName = stack.getDisplayName();
-                            }
-                        }
-                    }
-                    ItemStack timerStack = inv.getStackInSlot(5 + 9 * 5 - 1);
-                    if (timerStack == null)
-                        return;
-                    boolean isClock = timerStack.getItem() == Items.clock;
-                    boolean isGlowstone = timerStack.getItem() == Item.getItemFromBlock(Blocks.glowstone);
-                    boolean filled = chronoOrderNames.size() == chronoLastSize + 1;
-                    if (isGlowstone || (isClock && !filled))
-                    {
-                        if (clayName != null && chronoToAdd) // Clay came, wait until clay go
-                        {
-                            chronoToAdd = false;
-                            chronoOrderNames.add(clayName);
-                        }
-                        else // Clay gone, start adding
-                        {
-                            chronoToAdd = true;
-                        }
-                    }
-                    else if (filled)
-                    {
-                        chronoReplaying = true;
-                        chronoToAdd = true;
-                        chronoLastSize = chronoOrderNames.size();
-                        chronoClickDelayTicks = getWorld().rand.nextInt(15) + 10;
-                    }
-                }
-                break;
-            case ULTRASEQUENCER:
-                if (fromPacket)
-                    return;
-                break;
-            case SUPERPAIRS:
-                if (fromPacket)
-                    return;
-                break;
-        }
-    }
-    
-    private void updateClicks()
-    {
-        GuiChest chest = (GuiChest)getMc().currentScreen;
-        ContainerChest container = (ContainerChest)chest.inventorySlots;
-        IInventory inv = container.getLowerChestInventory();
-        
-        switch (currentType)
-        {
-            case CHRONOMATRON:
-                if (chronoReplaying)
-                {
-                    if (chronoClickDelayTicks == 0)
-                    {
-                        chronoClickDelayTicks = getWorld().rand.nextInt(10) + 10;
-                    
-                        String nameToClick = chronoOrderNames.poll();
-                        for (int i = 0; i < inv.getSizeInventory(); i++)
-                        {
-                            ItemStack stack = inv.getStackInSlot(i);
-                            if (stack != null && stack.getItem() == Item.getItemFromBlock(Blocks.stained_glass) &&
-                                stack.getDisplayName().equals(nameToClick))
-                            {
-                                getMc().playerController.windowClick(container.windowId, i, 0, 0, getPlayer());
-                                break;
-                            }
-                        }
-                        
-                        if (chronoOrderNames.isEmpty())
-                            chronoReplaying = false;
-                    }
-                    else // Replaying but in click delay
-                        chronoClickDelayTicks--;
-                }
-                break;
-            case ULTRASEQUENCER:
-                break;
-            case SUPERPAIRS:
-                break;
-        }
     }
     
     public void toggleAutoSolve()

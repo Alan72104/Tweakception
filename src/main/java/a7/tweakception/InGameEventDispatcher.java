@@ -134,6 +134,7 @@ public class InGameEventDispatcher
         foragingTweaks.onTick(event);
         fishingTweaks.onTick(event);
         enchantingTweaks.onTick(event);
+        bazaarTweaks.onTick(event);
         overlayManager.onTick(event);
         
         endFuncAndAddNum(event.phase, 0);
@@ -224,7 +225,6 @@ public class InGameEventDispatcher
     public void onChunkLoad(ChunkEvent.Load event)
     {
         if (!isInSkyblock()) return;
-        
     }
     
     @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
@@ -292,8 +292,16 @@ public class InGameEventDispatcher
         enchantingTweaks.onGuiDrawPost(event);
     }
     
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public void onItemTooltipHighest(ItemTooltipEvent event)
+    {
+        if (!isInSkyblock()) return;
+        
+        bazaarTweaks.onItemTooltip(event);
+    }
+    
     @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void onItemTooltip(ItemTooltipEvent event)
+    public void onItemTooltipLowest(ItemTooltipEvent event)
     {
         if (!isInSkyblock()) return;
         

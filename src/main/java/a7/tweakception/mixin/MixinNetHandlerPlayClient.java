@@ -45,8 +45,6 @@ public class MixinNetHandlerPlayClient
         if (!isInSkyblock()) return;
         
         Tweakception.dungeonTweaks.onPacketCollectItem(packet);
-        if (GlobalTracker.t)
-            McUtils.sendChat("collected " + Thread.currentThread().getName());
     }
     
     @Inject(method = "handleEntityStatus", at = @At(value = "RETURN"))
@@ -80,6 +78,5 @@ public class MixinNetHandlerPlayClient
     @Inject(method = "handleSetSlot", at = @At(value = "RETURN"))
     public void handleSetSlot(S2FPacketSetSlot p_handleSetSlot_1_, CallbackInfo ci)
     {
-        Tweakception.enchantingTweaks.updateContents(true);
     }
 }

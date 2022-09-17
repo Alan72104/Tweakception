@@ -51,6 +51,12 @@ public class McUtils
         return getWorld() != null && getPlayer() != null;
     }
     
+    public static <T> T sendDebug(T v)
+    {
+        getPlayer().addChatMessage(new ChatComponentText(String.valueOf(v)));
+        return v;
+    }
+    
     public static void sendChat(String s)
     {
         getPlayer().addChatMessage(new ChatComponentText(s));

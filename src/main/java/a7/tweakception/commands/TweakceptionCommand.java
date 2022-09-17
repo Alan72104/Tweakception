@@ -63,6 +63,8 @@ public class TweakceptionCommand extends CommandBase
                 args -> Tweakception.dungeonTweaks.toggleDisplaySoulName()),
             new Command("frag",
                 args -> Tweakception.dungeonTweaks.listFragCounts(),
+                new Command("autoreparty",
+                    args -> Tweakception.dungeonTweaks.toggleFragAutoReparty()),
                 new Command("endsession",
                     args -> Tweakception.dungeonTweaks.fragEndSession()),
                 new Command("next",
@@ -303,7 +305,9 @@ public class TweakceptionCommand extends CommandBase
                 new Command("nbt",
                     args -> Tweakception.globalTracker.rightCtrlCopySet("nbt")),
                 new Command("tooltip",
-                    args -> Tweakception.globalTracker.rightCtrlCopySet("tooltip"))
+                    args -> Tweakception.globalTracker.rightCtrlCopySet("tooltip")),
+                new Command("tooltipfinal",
+                    args -> Tweakception.globalTracker.rightCtrlCopySet("tooltipfinal"))
             ).setVisibility(false)
         ));
         addSub(new Command("slayer",
@@ -383,6 +387,8 @@ public class TweakceptionCommand extends CommandBase
         ));
         addSub(new Command("next",
             args -> Tweakception.dungeonTweaks.fragNext()));
+        addSub(new Command("dailies",
+            args -> Tweakception.dungeonTweaks.getDailyRuns(args.length > 0 ? args[0] : "")));
         addSub(new Command("fish",
             args -> Tweakception.fishingTweaks.toggleAutoFish(),
             new Command("setcatchestomove",
@@ -421,6 +427,11 @@ public class TweakceptionCommand extends CommandBase
             new Command("debug",
                 args -> Tweakception.foragingTweaks.debugTreeIndicator(
                     args.length > 0 ? toInt(args[0]) : -1))
+        ));
+        addSub(new Command("bazaar",
+            null,
+            new Command("printorders",
+                args -> Tweakception.bazaarTweaks.printOrders())
         ));
         addSub(new Command("looktrace",
             args ->

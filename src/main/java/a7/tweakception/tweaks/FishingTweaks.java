@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
-import static a7.tweakception.tweaks.GlobalTracker.getTicks;
+import static a7.tweakception.tweaks.GlobalTweaks.getTicks;
 import static a7.tweakception.utils.McUtils.*;
 import static a7.tweakception.utils.Utils.f;
 

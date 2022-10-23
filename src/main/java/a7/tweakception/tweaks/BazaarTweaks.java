@@ -11,13 +11,14 @@ import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 
-import java.text.NumberFormat;
-import java.text.ParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static a7.tweakception.tweaks.GlobalTracker.getTicks;
+import static a7.tweakception.tweaks.GlobalTweaks.getTicks;
 import static a7.tweakception.utils.McUtils.*;
 
 public class BazaarTweaks extends Tweak
@@ -143,7 +144,7 @@ public class BazaarTweaks extends Tweak
         for (int i = 0; i < event.toolTip.size(); i++)
         {
             String s = event.toolTip.get(i);
-            if (GlobalTracker.t)
+            if (GlobalTweaks.t)
                 sendChat(s);
             if (s.startsWith("§5§o§8"))
             {
@@ -159,7 +160,7 @@ public class BazaarTweaks extends Tweak
                 {
                     double price = Utils.parseDouble(orderListMatcher.group(1));
 
-                    if (GlobalTracker.t)
+                    if (GlobalTweaks.t)
                         sendChat(""+price);
                     if (price == 0.0)
                         continue;
@@ -305,7 +306,7 @@ public class BazaarTweaks extends Tweak
             }
         }
         
-        if (GlobalTracker.t)
+        if (GlobalTweaks.t)
         {
             sendChatf("%d-%s %f$ %d/%d (%s)", type, name, price, curAmount, totalAmount, amountString);
         }

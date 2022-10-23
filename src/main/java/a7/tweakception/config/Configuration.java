@@ -1,5 +1,6 @@
 package a7.tweakception.config;
 
+import a7.tweakception.utils.Utils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -24,13 +25,17 @@ public class Configuration
         path = folderPath;
         fileName = "config.json";
         dirFile = new File(path);
+        file = createFile(fileName);
+        gson = new GsonBuilder().setPrettyPrinting().create();
+    }
+
+    public void initConfig() throws Exception
+    {
         if (!dirFile.exists())
         {
             boolean ignored = dirFile.mkdirs();
         }
-        file = createFile(fileName);
-        gson = new GsonBuilder().setPrettyPrinting().create();
-        
+
         if (!file.exists())
         {
             boolean ignored = file.createNewFile();
@@ -39,6 +44,7 @@ public class Configuration
         }
         else
         {
+            Utils.fileCopy(file, createFile(fileName + ".old"));
             loadConfig();
         }
     }

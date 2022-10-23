@@ -1,5 +1,6 @@
 package a7.tweakception.utils;
 
+import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.PositionedSoundRecord;
@@ -10,6 +11,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.init.Items;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -18,7 +21,6 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.Constants;
-
 
 import java.io.File;
 import java.util.Collection;
@@ -29,7 +31,7 @@ import java.util.regex.Pattern;
 
 public class McUtils
 {
-    private static final Matcher COLOR_MATCHER = Pattern.compile("§[\\da-f]").matcher("");
+    private static final Matcher COLOR_MATCHER = Pattern.compile("§[0-9a-fk-or]").matcher("");
     
     public static Minecraft getMc()
     {
@@ -65,6 +67,19 @@ public class McUtils
     public static void sendChatf(String s, Object... args)
     {
         getPlayer().addChatMessage(new ChatComponentText(String.format(s, args)));
+    }
+
+    public static boolean checkStackInInv(IInventory inv, int slot, Block block, String name)
+    {
+        return checkStackInInv(inv, slot, Item.getItemFromBlock(block), name);
+    }
+
+    public static boolean checkStackInInv(IInventory inv, int slot, Item item, String name)
+    {
+        ItemStack stack = inv.getStackInSlot(slot);
+        return stack != null &&
+            stack.getItem() == item &&
+            (name == null || stack.getDisplayName().equals(name));
     }
     
     public static String[] getDisplayLore(ItemStack stack)

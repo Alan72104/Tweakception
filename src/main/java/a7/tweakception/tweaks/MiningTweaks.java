@@ -20,8 +20,8 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-import static a7.tweakception.tweaks.GlobalTracker.getCurrentIsland;
-import static a7.tweakception.tweaks.GlobalTracker.getTicks;
+import static a7.tweakception.tweaks.GlobalTweaks.getCurrentIsland;
+import static a7.tweakception.tweaks.GlobalTweaks.getTicks;
 import static a7.tweakception.utils.McUtils.getWorld;
 import static a7.tweakception.utils.McUtils.sendChat;
 
@@ -30,20 +30,24 @@ public class MiningTweaks extends Tweak
     public static class MiningTweaksConfig
     {
         public boolean highlightChests = false;
+        public boolean simulateBlockHardness = false;
     }
+    private static final Color CHEST_COLOR_OPENED = new Color(0x2a00ff00, true);
+    private static final Color CHEST_COLOR_CLOSED = new Color(255, 0, 0, 255 / 6);
+    private static final Color CHEST_COLOR_WARNING = new Color(255, 255, 0, 255 / 6);
     private final MiningTweaksConfig c;
     private final Set<TreasureChest> treasureChests = new ConcurrentSkipListSet<>(Comparator.comparing(a -> a.pos));
-    
+
     public MiningTweaks(Configuration configuration)
     {
         super(configuration);
         c = configuration.config.miningTweaks;
     }
-    
+
     public void onTick(TickEvent.ClientTickEvent event)
     {
         if (event.phase == TickEvent.Phase.END) return;
-        
+
         if (getCurrentIsland() == SkyblockIsland.CRYSTAL_HOLLOWS)
         {
             if (!treasureChests.isEmpty())
@@ -66,11 +70,7 @@ public class MiningTweaks extends Tweak
             }
         }
     }
-    
-    private static final Color CHEST_COLOR_OPENED = new Color(0, 255, 0, 255 / 6);
-    private static final Color CHEST_COLOR_CLOSED = new Color(255, 0, 0, 255 / 6);
-    private static final Color CHEST_COLOR_WARNING = new Color(255, 255, 0, 255 / 6);
-    
+
     public void onRenderLast(RenderWorldLastEvent event)
     {
         if (getCurrentIsland() == SkyblockIsland.CRYSTAL_HOLLOWS)
@@ -150,6 +150,11 @@ public class MiningTweaks extends Tweak
     public void onWorldUnload(WorldEvent.Unload event)
     {
         treasureChests.clear();
+    }
+
+    public boolean isSimulateBlockHardnessOn()
+    {
+        return c.simulateBlockHardness;
     }
     
     public void toggleHighlightChests()

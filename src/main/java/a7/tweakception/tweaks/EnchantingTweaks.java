@@ -5,19 +5,19 @@ import a7.tweakception.utils.Pair;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
 import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.IInventory;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
-import static a7.tweakception.utils.McUtils.*;
+import static a7.tweakception.utils.McUtils.getMc;
+import static a7.tweakception.utils.McUtils.sendChat;
 
 public class EnchantingTweaks extends Tweak
 {
@@ -112,7 +112,6 @@ public class EnchantingTweaks extends Tweak
         FontRenderer r = getMc().fontRendererObj;
         int x = chest.guiLeft + 176 + 20;
         int y = chest.guiTop;
-        GlStateManager.disableLighting();
         GlStateManager.pushMatrix();
         GlStateManager.translate(0, 0, 500);
         

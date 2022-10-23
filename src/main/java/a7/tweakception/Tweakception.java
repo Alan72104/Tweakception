@@ -9,12 +9,10 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
-import net.minecraftforge.fml.relauncher.Side;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Collection;
@@ -36,7 +34,7 @@ public class Tweakception
     public static Scheduler scheduler;
     public static InGameEventDispatcher inGameEventDispatcher;
     public static APIManager apiManager;
-    public static GlobalTracker globalTracker;
+    public static GlobalTweaks globalTweaks;
     public static OverlayManager overlayManager;
     public static TuningTweaks tuningTweaks;
     public static FairyTracker fairyTracker;
@@ -48,6 +46,7 @@ public class Tweakception
     public static FishingTweaks fishingTweaks;
     public static EnchantingTweaks enchantingTweaks;
     public static BazaarTweaks bazaarTweaks;
+    public static AutoRunes autoRunes;
     
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) throws Exception
@@ -55,13 +54,14 @@ public class Tweakception
         instance = this;
         logger = event.getModLog();
         configuration = new Configuration(event.getModConfigurationDirectory().getAbsolutePath() + "/" + MOD_ID + "/");
+        configuration.initConfig();
         
         inGameEventDispatcher = new InGameEventDispatcher();
         threadPool = Executors.newFixedThreadPool(3);
         scheduler = new Scheduler();
         apiManager = new APIManager(configuration);
         overlayManager = new OverlayManager(configuration);
-        globalTracker = new GlobalTracker(configuration);
+        globalTweaks = new GlobalTweaks(configuration);
         tuningTweaks = new TuningTweaks(configuration);
         fairyTracker = new FairyTracker(configuration);
         dungeonTweaks = new DungeonTweaks(configuration);
@@ -72,7 +72,8 @@ public class Tweakception
         fishingTweaks = new FishingTweaks(configuration);
         enchantingTweaks = new EnchantingTweaks(configuration);
         bazaarTweaks = new BazaarTweaks(configuration);
-        
+        autoRunes = new AutoRunes(configuration);
+
         ClientCommandHandler.instance.registerCommand(new TweakceptionCommand());
         MinecraftForge.EVENT_BUS.register(inGameEventDispatcher);
         MinecraftForge.EVENT_BUS.register(scheduler);
@@ -84,6 +85,7 @@ public class Tweakception
                 configuration.writeConfig();
                 threadPool.shutdownNow();
                 LagSpikeWatcher.stopWatcher();
+                globalTweaks.getPacketLogger().stop();
             }
             catch (Exception ignored)
             {

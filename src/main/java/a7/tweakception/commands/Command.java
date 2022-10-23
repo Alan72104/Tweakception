@@ -30,7 +30,7 @@ public class Command implements Comparable<Command>
     
     public boolean isVisible()
     {
-        return visible || Tweakception.globalTracker.isInDevMode();
+        return visible || Tweakception.globalTweaks.isInDevMode();
     }
     
     public void processCommands(String[] args)

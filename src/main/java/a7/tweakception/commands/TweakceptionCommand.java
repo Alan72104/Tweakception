@@ -2,7 +2,7 @@ package a7.tweakception.commands;
 
 import a7.tweakception.LagSpikeWatcher;
 import a7.tweakception.Tweakception;
-import a7.tweakception.tweaks.GlobalTracker;
+import a7.tweakception.tweaks.GlobalTweaks;
 import a7.tweakception.utils.DumpUtils;
 import a7.tweakception.utils.McUtils;
 import net.minecraft.block.Block;
@@ -43,6 +43,8 @@ public class TweakceptionCommand extends CommandBase
             ),
             new Command("autosalvage",
                 args -> Tweakception.dungeonTweaks.toggleAutoSalvage()),
+            new Command("autoswapsceptreaote",
+                args -> Tweakception.dungeonTweaks.toggleAutoSwapSpiritSceptreAote()),
             new Command("blockopheliaclicks",
                 args -> Tweakception.dungeonTweaks.toggleBlockOpheliaShopClicks()),
             new Command("blockrightclick",
@@ -173,16 +175,16 @@ public class TweakceptionCommand extends CommandBase
         addSub(new Command("gt",
             null,
             new Command("areaedit",
-                args -> Tweakception.globalTracker.toggleAreaEdit(),
+                args -> Tweakception.globalTweaks.toggleAreaEdit(),
                 new Command("print",
-                    args -> Tweakception.globalTracker.printArea()),
+                    args -> Tweakception.globalTweaks.printArea()),
                 new Command("reset",
-                    args -> Tweakception.globalTracker.resetArea()),
+                    args -> Tweakception.globalTweaks.resetArea()),
                 new Command("setpoint",
                     args ->
                     {
                         if (args.length >= 4)
-                            Tweakception.globalTracker.setAreaPoint(args[0].equals("2") ? 1 : 0,
+                            Tweakception.globalTweaks.setAreaPoint(args[0].equals("2") ? 1 : 0,
                                 toInt(args[1]), toInt(args[2]), toInt(args[3]));
                         else
                             sendChat("Give me 4 args");
@@ -192,9 +194,9 @@ public class TweakceptionCommand extends CommandBase
                     {
                         if (args.length >= 6)
                         {
-                            Tweakception.globalTracker.setAreaPoint(0,
+                            Tweakception.globalTweaks.setAreaPoint(0,
                                 toInt(args[0]), toInt(args[1]), toInt(args[2]));
-                            Tweakception.globalTracker.setAreaPoint(1,
+                            Tweakception.globalTweaks.setAreaPoint(1,
                                 toInt(args[3]), toInt(args[4]), toInt(args[5]));
                         }
                         else
@@ -202,74 +204,121 @@ public class TweakceptionCommand extends CommandBase
                     })
             ),
             new Command("blockquickcraft",
-                args -> Tweakception.globalTracker.toggleBlockQuickCraft(),
+                args -> Tweakception.globalTweaks.toggleBlockQuickCraft(),
                 new Command("remove",
-                    args -> Tweakception.globalTracker.removeBlockQuickCraftWhitelist(
+                    args -> Tweakception.globalTweaks.removeBlockQuickCraftWhitelist(
                         args.length > 0 ? toInt(args[0]) : 0))
             ),
             new Command("championoverlay",
-                args -> Tweakception.globalTracker.toggleChampionOverlay(),
+                args -> Tweakception.globalTweaks.toggleChampionOverlay(),
                 new Command("incrementresetdelay",
-                    args -> Tweakception.globalTracker.setChampionOverlayIncrementResetDuration(
+                    args -> Tweakception.globalTweaks.setChampionOverlayIncrementResetDuration(
                         args.length > 0 ? toInt(args[0]) : 0))
             ),
             new Command("copylocation",
-                args -> Tweakception.globalTracker.copyLocation()),
+                args -> Tweakception.globalTweaks.copyLocation()),
             new Command("disabletooltips",
-                args -> Tweakception.globalTracker.toggleDisableTooltips()),
+                args -> Tweakception.globalTweaks.toggleDisableTooltips()),
             new Command("drawselectedentityoutline",
-                args -> Tweakception.globalTracker.toggleDrawSelectedEntityOutline(),
+                args -> Tweakception.globalTweaks.toggleDrawSelectedEntityOutline(),
                 new Command("width",
-                    args -> Tweakception.globalTracker.setSelectedEntityOutlineWidth(
+                    args -> Tweakception.globalTweaks.setSelectedEntityOutlineWidth(
                         args.length >= 1 ? toFloat(args[0]) : 0.0f)),
                 new Command("color",
                     args ->
                     {
                         if (args.length >= 4)
-                            Tweakception.globalTracker.setSelectedEntityOutlineColor(
+                            Tweakception.globalTweaks.setSelectedEntityOutlineColor(
                                 toInt(args[0]), toInt(args[1]), toInt(args[2]), toInt(args[3]));
                         else
-                            Tweakception.globalTracker.setSelectedEntityOutlineColor(-1, 0, 0, 0);
+                            Tweakception.globalTweaks.setSelectedEntityOutlineColor(-1, 0, 0, 0);
                     })
             ),
             new Command("entertoclosesign",
-                args -> Tweakception.globalTracker.toggleEnterToCloseNumberTypingSign()),
-            new Command("forcesetisland",
-                args -> Tweakception.globalTracker.forceSetIsland(args.length > 0 ? String.join(" ", args) : "")),
+                args -> Tweakception.globalTweaks.toggleEnterToCloseNumberTypingSign()),
+            new Command("setisland",
+                args -> Tweakception.globalTweaks.forceSetIsland(args.length > 0 ? String.join(" ", args) : "")),
             new Command("hideplayers",
-                args -> Tweakception.globalTracker.toggleHidePlayers()),
+                args -> Tweakception.globalTweaks.toggleHidePlayers()),
             new Command("highlightshinypigs",
-                args -> Tweakception.globalTracker.toggleHighlightShinyPigs(),
+                args -> Tweakception.globalTweaks.toggleHighlightShinyPigs(),
                 new Command("setname",
-                    args -> Tweakception.globalTracker.setHighlightShinyPigsName(args.length > 0 ? String.join(" ", args) : ""))
+                    args -> Tweakception.globalTweaks.setHighlightShinyPigsName(args.length > 0 ? String.join(" ", args) : ""))
             ),
+            new Command("highlightplayer",
+                args -> Tweakception.globalTweaks.setPlayerToHighlight(args.length > 0 ? args[0] : "")),
+            new Command("highlightskulls",
+                args -> Tweakception.globalTweaks.toggleHighlightSkulls()),
             new Command("island",
-                args -> Tweakception.globalTracker.printIsland()),
+                args -> Tweakception.globalTweaks.printIsland()),
+            new Command("minionautoclaim",
+                args -> Tweakception.globalTweaks.toggleMinionAutoClaim(),
+                    new Command("whitelist",
+                        args ->
+                        {
+                            if (args.length > 0)
+                                Tweakception.globalTweaks.addMinionAutoClaimWhitelist(args[0]);
+                            else
+                                sendChat("Need a id");
+                        },
+                        new Command("remove",
+                            args ->
+                            {
+                                if (args.length > 0)
+                                    Tweakception.globalTweaks.removeMinionAutoClaimWhitelist(toInt(args[0]));
+                                else
+                                    sendChat("Need a id");
+                            }
+                        )
+                    ),
+                    new Command("setdelay",
+                        args -> Tweakception.globalTweaks.setMinionAutoClaimClickDelayMin(
+                            args.length > 0 ? toInt(args[0]) : 0))
+            ),
             new Command("renderinvisiblearmorstands",
-                args -> Tweakception.globalTracker.toggleRenderInvisibleArmorStands()),
+                args -> Tweakception.globalTweaks.toggleRenderInvisibleArmorStands()),
             new Command("renderinvisibleenities",
-                args -> Tweakception.globalTracker.toggleRenderInvisibleEntities()),
+                args -> Tweakception.globalTweaks.toggleRenderInvisibleEntities()),
             new Command("renderenchantedbookstype",
-                args -> Tweakception.globalTracker.toggleRenderEnchantedBooksType()),
+                args -> Tweakception.globalTweaks.toggleRenderEnchantedBooksType()),
             new Command("rendersackstype",
-                args -> Tweakception.globalTracker.toggleRenderSacksType()),
+                args -> Tweakception.globalTweaks.toggleRenderSacksType()),
             new Command("renderpotiontier",
-                args -> Tweakception.globalTracker.toggleRenderPotionTier()),
+                args -> Tweakception.globalTweaks.toggleRenderPotionTier()),
             new Command("setinvisibleentityalphapercentage",
-                args -> Tweakception.globalTracker.setInvisibleEntityAlphaPercentage(
+                args -> Tweakception.globalTweaks.setInvisibleEntityAlphaPercentage(
                     args.length > 0 ? toInt(args[0]) : 0)),
             new Command("skipworldrendering",
-                args -> Tweakception.globalTracker.toggleSkipWorldRendering()),
+                args -> Tweakception.globalTweaks.toggleSkipWorldRendering()),
+            new Command("tooltip",
+                null,
+                new Command("id",
+                    args -> Tweakception.globalTweaks.toggleTooltipDisplayId())
+            ),
+            new Command("trevor",
+                null,
+                new Command("autoaccept",
+                    args -> Tweakception.globalTweaks.toggleTrevorQuestAutoAccept()),
+                new Command("autostart",
+                    args -> Tweakception.globalTweaks.toggleTrevorQuestAutoStart()),
+                new Command("highlightanimal",
+                    args -> Tweakception.globalTweaks.toggleTrevorAnimalHighlight())
+            ),
             new Command("usefallbackdetection",
-                args -> Tweakception.globalTracker.toggleFallbackDetection()),
+                args -> Tweakception.globalTweaks.toggleFallbackDetection()),
+            new Command("onlinestatusoverlay",
+                args -> Tweakception.globalTweaks.toggleOnlineStatusOverlay(),
+                new Command("showalreadyon",
+                    args -> Tweakception.globalTweaks.toggleOnlineStatusOverlayShowAlreadyOn())
+            ),
             new Command("ping",
-                args -> Tweakception.globalTracker.pingServer(),
+                args -> Tweakception.globalTweaks.pingServer(),
                 new Command("overlay",
-                    args -> Tweakception.globalTracker.pingOverlay())),
+                    args -> Tweakception.globalTweaks.pingOverlay())),
             new Command("playercount",
                 null,
                 new Command("park",
-                    args -> Tweakception.globalTracker.getPlayerCountInArea(0)),
+                    args -> Tweakception.globalTweaks.getPlayerCountInArea(0)),
                 new Command("crimson",
                     null,
                     new Command("stronghold",
@@ -277,37 +326,39 @@ public class TweakceptionCommand extends CommandBase
                         new Command("back",
                             null,
                             new Command("topright",
-                                args -> Tweakception.globalTracker.getPlayerCountInArea(1))
+                                args -> Tweakception.globalTweaks.getPlayerCountInArea(1))
                         ),
                         new Command("front",
                             null,
                             new Command("topright",
-                                args -> Tweakception.globalTracker.getPlayerCountInArea(2))
+                                args -> Tweakception.globalTweaks.getPlayerCountInArea(2))
                         )
                     )
                 )
             ),
             new Command("playersinareas",
-                args -> Tweakception.globalTracker.togglePlayersInAreasDisplay()),
+                args -> Tweakception.globalTweaks.togglePlayersInAreasDisplay()),
             new Command("logpackets",
-                args -> Tweakception.globalTracker.toggleLogPacket(),
+                args -> Tweakception.globalTweaks.toggleLogPacket(),
                 new Command("setallowed",
                     args ->
                     {
                         if (args.length > 0)
-                            Tweakception.globalTracker.setPacketLogAllowedClass(args[0]);
+                            Tweakception.globalTweaks.setPacketLogAllowedClass(args[0]);
                         else
                             sendChat("Give me 1 arg");
-                    })
+                    }),
+                new Command("logall",
+                    args -> Tweakception.globalTweaks.toggleLogPacketLogAll())
             ).setVisibility(false),
             new Command("rightctrlcopy",
                 null,
                 new Command("nbt",
-                    args -> Tweakception.globalTracker.rightCtrlCopySet("nbt")),
+                    args -> Tweakception.globalTweaks.rightCtrlCopySet("nbt")),
                 new Command("tooltip",
-                    args -> Tweakception.globalTracker.rightCtrlCopySet("tooltip")),
+                    args -> Tweakception.globalTweaks.rightCtrlCopySet("tooltip")),
                 new Command("tooltipfinal",
-                    args -> Tweakception.globalTracker.rightCtrlCopySet("tooltipfinal"))
+                    args -> Tweakception.globalTweaks.rightCtrlCopySet("tooltipfinal"))
             ).setVisibility(false)
         ));
         addSub(new Command("slayer",
@@ -467,7 +518,7 @@ public class TweakceptionCommand extends CommandBase
                     args.length > 0 ? toFloat(args[0]) : 0.0f))
         ).setVisibility(false));
         addSub(new Command("dev",
-            args -> Tweakception.globalTracker.toggleDevMode()));
+            args -> Tweakception.globalTweaks.toggleDevMode()));
         addSub(new Command("lagspikewatcher",
             null,
             new Command("start",
@@ -547,14 +598,14 @@ public class TweakceptionCommand extends CommandBase
         addSub(new Command("t",
             args ->
             {
-                GlobalTracker.t = !GlobalTracker.t;
-                sendChat("t = " + GlobalTracker.t);
+                GlobalTweaks.t = !GlobalTweaks.t;
+                sendChat("t = " + GlobalTweaks.t);
             }).setVisibility(false));
         addSub(new Command("action",
             args ->
             {
                 if (args.length == 1)
-                    Tweakception.globalTracker.doChatAction(args[0]);
+                    Tweakception.globalTweaks.doChatAction(args[0]);
                 else
                     sendChat("Don't use this command!");
             }));

@@ -8,36 +8,33 @@ import a7.tweakception.utils.McUtils;
 import a7.tweakception.utils.Pair;
 import a7.tweakception.utils.RenderUtils;
 import a7.tweakception.utils.Utils;
-import net.minecraft.client.entity.AbstractClientPlayer;
-import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityArmorStand;
-import net.minecraft.entity.monster.*;
+import net.minecraft.entity.monster.EntityBlaze;
+import net.minecraft.entity.monster.EntityEnderman;
+import net.minecraft.entity.monster.EntitySpider;
+import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.passive.EntityWolf;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.awt.*;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static a7.tweakception.Tweakception.BlockSearchTask;
-import static a7.tweakception.tweaks.GlobalTracker.getCurrentIsland;
-import static a7.tweakception.tweaks.GlobalTracker.getTicks;
+import static a7.tweakception.tweaks.GlobalTweaks.getCurrentIsland;
+import static a7.tweakception.tweaks.GlobalTweaks.getTicks;
 import static a7.tweakception.utils.McUtils.*;
 import static a7.tweakception.utils.Utils.f;
 import static a7.tweakception.utils.Utils.removeWhile;
@@ -233,7 +230,7 @@ public class SlayerTweaks extends Tweak
             if (currentHealth > 100 && maxHealth > 100 && getTicks() > 600 &&
                 currentHealth <= maxHealth * c.autoHealWandHealthThreshold / 100 &&
                 getTicks() - lastHealWandTicks >= 20 * 7 + 5 + healWandRandomDelay &&
-                System.currentTimeMillis() - Tweakception.globalTracker.getWorldJoinMillis() >= 2000 &&
+                System.currentTimeMillis() - Tweakception.globalTweaks.getWorldJoinMillis() >= 2000 &&
                 !switchingSlot)
             {
                 lastHealWandTicks = getTicks();

@@ -19,7 +19,7 @@ public class MixinEntityRenderer implements IResourceManagerReloadListener
     @Inject(method = "renderWorld", at = @At("HEAD"), cancellable = true)
     private void onRenderWorld(CallbackInfo ci)
     {
-        if (Tweakception.globalTracker.isSkipWorldRenderingOn())
+        if (Tweakception.globalTweaks.isSkipWorldRenderingOn())
         {
             ci.cancel();
         }

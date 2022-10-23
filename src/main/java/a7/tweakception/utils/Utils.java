@@ -3,19 +3,23 @@ package a7.tweakception.utils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
-import java.awt.Color;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.nio.file.Files;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.List;
 
 import static a7.tweakception.utils.McUtils.getMc;
 
@@ -273,13 +277,30 @@ public class Utils
         
         return sb.toString();
     }
-    
-    public static <T> T setAccessibleAndGetField(Object o, String name) throws NoSuchFieldException, IllegalAccessException
+
+    public static <T> T setAccessibleAndGetField(Object o, String... names) throws Exception
     {
-        Field field = o.getClass().getDeclaredField(name);
-        field.setAccessible(true);
-        //noinspection unchecked
-        return (T)field.get(o);
+        return setAccessibleAndGetField(o.getClass(), names);
+    }
+    
+    public static <T> T setAccessibleAndGetField(Class<?> clazz, Object o, String... names) throws Exception
+    {
+        Exception lastException = null;
+        for (String name : names)
+        {
+            try
+            {
+                Field field = clazz.getDeclaredField(name);
+                field.setAccessible(true);
+                //noinspection unchecked
+                return (T)field.get(o);
+            }
+            catch (Exception e)
+            {
+                lastException = e;
+            }
+        }
+        throw lastException;
     }
     
     public static void setClipboard(String s)
@@ -300,5 +321,17 @@ public class Utils
             return null;
         }
         return s;
+    }
+
+    public static void fileCopy(File source, File dest) throws IOException
+    {
+        try (InputStream is = Files.newInputStream(source.toPath());
+             OutputStream os = Files.newOutputStream(dest.toPath()))
+        {
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = is.read(buffer)) > 0)
+                os.write(buffer, 0, length);
+        }
     }
 }

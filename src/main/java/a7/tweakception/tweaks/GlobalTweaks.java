@@ -5,55 +5,59 @@ import a7.tweakception.Tweakception;
 import a7.tweakception.config.Configuration;
 import a7.tweakception.events.IslandChangedEvent;
 import a7.tweakception.events.PacketReceiveEvent;
+import a7.tweakception.events.PacketSendEvent;
 import a7.tweakception.overlay.Anchor;
 import a7.tweakception.overlay.TextOverlay;
 import a7.tweakception.utils.*;
-import com.google.gson.Gson;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.entity.EntityOtherPlayerMP;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.network.NetworkPlayerInfo;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.entity.passive.EntityPig;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.event.ClickEvent;
+import net.minecraft.init.Blocks;
+import net.minecraft.inventory.ContainerChest;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.Packet;
 import net.minecraft.network.play.client.C16PacketClientStatus;
 import net.minecraft.scoreboard.Score;
 import net.minecraft.scoreboard.ScoreObjective;
 import net.minecraft.scoreboard.ScorePlayerTeam;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.util.*;
-import net.minecraftforge.client.event.DrawBlockHighlightEvent;
-import net.minecraftforge.client.event.GuiScreenEvent;
-import net.minecraftforge.client.event.RenderLivingEvent;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.client.event.*;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL31;
 
 import java.awt.*;
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static a7.tweakception.utils.McUtils.*;
 import static a7.tweakception.utils.Utils.f;
 
-public class GlobalTracker extends Tweak
+public class GlobalTweaks extends Tweak
 {
-    public static class GlobalTrackerConfig
+    public static class GlobalTweaksConfig
     {
         public boolean devMode = false;
         public String rightCtrlCopyType = "nbt";
@@ -78,8 +82,18 @@ public class GlobalTracker extends Tweak
         public boolean renderEnchantedBooksType = false;
         public boolean renderSacksType = false;
         public boolean renderPotionTier = false;
+        public boolean tooltipDisplaySkyblockItemId = false;
+        public boolean minionAutoClaim = false;
+        public TreeSet<String> minionAutoClaimWhitelist = new TreeSet<>();
+        public int minionAutoclaimDelayTicksMin = 3;
+        public boolean enableOnlineStatusOverlay = false;
+        public String lastOnlineStatus = "online";
+        public boolean showOnlineStatusAlreadyOn = false;
+        public boolean trevorQuestAutoAccept = false;
+        public boolean trevorQuestAutoStart = false;
+        public boolean trevorHighlightAnimal = false;
     }
-    private final GlobalTrackerConfig c;
+    private final GlobalTweaksConfig c;
 //    private static final HashMap<String, SkyblockIsland> SUBPLACE_TO_ISLAND_MAP = new HashMap<>();
     private static final List<SkyblockIsland> ISLANDS_THAT_HAS_SUBAREAS = new ArrayList<>();
     private static int ticks = 0;
@@ -93,6 +107,7 @@ public class GlobalTracker extends Tweak
     private static boolean useFallbackDetection = false;
     private static final Map<String, Runnable> chatActionMap = new HashMap<>();
     private static final HashSet<String> npcSkins = new HashSet<>();
+    private static final PacketLogger packetLogger = new PacketLogger();
     public static boolean t = false;
     private int pendingCopyStartTicks = -1;
     private boolean editingAreas = false;
@@ -102,15 +117,25 @@ public class GlobalTracker extends Tweak
     private long pingNanos = 0;
     private int ping = 0;
     private boolean pingingFromCommand = false;
-    private boolean logPacket = false;
-    private BufferedWriter packetLogWriter = null;
-    private final Object packetLogLock = new Object();
-    private final Gson gson = new Gson();
-    private final Set<String> allowedPacketClasses = new HashSet<>();
     private long lastWorldJoin = 0;
     private List<String> lastTooltip = null;
     private int tooltipUpdateTicks = 0;
-    
+    private int minionAutoClaimLastClickTicks = 0;
+    private int minionAutoClaimClickDelay = 0;
+    private final Set<String> playersToHighlight = new HashSet<>();
+    private final Matcher trevorAnimalNametagMatcher = Pattern.compile(
+        "\\[Lv[0-9]+] (?<rarity>[a-zA-Z]+) (?<animal>[a-zA-Z]+) .*❤").matcher("");
+    private Entity trevorAnimalNametag = null;
+    private boolean trevorQuestOngoing = false;
+    private int trevorQuestStartTicks = 0;
+    private boolean trevorQuestCooldownNoticed = false;
+    private boolean trevorQuestPendingStart = false;
+    private int trevorQuestPendingStartStartTicks = 0;
+    private boolean highlightSkulls = false;
+    private List<BlockPos> skulls = new ArrayList<>(25);
+    private List<BlockPos> skullsTemp = new ArrayList<>(25);
+    private Tweakception.BlockSearchTask skullsSearchThread;
+
     static
     {
         for (SkyblockIsland island : SkyblockIsland.values())
@@ -120,41 +145,27 @@ public class GlobalTracker extends Tweak
         }
     }
     
-    public GlobalTracker(Configuration configuration)
+    public GlobalTweaks(Configuration configuration)
     {
         super(configuration);
-        c = configuration.config.globalTracker;
+        c = configuration.config.globalTweaks;
         Tweakception.overlayManager.addOverlay(new PlayersInAreasDisplayOverlay());
         Tweakception.overlayManager.addOverlay(new PingOverlay());
         Tweakception.overlayManager.addOverlay(new ChampionOverlay());
+        Tweakception.overlayManager.addOverlay(new OnlineStatusOverlay());
+        Tweakception.overlayManager.addOverlay(new TrevorOverlay());
         npcSkins.add("minecraft:skins/57a517865b820a4451cd3cc6765f370fd0522b6489c9c94fb345fdee2689451a"); // Shaman
         npcSkins.add("minecraft:skins/1642a06cd75ef307c1913ba7a224fb2082d8a2c5254fd1bf006125a087a9a868"); // Taurus
     }
-    
-    public void onPacket(PacketReceiveEvent event)
+
+    public void onPacketReceive(PacketReceiveEvent event)
     {
-        if (logPacket)
-            synchronized (packetLogLock)
-            {
-                Packet<?> packet = event.getPacket();
-                try
-                {
-                    String s = packet.getClass().getSimpleName();
-                    if (allowedPacketClasses.contains(s))
-                    {
-                        packetLogWriter.write(s);
-                        gson.toJson(packet, packetLogWriter);
-                        packetLogWriter.newLine();
-                        packetLogWriter.flush();
-                    }
-                }
-                catch (Exception | StackOverflowError e)
-                {
-                    sendChat("GT: exception on logging packet!");
-                    e.printStackTrace();
-                    toggleLogPacket();
-                }
-            }
+        packetLogger.logPacket("Receive", event.getPacket());
+    }
+
+    public void onPacketSend(PacketSendEvent event)
+    {
+        packetLogger.logPacket("Send", event.getPacket());
     }
     
     public void onTick(TickEvent.ClientTickEvent event)
@@ -186,32 +197,154 @@ public class GlobalTracker extends Tweak
             }
         }
         
-        if (event.phase == TickEvent.Phase.END && getTicks() % 5 == 4)
+        if (event.phase == TickEvent.Phase.END)
         {
-            SkyblockIsland island = getCurrentIsland();
-            if (c.displayPlayersInArea)
+            if (getTicks() % 5 == 4)
             {
-                playersInAreas.clear();
-                if (ISLANDS_THAT_HAS_SUBAREAS.contains(island))
-                    for (SkyblockIsland.SubArea area : island.subAreas)
+                SkyblockIsland island = getCurrentIsland();
+                if (c.displayPlayersInArea)
+                {
+                    playersInAreas.clear();
+                    if (ISLANDS_THAT_HAS_SUBAREAS.contains(island))
+                        for (SkyblockIsland.SubArea area : island.subAreas)
+                        {
+                            List<Entity> players = getWorld().getEntitiesWithinAABB(EntityOtherPlayerMP.class,
+                                area.box,
+                                e ->
+                                {
+                                    String skin = ((AbstractClientPlayer)e).getLocationSkin().toString();
+                                    return !npcSkins.contains(skin) && !e.isInvisible(); // Watchdog player is invisible
+                                });
+                            for (Entity p : players)
+                                playersInAreas.put(p.getName(), area);
+                        }
+                    Tweakception.overlayManager.setEnable(PlayersInAreasDisplayOverlay.NAME, !playersInAreas.isEmpty());
+                }
+            }
+
+            if (c.minionAutoClaim && getMc().currentScreen instanceof GuiChest)
+            {
+                GuiChest chest = (GuiChest)McUtils.getMc().currentScreen;
+                ContainerChest container = (ContainerChest)chest.inventorySlots;
+                IInventory inv = container.getLowerChestInventory();
+                if (inv.getName().contains("Minion") &&
+                    inv.getSizeInventory() == 54 &&
+                    inv.getStackInSlot(54 - 1) != null &&
+                    inv.getStackInSlot(54 - 1).getItem() == Item.getItemFromBlock(Blocks.bedrock))
+                {
+                    for (int i = 9*2+4 - 1; i <= 9*4+8 - 1; i++)
                     {
-                        List<Entity> players = getWorld().getEntitiesWithinAABB(EntityOtherPlayerMP.class,
-                            area.box,
-                            e ->
+                        ItemStack stack = inv.getStackInSlot(i);
+                        String id = Utils.getSkyblockItemId(stack);
+                        if (stack != null && id != null &&
+                            c.minionAutoClaimWhitelist.contains(id))
+                        {
+                            if (getTicks() - minionAutoClaimLastClickTicks >= minionAutoClaimClickDelay)
                             {
-                                String skin = ((AbstractClientPlayer)e).getLocationSkin().toString();
-                                return !npcSkins.contains(skin) && !e.isInvisible(); // Watchdog player is invisible
-                            });
-                        for (Entity p : players)
-                            playersInAreas.put(p.getName(), area);
+                                minionAutoClaimLastClickTicks = getTicks();
+                                minionAutoClaimClickDelay = c.minionAutoclaimDelayTicksMin + getWorld().rand.nextInt(3);
+
+                                getMc().playerController.windowClick(container.windowId, i,
+                                    2, 3, getPlayer());
+                            }
+                            break;
+                        }
                     }
-                Tweakception.overlayManager.setEnable(PlayersInAreasDisplayOverlay.NAME, !playersInAreas.isEmpty());
+                }
+            }
+
+            if (lastTooltip != null && getTicks() - tooltipUpdateTicks > 10)
+            {
+                lastTooltip = null;
+            }
+
+            if (c.trevorHighlightAnimal || c.trevorQuestAutoAccept || c.trevorQuestAutoStart)
+            {
+                GuiScreen screen = getMc().currentScreen;
+                if (trevorQuestPendingStart && screen instanceof GuiChest)
+                {
+                    GuiChest chest = (GuiChest)screen;
+                    ContainerChest container = (ContainerChest)chest.inventorySlots;
+                    IInventory inv = container.getLowerChestInventory();
+                    String containerName = inv.getName();
+                    if (containerName.startsWith("Abiphone "))
+                    {
+                        for (int i = 0; i < inv.getSizeInventory(); i++)
+                        {
+                            ItemStack stack = inv.getStackInSlot(i);
+                            if (stack != null && stack.getDisplayName().equals("§fTrevor"))
+                            {
+                                trevorQuestPendingStart = false;
+                                getMc().playerController.windowClick(container.windowId, i, 0, 0, getPlayer());
+                                sendChat("GT-Trevor: quest started");
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (trevorQuestStartTicks != 0)
+                {
+                    int elapsed = getTicks() - trevorQuestStartTicks;
+
+                    if (elapsed >= 20 * 60 * 10 && trevorQuestOngoing)
+                    {
+                        sendChat("GT-Trevor: quest timed out");
+                        trevorQuestStartTicks = 0;
+                        trevorAnimalNametag = null;
+                        trevorQuestOngoing = false;
+                    }
+
+                    if (elapsed >= 20 * 60)
+                    {
+                        if (!trevorQuestCooldownNoticed)
+                        {
+                            trevorQuestCooldownNoticed = true;
+                            sendChat("GT-Trevor: quest cooldown elapsed");
+                        }
+
+                        if (c.trevorQuestAutoStart && !trevorQuestOngoing)
+                        {
+                            // To prevent failing right after killing the animal
+                            Tweakception.scheduler.addDelayed(this::trevorStartFromAbiphone, 40);
+                            trevorQuestStartTicks = 0;
+                        }
+                    }
+
+                }
+
+                if (getTicks() - trevorQuestPendingStartStartTicks >= 20 * 11)
+                    trevorQuestPendingStart = false;
+            }
+
+
+            if (highlightSkulls && getTicks() % 5 == 0)
+            {
+                if (skullsSearchThread == null || skullsSearchThread.done)
+                {
+                    EntityPlayerSP p = getPlayer();
+                    skulls = skullsTemp;
+                    skullsTemp = new ArrayList<>(20);
+                    skullsSearchThread = new Tweakception.BlockSearchTask((int)p.posX - 64, 40, (int)p.posZ - 64,
+                            (int)p.posX + 64, 150, (int)p.posZ + 64, getWorld(), Blocks.skull, skullsTemp);
+                    Tweakception.threadPool.execute(skullsSearchThread);
+                }
             }
         }
-        
-        if (lastTooltip != null && getTicks() - tooltipUpdateTicks > 10)
+    }
+
+    public void onEntityUpdate(LivingEvent.LivingUpdateEvent event)
+    {
+        if (c.trevorHighlightAnimal &&
+            event.entity instanceof EntityArmorStand &&
+            event.entity.hasCustomName() &&
+            event.entity.ticksExisted > 5)
         {
-            lastTooltip = null;
+            String name = McUtils.cleanColor(event.entity.getName());
+            if (trevorAnimalNametagMatcher.reset(name).matches())
+            {
+                trevorAnimalNametag = event.entity;
+            }
         }
     }
     
@@ -246,6 +379,34 @@ public class GlobalTracker extends Tweak
             RenderUtils.drawFilledBoundingBox(bb, new Color(0, 255, 0, 32), t, true);
             RenderUtils.drawFilledBoundingBox(areaPoints[selectedAreaPointIndex], new Color(255, 0, 0, 64), t);
             RenderUtils.drawFilledBoundingBox(areaPoints[1 - selectedAreaPointIndex], new Color(0, 255, 0, 64), t);
+        }
+
+        if (!playersToHighlight.isEmpty())
+        {
+            for (String name : playersToHighlight)
+            {
+                for (EntityPlayer player : getWorld().playerEntities)
+                {
+                    if (player.getName().equalsIgnoreCase(name))
+                    {
+                        RenderUtils.drawDefaultHighlightBoxForEntity(player, new Color(0, 255, 0, 64), false);
+                    }
+                }
+            }
+        }
+
+        if (c.trevorHighlightAnimal)
+        {
+            if (trevorAnimalNametag != null && !trevorAnimalNametag.isDead)
+                RenderUtils.drawBeaconBeamAtEntity(trevorAnimalNametag, new Color(0, 255, 0, 80));
+            else
+                trevorAnimalNametag = null;
+        }
+
+        if (highlightSkulls)
+        {
+            for (BlockPos pos : skulls)
+                RenderUtils.drawBeaconBeamOrBoundingBox(pos, new Color(168, 157, 50, 127), event.partialTicks, 0);
         }
     }
     
@@ -311,21 +472,30 @@ public class GlobalTracker extends Tweak
             switch (Keyboard.getEventKey())
             {
                 case Keyboard.KEY_UP:
-                    Tweakception.globalTracker.extendAreaPoint();
+                    Tweakception.globalTweaks.extendAreaPoint();
                     break;
                 case Keyboard.KEY_DOWN:
-                    Tweakception.globalTracker.retractAreaPoint();
+                    Tweakception.globalTweaks.retractAreaPoint();
                     break;
                 case Keyboard.KEY_LEFT:
                 case Keyboard.KEY_RIGHT:
-                    Tweakception.globalTracker.switchAreaPoints();
+                    Tweakception.globalTweaks.switchAreaPoints();
                     break;
             }
         }
     }
-    
+
     public void onItemTooltip(ItemTooltipEvent event)
     {
+        if (c.tooltipDisplaySkyblockItemId && event.itemStack != null)
+        {
+            String id = Utils.getSkyblockItemId(event.itemStack);
+            if (id != null && !id.isEmpty())
+            {
+                event.toolTip.add("ID: " + id);
+            }
+        }
+
         if (c.disableTooltips)
             event.toolTip.clear();
     }
@@ -333,8 +503,92 @@ public class GlobalTracker extends Tweak
     public void onWorldLoad(WorldEvent.Load event)
     {
         lastWorldJoin = System.currentTimeMillis();
+        trevorQuestStartTicks = 0;
+        trevorQuestCooldownNoticed = false;
+        trevorQuestPendingStart = false;
+        trevorAnimalNametag = null;
+        trevorQuestOngoing = false;
     }
-    
+
+    public void onChatReceived(ClientChatReceivedEvent event)
+    {
+        String msg = event.message.getUnformattedText();
+        if (event.type == 0 || event.type == 1)
+        {
+            if (msg.startsWith("Your online status has been set to "))
+            {
+                switch (msg)
+                {
+                    case "Your online status has been set to Online":
+                        c.lastOnlineStatus = "online";
+                        break;
+                    case "Your online status has been set to Away":
+                        c.lastOnlineStatus = "away";
+                        break;
+                    case "Your online status has been set to Busy":
+                        c.lastOnlineStatus = "busy";
+                        break;
+                    case "Your online status has been set to Appear Offline":
+                        c.lastOnlineStatus = "offline";
+                        break;
+                }
+            }
+            else if (msg.equals("REMINDER: Your Online Status is currently set to Appear Offline"))
+            {
+                c.lastOnlineStatus = "offline";
+            }
+            else if (c.trevorHighlightAnimal &&
+                McUtils.cleanColor(msg).startsWith("[NPC] Trevor The Trapper: You can find your "))
+            {
+                trevorQuestStartTicks = getTicks();
+                trevorQuestCooldownNoticed = false;
+                trevorQuestOngoing = true;
+            }
+            else if (c.trevorHighlightAnimal &&
+                (msg.startsWith("Your mob died randomly, you are rewarded ") ||
+                msg.startsWith("Killing the animal rewarded you ")))
+            {
+                trevorAnimalNametag = null;
+                trevorQuestOngoing = false;
+            }
+            else if (c.trevorQuestAutoAccept &&
+                msg.trim().startsWith("Accept the trapper's task to hunt the animal?"))
+            {
+                for (IChatComponent part : event.message.getSiblings())
+                {
+                    ClickEvent onClick = part.getChatStyle().getChatClickEvent();
+                    if (onClick != null && onClick.getAction() == ClickEvent.Action.RUN_COMMAND)
+                    {
+                        String value = onClick.getValue();
+                        if (value.startsWith("/chatprompt ") && value.endsWith(" YES"))
+                        {
+                            getPlayer().sendChatMessage(value);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        else if (event.type == 2)
+        {
+            if (msg.startsWith("You are currently "))
+            {
+                switch (msg)
+                {
+                    case "You are currently AWAY":
+                        c.lastOnlineStatus = "away";
+                        break;
+                    case "You are currently BUSY":
+                        c.lastOnlineStatus = "busy";
+                        break;
+                    case "You are currently APPEARING OFFLINE":
+                        c.lastOnlineStatus = "offline";
+                        break;
+                }
+            }
+        }
+    }
+
     // region Misc
     
     public void printIsland()
@@ -745,7 +999,41 @@ public class GlobalTracker extends Tweak
     {
         return lastWorldJoin;
     }
-    
+
+    public PacketLogger getPacketLogger()
+    {
+        return packetLogger;
+    }
+
+    private void trevorStartFromAbiphone()
+    {
+        int slot = findAbiphone();
+        if (slot != -1)
+        {
+            sendChat("GT-Trevor: starting from abiphone");
+            getPlayer().inventory.currentItem = slot;
+            getMc().rightClickMouse();
+            trevorQuestPendingStart = true;
+            trevorQuestPendingStartStartTicks = getTicks();
+        }
+        else
+        {
+            sendChat("GT-Trevor: can't find abiphone in hotbar");
+        }
+    }
+
+    private int findAbiphone()
+    {
+        for (int i = 0; i < 9; i++)
+        {
+            ItemStack stack = getPlayer().inventory.getStackInSlot(i);
+            String id = Utils.getSkyblockItemId(stack);
+            if (stack != null && id != null && id.startsWith("ABIPHONE_"))
+                return i;
+        }
+        return -1;
+    }
+
     private class PlayersInAreasDisplayOverlay extends TextOverlay
     {
         public static final String NAME = "PlayersInAreasDisplayOverlay";
@@ -923,6 +1211,118 @@ public class GlobalTracker extends Tweak
         {
             List<String> list = new ArrayList<>();
             list.add("ping is lSo ms");
+            return list;
+        }
+    }
+
+    private class OnlineStatusOverlay extends TextOverlay
+    {
+        public static final String NAME = "OnlineStatusOverlay";
+
+        public OnlineStatusOverlay()
+        {
+            super(NAME);
+            setAnchor(Anchor.BottomCenter);
+            setOrigin(Anchor.BottomCenter);
+            setX(200);
+            setY(-20);
+        }
+
+        @Override
+        public void update()
+        {
+            super.update();
+
+            String text;
+            switch (c.lastOnlineStatus)
+            {
+                case "online":
+                    if (!c.showOnlineStatusAlreadyOn)
+                    {
+                        setContent(Collections.emptyList());
+                        return;
+                    }
+                    text = "§aOnline";
+                    break;
+                case "away":
+                    text = "§eAway";
+                    break;
+                case "busy":
+                    text = "§5Busy";
+                    break;
+                case "offline":
+                    text = "§8Offline";
+                    break;
+                default:
+                    text = "Invalid cached status";
+                    break;
+            }
+
+            setContent(Collections.singletonList(text));
+        }
+
+        @Override
+        public List<String> getDefaultContent()
+        {
+            List<String> list = new ArrayList<>();
+            list.add("§aOnline");
+            return list;
+        }
+    }
+
+    private class TrevorOverlay extends TextOverlay
+    {
+        public static final String NAME = "TrevorOverlay";
+
+        public TrevorOverlay()
+        {
+            super(NAME);
+            setAnchor(Anchor.BottomCenter);
+            setOrigin(Anchor.BottomCenter);
+            setX(-200);
+            setY(-20);
+        }
+
+        @Override
+        public void update()
+        {
+            super.update();
+
+            List<String> list = new ArrayList<>();
+            if (trevorQuestStartTicks != 0)
+            {
+                int elapsed = (getTicks() - trevorQuestStartTicks) * 50;
+                if (trevorQuestOngoing)
+                {
+                    list.add("§aOngoing quest >>>");
+                    list.add("Trevor quest time: " + Utils.msToMMSSmmm(elapsed));
+
+                    if (trevorAnimalNametag != null)
+                    {
+                        list.add("§aANIMAL IN RANGE");
+                        list.add("Distance: §a" +
+                            Utils.roundToDigits(getPlayer().getDistanceToEntity(trevorAnimalNametag), 1) +
+                            " blocks");
+                        list.add(f("Coords: §a%d§r, §a%d§r, §a%d",
+                            (int)trevorAnimalNametag.posX,
+                            (int)trevorAnimalNametag.posY,
+                            (int)trevorAnimalNametag.posZ));
+                    }
+                }
+                else
+                {
+                    list.add("Trevor quest cooldown: " + Utils.msToMMSSmmm(Math.max(60000 - elapsed, 0)));
+                }
+            }
+
+            setContent(list);
+        }
+
+        @Override
+        public List<String> getDefaultContent()
+        {
+            List<String> list = new ArrayList<>();
+            list.add("Trevor quest cooldown: 0:0:0");
             return list;
         }
     }
@@ -1153,13 +1553,13 @@ public class GlobalTracker extends Tweak
     
     public void setSelectedEntityOutlineWidth(float w)
     {
-        c.selectedEntityOutlineWidth = w > 0.0f ? w : new GlobalTrackerConfig().selectedEntityOutlineWidth;
+        c.selectedEntityOutlineWidth = w > 0.0f ? w : new GlobalTweaksConfig().selectedEntityOutlineWidth;
         sendChat("GT-DrawSelectedEntityOutline: set width to " + c.selectedEntityOutlineWidth);
     }
     
     public void setSelectedEntityOutlineColor(int r, int g, int b, int a)
     {
-        c.selectedEntityOutlineColor = r < 0 ? new GlobalTrackerConfig().selectedEntityOutlineColor
+        c.selectedEntityOutlineColor = r < 0 ? new GlobalTweaksConfig().selectedEntityOutlineColor
             : Utils.makeColorArray(r, g, b, a);
         sendChat("GT-DrawSelectedEntityOutline: set color to " + Arrays.toString(c.selectedEntityOutlineColor));
     }
@@ -1203,56 +1603,17 @@ public class GlobalTracker extends Tweak
     
     public void toggleLogPacket()
     {
-        logPacket = !logPacket;
-        if (logPacket)
-        {
-            try
-            {
-                File file = Tweakception.configuration.createFileWithCurrentDateTime("packets_$_.txt");
-                synchronized (packetLogLock)
-                {
-                    packetLogWriter = Tweakception.configuration.createWriterFor(file);
-                }
-                McUtils.getPlayer().addChatMessage(new ChatComponentTranslation("Output written to file %s",
-                    McUtils.makeFileLink(file)));
-//                Desktop.getDesktop().open(file);
-                sendChat("GT: toggled on packet log");
-            }
-            catch (IOException e)
-            {
-                sendChat("GT: cannot create file");
-                logPacket = false;
-            }
-        }
-        else
-        {
-            synchronized (packetLogLock)
-            {
-                try
-                {
-                    packetLogWriter.close();
-                    packetLogWriter = null;
-                }
-                catch (IOException ignored)
-                {
-                }
-            }
-            sendChat("GT: toggled off packet log");
-        }
+        packetLogger.toggle();
     }
     
     public void setPacketLogAllowedClass(String name)
     {
-        if (allowedPacketClasses.contains(name))
-        {
-            allowedPacketClasses.remove(name);
-            sendChat("GT: removed " + name);
-        }
-        else
-        {
-            allowedPacketClasses.add(name);
-            sendChat("GT: added " + name);
-        }
+        packetLogger.toggleAllowedPacket(name);
+    }
+
+    public void toggleLogPacketLogAll()
+    {
+        packetLogger.toggleLogAll();
     }
     
     public void toggleChampionOverlay()
@@ -1265,7 +1626,7 @@ public class GlobalTracker extends Tweak
     public void setChampionOverlayIncrementResetDuration(int d)
     {
         c.championExpIncrementResetDuration =
-            d > 0 ? d : new GlobalTrackerConfig().championExpIncrementResetDuration;
+            d > 0 ? d : new GlobalTweaksConfig().championExpIncrementResetDuration;
         sendChat("FT-ChampionOverlay: set increment reset time to " + c.championExpIncrementResetDuration);
     }
     
@@ -1291,6 +1652,134 @@ public class GlobalTracker extends Tweak
     {
         c.renderPotionTier = !c.renderPotionTier;
         sendChat("GT-RenderPotionTier: toggled " + c.renderPotionTier);
+    }
+
+    public void toggleMinionAutoClaim()
+    {
+        c.minionAutoClaim = !c.minionAutoClaim;
+        sendChat("GT-MinionAutoClaim: toggled " + c.minionAutoClaim);
+    }
+
+    public void addMinionAutoClaimWhitelist(String id)
+    {
+        if (id.isEmpty())
+            sendChat("GT-MinionAutoClaim: give id ");
+        else
+        {
+            id = id.toUpperCase();
+            c.minionAutoClaimWhitelist.add(id);
+            sendChat("GT-MinionAutoClaim: added " + id);
+        }
+    }
+
+    public void removeMinionAutoClaimWhitelist(int i)
+    {
+        if (i < 1)
+        {
+            sendChat("GT-MinionAutoClaim: there are " + c.minionAutoClaimWhitelist.size() + " whitelisted IDs");
+            int ii = 1;
+            for (String id : c.minionAutoClaimWhitelist)
+                sendChat(ii++ + ": " + id);
+        }
+        else
+        {
+            if (i > c.minionAutoClaimWhitelist.size())
+                sendChat("GT-MinionAutoClaim: index is out of bounds!");
+            else
+            {
+                String id = c.minionAutoClaimWhitelist.toArray(new String[0])[i - 1];
+                c.minionAutoClaimWhitelist.remove(id);
+                sendChat("GT-MinionAutoClaim: removed " + id);
+            }
+        }
+    }
+
+    public void setMinionAutoClaimClickDelayMin(int i)
+    {
+        i = Utils.clamp(i, 1, 20);
+        c.minionAutoclaimDelayTicksMin = i;
+        sendChat("GT-MinionAutoClaim: set min delay ticks to " + i);
+    }
+
+    public void toggleTooltipDisplayId()
+    {
+        c.tooltipDisplaySkyblockItemId = !c.tooltipDisplaySkyblockItemId;
+        sendChat("GT-TooltipDisplayItemId: toggled " + c.tooltipDisplaySkyblockItemId);
+    }
+
+    public void setPlayerToHighlight(String name)
+    {
+        if (name.equals(""))
+        {
+            playersToHighlight.clear();
+            sendChat("GT-HighlightPlayer: cleared list");
+        }
+        else
+        {
+            name = name.toLowerCase();
+            if (playersToHighlight.contains(name))
+            {
+                playersToHighlight.remove(name);
+                sendChat("GT-HighlightPlayer: removed " + name);
+            }
+            else
+            {
+                playersToHighlight.add(name);
+                sendChat("GT-HighlightPlayer: added " + name);
+            }
+        }
+    }
+
+    public void toggleOnlineStatusOverlay()
+    {
+        c.enableOnlineStatusOverlay = !c.enableOnlineStatusOverlay;
+        Tweakception.overlayManager.setEnable(OnlineStatusOverlay.NAME, c.enableOnlineStatusOverlay);
+        sendChat("GT-OnlineStatusOverlay: toggled " + c.enableOnlineStatusOverlay);
+    }
+
+    public void toggleOnlineStatusOverlayShowAlreadyOn()
+    {
+        c.showOnlineStatusAlreadyOn = !c.showOnlineStatusAlreadyOn;
+        sendChat("GT-OnlineStatusOverlay: toggled show already on " + c.showOnlineStatusAlreadyOn);
+    }
+
+    public void toggleTrevorAnimalHighlight()
+    {
+        c.trevorHighlightAnimal = !c.trevorHighlightAnimal;
+        sendChat("GT-Trevor: toggled highlight " + c.trevorHighlightAnimal);
+        trevorAnimalNametag = null;
+        trevorQuestStartTicks = 0;
+        Tweakception.overlayManager.setEnable(TrevorOverlay.NAME,
+            c.trevorHighlightAnimal || c.trevorQuestAutoAccept || c.trevorQuestAutoStart);
+    }
+
+    public void toggleTrevorQuestAutoAccept()
+    {
+        c.trevorQuestAutoAccept = !c.trevorQuestAutoAccept;
+        sendChat("GT-Trevor: toggled auto accept " + c.trevorQuestAutoAccept);
+        Tweakception.overlayManager.setEnable(TrevorOverlay.NAME,
+                c.trevorHighlightAnimal || c.trevorQuestAutoAccept || c.trevorQuestAutoStart);
+    }
+
+    public void toggleTrevorQuestAutoStart()
+    {
+        c.trevorQuestAutoStart = !c.trevorQuestAutoStart;
+        sendChat("GT-Trevor: toggled auto start and auto accept " + c.trevorQuestAutoStart);
+        c.trevorQuestAutoAccept = c.trevorQuestAutoStart;
+        Tweakception.overlayManager.setEnable(TrevorOverlay.NAME,
+                c.trevorHighlightAnimal || c.trevorQuestAutoAccept || c.trevorQuestAutoStart);
+    }
+
+    public void toggleHighlightSkulls()
+    {
+        highlightSkulls = !highlightSkulls;
+        sendChat("GT-HighlightSkulls: toggled " + highlightSkulls);
+        if (!highlightSkulls)
+        {
+            if (skullsSearchThread != null && !skullsSearchThread.done)
+                skullsSearchThread.cancel = true;
+            skullsSearchThread = null;
+        }
     }
     
     // endregion

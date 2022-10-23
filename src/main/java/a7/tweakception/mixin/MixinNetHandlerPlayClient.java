@@ -1,8 +1,6 @@
 package a7.tweakception.mixin;
 
 import a7.tweakception.Tweakception;
-import a7.tweakception.tweaks.GlobalTracker;
-import a7.tweakception.utils.McUtils;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.network.play.server.*;
 import org.spongepowered.asm.mixin.Mixin;
@@ -10,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static a7.tweakception.tweaks.GlobalTracker.isInSkyblock;
+import static a7.tweakception.tweaks.GlobalTweaks.isInSkyblock;
 
 @Mixin(NetHandlerPlayClient.class)
 public class MixinNetHandlerPlayClient
@@ -66,13 +64,13 @@ public class MixinNetHandlerPlayClient
     @Inject(method = "handleJoinGame", at = @At(value = "RETURN"))
     public void handleJoinGame(S01PacketJoinGame packet, CallbackInfo ci)
     {
-        Tweakception.globalTracker.pingReset();
+        Tweakception.globalTweaks.pingReset();
     }
     
     @Inject(method = "handleStatistics", at = @At(value = "RETURN"))
     public void handleStatistics(S37PacketStatistics packet, CallbackInfo ci)
     {
-        Tweakception.globalTracker.pingDone();
+        Tweakception.globalTweaks.pingDone();
     }
     
     @Inject(method = "handleSetSlot", at = @At(value = "RETURN"))

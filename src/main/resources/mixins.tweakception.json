@@ -5,6 +5,7 @@
   "refmap": "mixins.tweakception.refmap.json",
   "minVersion": "0.6",
   "mixins": [
+    "MixinBlock",
     "MixinNetworkManager",
     "MixinUtil"
   ],
@@ -17,7 +18,8 @@
     "MixinNetHandlerPlayClient",
     "MixinRendererLivingEntity",
     "MixinRenderItem",
-    "MixinRenderManager"
+    "MixinRenderManager",
+    "PlayerControllerMPInvoker"
   ],
   "injectors": {
     "defaultRequire": 1

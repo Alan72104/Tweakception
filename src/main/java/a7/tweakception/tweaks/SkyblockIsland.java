@@ -2,9 +2,6 @@ package a7.tweakception.tweaks;
 
 import net.minecraft.util.AxisAlignedBB;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public enum SkyblockIsland
 {
     HUB("Hub", new String[]
@@ -38,13 +35,13 @@ public enum SkyblockIsland
         "Wilderness",
         "Wizard Tower"
     }),
-    DUNGEON_HUB("Dungeon Hub", new String[]
-    {
-        "Dungeon Hub"
-    }),
     DUNGEON("Dungeon", new String[]
     {
         "The Catacombs"
+    }),
+    DUNGEON_HUB("Dungeon Hub", new String[]
+    {
+        "Dungeon Hub"
     }),
     THE_END("The End", new String[]
     {
@@ -98,6 +95,33 @@ public enum SkyblockIsland
         "Mines of Divan",
         "Mithril Deposits",
         "Precursor Remnants"
+    }),
+    DWARVEN_MINES("Dwarven Mines", new String[]
+    {
+        "Dwarven Mines",
+        "The Forge",
+        "Forge Basin",
+        "Palace Bridge",
+        "Royal Palace",
+        "Aristocrat Passage",
+        "Hanging Court",
+        "Divan's Gateway",
+        "Far Reserve",
+        "Goblin Burrows",
+        "Miner's Guild",
+        "Great Ice Wall",
+        "The Mist",
+        "C Minecarts Co.",
+        "Grand Library",
+        "Barracks of Heroes",
+        "Dwarven Village",
+        "The Lift",
+        "Royal Quarters",
+        "Lava Springs",
+        "Cliffside Veins",
+        "Rampart's Quarry",
+        "Upper Mines",
+        "Royal Mines"
     }),
     PARK("Park", new String[]
     {

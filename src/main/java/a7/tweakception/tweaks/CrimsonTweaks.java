@@ -19,8 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static a7.tweakception.Tweakception.BlockSearchTask;
-import static a7.tweakception.tweaks.GlobalTracker.getCurrentIsland;
-import static a7.tweakception.tweaks.GlobalTracker.getTicks;
+import static a7.tweakception.tweaks.GlobalTweaks.getCurrentIsland;
+import static a7.tweakception.tweaks.GlobalTweaks.getTicks;
 import static a7.tweakception.utils.McUtils.*;
 
 public class CrimsonTweaks extends Tweak

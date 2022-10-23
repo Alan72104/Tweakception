@@ -28,7 +28,7 @@ public class MixinGuiEditSign extends GuiScreen
     @Inject(method = "keyTyped", at = @At("HEAD"), cancellable = true)
     protected void keyTyped(char chr, int key, CallbackInfo ci) throws IOException
     {
-        if (Tweakception.globalTracker.isEnterToCloseNumberTypingSignOn() &&
+        if (Tweakception.globalTweaks.isEnterToCloseNumberTypingSignOn() &&
             key == Keyboard.KEY_RETURN || key == Keyboard.KEY_NUMPADENTER)
         {
             if (Keyboard.isKeyDown(Keyboard.KEY_LMENU))

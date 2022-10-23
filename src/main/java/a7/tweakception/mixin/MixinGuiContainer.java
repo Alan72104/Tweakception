@@ -4,10 +4,6 @@ import a7.tweakception.Tweakception;
 import a7.tweakception.tweaks.SkyblockIsland;
 import a7.tweakception.utils.McUtils;
 import a7.tweakception.utils.Utils;
-import net.minecraft.client.audio.ISound;
-import net.minecraft.client.audio.PositionedSoundRecord;
-import net.minecraft.client.audio.SoundCategory;
-import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.GlStateManager;
@@ -25,8 +21,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static a7.tweakception.tweaks.GlobalTracker.getCurrentIsland;
-import static a7.tweakception.utils.McUtils.*;
+import static a7.tweakception.tweaks.GlobalTweaks.getCurrentIsland;
+import static a7.tweakception.utils.McUtils.getMc;
 
 @Mixin(GuiContainer.class)
 public abstract class MixinGuiContainer extends GuiScreen
@@ -117,14 +113,14 @@ public abstract class MixinGuiContainer extends GuiScreen
                 ci.cancel();
             }
         }
-        else if (Tweakception.globalTracker.isBlockingQuickCraft() &&
+        else if (Tweakception.globalTweaks.isBlockingQuickCraft() &&
             inv.getSizeInventory() == 54 &&
             name.equals("Craft Item") &&
             slot.getStack() != null && slot.slotNumber % 9 == 7 &&
             slot.slotNumber / 9 >= 1 && slot.slotNumber / 9 <= 3)
         {
             String id = Utils.getSkyblockItemId(slot.getStack());
-            if (id != null && !Tweakception.globalTracker.isIdInQuickCraftWhitelist(id))
+            if (id != null && !Tweakception.globalTweaks.isIdInQuickCraftWhitelist(id))
             {
                 McUtils.playCoolDing();
                 ci.cancel();
@@ -145,7 +141,7 @@ public abstract class MixinGuiContainer extends GuiScreen
         IInventory inv = chest.getLowerChestInventory();
         String name = inv.getName();
         
-        if (Tweakception.globalTracker.isBlockingQuickCraft() &&
+        if (Tweakception.globalTweaks.isBlockingQuickCraft() &&
             inv.getSizeInventory() == 54 &&
             name.equals("Craft Item"))
         {
@@ -157,7 +153,7 @@ public abstract class MixinGuiContainer extends GuiScreen
                 String id = Utils.getSkyblockItemId(slot.getStack());
                 if (id != null)
                 {
-                    Tweakception.globalTracker.toggleQuickCraftWhitelist(id);
+                    Tweakception.globalTweaks.toggleQuickCraftWhitelist(id);
                     McUtils.playCoolDing();
                 }
             }

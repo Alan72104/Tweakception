@@ -59,7 +59,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static a7.tweakception.tweaks.GlobalTracker.*;
+import static a7.tweakception.tweaks.GlobalTweaks.*;
 import static a7.tweakception.utils.McUtils.*;
 import static a7.tweakception.utils.Utils.f;
 import static a7.tweakception.utils.Utils.removeWhile;
@@ -100,6 +100,7 @@ public class DungeonTweaks extends Tweak
         public boolean trackNonCritDamageTags = false;
         public boolean trackShootingSpeed = false;
         public boolean trackWitherDamageTags = false;
+        public boolean autoSwapSpiritSceptreAote = false;
         public int damageTagHistoryTimeoutTicks = 20 * 30;
         public int damageTagTrackingCount = 10;
         public int damageHistoryOverlayMaxLines = 15;
@@ -140,11 +141,15 @@ public class DungeonTweaks extends Tweak
     private final LinkedList<Pair<Integer, Entity>> armorStandsTemp = new LinkedList<>();
     private final Set<Entity> starredMobs = new HashSet<>();
     private Entity spiritBear = null;
-    private final Matcher anyDamageTagMatcher = Pattern.compile("^§.✧?(?:(?:§.)?\\d)+.*").matcher("");
+    private final Matcher anyDamageTagMatcher = Pattern.compile(
+        "^(?:§[\\da-f][✧✯]?)?((?:(?:(?:§[\\da-f])?\\d){1,3}(?:§[\\da-f])?,?)+)(?:§[\\da-f][✧✯]?)?").matcher("");
+    // §f✧§f1§e3§6,§e7§66§c9§c✧§d♥
     private final Matcher critTagMatcher = Pattern.compile(
-        "^§f✧((?:(?:§[\\da-f]\\d){1,3}(?:§[\\da-f],)?)+)§[\\da-f]✧(.*)").matcher(""); // §f✧§f1§e3§6,§e7§66§c9§c✧§d♥
-    private final Matcher nonCritTagMatcher = Pattern.compile("^§7((?:\\d{1,3},?)+)(.*)").matcher(""); // §712,345
-    private final Matcher witherTagMatcher = Pattern.compile("^§0((?:\\d{1,3},?)+)$").matcher(""); // §012,345
+        "^§f[✧✯]((?:(?:§[\\da-f]\\d){1,3}(?:§[\\da-f],)?)+)§[\\da-f][✧✯](.*)").matcher("");
+    // §712,345
+    private final Matcher nonCritTagMatcher = Pattern.compile("^§7((?:\\d{1,3},?)+)(.*)").matcher("");
+    // §012,345
+    private final Matcher witherTagMatcher = Pattern.compile("^§0((?:\\d{1,3},?)+)$").matcher("");
     private boolean secretChestOpened = false;
     private boolean blacksmithMenuOpened = false;
     private boolean salvageClickSent = false;
@@ -371,7 +376,7 @@ public class DungeonTweaks extends Tweak
             fragRunTracking &&
             getCurrentIsland() == SkyblockIsland.DUNGEON &&
             !fragGotten &&
-            System.currentTimeMillis() - Tweakception.globalTracker.getWorldJoinMillis() >= 5000)
+            System.currentTimeMillis() - Tweakception.globalTweaks.getWorldJoinMillis() >= 5000)
         {
             HashMap<String, Integer> curInventoryItemCounts = new HashMap<>();
             HashSet<String> allItemIds = new HashSet<>(prevInventoryItemCounts.keySet());
@@ -508,11 +513,11 @@ public class DungeonTweaks extends Tweak
                     try
                     {
                         if ((c.trackDamageTags || c.trackDamageHistory) &&
-                            name.startsWith("§f✧") && critTagMatcher.reset(name).matches())
+                            name.startsWith("§f") && critTagMatcher.reset(name).matches())
                         {
                             long num = Long.parseLong(McUtils.cleanColor(critTagMatcher.group(1)).replace(",", ""));
                             if (c.trackDamageTags)
-                                addDamageInfo(ele.a, name);
+                                pushDamageInfo(ele.a, name);
                             if (c.trackDamageHistory)
                                 damageHistoriesMap.merge(num, 1L, Long::sum);
                         }
@@ -520,13 +525,13 @@ public class DungeonTweaks extends Tweak
                         {
 //                            long num = Long.parseLong(McUtils.cleanColor(witherTagMatcher.group(1)));
 //                            name = "§0" + Utils.formatCommas(num);
-                            addDamageInfo(ele.a, name);
+                            pushDamageInfo(ele.a, name);
                         }
                         else if (c.trackDamageTags && c.trackNonCritDamageTags && nonCritTagMatcher.reset(name).matches())
                         {
 //                            long num = Long.parseLong(McUtils.cleanColor(nonCritTagMatcher.group(1)));
 //                            name = "§7" + Utils.formatCommas(num) + nonCritTagMatcher.group(2);
-                            addDamageInfo(ele.a, name);
+                            pushDamageInfo(ele.a, name);
                         }
                     }
                     catch (Exception e)
@@ -635,7 +640,7 @@ public class DungeonTweaks extends Tweak
         
         if (fragRunTracking)
         {
-            Tweakception.globalTracker.updateIslandNow();
+            Tweakception.globalTweaks.updateIslandNow();
             if (getCurrentIsland() != SkyblockIsland.DUNGEON)
             {
                 if (fragPendingEndRunWarp || fragGotten)
@@ -953,7 +958,7 @@ public class DungeonTweaks extends Tweak
         }
         else if (getCurrentIsland() == SkyblockIsland.DUNGEON && msg.equals("Dungeon starts in 1 second."))
         {
-            Tweakception.globalTracker.updateIslandNow();
+            Tweakception.globalTweaks.updateIslandNow();
             if (isInF7())
             {
                 fragGotten = false;
@@ -1192,7 +1197,7 @@ public class DungeonTweaks extends Tweak
         if (c.trackDamageTags)
         {
             if (event.name.equals("mob.zombie.woodbreak"))
-                addDamageInfo(getTicks(), "§f✧§4STRIKE§f✧");
+                pushDamageInfo(getTicks(), "§f✧§4STRIKE§f✧");
         }
     }
     
@@ -1202,6 +1207,14 @@ public class DungeonTweaks extends Tweak
         {
             event.density = 0.0f;
             event.setCanceled(true);
+        }
+    }
+
+    public void onFogColorsSet(EntityViewRenderEvent.FogColors event)
+    {
+        if (c.enableNoFog)
+        {
+            sendChatf("%f, %f, %f", event.red, event.green, event.blue);
         }
     }
     
@@ -1266,6 +1279,35 @@ public class DungeonTweaks extends Tweak
     {
         partyFinderLastRefreshMillis = System.currentTimeMillis();
     }
+
+    public boolean isAutoSwapSpiritSceptreAoteOn()
+    {
+        return c.autoSwapSpiritSceptreAote;
+    }
+
+    public int findSpiritSceptre()
+    {
+        for (int i = 0; i < 9; i++)
+        {
+            ItemStack stack = getPlayer().inventory.getStackInSlot(i);
+            String id = Utils.getSkyblockItemId(stack);
+            if (stack != null && id != null && id.equals("BAT_WAND"))
+                return i;
+        }
+        return -1;
+    }
+
+    public int findAote()
+    {
+        for (int i = 0; i < 9; i++)
+        {
+            ItemStack stack = getPlayer().inventory.getStackInSlot(i);
+            String id = Utils.getSkyblockItemId(stack);
+            if (stack != null && id != null && (id.equals("ASPECT_OF_THE_END") || id.equals("ASPECT_OF_THE_VOID")))
+                return i;
+        }
+        return -1;
+    }
     
     private void resetLivid()
     {
@@ -1278,7 +1320,7 @@ public class DungeonTweaks extends Tweak
         }
     }
     
-    private void addDamageInfo(int spawnTicks, String s)
+    private void pushDamageInfo(int spawnTicks, String s)
     {
         damageTags.offer(new Pair<>(spawnTicks, s));
         if (damageTags.size() > c.damageTagTrackingCount)
@@ -1740,7 +1782,7 @@ public class DungeonTweaks extends Tweak
             return;
         }
         String ele = c.blockRightClickItemNames.toArray(new String[0])[i - 1];
-        String chatActionUuid = Tweakception.globalTracker.registerChatAction(() ->
+        String chatActionUuid = Tweakception.globalTweaks.registerChatAction(() ->
         {
             if (c.blockRightClickItemNames.contains(ele))
             {
@@ -1989,7 +2031,7 @@ public class DungeonTweaks extends Tweak
         sendChat("DT-Frag: started the next run");
         
         // To prevent active run being cancelled when starting before the island is updated
-        Tweakception.globalTracker.updateIslandNow();
+        Tweakception.globalTweaks.updateIslandNow();
     }
     
     private void fragEnd()
@@ -2250,5 +2292,11 @@ public class DungeonTweaks extends Tweak
             e.printStackTrace();
             sendChat("GT: exception occurred when making and opening file");
         }
+    }
+
+    public void toggleAutoSwapSpiritSceptreAote()
+    {
+        c.autoSwapSpiritSceptreAote = !c.autoSwapSpiritSceptreAote;
+        sendChat("DT-AutoSwapSpiritSceptreAote: toggled " + c.autoSwapSpiritSceptreAote);
     }
 }

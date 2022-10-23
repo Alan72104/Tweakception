@@ -17,10 +17,14 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
-import static a7.tweakception.utils.McUtils.*;
+import static a7.tweakception.utils.McUtils.getPlayer;
+import static a7.tweakception.utils.McUtils.sendChat;
 import static a7.tweakception.utils.Utils.f;
 
 public class APIManager extends Tweak
@@ -43,6 +47,7 @@ public class APIManager extends Tweak
     private long lastHypixelRequestTime = 0L;
     private boolean requestingUuid = false;
     private final Set<String> hypixelUuidsInRequest = new HashSet<>();
+    private long hypixelApiLimitResetTime = 0;
     
     public APIManager(Configuration configuration)
     {
@@ -252,7 +257,7 @@ public class APIManager extends Tweak
             return;
         }
         
-        if (System.currentTimeMillis() - lastHypixelRequestTime < HYPIXEL_REQUEST_COOLDOWN)
+        if (System.currentTimeMillis() < hypixelApiLimitResetTime)
         {
             onComplete.accept(null);
             return;
@@ -263,8 +268,8 @@ public class APIManager extends Tweak
         String url = makeHypixelApiUrl(apiKey, method, args);
         
         System.out.println(f("AM: hypixel api request started, url: %s", url));
-        
-        getApiAsync(url,
+
+        fetchHypixelAsync(url,
             result -> Tweakception.scheduler.add(() ->
             {
                 System.out.println(f("AM: hypixel api request completed, url: %s", url));
@@ -293,7 +298,7 @@ public class APIManager extends Tweak
         
         requestingUuid = true;
         
-        getApiAsync("https://api.mojang.com/users/profiles/minecraft/" + name,
+        fetchAsync("https://api.mojang.com/users/profiles/minecraft/" + name,
             (jsonObject) ->
             {
                 if (jsonObject.has("id") && jsonObject.get("id").isJsonPrimitive() &&
@@ -331,13 +336,74 @@ public class APIManager extends Tweak
     }
     
     // This executes off the main thread
-    private void getApiAsync(String url, Consumer<JsonObject> onSuccess, Runnable onError)
+    private void fetchHypixelAsync(String url, Consumer<JsonObject> onSuccess, Runnable onError)
+    {
+        Tweakception.threadPool.submit(() ->
+        {
+            int remaining = 0;
+            int timeToReset = 0;
+            try
+            {
+                URLConnection connection = openConnection(url);
+
+                String content = IOUtils.toString(connection.getInputStream(), StandardCharsets.UTF_8);
+
+                String s = connection.getHeaderField("RateLimit-Remaining");
+                String s1 = connection.getHeaderField("RateLimit-Reset");
+
+                if (s != null && s1 != null)
+                {
+                    try
+                    {
+                        remaining = Integer.parseInt(s);
+                        timeToReset = Integer.parseInt(s1);
+                        if (remaining <= 3)
+                        {
+                            hypixelApiLimitResetTime = System.currentTimeMillis() + 1000L * timeToReset;
+                            int finalTimeToReset = timeToReset;
+                            Tweakception.scheduler.add(() ->
+                                sendChat("Hypixel API is ratelimited, resetting in " + finalTimeToReset + "s"));
+                        }
+                    }
+                    catch (NumberFormatException ignored)
+                    {
+                    }
+                }
+
+                JsonObject json = gson.fromJson(content, JsonObject.class);
+
+                if (json == null)
+                    throw new ConnectException("Invalid JSON");
+
+                onSuccess.accept(json);
+            }
+            catch (Exception e)
+            {
+                System.out.println(f(
+                    "AM: api request failed, url: %s, exception: %s, remaining requests: %d, reset in: %d",
+                    url, e.toString(), remaining, timeToReset));
+                onError.run();
+            }
+        });
+    }
+
+    // This executes off the main thread
+    private void fetchAsync(String url, Consumer<JsonObject> onSuccess, Runnable onError)
     {
         Tweakception.threadPool.submit(() ->
         {
             try
             {
-                onSuccess.accept(getApiSync(url));
+                URLConnection connection = openConnection(url);
+
+                String content = IOUtils.toString(connection.getInputStream(), StandardCharsets.UTF_8);
+
+                JsonObject json = gson.fromJson(content, JsonObject.class);
+
+                if (json == null)
+                    throw new ConnectException("Invalid JSON");
+
+                onSuccess.accept(json);
             }
             catch (Exception e)
             {
@@ -347,20 +413,14 @@ public class APIManager extends Tweak
         });
     }
     
-    private JsonObject getApiSync(String urlS) throws IOException
+    private URLConnection openConnection(String urlS) throws IOException
     {
         URL url = new URL(urlS);
         URLConnection connection = url.openConnection();
-        connection.setConnectTimeout(10000);
-        connection.setReadTimeout(10000);
-        
-        String response = IOUtils.toString(connection.getInputStream(), StandardCharsets.UTF_8);
-        
-        JsonObject json = gson.fromJson(response, JsonObject.class);
-        if (json == null)
-            throw new ConnectException("Invalid JSON");
-        
-        return json;
+        connection.setConnectTimeout(5000);
+        connection.setReadTimeout(5000);
+        connection.connect();
+        return connection;
     }
     
     private String makeHypixelApiUrl(String apiKey, String method, Map<String, String> args)

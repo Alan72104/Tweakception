@@ -18,7 +18,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static a7.tweakception.utils.McUtils.getMc;
 
@@ -42,9 +41,9 @@ public class MixinRenderItem
         if (extra == null)
             return;
         
-        if (Tweakception.globalTracker.isRenderPotionTierOn() && extra.hasKey("potion_level"))
+        if (Tweakception.globalTweaks.isRenderPotionTierOn() && extra.hasKey("potion_level"))
             stackCount = String.valueOf(extra.getInteger("potion_level"));
-        else if (Tweakception.globalTracker.isRenderEnchantedBooksTypeOn() &&
+        else if (Tweakception.globalTweaks.isRenderEnchantedBooksTypeOn() &&
                  stack.getItem() == Items.enchanted_book && extra.hasKey("enchantments"))
         {
             NBTTagCompound enchantments = extra.getCompoundTag("enchantments");
@@ -56,7 +55,7 @@ public class MixinRenderItem
                 stackCount = String.valueOf(enchantments.getInteger(id));
             }
         }
-        else if (Tweakception.globalTracker.isRenderSacksTypeOn() &&
+        else if (Tweakception.globalTweaks.isRenderSacksTypeOn() &&
                  stack.getItem() != Items.dye)
         {
             String id = Utils.getSkyblockItemId(stack);

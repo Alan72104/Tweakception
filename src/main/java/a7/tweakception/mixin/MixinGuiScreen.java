@@ -18,6 +18,6 @@ public class MixinGuiScreen
     @Inject(method = "renderToolTip", at = @At(value = "TAIL"), locals = LocalCapture.CAPTURE_FAILEXCEPTION)
     public void renderToolTip(ItemStack stack, int x, int y, CallbackInfo ci, List<String> list, FontRenderer r)
     {
-        Tweakception.globalTracker.updateTooltipToCopy(list);
+        Tweakception.globalTweaks.updateTooltipToCopy(list);
     }
 }

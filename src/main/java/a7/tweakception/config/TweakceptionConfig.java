@@ -6,7 +6,7 @@ import a7.tweakception.tweaks.*;
 public class TweakceptionConfig
 {
     public APIManager.APIManagerConfig apiManager = new APIManager.APIManagerConfig();
-    public GlobalTracker.GlobalTrackerConfig globalTracker = new GlobalTracker.GlobalTrackerConfig();
+    public GlobalTweaks.GlobalTweaksConfig globalTweaks = new GlobalTweaks.GlobalTweaksConfig();
     public OverlayManager.OverlayManagerConfig overlayManager = new OverlayManager.OverlayManagerConfig();
     public TuningTweaks.TuningTweaksConfig tuningTweaks = new TuningTweaks.TuningTweaksConfig();
     public FairyTracker.FairyTrackerConfig fairyTracker = new FairyTracker.FairyTrackerConfig();
@@ -18,4 +18,5 @@ public class TweakceptionConfig
     public FishingTweaks.AutoFishConfig autoFish = new FishingTweaks.AutoFishConfig();
     public EnchantingTweaks.EnchantingTweaksConfig enchantingTweaks = new EnchantingTweaks.EnchantingTweaksConfig();
     public BazaarTweaks.BazaarTweaksConfig bazaarTweaks = new BazaarTweaks.BazaarTweaksConfig();
+    public AutoRunes.AutoRunesConfig autoRunes = new AutoRunes.AutoRunesConfig();
 }

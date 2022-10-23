@@ -26,12 +26,12 @@ public abstract class MixinRendererLivingEntity<T extends EntityLivingBase> exte
     {
         if (living instanceof EntityArmorStand)
         {
-            if (Tweakception.globalTracker.isRenderInvisibleArmorStandsOn())
+            if (Tweakception.globalTweaks.isRenderInvisibleArmorStandsOn())
                 return false;
             else
                 return living.isInvisibleToPlayer(player);
         }
-        else if (Tweakception.globalTracker.isRenderInvisibleEntitiesOn())
+        else if (Tweakception.globalTweaks.isRenderInvisibleEntitiesOn())
             return false;
         else
             return living.isInvisibleToPlayer(player);
@@ -41,6 +41,6 @@ public abstract class MixinRendererLivingEntity<T extends EntityLivingBase> exte
         "Lnet/minecraft/client/renderer/GlStateManager;color(FFFF)V"), index = 3)
     private float modifyInvisibleEntityAlpha(float a)
     {
-        return Tweakception.globalTracker.getInvisibleEntityAlpha();
+        return Tweakception.globalTweaks.getInvisibleEntityAlpha();
     }
 }

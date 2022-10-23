@@ -2,7 +2,10 @@ package a7.tweakception;
 
 import a7.tweakception.events.IslandChangedEvent;
 import a7.tweakception.events.PacketReceiveEvent;
+import a7.tweakception.events.PacketSendEvent;
 import a7.tweakception.utils.Utils;
+import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ChatComponentText;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
@@ -16,12 +19,12 @@ import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.fml.common.network.FMLNetworkEvent;
+import org.lwjgl.input.Mouse;
 
 import java.text.DecimalFormat;
 
 import static a7.tweakception.Tweakception.*;
-import static a7.tweakception.tweaks.GlobalTracker.isInSkyblock;
+import static a7.tweakception.tweaks.GlobalTweaks.isInSkyblock;
 import static a7.tweakception.utils.McUtils.*;
 
 public class InGameEventDispatcher
@@ -110,9 +113,15 @@ public class InGameEventDispatcher
     }
     
     @SubscribeEvent
-    public void onPacket(PacketReceiveEvent event)
+    public void onPacketReceive(PacketReceiveEvent event)
     {
-        globalTracker.onPacket(event);
+        globalTweaks.onPacketReceive(event);
+    }
+
+    @SubscribeEvent
+    public void onPacketSend(PacketSendEvent event)
+    {
+        globalTweaks.onPacketSend(event);
     }
     
     @SubscribeEvent
@@ -120,7 +129,7 @@ public class InGameEventDispatcher
     {
         startFunc(0);
         
-        globalTracker.onTick(event);
+        globalTweaks.onTick(event);
         
         if (!isInGame()) return;
         if (!isInSkyblock()) return;
@@ -135,6 +144,7 @@ public class InGameEventDispatcher
         fishingTweaks.onTick(event);
         enchantingTweaks.onTick(event);
         bazaarTweaks.onTick(event);
+        autoRunes.onTick(event);
         overlayManager.onTick(event);
         
         endFuncAndAddNum(event.phase, 0);
@@ -161,7 +171,7 @@ public class InGameEventDispatcher
         slayerTweaks.onRenderLast(event);
         miningTweaks.onRenderLast(event);
         foragingTweaks.onRenderLast(event);
-        globalTracker.onRenderLast(event);
+        globalTweaks.onRenderLast(event);
         
         endFuncAndAddNum(1);
     }
@@ -186,7 +196,7 @@ public class InGameEventDispatcher
         if (!isInSkyblock()) return;
         
         dungeonTweaks.onLivingRenderPre(event);
-        globalTracker.onLivingRenderPre(event);
+        globalTweaks.onLivingRenderPre(event);
         
         endFuncAndAddNum(3);
     }
@@ -199,7 +209,7 @@ public class InGameEventDispatcher
         if (!isInSkyblock()) return;
         
         dungeonTweaks.onLivingSpecialRenderPre(event);
-        globalTracker.onLivingSpecialRenderPre(event);
+        globalTweaks.onLivingSpecialRenderPre(event);
         
         endFuncAndAddNum(4);
     }
@@ -210,7 +220,7 @@ public class InGameEventDispatcher
         if (!isInSkyblock()) return;
         
         dungeonTweaks.onRenderBlockOverlay(event);
-        globalTracker.onRenderBlockOverlay(event);
+        globalTweaks.onRenderBlockOverlay(event);
     }
     
     @SubscribeEvent
@@ -231,7 +241,8 @@ public class InGameEventDispatcher
     public void onClientChatReceived(ClientChatReceivedEvent event)
     {
         if (!isInSkyblock()) return;
-        
+
+        globalTweaks.onChatReceived(event);
         dungeonTweaks.onChatReceived(event);
         fishingTweaks.onChatReceived(event);
         slayerTweaks.onChatReceived(event);
@@ -242,13 +253,14 @@ public class InGameEventDispatcher
     {
         if (!isInSkyblock()) return;
         
+        globalTweaks.onEntityUpdate(event);
         dungeonTweaks.onEntityUpdate(event);
     }
     
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event)
     {
-        globalTracker.onWorldLoad(event);
+        globalTweaks.onWorldLoad(event);
         dungeonTweaks.onWorldLoad(event);
     }
     
@@ -279,7 +291,7 @@ public class InGameEventDispatcher
     public void onGuiOpen(GuiOpenEvent event)
     {
         if (!isInSkyblock()) return;
-        
+
         dungeonTweaks.onGuiOpen(event);
         enchantingTweaks.onGuiOpen(event);
     }
@@ -288,15 +300,18 @@ public class InGameEventDispatcher
     public void onGuiDrawPost(GuiScreenEvent.DrawScreenEvent.Post event)
     {
         if (!isInSkyblock()) return;
-    
+
+        GlStateManager.disableLighting();
+
         enchantingTweaks.onGuiDrawPost(event);
+        autoRunes.onGuiDrawPost(event);
     }
     
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onItemTooltipHighest(ItemTooltipEvent event)
     {
         if (!isInSkyblock()) return;
-        
+
         bazaarTweaks.onItemTooltip(event);
     }
     
@@ -307,27 +322,43 @@ public class InGameEventDispatcher
         
         dungeonTweaks.onItemTooltip(event);
         tuningTweaks.onItemTooltip(event);
-        globalTracker.onItemTooltip(event);
+        globalTweaks.onItemTooltip(event);
     }
     
     @SubscribeEvent
     public void onGuiKeyInputPre(GuiScreenEvent.KeyboardInputEvent.Pre event)
     {
         if (!isInSkyblock()) return;
-        
-        globalTracker.onGuiKeyInputPre(event);
+
+        globalTweaks.onGuiKeyInputPre(event);
     }
-    
+
+    @SubscribeEvent
+    public void onGuiScreenMouse(GuiScreenEvent.MouseInputEvent.Pre event)
+    {
+        if (!isInSkyblock()) return;
+
+        final ScaledResolution scaledresolution = new ScaledResolution(getMc());
+        final int scaledWidth = scaledresolution.getScaledWidth();
+        final int scaledHeight = scaledresolution.getScaledHeight();
+        int mouseX = Mouse.getX() / scaledresolution.getScaleFactor();
+        int mouseY = scaledHeight - Mouse.getY() / scaledresolution.getScaleFactor();
+
+        autoRunes.onGuiMouseInput(event, mouseX, mouseY);
+        if (event.isCanceled())
+            return;
+    }
+
     @SubscribeEvent
     public void onKeyInput(InputEvent.KeyInputEvent event)
     {
         if (!isInGame()) return;
         if (!isInSkyblock()) return;
-        
+
         fairyTracker.onKeyInput(event);
-        globalTracker.onKeyInput(event);
+        globalTweaks.onKeyInput(event);
     }
-    
+
     @SubscribeEvent
     public void onEntityJoinWorld(EntityJoinWorldEvent event)
     {
@@ -346,5 +377,13 @@ public class InGameEventDispatcher
         dungeonTweaks.onFogDensitySet(event);
         if (event.isCanceled())
             return;
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public void onFogColorsSet(EntityViewRenderEvent.FogColors event)
+    {
+        if (!isInSkyblock()) return;
+
+        dungeonTweaks.onFogColorsSet(event);
     }
 }

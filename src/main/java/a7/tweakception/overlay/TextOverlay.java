@@ -2,7 +2,6 @@ package a7.tweakception.overlay;
 
 import a7.tweakception.utils.Utils;
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.ScaledResolution;
 
 import java.util.ArrayList;
 import java.util.List;

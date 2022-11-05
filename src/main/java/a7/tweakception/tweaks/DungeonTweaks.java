@@ -1212,7 +1212,7 @@ public class DungeonTweaks extends Tweak
 
     public void onFogColorsSet(EntityViewRenderEvent.FogColors event)
     {
-        if (c.enableNoFog)
+        if (c.enableNoFog && GlobalTweaks.t)
         {
             sendChatf("%f, %f, %f", event.red, event.green, event.blue);
         }

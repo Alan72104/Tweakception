@@ -336,6 +336,7 @@ public class GlobalTweaks extends Tweak
     public void onEntityUpdate(LivingEvent.LivingUpdateEvent event)
     {
         if (c.trevorHighlightAnimal &&
+            trevorQuestOngoing &&
             event.entity instanceof EntityArmorStand &&
             event.entity.hasCustomName() &&
             event.entity.ticksExisted > 5)

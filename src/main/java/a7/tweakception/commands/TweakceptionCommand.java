@@ -288,6 +288,8 @@ public class TweakceptionCommand extends CommandBase
             new Command("setinvisibleentityalphapercentage",
                 args -> Tweakception.globalTweaks.setInvisibleEntityAlphaPercentage(
                     args.length > 0 ? toInt(args[0]) : 0)),
+            new Command("sendbitsmessage",
+                args -> Tweakception.globalTweaks.toggleSendBitsMessage()),
             new Command("skipworldrendering",
                 args -> Tweakception.globalTweaks.toggleSkipWorldRendering()),
             new Command("tooltip",

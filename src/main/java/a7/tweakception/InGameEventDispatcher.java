@@ -240,6 +240,7 @@ public class InGameEventDispatcher
     @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
     public void onClientChatReceived(ClientChatReceivedEvent event)
     {
+        globalTweaks.onChatReceivedGlobal(event);
         if (!isInSkyblock()) return;
 
         globalTweaks.onChatReceived(event);

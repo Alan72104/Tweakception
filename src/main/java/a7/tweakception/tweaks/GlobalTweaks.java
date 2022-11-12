@@ -92,6 +92,7 @@ public class GlobalTweaks extends Tweak
         public boolean trevorQuestAutoAccept = false;
         public boolean trevorQuestAutoStart = false;
         public boolean trevorHighlightAnimal = false;
+        public boolean sendBitsMessage = false;
     }
     private final GlobalTweaksConfig c;
 //    private static final HashMap<String, SkyblockIsland> SUBPLACE_TO_ISLAND_MAP = new HashMap<>();
@@ -135,6 +136,7 @@ public class GlobalTweaks extends Tweak
     private List<BlockPos> skulls = new ArrayList<>(25);
     private List<BlockPos> skullsTemp = new ArrayList<>(25);
     private Tweakception.BlockSearchTask skullsSearchThread;
+    private int lastBitsMsgTicks = 0;
 
     static
     {
@@ -511,7 +513,7 @@ public class GlobalTweaks extends Tweak
         trevorQuestOngoing = false;
     }
 
-    public void onChatReceived(ClientChatReceivedEvent event)
+    public void onChatReceivedGlobal(ClientChatReceivedEvent event)
     {
         String msg = event.message.getUnformattedText();
         if (event.type == 0 || event.type == 1)
@@ -538,7 +540,33 @@ public class GlobalTweaks extends Tweak
             {
                 c.lastOnlineStatus = "offline";
             }
-            else if (c.trevorHighlightAnimal &&
+        }
+        else if (event.type == 2)
+        {
+            if (msg.startsWith("You are currently "))
+            {
+                switch (msg)
+                {
+                    case "You are currently AWAY":
+                        c.lastOnlineStatus = "away";
+                        break;
+                    case "You are currently BUSY":
+                        c.lastOnlineStatus = "busy";
+                        break;
+                    case "You are currently APPEARING OFFLINE":
+                        c.lastOnlineStatus = "offline";
+                        break;
+                }
+            }
+        }
+    }
+
+    public void onChatReceived(ClientChatReceivedEvent event)
+    {
+        String msg = event.message.getUnformattedText();
+        if (event.type == 0 || event.type == 1)
+        {
+            if (c.trevorHighlightAnimal &&
                 McUtils.cleanColor(msg).startsWith("[NPC] Trevor The Trapper: You can find your "))
             {
                 trevorQuestStartTicks = getTicks();
@@ -572,20 +600,10 @@ public class GlobalTweaks extends Tweak
         }
         else if (event.type == 2)
         {
-            if (msg.startsWith("You are currently "))
+            if (msg.endsWith(" Bits from Cookie Buff!") && getTicks() - lastBitsMsgTicks >= 20 * 3)
             {
-                switch (msg)
-                {
-                    case "You are currently AWAY":
-                        c.lastOnlineStatus = "away";
-                        break;
-                    case "You are currently BUSY":
-                        c.lastOnlineStatus = "busy";
-                        break;
-                    case "You are currently APPEARING OFFLINE":
-                        c.lastOnlineStatus = "offline";
-                        break;
-                }
+                lastBitsMsgTicks = getTicks();
+                sendChat(msg);
             }
         }
     }
@@ -1759,7 +1777,7 @@ public class GlobalTweaks extends Tweak
         c.trevorQuestAutoAccept = !c.trevorQuestAutoAccept;
         sendChat("GT-Trevor: toggled auto accept " + c.trevorQuestAutoAccept);
         Tweakception.overlayManager.setEnable(TrevorOverlay.NAME,
-                c.trevorHighlightAnimal || c.trevorQuestAutoAccept || c.trevorQuestAutoStart);
+            c.trevorHighlightAnimal || c.trevorQuestAutoAccept || c.trevorQuestAutoStart);
     }
 
     public void toggleTrevorQuestAutoStart()
@@ -1768,7 +1786,7 @@ public class GlobalTweaks extends Tweak
         sendChat("GT-Trevor: toggled auto start and auto accept " + c.trevorQuestAutoStart);
         c.trevorQuestAutoAccept = c.trevorQuestAutoStart;
         Tweakception.overlayManager.setEnable(TrevorOverlay.NAME,
-                c.trevorHighlightAnimal || c.trevorQuestAutoAccept || c.trevorQuestAutoStart);
+            c.trevorHighlightAnimal || c.trevorQuestAutoAccept || c.trevorQuestAutoStart);
     }
 
     public void toggleHighlightSkulls()
@@ -1781,6 +1799,12 @@ public class GlobalTweaks extends Tweak
                 skullsSearchThread.cancel = true;
             skullsSearchThread = null;
         }
+    }
+
+    public void toggleSendBitsMessage()
+    {
+        c.sendBitsMessage = !c.sendBitsMessage;
+        sendChat("GT-SendBitsMessage: toggled " + c.sendBitsMessage);
     }
     
     // endregion

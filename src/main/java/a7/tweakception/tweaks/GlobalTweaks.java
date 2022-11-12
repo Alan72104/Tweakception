@@ -137,6 +137,8 @@ public class GlobalTweaks extends Tweak
     private List<BlockPos> skullsTemp = new ArrayList<>(25);
     private Tweakception.BlockSearchTask skullsSearchThread;
     private int lastBitsMsgTicks = 0;
+    private int[] minionAutoclaimPos = { -2, -2 };
+    private boolean minionAutoclaimWasInScreen = false;
 
     static
     {
@@ -229,31 +231,68 @@ public class GlobalTweaks extends Tweak
                 GuiChest chest = (GuiChest)McUtils.getMc().currentScreen;
                 ContainerChest container = (ContainerChest)chest.inventorySlots;
                 IInventory inv = container.getLowerChestInventory();
-                if (inv.getName().contains("Minion") &&
+                String[] words = inv.getName().split(" ");
+                int[] pos1 = { -1, -1 }; // Both 0 based
+                int[] pos2 = { -1, -1 };
+                if (words.length == 3 && words[1].equals("Minion") &&
                     inv.getSizeInventory() == 54 &&
                     inv.getStackInSlot(54 - 1) != null &&
                     inv.getStackInSlot(54 - 1).getItem() == Item.getItemFromBlock(Blocks.bedrock))
                 {
-                    for (int i = 9*2+4 - 1; i <= 9*4+8 - 1; i++)
-                    {
-                        ItemStack stack = inv.getStackInSlot(i);
-                        String id = Utils.getSkyblockItemId(stack);
-                        if (stack != null && id != null &&
-                            c.minionAutoClaimWhitelist.contains(id))
-                        {
-                            if (getTicks() - minionAutoClaimLastClickTicks >= minionAutoClaimClickDelay)
-                            {
-                                minionAutoClaimLastClickTicks = getTicks();
-                                minionAutoClaimClickDelay = c.minionAutoclaimDelayTicksMin + getWorld().rand.nextInt(3);
+                    pos1[0] = 3;
+                    pos1[1] = 2;
+                    pos2[0] = 7;
+                    pos2[1] = 4;
+                }
+                else if (words.length == 2 && words[0].equals("Minion") && words[1].equals("Chest") &&
+                    inv.getSizeInventory() == 27)
+                {
+                    pos1[0] = 0;
+                    pos1[1] = 0;
+                    pos2[0] = 8;
+                    pos2[1] = 2;
+                }
 
-                                getMc().playerController.windowClick(container.windowId, i,
-                                    2, 3, getPlayer());
+                if (pos1[0] != -1)
+                {
+                    if (!minionAutoclaimWasInScreen)
+                    {
+                        minionAutoclaimPos[0] = pos2[0];
+                        minionAutoclaimPos[1] = pos2[1];
+                    }
+
+                    minionAutoclaimWasInScreen = true;
+
+                    if (getTicks() - minionAutoClaimLastClickTicks >= minionAutoClaimClickDelay)
+                    {
+                        minionAutoClaimLastClickTicks = getTicks();
+                        minionAutoClaimClickDelay = c.minionAutoclaimDelayTicksMin + getWorld().rand.nextInt(3);
+
+                        findLoop:
+                        for (; minionAutoclaimPos[1] >= pos1[1];
+                             minionAutoclaimPos[1]--, minionAutoclaimPos[0] = pos2[0])
+                        {
+                            for (; minionAutoclaimPos[0] >= pos1[0]; minionAutoclaimPos[0]--)
+                            {
+                                int index = 9 * minionAutoclaimPos[1] + minionAutoclaimPos[0];
+                                ItemStack stack = inv.getStackInSlot(index);
+                                String id = Utils.getSkyblockItemId(stack);
+                                if (stack != null && id != null &&
+                                    c.minionAutoClaimWhitelist.contains(id))
+                                {
+                                    getMc().playerController.windowClick(container.windowId, index,
+                                        2, 3, getPlayer());
+                                    break findLoop;
+                                }
                             }
-                            break;
                         }
                     }
                 }
+                else
+                    minionAutoclaimWasInScreen = false;
             }
+            else
+                minionAutoclaimWasInScreen = false;
 
             if (lastTooltip != null && getTicks() - tooltipUpdateTicks > 10)
             {

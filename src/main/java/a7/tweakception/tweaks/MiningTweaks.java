@@ -255,7 +255,7 @@ public class MiningTweaks extends Tweak
             return 0.0f;
         for (String s : lore)
         {
-            if (miningItemStatMatcher.reset(s).matches())
+            if (miningItemStatMatcher.reset(s).find())
             {
                 return Utils.parseFloat(miningItemStatMatcher.group(1));
             }

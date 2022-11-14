@@ -67,7 +67,6 @@ public class MixinForgeHooks
             (GlobalTweaks.getCurrentIsland() == SkyblockIsland.DWARVEN_MINES ||
             GlobalTweaks.getCurrentIsland() == SkyblockIsland.CRYSTAL_HOLLOWS))
         {
-            Block block = state.getBlock();
             ItemStack stack = player.inventory.getCurrentItem();
             String id = Utils.getSkyblockItemId(stack);
             float pickaxeBreakSpeed = 0.0f;

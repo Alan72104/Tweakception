@@ -135,17 +135,14 @@ public class PacketLogger
         {
             try
             {
-                boolean isPrimitive = field.getType().isPrimitive();
                 field.setAccessible(true);
                 Object value = field.get(obj);
-                packetLogWriter.write("    ");
-                packetLogWriter.write(Modifier.toString(field.getModifiers()));
-                packetLogWriter.write(' ');
-                packetLogWriter.write(field.getType().getSimpleName());
-                packetLogWriter.write(' ');
-                packetLogWriter.write(field.getName());
-                packetLogWriter.write(": ");
-                packetLogWriter.write(isPrimitive ? String.valueOf(value) : (value == null) ? "null" : "obj");
+
+                String modifiers = Modifier.toString(field.getModifiers());
+                String type = field.getType().getSimpleName();
+                String name = field.getName();
+                String valueString = objToString(field.getType(), value);
+                write(packetLogWriter, "    ", modifiers, " ", type, " ", name, ": ", valueString);
                 packetLogWriter.newLine();
             }
             catch (Exception ignored)
@@ -158,5 +155,40 @@ public class PacketLogger
         {
             printFields(obj, superclass);
         }
+    }
+
+    private String objToString(Class<?> clazz, Object obj)
+    {
+        if (clazz.isPrimitive())
+        {
+            return String.valueOf(obj);
+        }
+        else if (obj == null)
+        {
+            return "null";
+        }
+
+        try
+        {
+            if (obj.getClass().getMethod("toString").getDeclaringClass() != Object.class)
+            {
+                return obj.toString();
+            }
+            else
+            {
+                return "obj";
+            }
+        }
+        catch (NoSuchMethodException ignored)
+        {
+        }
+
+        return "NOWAY";
+    }
+
+    private static void write(BufferedWriter writer, String... strings) throws IOException
+    {
+        for (String s : strings)
+            writer.append(s);
     }
 }

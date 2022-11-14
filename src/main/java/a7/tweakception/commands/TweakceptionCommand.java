@@ -170,7 +170,14 @@ public class TweakceptionCommand extends CommandBase
         addSub(new Command("mining",
             null,
             new Command("highlightchests",
-                args -> Tweakception.miningTweaks.toggleHighlightChests())
+                args -> Tweakception.miningTweaks.toggleHighlightChests()),
+            new Command("simulateBlockHardness",
+                args -> Tweakception.miningTweaks.toggleSimulateBlockHardness()),
+            new Command("printcachedminingspeed",
+                args -> Tweakception.miningTweaks.printMiningSpeedCache()),
+            new Command("setminingspeedboostvalue",
+                args -> Tweakception.miningTweaks.setMiningSpeedBoostValue(
+                    args.length > 0 ? toInt(args[0]) : 0))
         ));
         addSub(new Command("gt",
             null,

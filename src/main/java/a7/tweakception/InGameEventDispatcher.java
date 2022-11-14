@@ -247,6 +247,7 @@ public class InGameEventDispatcher
         dungeonTweaks.onChatReceived(event);
         fishingTweaks.onChatReceived(event);
         slayerTweaks.onChatReceived(event);
+        miningTweaks.onChatReceived(event);
     }
     
     @SubscribeEvent

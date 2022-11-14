@@ -6,6 +6,7 @@
   "minVersion": "0.6",
   "mixins": [
     "MixinBlock",
+    "MixinForgeHooks",
     "MixinNetworkManager",
     "MixinUtil"
   ],
@@ -17,6 +18,7 @@
     "MixinMinecraft",
     "MixinNetHandlerPlayClient",
     "MixinRendererLivingEntity",
+    "MixinRenderGlobal",
     "MixinRenderItem",
     "MixinRenderManager",
     "PlayerControllerMPInvoker"

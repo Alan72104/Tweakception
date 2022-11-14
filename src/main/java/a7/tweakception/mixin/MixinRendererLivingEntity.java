@@ -22,19 +22,19 @@ public abstract class MixinRendererLivingEntity<T extends EntityLivingBase> exte
     
     @Redirect(method = "renderModel", at = @At(value = "INVOKE", target =
         "Lnet/minecraft/entity/EntityLivingBase;isInvisibleToPlayer(Lnet/minecraft/entity/player/EntityPlayer;)Z"))
-    private boolean redirectedIsInvisibleToPlayer(EntityLivingBase living, EntityPlayer player)
+    private boolean redirectedIsInvisibleToPlayer(EntityLivingBase $this, EntityPlayer player)
     {
-        if (living instanceof EntityArmorStand)
+        if ($this instanceof EntityArmorStand)
         {
             if (Tweakception.globalTweaks.isRenderInvisibleArmorStandsOn())
                 return false;
             else
-                return living.isInvisibleToPlayer(player);
+                return $this.isInvisibleToPlayer(player);
         }
         else if (Tweakception.globalTweaks.isRenderInvisibleEntitiesOn())
             return false;
         else
-            return living.isInvisibleToPlayer(player);
+            return $this.isInvisibleToPlayer(player);
     }
     
     @ModifyArg(method = "renderModel", at = @At(value = "INVOKE", target =

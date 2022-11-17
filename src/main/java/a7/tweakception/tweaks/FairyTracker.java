@@ -141,7 +141,7 @@ public class FairyTracker extends Tweak
             String fairyTexture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjk2OTIzYWQyNDczMTAwMDdmNmFlNWQzMjZkODQ3YWQ1Mzg2NGNmMTZjMzU2NWExODFkYzhlNmIyMGJlMjM4NyJ9fX0=";
             
             String tex = McUtils.getArmorStandHeadTexture(armorStand);
-            if (tex.equals(fairyTexture))
+            if (tex != null && tex.equals(fairyTexture))
             {
                 FairyPos pos = new FairyPos(armorStand.posX - 1, armorStand.posY + 2, armorStand.posZ - 1);
                 if (!set.contains(pos))

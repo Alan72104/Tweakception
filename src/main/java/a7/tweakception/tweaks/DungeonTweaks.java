@@ -11,6 +11,7 @@ import com.google.gson.JsonObject;
 import net.minecraft.block.Block;
 import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.client.gui.inventory.GuiChest;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityArmorStand;
@@ -560,9 +561,9 @@ public class DungeonTweaks extends Tweak
             });
         }
         
-        if (McUtils.getMc().currentScreen instanceof GuiChest)
+        if (getMc().currentScreen instanceof GuiChest)
         {
-            GuiChest chest = (GuiChest)McUtils.getMc().currentScreen;
+            GuiChest chest = (GuiChest) getMc().currentScreen;
             ContainerChest container = (ContainerChest)chest.inventorySlots;
             if (secretChestOpened)
             {
@@ -594,7 +595,7 @@ public class DungeonTweaks extends Tweak
                             firstPane != null && Block.getBlockFromItem(firstPane) == Blocks.stained_glass_pane &&
                             salvageBtn != null && salvageBtn.getDisplayName().equals("§aSalvage Item"))
                         {
-                            McUtils.getMc().playerController.windowClick(container.windowId, 9 * 3 + 5 - 1,
+                            getMc().playerController.windowClick(container.windowId, 9 * 3 + 5 - 1,
                                 0, 0, McUtils.getPlayer());
                             salvageClickSent = true;
                             salvageLastClickTick = getTicks();
@@ -1053,9 +1054,9 @@ public class DungeonTweaks extends Tweak
                 }
             }
         }
-        else if (McUtils.getMc().currentScreen instanceof GuiChest)
+        else if (getMc().currentScreen instanceof GuiChest)
         {
-            GuiChest chest = (GuiChest)McUtils.getMc().currentScreen;
+            GuiChest chest = (GuiChest)getMc().currentScreen;
             ContainerChest container = (ContainerChest)chest.inventorySlots;
             String containerName = container.getLowerChestInventory().getName();
             if (containerName.equals("Party Finder"))
@@ -1078,7 +1079,7 @@ public class DungeonTweaks extends Tweak
                     
                     if (c.partyFinderDisplayQuickPlayerInfo || c.partyFinderPlayerBlacklist.size() > 0)
                     {
-                        final int spaceWidth = McUtils.getMc().fontRendererObj.getStringWidth(" ");
+                        final int spaceWidth = getMc().fontRendererObj.getStringWidth(" ");
                         int maxWidth = 0;
                         // Index, result, width
                         List<TriPair<Integer, MatchResult, Integer>> playerLines = new ArrayList<>(5);
@@ -1088,7 +1089,7 @@ public class DungeonTweaks extends Tweak
                             String line = event.toolTip.get(i);
                             if (partyFinderPlayerMatcher.reset(line).matches())
                             {
-                                int width = McUtils.getMc().fontRendererObj.getStringWidth(line);
+                                int width = getMc().fontRendererObj.getStringWidth(line);
                                 maxWidth = Math.max(maxWidth, width);
                                 playerLines.add(new TriPair<>(i, partyFinderPlayerMatcher.toMatchResult(), width));
                                 if (playerLines.size() == 5)

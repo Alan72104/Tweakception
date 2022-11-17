@@ -1207,14 +1207,15 @@ public class DungeonTweaks extends Tweak
         {
             event.density = 0.0f;
             event.setCanceled(true);
+            GlStateManager.setFogStart(1023.0f);
+            GlStateManager.setFogEnd(1024.0f);
         }
     }
 
     public void onFogColorsSet(EntityViewRenderEvent.FogColors event)
     {
-        if (c.enableNoFog && GlobalTweaks.t)
+        if (c.enableNoFog)
         {
-            sendChatf("%f, %f, %f", event.red, event.green, event.blue);
         }
     }
     

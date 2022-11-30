@@ -295,7 +295,7 @@ public class RenderUtils
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
     }
     
-    public static void renderFilledBoundingBox(AxisAlignedBB bb, Color c, boolean depth)
+    public static void drawFilledBoundingBox(AxisAlignedBB bb, Color c, boolean depth)
     {
         GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
@@ -370,17 +370,17 @@ public class RenderUtils
             GlStateManager.enableDepth();
     }
     
-    public static void renderFilledBoundingBoxBlockSize(double x, double y, double z, Color c)
+    public static void drawFilledBoundingBoxBlockSize(double x, double y, double z, Color c)
     {
         AxisAlignedBB bb = new AxisAlignedBB(x, y, z, x + 1, y + 1, z + 1);
-        renderFilledBoundingBox(bb, c, false);
+        drawFilledBoundingBox(bb, c, false);
     }
     
-    public static void renderFilledBoundingBoxChestSize(double x, double y, double z, Color c)
+    public static void drawFilledBoundingBoxChestSize(double x, double y, double z, Color c)
     {
         AxisAlignedBB bb = new AxisAlignedBB(x + 0.0625, y, z + 0.0625,
             x + 0.9375, y + 0.875, z + 0.9375);
-        renderFilledBoundingBox(bb, c, false);
+        drawFilledBoundingBox(bb, c, false);
     }
     
     public static Vector3d getInterpolatedViewingPos(float partialTicks)
@@ -401,6 +401,11 @@ public class RenderUtils
     // Type 1 is bounding box
     public static void drawBeaconBeamOrBoundingBox(BlockPos block, Color c, float partialTicks, int type)
     {
+        drawBeaconBeamOrBoundingBox(block, c, partialTicks, type, 10);
+    }
+
+    public static void drawBeaconBeamOrBoundingBox(BlockPos block, Color c, float partialTicks, int type, float range)
+    {
         Vector3d viewer = getInterpolatedViewingPos(partialTicks);
         double x = block.getX() - viewer.x;
         double y = block.getY() - viewer.y;
@@ -408,22 +413,45 @@ public class RenderUtils
         
         double distSq = x * x + y * y + z * z;
         
-        if (type < 0 || (type == 0 && distSq > 10 * 10))
-            RenderUtils.renderBeaconBeam(x, y, z, c, partialTicks, true);
+        if (type < 0 || (type == 0 && distSq > range * range))
+            RenderUtils.drawBeaconBeam(x, y, z, c, partialTicks, false);
         else
-            RenderUtils.renderFilledBoundingBoxBlockSize(x, y, z, c);
+            RenderUtils.drawFilledBoundingBoxBlockSize(x, y, z, c);
+    }
+
+    // Type -1 is beacon beam
+    // Type 0 is auto
+    // Type 1 is bounding box
+    public static void drawBeaconBeamOrBoundingBox(Entity e, Color c, float partialTicks, int type)
+    {
+        drawBeaconBeamOrBoundingBox(e, c, partialTicks, type, 10);
+    }
+
+    public static void drawBeaconBeamOrBoundingBox(Entity e, Color c, float partialTicks, int type, float range)
+    {
+        Vector3d viewer = getInterpolatedViewingPos(partialTicks);
+        double x = e.posX - viewer.x;
+        double y = e.posY - viewer.y;
+        double z = e.posZ - viewer.z;
+
+        double distSq = x * x + y * y + z * z;
+
+        if (type < 0 || (type == 0 && distSq > range * range))
+            RenderUtils.drawBeaconBeam(x, y, z, c, partialTicks, false);
+        else
+            RenderUtils.drawDefaultHighlightBoxForEntity(e, c, false);
     }
     
     public static void drawFilledBoundingBox(AxisAlignedBB bb, Color c, float partialTicks)
     {
         Vector3d viewer = getInterpolatedViewingPos(partialTicks);
-        renderFilledBoundingBox(bb.offset(-viewer.x, -viewer.y, -viewer.z), c, false);
+        drawFilledBoundingBox(bb.offset(-viewer.x, -viewer.y, -viewer.z), c, false);
     }
     
     public static void drawFilledBoundingBox(AxisAlignedBB bb, Color c, float partialTicks, boolean depth)
     {
         Vector3d viewer = getInterpolatedViewingPos(partialTicks);
-        renderFilledBoundingBox(bb.offset(-viewer.x, -viewer.y, -viewer.z), c, depth);
+        drawFilledBoundingBox(bb.offset(-viewer.x, -viewer.y, -viewer.z), c, depth);
     }
     
     public static void drawFilledBoundingBox(BlockPos block, Color c, float partialTicks)
@@ -432,7 +460,7 @@ public class RenderUtils
         double x = block.getX() - viewer.x;
         double y = block.getY() - viewer.y;
         double z = block.getZ() - viewer.z;
-        renderFilledBoundingBox(new AxisAlignedBB(x, y, z, x + 1d, y + 1d, z + 1d), c, false);
+        drawFilledBoundingBox(new AxisAlignedBB(x, y, z, x + 1d, y + 1d, z + 1d), c, false);
     }
     
     public static void drawBeaconBeamAtEntity(Entity entity, Color c)
@@ -441,12 +469,12 @@ public class RenderUtils
         double x = entity.posX - viewer.x - 0.5;
         double y = entity.posY - viewer.y - 0.5;
         double z = entity.posZ - viewer.z - 0.5;
-        RenderUtils.renderBeaconBeam(x, y, z, c, getMc().timer.renderPartialTicks, true);
+        RenderUtils.drawBeaconBeam(x, y, z, c, getMc().timer.renderPartialTicks, false);
     }
     
-    private static void renderBeaconBeam(
+    private static void drawBeaconBeam(
         double x, double y, double z, Color c,
-        float partialTicks, Boolean disableDepth
+        float partialTicks, Boolean depth
     )
     {
         int height = 300;
@@ -456,7 +484,7 @@ public class RenderUtils
         Tessellator tessellator = Tessellator.getInstance();
         WorldRenderer worldrenderer = tessellator.getWorldRenderer();
         
-        if (disableDepth)
+        if (!depth)
         {
             GlStateManager.disableDepth();
         }
@@ -532,7 +560,7 @@ public class RenderUtils
         
         GlStateManager.disableLighting();
         GlStateManager.enableTexture2D();
-        if (disableDepth)
+        if (!depth)
         {
             GlStateManager.enableDepth();
         }

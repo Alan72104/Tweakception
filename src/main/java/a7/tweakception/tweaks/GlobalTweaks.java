@@ -425,14 +425,11 @@ public class GlobalTweaks extends Tweak
 
         if (!playersToHighlight.isEmpty())
         {
-            for (String name : playersToHighlight)
+            for (EntityPlayer player : getWorld().playerEntities)
             {
-                for (EntityPlayer player : getWorld().playerEntities)
+                if (playersToHighlight.contains(player.getName().toLowerCase()))
                 {
-                    if (player.getName().equalsIgnoreCase(name))
-                    {
-                        RenderUtils.drawDefaultHighlightBoxForEntity(player, new Color(0, 255, 0, 64), false);
-                    }
+                    RenderUtils.drawBeaconBeamOrBoundingBox(player, new Color(0, 255, 0, 64), event.partialTicks, 0, 15);
                 }
             }
         }

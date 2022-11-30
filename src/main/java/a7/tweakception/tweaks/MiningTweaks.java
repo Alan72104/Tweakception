@@ -149,7 +149,7 @@ public class MiningTweaks extends Tweak
                         else
                             color = CHEST_COLOR_CLOSED;
                     }
-                    RenderUtils.renderFilledBoundingBoxChestSize(bp.getX() - pos.x, bp.getY() - pos.y, bp.getZ() - pos.z, color);
+                    RenderUtils.drawFilledBoundingBoxChestSize(bp.getX() - pos.x, bp.getY() - pos.y, bp.getZ() - pos.z, color);
                 }
             }
         }

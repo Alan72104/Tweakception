@@ -112,15 +112,6 @@ public class DungeonTweaks extends Tweak
         public long fastestFragrun = 0L;
     }
     private final DungeonTweaksConfig c;
-    private static final EnumChatFormatting[] KOOL_COLORS =
-    {
-        EnumChatFormatting.WHITE,
-        EnumChatFormatting.YELLOW,
-        EnumChatFormatting.GOLD,
-        EnumChatFormatting.RED,
-        EnumChatFormatting.RED,
-        EnumChatFormatting.WHITE
-    };
     private static final Set<String> SECRET_CHEST_ITEMS = new HashSet<>();
     private static final Set<String> TRASH_ITEMS = new HashSet<>();
     private static final Set<String> ESSENCES = new HashSet<>(Arrays.asList("wither", "spider", "undead", "dragon",
@@ -524,14 +515,11 @@ public class DungeonTweaks extends Tweak
                         }
                         if (c.trackDamageTags && c.trackWitherDamageTags && witherTagMatcher.reset(name).matches())
                         {
-//                            long num = Long.parseLong(McUtils.cleanColor(witherTagMatcher.group(1)));
-//                            name = "§0" + Utils.formatCommas(num);
                             pushDamageInfo(ele.a, name);
                         }
-                        else if (c.trackDamageTags && c.trackNonCritDamageTags && nonCritTagMatcher.reset(name).matches())
+                        else if (c.trackDamageTags && c.trackNonCritDamageTags &&
+                            nonCritTagMatcher.reset(name).matches())
                         {
-//                            long num = Long.parseLong(McUtils.cleanColor(nonCritTagMatcher.group(1)));
-//                            name = "§7" + Utils.formatCommas(num) + nonCritTagMatcher.group(2);
                             pushDamageInfo(ele.a, name);
                         }
                     }
@@ -553,7 +541,7 @@ public class DungeonTweaks extends Tweak
             damageHistoriesSorted.clear();
             damageHistoriesSorted.addAll(damageHistoriesMap.entrySet());
             damageHistoriesSorted.sort((a, b) ->
-            { // Fuck comparators, this is better
+            {
                 int r = b.getValue().compareTo(a.getValue());
                 if (r == 0)
                     return b.getKey().compareTo(a.getKey());
@@ -1210,13 +1198,6 @@ public class DungeonTweaks extends Tweak
             event.setCanceled(true);
             GlStateManager.setFogStart(1023.0f);
             GlStateManager.setFogEnd(1024.0f);
-        }
-    }
-
-    public void onFogColorsSet(EntityViewRenderEvent.FogColors event)
-    {
-        if (c.enableNoFog)
-        {
         }
     }
     

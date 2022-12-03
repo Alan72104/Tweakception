@@ -380,12 +380,4 @@ public class InGameEventDispatcher
         if (event.isCanceled())
             return;
     }
-
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void onFogColorsSet(EntityViewRenderEvent.FogColors event)
-    {
-        if (!isInSkyblock()) return;
-
-        dungeonTweaks.onFogColorsSet(event);
-    }
 }

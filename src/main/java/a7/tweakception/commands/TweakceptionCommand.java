@@ -414,14 +414,12 @@ public class TweakceptionCommand extends CommandBase
                 args -> Tweakception.fairyTracker.list()),
             new Command("reset",
                 args -> Tweakception.fairyTracker.reset()),
-            new Command("setdelay",
-                args -> Tweakception.fairyTracker.setDelay(args.length > 0 ? toInt(args[0]) : 0)),
             new Command("setnotfound",
                 args -> Tweakception.fairyTracker.setNotFound()),
-            new Command("toggleauto",
-                args -> Tweakception.fairyTracker.toggleAutoTracking()),
-            new Command("trackonce",
-                args -> Tweakception.fairyTracker.trackOnce())
+            new Command("toggletracking",
+                args -> Tweakception.fairyTracker.toggleTracking()),
+            new Command("togglegift",
+                args -> Tweakception.fairyTracker.toggleGiftTracking())
         ));
         addSub(new Command("enchanting",
             null,

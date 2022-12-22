@@ -257,6 +257,7 @@ public class InGameEventDispatcher
         
         globalTweaks.onEntityUpdate(event);
         dungeonTweaks.onEntityUpdate(event);
+        fairyTracker.onEntityUpdate(event);
     }
     
     @SubscribeEvent
@@ -365,8 +366,7 @@ public class InGameEventDispatcher
     public void onEntityJoinWorld(EntityJoinWorldEvent event)
     {
         if (!isInSkyblock()) return;
-        
-        fairyTracker.onEntityJoinWorld(event);
+
         dungeonTweaks.onEntityJoinWorld(event);
         slayerTweaks.onEntityJoinWorld(event);
     }

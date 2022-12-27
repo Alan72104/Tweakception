@@ -83,7 +83,6 @@ public class GlobalTweaks extends Tweak
         public boolean renderSacksType = false;
         public boolean renderPotionTier = false;
         public boolean tooltipDisplaySkyblockItemId = false;
-        public boolean minionAutoClaim = false;
         public TreeSet<String> minionAutoClaimWhitelist = new TreeSet<>();
         public int minionAutoclaimDelayTicksMin = 3;
         public boolean enableOnlineStatusOverlay = false;
@@ -137,6 +136,7 @@ public class GlobalTweaks extends Tweak
     private List<BlockPos> skullsTemp = new ArrayList<>(25);
     private Tweakception.BlockSearchTask skullsSearchThread;
     private int lastBitsMsgTicks = 0;
+    private boolean minionAutoClaim = false;
     private int[] minionAutoclaimPos = { -2, -2 };
     private boolean minionAutoclaimWasInScreen = false;
 
@@ -226,7 +226,7 @@ public class GlobalTweaks extends Tweak
                 }
             }
 
-            if (c.minionAutoClaim && getMc().currentScreen instanceof GuiChest)
+            if (minionAutoClaim && getMc().currentScreen instanceof GuiChest)
             {
                 GuiChest chest = (GuiChest)McUtils.getMc().currentScreen;
                 ContainerChest container = (ContainerChest)chest.inventorySlots;
@@ -1711,8 +1711,8 @@ public class GlobalTweaks extends Tweak
 
     public void toggleMinionAutoClaim()
     {
-        c.minionAutoClaim = !c.minionAutoClaim;
-        sendChat("GT-MinionAutoClaim: toggled " + c.minionAutoClaim);
+        minionAutoClaim = !minionAutoClaim;
+        sendChat("GT-MinionAutoClaim: toggled " + minionAutoClaim);
     }
 
     public void addMinionAutoClaimWhitelist(String id)

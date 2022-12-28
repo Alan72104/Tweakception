@@ -92,6 +92,9 @@ public class GlobalTweaks extends Tweak
         public boolean trevorQuestAutoStart = false;
         public boolean trevorHighlightAnimal = false;
         public boolean sendBitsMessage = false;
+        public boolean disableDeadMobTargeting = false;
+        public boolean disableArmorStandTargeting = false;
+        public boolean onlyTargetOpenableGift = false;
     }
     private final GlobalTweaksConfig c;
 //    private static final HashMap<String, SkyblockIsland> SUBPLACE_TO_ISLAND_MAP = new HashMap<>();
@@ -1060,6 +1063,22 @@ public class GlobalTweaks extends Tweak
         return packetLogger;
     }
 
+    public boolean isDisableDeadMobTargetingOn()
+    {
+        return c.disableDeadMobTargeting;
+    }
+
+    public boolean isDisableArmorStandTargetingOn()
+    {
+        return c.disableArmorStandTargeting;
+    }
+
+    public boolean isOnlyTargetOpenableGiftOn()
+    {
+        return c.onlyTargetOpenableGift;
+    }
+
+
     private void trevorStartFromAbiphone()
     {
         int slot = findAbiphone();
@@ -1842,6 +1861,32 @@ public class GlobalTweaks extends Tweak
         c.sendBitsMessage = !c.sendBitsMessage;
         sendChat("GT-SendBitsMessage: toggled " + c.sendBitsMessage);
     }
-    
+
+    public void toggleDisableDeadMobTargeting()
+    {
+        c.disableDeadMobTargeting = !c.disableDeadMobTargeting;
+        sendChat("GT-DisableDeadMobTargeting: toggled " + c.disableDeadMobTargeting);
+    }
+
+    public void toggleDisableArmorStandTargeting()
+    {
+        c.disableArmorStandTargeting = !c.disableArmorStandTargeting;
+        sendChat("GT-DisableArmorStandTargeting: toggled " + c.disableArmorStandTargeting);
+    }
+
+    public void toggleOnlyTargetOpenableGift()
+    {
+        c.onlyTargetOpenableGift = !c.onlyTargetOpenableGift;
+        sendChat("GT-OnlyTargetOpenableGift: toggled " + c.onlyTargetOpenableGift);
+    }
+
+    public void resetTargeting()
+    {
+        c.disableDeadMobTargeting = new GlobalTweaksConfig().disableDeadMobTargeting;
+        c.disableArmorStandTargeting = new GlobalTweaksConfig().disableArmorStandTargeting;
+        c.onlyTargetOpenableGift = new GlobalTweaksConfig().onlyTargetOpenableGift;
+        sendChat("GT: reset all targeting options");
+    }
+
     // endregion
 }

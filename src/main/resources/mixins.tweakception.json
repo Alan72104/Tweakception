@@ -6,6 +6,7 @@
   "minVersion": "0.6",
   "mixins": [
     "MixinBlock",
+    "MixinEntityRenderer_Predicate",
     "MixinForgeHooks",
     "MixinNetworkManager",
     "MixinUtil"

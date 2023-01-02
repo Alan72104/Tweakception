@@ -14,14 +14,13 @@ import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.*;
 import java.util.List;
-import java.util.Locale;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import static a7.tweakception.utils.McUtils.getMc;
+import static a7.tweakception.utils.McUtils.getPlayer;
 
 public class Utils
 {
@@ -239,6 +238,42 @@ public class Utils
                 return extra.getString("uuid");
         }
         return null;
+    }
+
+    public static int findInHotbarById(String... ids)
+    {
+        return findInHotbarById(id ->
+        {
+            for (String target : ids)
+                if (id.equals(target))
+                    return true;
+            return false;
+        });
+    }
+
+    public static int findInHotbarById(Predicate<String> predicate)
+    {
+        for (int i = 0; i < 9; i++)
+        {
+            ItemStack stack = getPlayer().inventory.getStackInSlot(i);
+            String id = Utils.getSkyblockItemId(stack);
+            if (stack == null || id == null)
+                continue;
+            if (predicate.test(id))
+                return i;
+        }
+        return -1;
+    }
+
+    public static int findInHotbarBy(Predicate<ItemStack> predicate)
+    {
+        for (int i = 0; i < 9; i++)
+        {
+            ItemStack stack = getPlayer().inventory.getStackInSlot(i);
+            if (predicate.test(stack))
+                return i;
+        }
+        return -1;
     }
     
     public static int[] makeColorArray(int r, int g, int b, int a)

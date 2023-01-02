@@ -62,7 +62,7 @@ public abstract class MixinMinecraft
             String id = Utils.getSkyblockItemId(getPlayer().getCurrentEquippedItem());
             if (id != null && (id.equals("ASPECT_OF_THE_END") || id.equals("ASPECT_OF_THE_VOID")))
             {
-                int slot = Tweakception.dungeonTweaks.findSpiritSceptre();
+                int slot = Utils.findInHotbarById("BAT_WAND");
                 if (slot != -1)
                 {
                     getPlayer().inventory.currentItem = slot;
@@ -100,7 +100,7 @@ public abstract class MixinMinecraft
             String id = Utils.getSkyblockItemId(getPlayer().getCurrentEquippedItem());
             if (id != null && (id.equals("ASPECT_OF_THE_END") || id.equals("ASPECT_OF_THE_VOID")))
             {
-                int slot = Tweakception.dungeonTweaks.findSpiritSceptre();
+                int slot = Utils.findInHotbarById("BAT_WAND");
                 if (slot != -1)
                 {
                     getPlayer().inventory.currentItem = slot;
@@ -165,7 +165,7 @@ public abstract class MixinMinecraft
             String id = Utils.getSkyblockItemId(getPlayer().getCurrentEquippedItem());
             if (id != null && (id.equals("ASPECT_OF_THE_END") || id.equals("ASPECT_OF_THE_VOID")))
             {
-                int slot = Tweakception.dungeonTweaks.findSpiritSceptre();
+                int slot = Utils.findInHotbarById("BAT_WAND");
                 if (slot != -1)
                 {
                     getPlayer().inventory.currentItem = slot;
@@ -200,7 +200,7 @@ public abstract class MixinMinecraft
                 if (id.equals("ASPECT_OF_THE_END") || id.equals("ASPECT_OF_THE_VOID"))
                 {
                     // Do not swap click if no ss to swap to
-                    int slot = Tweakception.dungeonTweaks.findSpiritSceptre();
+                    int slot = Utils.findInHotbarById("BAT_WAND");
                     if (slot != -1)
                     {
                         inAutoSwap = true;
@@ -213,7 +213,7 @@ public abstract class MixinMinecraft
                 else if (id.equals("BAT_WAND") && // Do not swap when attacking with both buttons
                         !Mouse.isButtonDown(1))
                 {
-                    int slot = Tweakception.dungeonTweaks.findAote();
+                    int slot = Utils.findInHotbarById("ASPECT_OF_THE_END", "ASPECT_OF_THE_VOID");
                     if (slot != -1)
                     {
                         getPlayer().inventory.currentItem = slot;

@@ -1081,7 +1081,7 @@ public class GlobalTweaks extends Tweak
 
     private void trevorStartFromAbiphone()
     {
-        int slot = findAbiphone();
+        int slot = Utils.findInHotbarById(id -> id.startsWith("ABIPHONE_"));
         if (slot != -1)
         {
             sendChat("GT-Trevor: starting from abiphone");
@@ -1094,18 +1094,6 @@ public class GlobalTweaks extends Tweak
         {
             sendChat("GT-Trevor: can't find abiphone in hotbar");
         }
-    }
-
-    private int findAbiphone()
-    {
-        for (int i = 0; i < 9; i++)
-        {
-            ItemStack stack = getPlayer().inventory.getStackInSlot(i);
-            String id = Utils.getSkyblockItemId(stack);
-            if (stack != null && id != null && id.startsWith("ABIPHONE_"))
-                return i;
-        }
-        return -1;
     }
 
     private class PlayersInAreasDisplayOverlay extends TextOverlay

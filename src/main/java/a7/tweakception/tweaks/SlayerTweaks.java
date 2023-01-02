@@ -202,7 +202,11 @@ public class SlayerTweaks extends Tweak
                         !switchingSlot)
                     {
                         currentSlayer.fishingRodThrown = true;
-                        int slot = findFishingRodSlot();
+                        int slot = Utils.findInHotbarBy(stack ->
+                            stack != null &&
+                            stack.getItem() == Items.fishing_rod &&
+                            Utils.getSkyblockItemId(stack) != null &&
+                            !Utils.getSkyblockItemId(stack).equals("GRAPPLING_HOOK"));
                         
                         if (slot == -1)
                             sendChat("ST-AutoThrowFishingRod: cannot find any fishing rod in your hotbar!");
@@ -235,7 +239,8 @@ public class SlayerTweaks extends Tweak
             {
                 lastHealWandTicks = getTicks();
                 healWandRandomDelay = getWorld().rand.nextInt(5);
-                int wandSlot = findHealWandSlot();
+                int wandSlot = Utils.findInHotbarById("WAND_OF_HEALING", "WAND_OF_MENDING", "WAND_OF_RESTORATION",
+                    "WAND_OF_ATONEMENT");
                 if (wandSlot == -1)
                     sendChat("ST-AutoHealWand: cannot find any healing wands in your hotbar!");
                 else
@@ -338,38 +343,6 @@ public class SlayerTweaks extends Tweak
             searchThread.cancel = true;
         slayersCache.clear();
         slayerMinibossCache.clear();
-    }
-    
-    private int findFishingRodSlot()
-    {
-        for (int i = 0; i < 9; i++)
-        {
-            ItemStack stack = getPlayer().inventory.getStackInSlot(i);
-            if (stack != null && stack.getItem() == Items.fishing_rod)
-            {
-                String id = Utils.getSkyblockItemId(stack);
-                if (id == null || !id.equals("GRAPPLING_HOOK"))
-                    return i;
-            }
-        }
-        return -1;
-    }
-    
-    private int findHealWandSlot()
-    {
-        Set<String> healWands = new HashSet<>(Arrays.asList("WAND_OF_HEALING", "WAND_OF_MENDING",
-            "WAND_OF_RESTORATION", "WAND_OF_ATONEMENT"));
-        for (int i = 0; i < 9; i++)
-        {
-            ItemStack stack = getPlayer().inventory.getStackInSlot(i);
-            if (stack != null && stack.getItem() == Items.stick)
-            {
-                String id = Utils.getSkyblockItemId(stack);
-                if (id == null || healWands.contains(id))
-                    return i;
-            }
-        }
-        return -1;
     }
     
     // If the name has health, returns the health

@@ -1269,30 +1269,6 @@ public class DungeonTweaks extends Tweak
     {
         return c.autoSwapSpiritSceptreAote;
     }
-
-    public int findSpiritSceptre()
-    {
-        for (int i = 0; i < 9; i++)
-        {
-            ItemStack stack = getPlayer().inventory.getStackInSlot(i);
-            String id = Utils.getSkyblockItemId(stack);
-            if (stack != null && id != null && id.equals("BAT_WAND"))
-                return i;
-        }
-        return -1;
-    }
-
-    public int findAote()
-    {
-        for (int i = 0; i < 9; i++)
-        {
-            ItemStack stack = getPlayer().inventory.getStackInSlot(i);
-            String id = Utils.getSkyblockItemId(stack);
-            if (stack != null && id != null && (id.equals("ASPECT_OF_THE_END") || id.equals("ASPECT_OF_THE_VOID")))
-                return i;
-        }
-        return -1;
-    }
     
     private void resetLivid()
     {

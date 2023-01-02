@@ -28,7 +28,8 @@ public class TweakceptionCommand extends CommandBase
     @SuppressWarnings("SpellCheckingInspection")
     public TweakceptionCommand()
     {
-        addSub(new Command("dungeon",
+        // Dungeon
+        {addSub(new Command("dungeon",
             null,
             new Command("autoclosesecretchest",
                 args -> Tweakception.dungeonTweaks.toggleAutoCloseSecretChest()),
@@ -150,8 +151,9 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.dungeonTweaks.setShootingSpeedTrackingRange(
                         args.length >= 1 ? toInt(args[0]) : 0))
             )
-        ));
-        addSub(new Command("crimson",
+        ));}
+        // Crimson
+        {addSub(new Command("crimson",
             null,
             new Command("map",
                 args -> Tweakception.crimsonTweaks.toggleMap(),
@@ -168,8 +170,9 @@ public class TweakceptionCommand extends CommandBase
             ),
             new Command("sulfur",
                 args -> Tweakception.crimsonTweaks.toggleSulfurHighlight())
-        ));
-        addSub(new Command("mining",
+        ));}
+        // Mining
+        {addSub(new Command("mining",
             null,
             new Command("highlightchests",
                 args -> Tweakception.miningTweaks.toggleHighlightChests()),
@@ -180,9 +183,12 @@ public class TweakceptionCommand extends CommandBase
             new Command("setminingspeedboostvalue",
                 args -> Tweakception.miningTweaks.setMiningSpeedBoostValue(
                     args.length > 0 ? toInt(args[0]) : 0))
-        ));
-        addSub(new Command("gt",
+        ));}
+        // Gt
+        {addSub(new Command("gt",
             null,
+            new Command("autoswitchgiftslot",
+                args -> Tweakception.globalTweaks.toggleAutoSwitchGiftSlot()),
             new Command("areaedit",
                 args -> Tweakception.globalTweaks.toggleAreaEdit(),
                 new Command("print",
@@ -382,8 +388,9 @@ public class TweakceptionCommand extends CommandBase
                 new Command("tooltipfinal",
                     args -> Tweakception.globalTweaks.rightCtrlCopySet("tooltipfinal"))
             ).setVisibility(false)
-        ));
-        addSub(new Command("slayer",
+        ));}
+        // Slayer
+        {addSub(new Command("slayer",
             null,
             new Command("autohealwand",
                 args -> Tweakception.slayerTweaks.toggleAutoHealWand(),
@@ -406,16 +413,18 @@ public class TweakceptionCommand extends CommandBase
                 args -> Tweakception.slayerTweaks.toggleHighlightSlayerMiniboss()),
             new Command("highlightslayers",
                 args -> Tweakception.slayerTweaks.toggleHighlightSlayers())
-        ));
-        addSub(new Command("tuning",
+        ));}
+        // Tuning
+        {addSub(new Command("tuning",
             null,
             new Command("clickdelayticks",
                 args -> Tweakception.tuningTweaks.setTuningClickDelay(
                     args.length > 0 ? toInt(args[0]) : 0)),
             new Command("toggletemplate",
                 args -> Tweakception.tuningTweaks.toggleTemplate())
-        ));
-        addSub(new Command("fairy",
+        ));}
+        // Fairy
+        {addSub(new Command("fairy",
             args -> Tweakception.fairyTracker.toggle(),
             new Command("count",
                 args -> Tweakception.fairyTracker.count()),
@@ -433,7 +442,7 @@ public class TweakceptionCommand extends CommandBase
                 args -> Tweakception.fairyTracker.toggleTracking()),
             new Command("togglegift",
                 args -> Tweakception.fairyTracker.toggleGiftTracking())
-        ));
+        ));}
         addSub(new Command("enchanting",
             null,
             new Command("autosolve",

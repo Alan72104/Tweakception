@@ -24,6 +24,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.function.Function;
+
 import static a7.tweakception.utils.McUtils.getPlayer;
 
 @Mixin(Minecraft.class)
@@ -56,34 +58,51 @@ public abstract class MixinMinecraft
     private void rightClickOnEntity(CallbackInfo ci)
     {
 //        sendChat("rclick entity");
-        if (Tweakception.dungeonTweaks.isAutoSwapSpiritSceptreAoteOn() &&
+        int slot = -1;
+        Runnable afterInject = () ->
+        {
+            boolean flag = true;
+            if (this.playerController.isPlayerRightClickingOnEntity(this.thePlayer, this.objectMouseOver.entityHit, this.objectMouseOver))
+                flag = false;
+            else if (this.playerController.interactWithEntitySendPacket(this.thePlayer, this.objectMouseOver.entityHit))
+                flag = false;
+
+            if (flag)
+            {
+                ItemStack itemstack1 = this.thePlayer.inventory.getCurrentItem();
+                boolean result = !ForgeEventFactory.onPlayerInteract(this.thePlayer,
+                    PlayerInteractEvent.Action.RIGHT_CLICK_AIR, this.theWorld, null, null, null).isCanceled();
+                if (result && itemstack1 != null &&
+                    this.playerController.sendUseItem(this.thePlayer, this.theWorld, itemstack1))
+                {
+                    this.entityRenderer.itemRenderer.resetEquippedProgress2();
+                }
+            }
+        };
+
+        if (Tweakception.globalTweaks.isAutoSwitchGiftSlotOn() &&
+            (slot = Utils.findInHotbarById("WHITE_GIFT", "GREEN_GIFT", "RED_GIFT")) != -1)
+        {
+            getPlayer().inventory.currentItem = slot;
+            afterInject.run();
+            ci.cancel();
+            return;
+        }
+
+        String id = Utils.getSkyblockItemId(getPlayer().getCurrentEquippedItem());
+        if (id == null)
+            return;
+
+        if ((id.equals("ASPECT_OF_THE_END") || id.equals("ASPECT_OF_THE_VOID")) &&
+            Tweakception.dungeonTweaks.isAutoSwapSpiritSceptreAoteOn() &&
             GlobalTweaks.getCurrentIsland() == SkyblockIsland.DUNGEON && !inAutoSwap)
         {
-            String id = Utils.getSkyblockItemId(getPlayer().getCurrentEquippedItem());
-            if (id != null && (id.equals("ASPECT_OF_THE_END") || id.equals("ASPECT_OF_THE_VOID")))
+            slot = Utils.findInHotbarById("BAT_WAND");
+            if (slot != -1)
             {
-                int slot = Utils.findInHotbarById("BAT_WAND");
-                if (slot != -1)
-                {
-                    getPlayer().inventory.currentItem = slot;
-
-                    boolean flag = !this.playerController.isPlayerRightClickingOnEntity(this.thePlayer,
-                        this.objectMouseOver.entityHit, this.objectMouseOver);
-
-                    if (flag)
-                    {
-                        ItemStack itemstack1 = this.thePlayer.inventory.getCurrentItem();
-                        boolean result = !ForgeEventFactory.onPlayerInteract(this.thePlayer,
-                            PlayerInteractEvent.Action.RIGHT_CLICK_AIR, this.theWorld, null, null, null).isCanceled();
-                        if (result && itemstack1 != null &&
-                            this.playerController.sendUseItem(this.thePlayer, this.theWorld, itemstack1))
-                        {
-                            this.entityRenderer.itemRenderer.resetEquippedProgress2();
-                        }
-                    }
-
-                    ci.cancel();
-                }
+                getPlayer().inventory.currentItem = slot;
+                afterInject.run();
+                ci.cancel();
             }
         }
     }

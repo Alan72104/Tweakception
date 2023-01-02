@@ -95,6 +95,7 @@ public class GlobalTweaks extends Tweak
         public boolean disableDeadMobTargeting = false;
         public boolean disableArmorStandTargeting = false;
         public boolean onlyTargetOpenableGift = false;
+        public boolean autoSwitchGiftSlot = false;
     }
     private final GlobalTweaksConfig c;
 //    private static final HashMap<String, SkyblockIsland> SUBPLACE_TO_ISLAND_MAP = new HashMap<>();
@@ -1078,6 +1079,11 @@ public class GlobalTweaks extends Tweak
         return c.onlyTargetOpenableGift;
     }
 
+    public boolean isAutoSwitchGiftSlotOn()
+    {
+        return c.autoSwitchGiftSlot;
+    }
+
 
     private void trevorStartFromAbiphone()
     {
@@ -1874,6 +1880,12 @@ public class GlobalTweaks extends Tweak
         c.disableArmorStandTargeting = new GlobalTweaksConfig().disableArmorStandTargeting;
         c.onlyTargetOpenableGift = new GlobalTweaksConfig().onlyTargetOpenableGift;
         sendChat("GT: reset all targeting options");
+    }
+
+    public void toggleAutoSwitchGiftSlot()
+    {
+        c.autoSwitchGiftSlot = !c.autoSwitchGiftSlot;
+        sendChat("GT-AutoSwitchGiftSlot: toggled " + c.autoSwitchGiftSlot);
     }
 
     // endregion

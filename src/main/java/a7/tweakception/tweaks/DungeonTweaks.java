@@ -78,6 +78,7 @@ public class DungeonTweaks extends Tweak
         public TreeSet<String> blockRightClickItemNames = new TreeSet<>();
         public boolean autoCloseSecretChest = false;
         public boolean autoJoinParty = false;
+        public boolean autoJoinPartyWhitelistEnable = true;
         public boolean autoSalvage = false;
         public boolean blockOpheliaShopClicks = true;
 //        public boolean displaySoulName = false;
@@ -1006,9 +1007,10 @@ public class DungeonTweaks extends Tweak
             if (partyRequestMatcher.reset(msg).find())
             {
                 String name = partyRequestMatcher.group(1)/*.replaceAll("[.*]", "").trim()*/.toLowerCase();
-                if (c.autoJoinPartyOwners.contains(name))
+                if (!c.autoJoinPartyWhitelistEnable || c.autoJoinPartyOwners.contains(name))
                 {
-                    sendChat("DT-AutoJoinParty: joining " + name + "'s party");
+                    sendChat("DT-AutoJoinParty: joining " + name + "'s party" +
+                        (!c.autoJoinPartyWhitelistEnable ? " (whitelist disabled)" : ""));
                     McUtils.getPlayer().sendChatMessage("/p " + name);
                 }
             }
@@ -1905,6 +1907,12 @@ public class DungeonTweaks extends Tweak
         {
             sendChat("DT-AutoJoinParty: player " + name + " is not in the list");
         }
+    }
+
+    public void autoJoinPartyToggleWhitelist()
+    {
+        c.autoJoinPartyWhitelistEnable = !c.autoJoinPartyWhitelistEnable;
+        sendChat("DT-AutoJoinParty: whitelist " + (c.autoJoinPartyWhitelistEnable ? "enabled" : "disabled"));
     }
     
     public void listFragCounts()

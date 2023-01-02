@@ -39,7 +39,9 @@ public class TweakceptionCommand extends CommandBase
                 new Command("list",
                     args -> Tweakception.dungeonTweaks.autoJoinPartyList()),
                 new Command("remove",
-                    args -> Tweakception.dungeonTweaks.autoJoinPartyRemove(args.length > 0 ? args[0] : ""))
+                    args -> Tweakception.dungeonTweaks.autoJoinPartyRemove(args.length > 0 ? args[0] : ""),
+                new Command("togglewhitelist",
+                    args -> Tweakception.dungeonTweaks.autoJoinPartyToggleWhitelist()))
             ),
             new Command("autosalvage",
                 args -> Tweakception.dungeonTweaks.toggleAutoSalvage()),

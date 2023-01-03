@@ -312,6 +312,12 @@ public class GlobalTweaks extends Tweak
                                 {
                                     getMc().playerController.windowClick(container.windowId, index,
                                         2, 3, getPlayer());
+                                    minionAutoclaimPos[0]--;
+                                    if (minionAutoclaimPos[0] < pos1[0])
+                                    {
+                                        minionAutoclaimPos[1]--;
+                                        minionAutoclaimPos[0] = pos2[0];
+                                    }
                                     break findLoop;
                                 }
                             }
@@ -426,6 +432,7 @@ public class GlobalTweaks extends Tweak
                             invDropGiftShitsLastClickTicks = getTicks();
                             invDropGiftShitsClickDelay = 3 + getWorld().rand.nextInt(3);
                             invDropGiftShits = true;
+                            invDropGiftShitsIndex++;
                             break;
                         }
                     }

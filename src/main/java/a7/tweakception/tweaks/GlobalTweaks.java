@@ -16,6 +16,7 @@ import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityArmorStand;
@@ -24,6 +25,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.ContainerChest;
+import net.minecraft.inventory.ContainerPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.Item;
@@ -49,6 +51,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -100,6 +103,7 @@ public class GlobalTweaks extends Tweak
     private final GlobalTweaksConfig c;
 //    private static final HashMap<String, SkyblockIsland> SUBPLACE_TO_ISLAND_MAP = new HashMap<>();
     private static final List<SkyblockIsland> ISLANDS_THAT_HAS_SUBAREAS = new ArrayList<>();
+    private static final HashMap<String, Predicate<ItemStack>> GIFT_SHITS = new HashMap<>();
     private static int ticks = 0;
     private static boolean islandUpdatedThisTick = false;
     private static boolean isInSkyblock = false;
@@ -143,6 +147,10 @@ public class GlobalTweaks extends Tweak
     private boolean minionAutoClaim = false;
     private int[] minionAutoclaimPos = { -2, -2 };
     private boolean minionAutoclaimWasInScreen = false;
+    private boolean invDropGiftShits = false;
+    private int invDropGiftShitsIndex = 0;
+    private int invDropGiftShitsLastClickTicks = 0;
+    private int invDropGiftShitsClickDelay = 0;
 
     static
     {
@@ -151,6 +159,24 @@ public class GlobalTweaks extends Tweak
             if (island.subAreas != null)
                 ISLANDS_THAT_HAS_SUBAREAS.add(island);
         }
+        GIFT_SHITS.put("BATTLE_DISC", s -> true);
+        GIFT_SHITS.put("WINTER_DISC", s -> true);
+        GIFT_SHITS.put("POTION", s -> McUtils.getExtraAttributes(s).getString("potion").endsWith("_xp_boost"));
+        HashMap<String, Integer> crap = new HashMap<>();
+        crap.put("scavenger", 4);
+        crap.put("looting", 4);
+        crap.put("luck", 6);
+        GIFT_SHITS.put("ENCHANTED_BOOK", s ->
+        {
+            NBTTagCompound enchs = McUtils.getExtraAttributes(s).getCompoundTag("enchantments");
+            Set<String> ids = enchs.getKeySet();
+            if (ids.size() == 1)
+            {
+                String next = ids.iterator().next();
+                return crap.containsKey(next) && crap.get(next) == enchs.getInteger(next);
+            }
+            return false;
+        });
     }
     
     public GlobalTweaks(Configuration configuration)
@@ -362,7 +388,6 @@ public class GlobalTweaks extends Tweak
                     trevorQuestPendingStart = false;
             }
 
-
             if (highlightSkulls && getTicks() % 5 == 0)
             {
                 if (skullsSearchThread == null || skullsSearchThread.done)
@@ -374,6 +399,41 @@ public class GlobalTweaks extends Tweak
                             (int)p.posX + 64, 150, (int)p.posZ + 64, getWorld(), Blocks.skull, skullsTemp);
                     Tweakception.threadPool.execute(skullsSearchThread);
                 }
+            }
+
+            if (getMc().currentScreen instanceof GuiInventory)
+            {
+                GuiInventory guiInv = (GuiInventory)getMc().currentScreen;
+                ContainerPlayer inv = (ContainerPlayer)guiInv.inventorySlots;
+                if (Keyboard.isKeyDown(Keyboard.KEY_D) && !invDropGiftShits)
+                {
+                    invDropGiftShitsIndex = 9;
+                    invDropGiftShits = true;
+                }
+
+                if (invDropGiftShits && getTicks() - invDropGiftShitsLastClickTicks >= invDropGiftShitsClickDelay)
+                {
+                    invDropGiftShits = false;
+                    for (; invDropGiftShitsIndex <= 44; invDropGiftShitsIndex++)
+                    {
+                        ItemStack stack = inv.getInventory().get(invDropGiftShitsIndex);
+                        String id = Utils.getSkyblockItemId(stack);
+                        if (stack != null && id != null &&
+                            GIFT_SHITS.containsKey(id) && GIFT_SHITS.get(id).test(stack))
+                        {
+                            getMc().playerController.windowClick(0, invDropGiftShitsIndex,
+                                0, 4, getPlayer());
+                            invDropGiftShitsLastClickTicks = getTicks();
+                            invDropGiftShitsClickDelay = 3 + getWorld().rand.nextInt(3);
+                            invDropGiftShits = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                invDropGiftShits = false;
             }
         }
     }

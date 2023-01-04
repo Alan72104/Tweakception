@@ -28,7 +28,7 @@ public class TweakceptionCommand extends CommandBase
     @SuppressWarnings("SpellCheckingInspection")
     public TweakceptionCommand()
     {
-        // Dungeon
+        // dungeon
         {addSub(new Command("dungeon",
             null,
             new Command("autoclosesecretchest",
@@ -152,7 +152,7 @@ public class TweakceptionCommand extends CommandBase
                         args.length >= 1 ? toInt(args[0]) : 0))
             )
         ));}
-        // Crimson
+        // crimson
         {addSub(new Command("crimson",
             null,
             new Command("map",
@@ -171,7 +171,7 @@ public class TweakceptionCommand extends CommandBase
             new Command("sulfur",
                 args -> Tweakception.crimsonTweaks.toggleSulfurHighlight())
         ));}
-        // Mining
+        // mining
         {addSub(new Command("mining",
             null,
             new Command("highlightchests",
@@ -184,7 +184,7 @@ public class TweakceptionCommand extends CommandBase
                 args -> Tweakception.miningTweaks.setMiningSpeedBoostValue(
                     args.length > 0 ? toInt(args[0]) : 0))
         ));}
-        // Gt
+        // gt
         {addSub(new Command("gt",
             null,
             new Command("autoswitchgiftslot",
@@ -389,7 +389,7 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.globalTweaks.rightCtrlCopySet("tooltipfinal"))
             ).setVisibility(false)
         ));}
-        // Slayer
+        // slayer
         {addSub(new Command("slayer",
             null,
             new Command("autohealwand",
@@ -414,7 +414,7 @@ public class TweakceptionCommand extends CommandBase
             new Command("highlightslayers",
                 args -> Tweakception.slayerTweaks.toggleHighlightSlayers())
         ));}
-        // Tuning
+        // tuning
         {addSub(new Command("tuning",
             null,
             new Command("clickdelayticks",
@@ -423,7 +423,7 @@ public class TweakceptionCommand extends CommandBase
             new Command("toggletemplate",
                 args -> Tweakception.tuningTweaks.toggleTemplate())
         ));}
-        // Fairy
+        // fairy
         {addSub(new Command("fairy",
             args -> Tweakception.fairyTracker.toggle(),
             new Command("count",
@@ -443,15 +443,18 @@ public class TweakceptionCommand extends CommandBase
             new Command("togglegift",
                 args -> Tweakception.fairyTracker.toggleGiftTracking())
         ));}
-        addSub(new Command("enchanting",
+        // enchanting
+        {addSub(new Command("enchanting",
             null,
             new Command("autosolve",
                 args -> Tweakception.enchantingTweaks.toggleAutoSolve())
-        ));
-        addSub(new Command("overlay",
+        ));}
+        // overlay
+        {addSub(new Command("overlay",
             args -> Tweakception.overlayManager.editOverlays()
-        ));
-        addSub(new Command("api",
+        ));}
+        // api
+        {addSub(new Command("api",
             null,
             new Command("set",
                 args -> Tweakception.apiManager.setApiKey(args.length > 0 ? args[0] : "")),
@@ -464,12 +467,15 @@ public class TweakceptionCommand extends CommandBase
                 args -> Tweakception.apiManager.toggleDebug()).setVisibility(false),
             new Command("printcaches",
                 args -> Tweakception.apiManager.printCaches()).setVisibility(false)
-        ));
-        addSub(new Command("next",
-            args -> Tweakception.dungeonTweaks.fragNext()));
-        addSub(new Command("dailies",
-            args -> Tweakception.dungeonTweaks.getDailyRuns(args.length > 0 ? args[0] : "")));
-        addSub(new Command("fish",
+        ));}
+        // next
+        {addSub(new Command("next",
+            args -> Tweakception.dungeonTweaks.fragNext()));}
+        // dailies
+        {addSub(new Command("dailies",
+            args -> Tweakception.dungeonTweaks.getDailyRuns(args.length > 0 ? args[0] : "")));}
+        // fish
+        {addSub(new Command("fish",
             args -> Tweakception.fishingTweaks.toggleAutoFish(),
             new Command("setcatchestomove",
                 args -> Tweakception.fishingTweaks.setCatchesToMove(
@@ -499,56 +505,24 @@ public class TweakceptionCommand extends CommandBase
                 new Command("incrementresetdelay",
                     args -> Tweakception.fishingTweaks.setThunderBottleChargeIncrementResetDuration(
                         args.length > 0 ? toInt(args[0]) : 0)))
-        ).setVisibility(false));
-        addSub(new Command("foraging",
+        ).setVisibility(false));}
+        // foraging
+        {addSub(new Command("foraging",
             null,
             new Command("tree",
                 args -> Tweakception.foragingTweaks.toggleTreeIndicator()),
             new Command("debug",
                 args -> Tweakception.foragingTweaks.debugTreeIndicator(
                     args.length > 0 ? toInt(args[0]) : -1))
-        ));
-        addSub(new Command("bazaar",
+        ));}
+        // bazaar
+        {addSub(new Command("bazaar",
             null,
             new Command("printorders",
                 args -> Tweakception.bazaarTweaks.printOrders())
-        ));
-        addSub(new Command("looktrace",
-            args ->
-            {
-                // /tc looktrace reach adjacent liquid
-                // /tc looktrace 5.0   false    false
-                DumpUtils.doLookTrace(getWorld(), McUtils.getPlayer(),
-                    args.length >= 1 ? toDouble(args[0]) : 5.0,
-                    args.length >= 2 && args[1].equals("true"),
-                    args.length >= 3 && args[2].equals("true"));
-            }).setVisibility(false));
-        addSub(new Command("dumpentityinrange",
-            args -> DumpUtils.dumpEntitiesInRange(getWorld(), McUtils.getPlayer(),
-                args.length > 0 ? toDouble(args[0]) : 5.0)
-        ).setVisibility(false));
-        addSub(new Command("clientsetblock",
-            args ->
-            {
-                if (args.length == 1)
-                    getWorld().setBlockState(McUtils.getPlayer().getPosition(),
-                        Block.blockRegistry.getObject(new ResourceLocation(args[0])).getDefaultState(),
-                        1);
-                else
-                    sendChat("Give me 1 arg");
-            }).setVisibility(false));
-        addSub(new Command("notifylagspike",
-            args -> Tweakception.inGameEventDispatcher.toggleNotifyLagSpike(),
-            new Command("setthreshold",
-                args -> Tweakception.inGameEventDispatcher.setNotifyThreshold(
-                    args.length > 0 ? toFloat(args[0]) : 0.0f)),
-            new Command("setaggregation",
-                args -> Tweakception.inGameEventDispatcher.setAggregationValue(
-                    args.length > 0 ? toFloat(args[0]) : 0.0f))
-        ).setVisibility(false));
-        addSub(new Command("dev",
-            args -> Tweakception.globalTweaks.toggleDevMode()));
-        addSub(new Command("lagspikewatcher",
+        ));}
+        // lagspikewatcher
+        {addSub(new Command("lagspikewatcher",
             null,
             new Command("start",
                 args ->
@@ -586,7 +560,7 @@ public class TweakceptionCommand extends CommandBase
                         File file = LagSpikeWatcher.dump();
                         if (file != null)
                             McUtils.getPlayer().addChatMessage(new ChatComponentTranslation("Output written to file %s",
-                                McUtils.makeFileLink(file)));
+                                    McUtils.makeFileLink(file)));
                         else
                             sendChat("Cannot create file");
                     }
@@ -619,25 +593,69 @@ public class TweakceptionCommand extends CommandBase
                     File file = LagSpikeWatcher.dumpThreads();
                     if (file != null)
                         McUtils.getPlayer().addChatMessage(new ChatComponentTranslation("Output written to file %s",
-                            McUtils.makeFileLink(file)));
+                                McUtils.makeFileLink(file)));
                     else
                         sendChat("Cannot create file");
                 }))
-        );
-        addSub(new Command("t",
+        );}
+        // dev
+        {addSub(new Command("dev",
+            args -> Tweakception.globalTweaks.toggleDevMode()));}
+
+        // clientsetblock
+        {addSub(new Command("clientsetblock",
+            args ->
+            {
+                if (args.length == 1)
+                    getWorld().setBlockState(McUtils.getPlayer().getPosition(),
+                        Block.blockRegistry.getObject(new ResourceLocation(args[0])).getDefaultState(),
+                        1);
+                else
+                    sendChat("Give me 1 arg");
+            }).setVisibility(false));}
+        // dumpentityinrange
+        {addSub(new Command("dumpentityinrange",
+            args -> DumpUtils.dumpEntitiesInRange(getWorld(), McUtils.getPlayer(),
+                args.length > 0 ? toDouble(args[0]) : 5.0)
+        ).setVisibility(false));}
+        // looktrace
+        {addSub(new Command("looktrace",
+            args ->
+            {
+                // /tc looktrace reach adjacent liquid
+                // /tc looktrace 5.0   false    false
+                DumpUtils.doLookTrace(getWorld(), McUtils.getPlayer(),
+                    args.length >= 1 ? toDouble(args[0]) : 5.0,
+                    args.length >= 2 && args[1].equals("true"),
+                    args.length >= 3 && args[2].equals("true"));
+            }).setVisibility(false));}
+        // notifylagspike
+        {addSub(new Command("notifylagspike",
+            args -> Tweakception.inGameEventDispatcher.toggleNotifyLagSpike(),
+            new Command("setthreshold",
+                args -> Tweakception.inGameEventDispatcher.setNotifyThreshold(
+                    args.length > 0 ? toFloat(args[0]) : 0.0f)),
+            new Command("setaggregation",
+                args -> Tweakception.inGameEventDispatcher.setAggregationValue(
+                    args.length > 0 ? toFloat(args[0]) : 0.0f))
+        ).setVisibility(false));}
+
+        // t
+        {addSub(new Command("t",
             args ->
             {
                 GlobalTweaks.t = !GlobalTweaks.t;
                 sendChat("t = " + GlobalTweaks.t);
-            }).setVisibility(false));
-        addSub(new Command("action",
+            }).setVisibility(false));}
+        // action
+        {addSub(new Command("action",
             args ->
             {
                 if (args.length == 1)
                     Tweakception.globalTweaks.doChatAction(args[0]);
                 else
                     sendChat("Don't use this command!");
-            }));
+            }));}
     }
     
     @Override

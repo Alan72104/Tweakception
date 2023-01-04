@@ -130,6 +130,6 @@ public class ForagingTweaks extends Tweak
                 return;
             }
         }
-        sendChat("FT-TreeIndicator: no block looked at");
+        sendChat("FT-TreeIndicator: no block is looked at");
     }
 }

@@ -1,6 +1,6 @@
 # Tweakception
 
-config path - .minecraft/config/tweakception/config.json
+Config path - .minecraft/config/tweakception/config.json
 
 ## TODO
 - Particle settings profile
@@ -10,6 +10,7 @@ config path - .minecraft/config/tweakception/config.json
 
 ###### *(ins)* - Setting is per instance, does not save to config
 ###### *(dev)* - Requires dev mode to use
+All command prefix - /tc
 
 ### DungeonTweaks
 - dungeon autoclosesecretchest - **This doesn't auto close chests with treasure talisman**

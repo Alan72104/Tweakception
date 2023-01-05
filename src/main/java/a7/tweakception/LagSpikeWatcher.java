@@ -224,10 +224,7 @@ public class LagSpikeWatcher
             String stackString = stackStringBuilder.toString();
             synchronized (lagSources)
             {
-                if (lagSources.containsKey(stackString))
-                    lagSources.merge(stackString, 1, Integer::sum);
-                else
-                    lagSources.put(stackString, 1);
+                lagSources.merge(stackString, 1, Integer::sum);
             }
             
             Tweakception.scheduler.add(() ->

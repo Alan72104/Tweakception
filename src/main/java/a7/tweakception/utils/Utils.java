@@ -25,7 +25,13 @@ import static a7.tweakception.utils.McUtils.getPlayer;
 public class Utils
 {
     private static final NumberFormat NUMBER_FORMAT = NumberFormat.getInstance(Locale.US);
-    
+
+    @SafeVarargs
+    public static <T> HashSet<T> hashSet(T... array)
+    {
+        return new HashSet<T>(Arrays.asList(array));
+    }
+
     // Supports comma
     public static int parseInt(String s)
     {

@@ -115,12 +115,12 @@ public class DungeonTweaks extends Tweak
     private final DungeonTweaksConfig c;
     private static final Set<String> SECRET_CHEST_ITEMS = new HashSet<>();
     private static final Set<String> TRASH_ITEMS = new HashSet<>();
-    private static final Set<String> ESSENCES = new HashSet<>(Arrays.asList("wither", "spider", "undead", "dragon",
-        "gold", "diamond", "ice", "crimson"));
+    private static final Set<String> ESSENCES = Utils.hashSet("wither", "spider", "undead", "dragon",
+        "gold", "diamond", "ice", "crimson");
     private static final Map<String, String> FRAGS_AND_NAMES = new HashMap<>();
     private static final Set<String> DUNGEON_FLOOR_HEADS = new HashSet<>();
-    private static final Set<String> MASKS = new HashSet<>(Arrays.asList("BONZO_MASK", "STARRED_BONZO_MASK",
-        "SPIRIT_MASK"));
+    private static final Set<String> MASKS = Utils.hashSet("BONZO_MASK", "STARRED_BONZO_MASK",
+        "SPIRIT_MASK");
     private static boolean isDamageFormattingExceptionNotified = false;
     private boolean wasNoFogAutoToggled = false;
     private boolean isInF5Bossfight = false;
@@ -893,14 +893,8 @@ public class DungeonTweaks extends Tweak
             Entity e = packet.getEntity(McUtils.getWorld());
             if (e != null)
             {
-                if (entityHurtTimes.containsKey(e))
-                    entityHurtTimes.get(e).offer(getTicks());
-                else
-                {
-                    ConcurrentLinkedQueue<Integer> q = new ConcurrentLinkedQueue<>();
-                    q.offer(getTicks());
-                    entityHurtTimes.put(e, q);
-                }
+                entityHurtTimes.computeIfAbsent(e, en -> new ConcurrentLinkedQueue<>())
+                    .offer(getTicks());
             }
         }
     }

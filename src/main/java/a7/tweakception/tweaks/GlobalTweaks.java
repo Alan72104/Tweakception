@@ -25,7 +25,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.ContainerChest;
-import net.minecraft.inventory.ContainerPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.Item;
@@ -99,6 +98,7 @@ public class GlobalTweaks extends Tweak
         public boolean disableArmorStandTargeting = false;
         public boolean onlyTargetOpenableGift = false;
         public boolean autoSwitchGiftSlot = false;
+        public boolean invGiftFeatures = false;
     }
     private final GlobalTweaksConfig c;
 //    private static final HashMap<String, SkyblockIsland> SUBPLACE_TO_ISLAND_MAP = new HashMap<>();
@@ -147,11 +147,16 @@ public class GlobalTweaks extends Tweak
     private boolean minionAutoClaim = false;
     private int[] minionAutoclaimPos = { -2, -2 };
     private boolean minionAutoclaimWasInScreen = false;
-    private boolean invDropGiftShits = false;
-    private boolean invMoveGifts = false;
-    private int invShitIndex = 0;
-    private int invDropGiftShitsLastClickTicks = 0;
-    private int invDropGiftShitsClickDelay = 0;
+    private InvFeature invFeature = InvFeature.None;
+    private int invFeatureIndex = 0;
+    private int invFeatureLastTicks = 0;
+    private int invFeatureClickDelay = 0;
+    private boolean stashEmptied = false;
+    private int lastPickupStashTicks = 0;
+    enum InvFeature
+    {
+        None, DropGiftShit, MoveGift, AutoDropGiftShit
+    }
 
     static
     {
@@ -408,87 +413,129 @@ public class GlobalTweaks extends Tweak
                 }
             }
 
-            if (c.autoSwitchGiftSlot && getMc().currentScreen instanceof GuiInventory)
+            if (c.invGiftFeatures && getMc().currentScreen instanceof GuiInventory)
             {
-                GuiInventory guiInv = (GuiInventory)getMc().currentScreen;
-                List<ItemStack> inv = guiInv.inventorySlots.getInventory();
-                if (Keyboard.isKeyDown(Keyboard.KEY_D) && !invDropGiftShits && !invMoveGifts)
+                if (invFeature == InvFeature.None)
                 {
-                    invShitIndex = 9;
-                    invDropGiftShits = true;
-                }
-                else if (Keyboard.isKeyDown(Keyboard.KEY_M) && !invDropGiftShits && !invMoveGifts)
-                {
-                    invShitIndex = 0;
-                    invMoveGifts = true;
-                }
-
-                if (getTicks() - invDropGiftShitsLastClickTicks >= invDropGiftShitsClickDelay)
-                {
-                    if (invDropGiftShits)
+                    if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) && Keyboard.isKeyDown(Keyboard.KEY_D))
                     {
-                        invDropGiftShits = false;
-                        for (; invShitIndex <= 44; invShitIndex++)
-                        {
-                            ItemStack stack = inv.get(invShitIndex);
-                            String id = Utils.getSkyblockItemId(stack);
-                            if (stack != null && id != null &&
-                                GIFT_SHITS.containsKey(id) && GIFT_SHITS.get(id).test(stack))
-                            {
-                                getMc().playerController.windowClick(0, invShitIndex,
-                                    0, 4, getPlayer());
-                                invDropGiftShitsLastClickTicks = getTicks();
-                                invDropGiftShitsClickDelay = 3 + getWorld().rand.nextInt(3);
-                                invDropGiftShits = true;
-                                invShitIndex++;
-                                break;
-                            }
-                        }
+                        invFeatureIndex = 9;
+                        invFeature = InvFeature.AutoDropGiftShit;
+                        stashEmptied = false;
                     }
-                    else if (invMoveGifts)
+                    else if (Keyboard.isKeyDown(Keyboard.KEY_D))
                     {
-                        HashSet<String> gifts = new HashSet<>(Arrays.asList("WHITE_GIFT", "GREEN_GIFT", "RED_GIFT"));
-                        invMoveGifts = false;
-                        for (; invShitIndex <= 7; invShitIndex++)
-                        {
-                            // Hotbar
-                            {
-                                ItemStack stack = inv.get(36 + invShitIndex);
-                                String id = Utils.getSkyblockItemId(stack);
-                                if (stack != null && id != null && gifts.contains(id))
-                                    continue;
-                            }
+                        invFeatureIndex = 9;
+                        invFeature = InvFeature.DropGiftShit;
+                    }
+                    else if (Keyboard.isKeyDown(Keyboard.KEY_M))
+                    {
+                        invFeatureIndex = 0;
+                        invFeature = InvFeature.MoveGift;
+                    }
+                }
 
-                            int backpackGiftSlot = 0;
-                            for (int backpack = 9; backpack <= 35; backpack++)
-                            {
-                                ItemStack stack = inv.get(backpack);
-                                String id = Utils.getSkyblockItemId(stack);
-                                if (stack != null && id != null && gifts.contains(id))
-                                {
-                                    backpackGiftSlot = backpack;
-                                    break;
-                                }
-                            }
-
-                            if (backpackGiftSlot != 0)
-                            {
-                                getMc().playerController.windowClick(0, backpackGiftSlot,
-                                    invShitIndex, 2, getPlayer());
-                                invDropGiftShitsLastClickTicks = getTicks();
-                                invDropGiftShitsClickDelay = 3 + getWorld().rand.nextInt(3);
-                                invMoveGifts = true;
-                                invShitIndex++;
-                                break;
-                            }
-                        }
+                if (getTicks() - invFeatureLastTicks >= invFeatureClickDelay)
+                {
+                    switch (invFeature)
+                    {
+                        case DropGiftShit:
+                            if (!doDropGiftShit())
+                                invFeature = InvFeature.None;
+                            break;
+                        case MoveGift:
+                            invMoveGift();
+                            break;
+                        case AutoDropGiftShit:
+                            invAutoDropGiftShit();
+                            break;
                     }
                 }
             }
             else
             {
-                invDropGiftShits = false;
-                invMoveGifts = false;
+                invFeature = InvFeature.None;
+            }
+        }
+    }
+
+    private boolean doDropGiftShit()
+    {
+        List<ItemStack> inv = ((GuiInventory)getMc().currentScreen).inventorySlots.getInventory();
+        for (; invFeatureIndex <= 44; invFeatureIndex++)
+        {
+            ItemStack stack = inv.get(invFeatureIndex);
+            String id = Utils.getSkyblockItemId(stack);
+            if (stack != null && id != null &&
+                GIFT_SHITS.containsKey(id) && GIFT_SHITS.get(id).test(stack))
+            {
+                getMc().playerController.windowClick(0, invFeatureIndex,
+                        0, 4, getPlayer());
+                invFeatureLastTicks = getTicks();
+                invFeatureClickDelay = 3 + getWorld().rand.nextInt(3);
+                invFeatureIndex++;
+                return true;
+            }
+        }
+        invFeatureIndex = 9;
+        return false;
+    }
+
+    private void invMoveGift()
+    {
+        List<ItemStack> inv = ((GuiInventory)getMc().currentScreen).inventorySlots.getInventory();
+        HashSet<String> gifts = Utils.hashSet("WHITE_GIFT", "GREEN_GIFT", "RED_GIFT");
+        for (; invFeatureIndex <= 7; invFeatureIndex++)
+        {
+            // Hotbar
+            {
+                ItemStack stack = inv.get(36 + invFeatureIndex);
+                String id = Utils.getSkyblockItemId(stack);
+                if (stack != null && id != null && gifts.contains(id))
+                    continue;
+            }
+
+            int backpackGiftSlot = 0;
+            for (int backpack = 9; backpack <= 35; backpack++)
+            {
+                ItemStack stack = inv.get(backpack);
+                String id = Utils.getSkyblockItemId(stack);
+                if (stack != null && id != null && gifts.contains(id))
+                {
+                    backpackGiftSlot = backpack;
+                    break;
+                }
+            }
+
+            if (backpackGiftSlot != 0)
+            {
+                getMc().playerController.windowClick(0, backpackGiftSlot,
+                        invFeatureIndex, 2, getPlayer());
+                invFeatureLastTicks = getTicks();
+                invFeatureClickDelay = 3 + getWorld().rand.nextInt(3);
+                invFeatureIndex++;
+                return;
+            }
+        }
+        invFeature = InvFeature.None;
+    }
+
+    private void invAutoDropGiftShit()
+    {
+        boolean dropped = doDropGiftShit();
+        if (!dropped)
+        {
+            if (getTicks() - lastPickupStashTicks >= 20 && stashEmptied)
+            {
+                invFeature = InvFeature.None;
+                return;
+            }
+
+
+            if (getTicks() - lastPickupStashTicks >= 60)
+            {
+                lastPickupStashTicks = getTicks();
+                getPlayer().sendChatMessage("/pickupstash");
             }
         }
     }
@@ -751,6 +798,13 @@ public class GlobalTweaks extends Tweak
                         }
                     }
                 }
+            }
+            else if (invFeature == InvFeature.AutoDropGiftShit &&
+                (msg.equals("Your stash isn't holding any item!") ||
+                msg.equals("You picked up all items from your item stash!") ||
+                msg.equals("Couldn't unstash your items! Your inventory is full!")))
+            {
+                stashEmptied = true;
             }
         }
         else if (event.type == 2)
@@ -2001,6 +2055,12 @@ public class GlobalTweaks extends Tweak
     {
         c.autoSwitchGiftSlot = !c.autoSwitchGiftSlot;
         sendChat("GT-AutoSwitchGiftSlot: toggled " + c.autoSwitchGiftSlot);
+    }
+
+    public void toggleGiftFeatures()
+    {
+        c.invGiftFeatures = !c.invGiftFeatures;
+        sendChat("GT-InvGiftFeatures: toggled " + c.invGiftFeatures);
     }
 
     // endregion

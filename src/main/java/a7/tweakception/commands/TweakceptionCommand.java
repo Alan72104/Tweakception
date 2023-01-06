@@ -251,6 +251,8 @@ public class TweakceptionCommand extends CommandBase
             ),
             new Command("entertoclosesign",
                 args -> Tweakception.globalTweaks.toggleEnterToCloseNumberTypingSign()),
+            new Command("gift",
+                args -> Tweakception.globalTweaks.toggleGiftFeatures()),
             new Command("setisland",
                 args -> Tweakception.globalTweaks.forceSetIsland(args.length > 0 ? String.join(" ", args) : "")),
             new Command("hideplayers",

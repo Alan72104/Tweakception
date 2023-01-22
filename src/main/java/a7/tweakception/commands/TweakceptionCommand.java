@@ -187,6 +187,13 @@ public class TweakceptionCommand extends CommandBase
         // gt
         {addSub(new Command("gt",
             null,
+            new Command("afkmode",
+                args -> Tweakception.globalTweaks.toggleAfkMode(),
+                new Command("onlyunfocused",
+                    args -> Tweakception.globalTweaks.toggleAfkOnlyUnfocosed()),
+                new Command("fps",
+                    args -> Tweakception.globalTweaks.setAfkFpsLimit(args.length > 0 ? toInt(args[0]) : 0))
+            ),
             new Command("autoswitchgiftslot",
                 args -> Tweakception.globalTweaks.toggleAutoSwitchGiftSlot()),
             new Command("areaedit",

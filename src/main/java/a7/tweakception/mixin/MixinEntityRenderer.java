@@ -1,6 +1,7 @@
 package a7.tweakception.mixin;
 
 import a7.tweakception.Tweakception;
+import a7.tweakception.tweaks.Tweak;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.resources.IResourceManagerReloadListener;
@@ -19,7 +20,8 @@ public class MixinEntityRenderer implements IResourceManagerReloadListener
     @Inject(method = "renderWorld", at = @At("HEAD"), cancellable = true)
     private void onRenderWorld(CallbackInfo ci)
     {
-        if (Tweakception.globalTweaks.isSkipWorldRenderingOn())
+        if ((Tweakception.globalTweaks.isAfkModeActive() && Tweakception.globalTweaks.isAfkSkipWorldRenderingOn()) ||
+            Tweakception.globalTweaks.isSkipWorldRenderingOn())
         {
             ci.cancel();
         }

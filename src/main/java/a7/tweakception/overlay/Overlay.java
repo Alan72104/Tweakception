@@ -133,7 +133,7 @@ public class Overlay
         this.config = c;
     }
     
-    // endregion getter/setters
+    // endregion Getter/setters
     
     public void moveOrigin(int newOrigin)
     {

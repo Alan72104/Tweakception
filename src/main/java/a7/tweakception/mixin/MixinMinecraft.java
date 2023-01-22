@@ -23,6 +23,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.function.Function;
 
@@ -43,8 +44,6 @@ public abstract class MixinMinecraft
 
     @Shadow
     public abstract void rightClickMouse();
-
-    @Shadow protected abstract void sendClickBlockToController(boolean p_sendClickBlockToController_1_);
 
     @Inject(method = "runGameLoop", at = @At("HEAD"))
     private void runGameLoop(CallbackInfo ci)
@@ -245,6 +244,16 @@ public abstract class MixinMinecraft
                     }
                 }
             }
+        }
+    }
+
+    @Inject(method = "getLimitFramerate", at = @At("HEAD"), cancellable = true)
+    private void getLimitFramerate(CallbackInfoReturnable<Integer> cir)
+    {
+        if (Tweakception.globalTweaks.isAfkModeActive())
+        {
+            cir.setReturnValue(Tweakception.globalTweaks.getAfkFpsLimit());
+            cir.cancel();
         }
     }
 }

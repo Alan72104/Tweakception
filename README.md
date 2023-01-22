@@ -85,6 +85,9 @@ All command prefix - /tc
 ### MiningTweaks
 - mining highlightchests - **Toggles all chests highlighting in crystal hollows**
 ### GlobalTracker
+- gt afkmode - **Limits fps when window is unfocused, optionally skips world rendering**
+- gt afkmode onlyunfocused
+- gt afkmode fps `[int fpsLimit]`
 - gt autoswitchgiftslot
   - **Auto switches to slot that has any gift for any right click**
   - **If toggled, press D in inventory to drop all shits**

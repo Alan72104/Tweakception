@@ -44,6 +44,7 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.opengl.Display;
 
 import java.awt.*;
 import java.io.File;
@@ -99,6 +100,10 @@ public class GlobalTweaks extends Tweak
         public boolean onlyTargetOpenableGift = false;
         public boolean autoSwitchGiftSlot = false;
         public boolean invGiftFeatures = false;
+        public boolean afkMode = false;
+        public boolean afkOnlyUnfocused = true;
+        public boolean afkSkipWorldRendering = true;
+        public int afkFpsLimit = 60;
     }
     private final GlobalTweaksConfig c;
 //    private static final HashMap<String, SkyblockIsland> SUBPLACE_TO_ISLAND_MAP = new HashMap<>();
@@ -197,6 +202,8 @@ public class GlobalTweaks extends Tweak
         npcSkins.add("minecraft:skins/57a517865b820a4451cd3cc6765f370fd0522b6489c9c94fb345fdee2689451a"); // Shaman
         npcSkins.add("minecraft:skins/1642a06cd75ef307c1913ba7a224fb2082d8a2c5254fd1bf006125a087a9a868"); // Taurus
     }
+
+    // region Events
 
     public void onPacketReceive(PacketReceiveEvent event)
     {
@@ -817,6 +824,8 @@ public class GlobalTweaks extends Tweak
         }
     }
 
+    // endregion Events
+
     // region Misc
     
     public void printIsland()
@@ -1063,6 +1072,15 @@ public class GlobalTweaks extends Tweak
             sendChat("GT: cannot find island in implemented island list");
         }
     }
+
+    public long getWorldJoinMillis()
+    {
+        return lastWorldJoin;
+    }
+
+    // endregion Misc
+
+    // region Feature access
     
     public boolean isInDevMode()
     {
@@ -1117,6 +1135,21 @@ public class GlobalTweaks extends Tweak
     public boolean isRenderPotionTierOn()
     {
         return c.renderPotionTier;
+    }
+
+    public boolean isAfkModeActive()
+    {
+        return c.afkMode && (!c.afkOnlyUnfocused || !Display.isActive());
+    }
+
+    public int getAfkFpsLimit()
+    {
+        return c.afkFpsLimit;
+    }
+
+    public boolean isAfkSkipWorldRenderingOn()
+    {
+        return c.afkSkipWorldRendering;
     }
     
     public void toggleQuickCraftWhitelist(String id)
@@ -1222,11 +1255,7 @@ public class GlobalTweaks extends Tweak
             }
         }
     }
-    
-    public long getWorldJoinMillis()
-    {
-        return lastWorldJoin;
-    }
+
 
     public PacketLogger getPacketLogger()
     {
@@ -1253,7 +1282,6 @@ public class GlobalTweaks extends Tweak
         return c.autoSwitchGiftSlot;
     }
 
-
     private void trevorStartFromAbiphone()
     {
         int slot = Utils.findInHotbarById(id -> id.startsWith("ABIPHONE_"));
@@ -1270,6 +1298,10 @@ public class GlobalTweaks extends Tweak
             sendChat("GT-Trevor: can't find abiphone in hotbar");
         }
     }
+
+    // endregion Feature access
+
+    // region Overlays
 
     private class PlayersInAreasDisplayOverlay extends TextOverlay
     {
@@ -1564,7 +1596,7 @@ public class GlobalTweaks extends Tweak
         }
     }
     
-    // endregion
+    // endregion Overlays
     
     // region Commands
     
@@ -2045,9 +2077,10 @@ public class GlobalTweaks extends Tweak
 
     public void resetTargeting()
     {
-        c.disableDeadMobTargeting = new GlobalTweaksConfig().disableDeadMobTargeting;
-        c.disableArmorStandTargeting = new GlobalTweaksConfig().disableArmorStandTargeting;
-        c.onlyTargetOpenableGift = new GlobalTweaksConfig().onlyTargetOpenableGift;
+        GlobalTweaksConfig newConfig = new GlobalTweaksConfig();
+        c.disableDeadMobTargeting = newConfig.disableDeadMobTargeting;
+        c.disableArmorStandTargeting = newConfig.disableArmorStandTargeting;
+        c.onlyTargetOpenableGift = newConfig.onlyTargetOpenableGift;
         sendChat("GT: reset all targeting options");
     }
 
@@ -2063,5 +2096,31 @@ public class GlobalTweaks extends Tweak
         sendChat("GT-InvGiftFeatures: toggled " + c.invGiftFeatures);
     }
 
-    // endregion
+    public void toggleAfkMode()
+    {
+        c.afkMode = !c.afkMode;
+        sendChat("GT-AfkMode: toggled " + c.afkMode);
+    }
+
+    public void setAfkFpsLimit(int i)
+    {
+        if (i == 0)
+            i = new GlobalTweaksConfig().afkFpsLimit;
+        c.afkFpsLimit = Utils.clamp(i, 5, 120);
+        sendChat("GT-AfkMode: set fps limit to " + c.afkFpsLimit);
+    }
+
+    public void toggleAfkOnlyUnfocosed()
+    {
+        c.afkOnlyUnfocused = !c.afkOnlyUnfocused;
+        sendChat("GT-AfkMode: toggled only when unfocused " + c.afkOnlyUnfocused);
+    }
+
+    public void toggleAfkSkipWorldRendering()
+    {
+        c.afkSkipWorldRendering = !c.afkSkipWorldRendering;
+        sendChat("GT-AfkMode: toggled skip world rendering " + c.afkSkipWorldRendering);
+    }
+
+    // endregion Commands
 }

@@ -189,10 +189,12 @@ public class TweakceptionCommand extends CommandBase
             null,
             new Command("afkmode",
                 args -> Tweakception.globalTweaks.toggleAfkMode(),
+                new Command("fps",
+                    args -> Tweakception.globalTweaks.setAfkFpsLimit(args.length > 0 ? toInt(args[0]) : 0)),
                 new Command("onlyunfocused",
                     args -> Tweakception.globalTweaks.toggleAfkOnlyUnfocosed()),
-                new Command("fps",
-                    args -> Tweakception.globalTweaks.setAfkFpsLimit(args.length > 0 ? toInt(args[0]) : 0))
+                new Command("skipworldrendering",
+                    args -> Tweakception.globalTweaks.toggleAfkSkipWorldRendering())
             ),
             new Command("autoswitchgiftslot",
                 args -> Tweakception.globalTweaks.toggleAutoSwitchGiftSlot()),

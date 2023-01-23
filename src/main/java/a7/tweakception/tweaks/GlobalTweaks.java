@@ -600,7 +600,7 @@ public class GlobalTweaks extends Tweak
         {
             for (EntityPlayer player : getWorld().playerEntities)
             {
-                if (playersToHighlight.contains(player.getName().toLowerCase()))
+                if (player.isEntityAlive() && playersToHighlight.contains(player.getName().toLowerCase()))
                 {
                     RenderUtils.drawBeaconBeamOrBoundingBox(player, new Color(0, 255, 0, 64), event.partialTicks, 0, 15);
                 }

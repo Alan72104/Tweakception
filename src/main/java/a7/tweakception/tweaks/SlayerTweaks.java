@@ -215,8 +215,8 @@ public class SlayerTweaks extends Tweak
                             switchingSlot = true;
                             int lastSlot = getPlayer().inventory.currentItem;
                             getPlayer().inventory.currentItem = slot;
-                            Tweakception.scheduler.addDelayed(() -> getMc().rightClickMouse(), 4).
-                                thenDelayed(() ->
+                            Tweakception.scheduler.addDelayed(() -> getMc().rightClickMouse(), 4)
+                                .thenDelayed(() ->
                                 {
                                     getPlayer().inventory.currentItem = lastSlot;
                                     switchingSlot = false;
@@ -248,8 +248,8 @@ public class SlayerTweaks extends Tweak
                     switchingSlot = true;
                     int lastSlot = getPlayer().inventory.currentItem;
                     getPlayer().inventory.currentItem = wandSlot;
-                    Tweakception.scheduler.addDelayed(() -> getMc().rightClickMouse(), 3).
-                        thenDelayed(() ->
+                    Tweakception.scheduler.addDelayed(() -> getMc().rightClickMouse(), 3)
+                        .thenDelayed(() ->
                         {
                             getPlayer().inventory.currentItem = lastSlot;
                             switchingSlot = false;

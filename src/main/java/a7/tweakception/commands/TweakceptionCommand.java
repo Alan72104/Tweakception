@@ -724,10 +724,10 @@ public class TweakceptionCommand extends CommandBase
     
     private List<String> getVisibleSubCommandNames()
     {
-        return subCommands.stream().
-            filter(Command::isVisible).
-            map(Command::getName).
-            collect(Collectors.toList());
+        return subCommands.stream()
+            .filter(Command::isVisible)
+            .map(Command::getName)
+            .collect(Collectors.toList());
     }
     
     private void addSub(Command cmd)

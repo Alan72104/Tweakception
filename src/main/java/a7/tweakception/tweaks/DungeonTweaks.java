@@ -643,9 +643,9 @@ public class DungeonTweaks extends Tweak
                         if (!c.fragBot.equals(""))
                         {
                             sendChat("DT-Frag: repartying " + c.fragBot);
-                            Tweakception.scheduler.
-                                addDelayed(() -> McUtils.getPlayer().sendChatMessage("/p disband"), 20).
-                                thenDelayed(() -> McUtils.getPlayer().sendChatMessage("/p " + c.fragBot), 20);
+                            Tweakception.scheduler
+                                .addDelayed(() -> McUtils.getPlayer().sendChatMessage("/p disband"), 20)
+                                .thenDelayed(() -> McUtils.getPlayer().sendChatMessage("/p " + c.fragBot), 20);
                         }
                         else
                             sendChat("DT-Frag: cannot reparty, please set a frag bot using `setfragbot <name>`");
@@ -1895,9 +1895,9 @@ public class DungeonTweaks extends Tweak
             sendChatf("§5%s§f: §a%d", FRAGS_AND_NAMES.get(e.getKey()), e.getValue());
         
         // Stupid java crap dog shit ass fuck
-        List<Map.Entry<String, Integer>> sorted = c.fragDrops.entrySet().stream().
-            sorted(Map.Entry.<String, Integer>comparingByValue().reversed()).
-            collect(Collectors.toList());
+        List<Map.Entry<String, Integer>> sorted = c.fragDrops.entrySet().stream()
+            .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+            .collect(Collectors.toList());
     
         sb.append("Total runs: ").append(c.totalFragruns).append(sep);
         for (Map.Entry<String, Integer> e : sorted)

@@ -74,10 +74,10 @@ public class Command implements Comparable<Command>
     
     private List<String> getVisibleSubCommandNames()
     {
-        return subCommands.stream().
-            filter(Command::isVisible).
-            map(Command::getName).
-            collect(Collectors.toList());
+        return subCommands.stream()
+            .filter(Command::isVisible)
+            .map(Command::getName)
+            .collect(Collectors.toList());
     }
     
     private static List<String> getPossibleCompletions(String arg, List<String> opts)

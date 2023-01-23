@@ -699,11 +699,13 @@ public class TweakceptionCommand extends CommandBase
         else
         {
             for (Command sub : subCommands)
+            {
                 if (sub.isVisible() && args[0].equals(sub.getName()))
                 {
                     sub.processCommands(Arrays.copyOfRange(args, 1, args.length));
                     return;
                 }
+            }
             sendCommandNotFound();
         }
     }

@@ -99,7 +99,7 @@ public class GlobalTweaks extends Tweak
         public boolean disableArmorStandTargeting = false;
         public boolean onlyTargetOpenableGift = false;
         public boolean autoSwitchGiftSlot = false;
-        public boolean invGiftFeatures = false;
+        public boolean giftFeatures = false;
         public boolean afkMode = false;
         public boolean afkOnlyUnfocused = true;
         public boolean afkSkipWorldRendering = true;
@@ -158,6 +158,7 @@ public class GlobalTweaks extends Tweak
     private int invFeatureClickDelay = 0;
     private boolean stashEmptied = false;
     private int lastPickupStashTicks = 0;
+    private boolean fakePowerScrolls = false;
     enum InvFeature
     {
         None, DropGiftShit, MoveGift, AutoDropGiftShit
@@ -420,7 +421,7 @@ public class GlobalTweaks extends Tweak
                 }
             }
 
-            if (c.invGiftFeatures && getMc().currentScreen instanceof GuiInventory)
+            if (c.giftFeatures && getMc().currentScreen instanceof GuiInventory)
             {
                 if (invFeature == InvFeature.None)
                 {
@@ -710,6 +711,18 @@ public class GlobalTweaks extends Tweak
 
         if (c.disableTooltips)
             event.toolTip.clear();
+
+        if (t)
+        {
+            for (int i = 0; i < event.toolTip.size(); i++)
+            {
+                if (event.toolTip.get(i).contains(" §e§lRIGHT CLICK"))
+                {
+                    event.toolTip.set(i, "§6§l⦾§5§l⦾§d§l⦾§c§l⦾§b§l⦾§f§l⦾ " +
+                        event.toolTip.get(i).replaceAll("§.§l⦾ ", ""));
+                }
+            }
+        }
     }
     
     public void onWorldLoad(WorldEvent.Load event)
@@ -1270,6 +1283,11 @@ public class GlobalTweaks extends Tweak
     public boolean isDisableArmorStandTargetingOn()
     {
         return c.disableArmorStandTargeting;
+    }
+
+    public boolean isGiftFeaturesOn()
+    {
+        return c.giftFeatures;
     }
 
     public boolean isOnlyTargetOpenableGiftOn()
@@ -2092,8 +2110,8 @@ public class GlobalTweaks extends Tweak
 
     public void toggleGiftFeatures()
     {
-        c.invGiftFeatures = !c.invGiftFeatures;
-        sendChat("GT-InvGiftFeatures: toggled " + c.invGiftFeatures);
+        c.giftFeatures = !c.giftFeatures;
+        sendChat("GT-GiftFeatures: toggled " + c.giftFeatures);
     }
 
     public void toggleAfkMode()
@@ -2120,6 +2138,12 @@ public class GlobalTweaks extends Tweak
     {
         c.afkSkipWorldRendering = !c.afkSkipWorldRendering;
         sendChat("GT-AfkMode: toggled skip world rendering " + c.afkSkipWorldRendering);
+    }
+
+    public void toggleFakePowerScrolls()
+    {
+        fakePowerScrolls = !fakePowerScrolls;
+        sendChat("GT-FakePowerScrolls: toggled " + fakePowerScrolls);
     }
 
     // endregion Commands

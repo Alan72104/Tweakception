@@ -79,7 +79,8 @@ public abstract class MixinMinecraft
             }
         };
 
-        if (Tweakception.globalTweaks.isAutoSwitchGiftSlotOn() &&
+        if (Tweakception.globalTweaks.isGiftFeaturesOn() &&
+            Tweakception.globalTweaks.isAutoSwitchGiftSlotOn() &&
             (slot = Utils.findInHotbarById("WHITE_GIFT", "GREEN_GIFT", "RED_GIFT")) != -1)
         {
             getPlayer().inventory.currentItem = slot;

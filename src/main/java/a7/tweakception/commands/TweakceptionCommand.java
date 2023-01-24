@@ -196,8 +196,6 @@ public class TweakceptionCommand extends CommandBase
                 new Command("skipworldrendering",
                     args -> Tweakception.globalTweaks.toggleAfkSkipWorldRendering())
             ),
-            new Command("autoswitchgiftslot",
-                args -> Tweakception.globalTweaks.toggleAutoSwitchGiftSlot()),
             new Command("areaedit",
                 args -> Tweakception.globalTweaks.toggleAreaEdit(),
                 new Command("print",
@@ -261,7 +259,10 @@ public class TweakceptionCommand extends CommandBase
             new Command("entertoclosesign",
                 args -> Tweakception.globalTweaks.toggleEnterToCloseNumberTypingSign()),
             new Command("gift",
-                args -> Tweakception.globalTweaks.toggleGiftFeatures()),
+                args -> Tweakception.globalTweaks.toggleGiftFeatures(),
+                new Command("autoswitchgiftslot",
+                    args -> Tweakception.globalTweaks.toggleAutoSwitchGiftSlot())
+            ),
             new Command("setisland",
                 args -> Tweakception.globalTweaks.forceSetIsland(args.length > 0 ? String.join(" ", args) : "")),
             new Command("hideplayers",

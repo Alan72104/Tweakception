@@ -89,10 +89,6 @@ All command prefix - /tc
 - gt afkmode fps `[int fpsLimit]`
 - gt afkmode onlyunfocused
 - gt afkmode skipworldrendering
-- gt autoswitchgiftslot
-  - **Auto switches to slot that has any gift for any right click**
-  - **If toggled, press D in inventory to drop all shits**
-  - **If toggled, press M in inventory to move all gifts to hotbar**
 - gt areaedit - **For area bounding box range finding**
 - gt areaedit print
 - gt areaedit reset
@@ -110,7 +106,11 @@ All command prefix - /tc
 - gt entertoclosesign
   - **Closes number typing signs when enter is pressed, hold left alt to override**
   - **It only activates if the second line equals "^^^^^^^^^^^^^^^"**
-- gt setisland `[string name...]` - **Sets or removes location override**
+- gt gift
+  - **Toggles all gift features**
+  - **In inventory, press D to drop all gift trash, Ctrl+D to throw trash plus emptying the stash, M to move gifts to hotbar**
+- gt gift autoswitchgiftslot
+  - **Auto switches to slot that has any gift on any entity right click**
 - gt hideplayers - **Hides ALL online players**
 - gt highlightshinypigs
 - gt highlightshinypigs setname - **Example:** `setname [vip] alan72104`
@@ -146,6 +146,7 @@ All command prefix - /tc
 - gt playercount crimson stronghold back topright
 - gt playercount crimson stronghold front topright
 - gt playersinareas - **Overlay, displays loaded players in implemented areas**
+- gt setisland `[string name...]` - **Sets or removes location override**
 - gt logpackets *(dev)* *(ins)* - **Logs packets to a file**
 - gt logpackets setallowed *(dev)* *(ins)* `string className`
 - gt logpackets logall *(dev)* *(ins)* - **Doubt anyone needs**

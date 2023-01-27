@@ -104,6 +104,7 @@ public class GlobalTweaks extends Tweak
         public boolean afkOnlyUnfocused = true;
         public boolean afkSkipWorldRendering = true;
         public int afkFpsLimit = 60;
+        public boolean sendSkyblockLevelExpGainMessage = false;
     }
     private final GlobalTweaksConfig c;
 //    private static final HashMap<String, SkyblockIsland> SUBPLACE_TO_ISLAND_MAP = new HashMap<>();
@@ -159,6 +160,10 @@ public class GlobalTweaks extends Tweak
     private boolean stashEmptied = false;
     private int lastPickupStashTicks = 0;
     private boolean fakePowerScrolls = false;
+    private final Matcher skyblockLevelExpGainMatcher = Pattern.compile(
+            "§b\\+\\d+ SkyBlock XP §7\\(.*§7\\)§b \\(\\d+\\/100\\)").matcher("");
+    private String lastSkyblockLevelExpGainMsg = "";
+    private int lastSkyblockLevelExpGainTicks = 0;
     enum InvFeature
     {
         None, DropGiftShit, MoveGift, AutoDropGiftShit
@@ -833,6 +838,15 @@ public class GlobalTweaks extends Tweak
             {
                 lastBitsMsgTicks = getTicks();
                 sendChat(msg);
+            }
+            else if (c.sendSkyblockLevelExpGainMessage &&
+                skyblockLevelExpGainMatcher.reset(msg).find() &&
+                (getTicks() - lastSkyblockLevelExpGainTicks >= 20 * 5 ||
+                !lastSkyblockLevelExpGainMsg.equals(skyblockLevelExpGainMatcher.group(0))))
+            {
+                lastSkyblockLevelExpGainMsg = skyblockLevelExpGainMatcher.group(0);
+                lastSkyblockLevelExpGainTicks = getTicks();
+                sendChat(lastSkyblockLevelExpGainMsg);
             }
         }
     }
@@ -2144,6 +2158,12 @@ public class GlobalTweaks extends Tweak
     {
         fakePowerScrolls = !fakePowerScrolls;
         sendChat("GT-FakePowerScrolls: toggled " + fakePowerScrolls);
+    }
+
+    public void toggleSendSkyblockLevelExpGainMessage()
+    {
+        c.sendSkyblockLevelExpGainMessage = !c.sendSkyblockLevelExpGainMessage;
+        sendChat("GT-SendSkyblockLevelExpGainMessage: toggled " + c.sendSkyblockLevelExpGainMessage);
     }
 
     // endregion Commands

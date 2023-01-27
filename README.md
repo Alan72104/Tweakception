@@ -85,6 +85,8 @@ All command prefix - /tc
 ### MiningTweaks
 - mining highlightchests - **Toggles all chests highlighting in crystal hollows**
 ### GlobalTracker
+- gt actionbar sendbitsmessage - **Sends the message to chat**
+- gt actionbar sendskyblockexpgainmsg - **Sends the message to chat**
 - gt afkmode - **Limits fps when window is unfocused, optionally skips world rendering**
 - gt afkmode fps `[int fpsLimit]`
 - gt afkmode onlyunfocused

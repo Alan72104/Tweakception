@@ -187,6 +187,12 @@ public class TweakceptionCommand extends CommandBase
         // gt
         {addSub(new Command("gt",
             null,
+            new Command("actionbar",
+                null,
+                new Command("sendbitsmessage",
+                    args -> Tweakception.globalTweaks.toggleSendBitsMessage()),
+                new Command("sendskyblockexpgainmsg",
+                    args -> Tweakception.globalTweaks.toggleSendSkyblockLevelExpGainMessage())),
             new Command("afkmode",
                 args -> Tweakception.globalTweaks.toggleAfkMode(),
                 new Command("fps",
@@ -317,8 +323,6 @@ public class TweakceptionCommand extends CommandBase
             new Command("setinvisibleentityalphapercentage",
                 args -> Tweakception.globalTweaks.setInvisibleEntityAlphaPercentage(
                     args.length > 0 ? toInt(args[0]) : 0)),
-            new Command("sendbitsmessage",
-                args -> Tweakception.globalTweaks.toggleSendBitsMessage()),
             new Command("skipworldrendering",
                 args -> Tweakception.globalTweaks.toggleSkipWorldRendering()),
             new Command("targeting",

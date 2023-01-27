@@ -258,6 +258,8 @@ public class TweakceptionCommand extends CommandBase
             ),
             new Command("entertoclosesign",
                 args -> Tweakception.globalTweaks.toggleEnterToCloseNumberTypingSign()),
+            new Command("fakepowerscrolls",
+                args -> Tweakception.globalTweaks.toggleFakePowerScrolls()),
             new Command("gift",
                 args -> Tweakception.globalTweaks.toggleGiftFeatures(),
                 new Command("autoswitchgiftslot",

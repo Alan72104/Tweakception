@@ -712,7 +712,7 @@ public class GlobalTweaks extends Tweak
         if (c.disableTooltips)
             event.toolTip.clear();
 
-        if (t)
+        if (fakePowerScrolls)
         {
             for (int i = 0; i < event.toolTip.size(); i++)
             {

@@ -109,6 +109,7 @@ All command prefix - /tc
 - gt gift
   - **Toggles all gift features**
   - **In inventory, press D to drop all gift trash, Ctrl+D to throw trash plus emptying the stash, M to move gifts to hotbar**
+- gt fakepowerscrolls - **⦾⦾⦾⦾⦾⦾**
 - gt gift autoswitchgiftslot
   - **Auto switches to slot that has any gift on any entity right click**
 - gt hideplayers - **Hides ALL online players**

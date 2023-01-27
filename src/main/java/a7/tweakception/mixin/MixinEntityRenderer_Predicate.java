@@ -1,6 +1,8 @@
 package a7.tweakception.mixin;
 
 import a7.tweakception.Tweakception;
+import net.minecraft.client.entity.EntityOtherPlayerMP;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.item.EntityArmorStand;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -27,9 +29,13 @@ public abstract class MixinEntityRenderer_Predicate
         {
             cancel = true;
         }
+        else if (Tweakception.globalTweaks.isDisablePlayerTargetingOn() &&
+            entity instanceof EntityOtherPlayerMP)
+        {
+            cancel = true;
+        }
         else if (Tweakception.globalTweaks.isOnlyTargetOpenableGiftOn() &&
-            (!(entity instanceof EntityArmorStand) ||
-             !(entity.getName().equals("§e§lCLICK TO OPEN"))))
+            (!(entity instanceof EntityArmorStand) || !(entity.getName().equals("§e§lCLICK TO OPEN"))))
         {
             cancel = true;
         }

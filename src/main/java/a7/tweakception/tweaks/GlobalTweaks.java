@@ -95,9 +95,10 @@ public class GlobalTweaks extends Tweak
         public boolean trevorQuestAutoStart = false;
         public boolean trevorHighlightAnimal = false;
         public boolean sendBitsMessage = false;
-        public boolean disableDeadMobTargeting = false;
-        public boolean disableArmorStandTargeting = false;
-        public boolean onlyTargetOpenableGift = false;
+        public boolean targetingDisableDeadMob = false;
+        public boolean targetingDisableArmorStand = false;
+        public boolean targetingDisablePlayer = false;
+        public boolean targetingOnlyOpenableGift = false;
         public boolean autoSwitchGiftSlot = false;
         public boolean giftFeatures = false;
         public boolean afkMode = false;
@@ -1291,12 +1292,17 @@ public class GlobalTweaks extends Tweak
 
     public boolean isDisableDeadMobTargetingOn()
     {
-        return c.disableDeadMobTargeting;
+        return c.targetingDisableDeadMob;
     }
 
     public boolean isDisableArmorStandTargetingOn()
     {
-        return c.disableArmorStandTargeting;
+        return c.targetingDisableArmorStand;
+    }
+
+    public boolean isDisablePlayerTargetingOn()
+    {
+        return c.targetingDisablePlayer;
     }
 
     public boolean isGiftFeaturesOn()
@@ -1306,7 +1312,7 @@ public class GlobalTweaks extends Tweak
 
     public boolean isOnlyTargetOpenableGiftOn()
     {
-        return c.onlyTargetOpenableGift;
+        return c.targetingOnlyOpenableGift;
     }
 
     public boolean isAutoSwitchGiftSlotOn()
@@ -2091,28 +2097,35 @@ public class GlobalTweaks extends Tweak
 
     public void toggleDisableDeadMobTargeting()
     {
-        c.disableDeadMobTargeting = !c.disableDeadMobTargeting;
-        sendChat("GT-DisableDeadMobTargeting: toggled " + c.disableDeadMobTargeting);
+        c.targetingDisableDeadMob = !c.targetingDisableDeadMob;
+        sendChat("GT-DisableDeadMobTargeting: toggled " + c.targetingDisableDeadMob);
     }
 
     public void toggleDisableArmorStandTargeting()
     {
-        c.disableArmorStandTargeting = !c.disableArmorStandTargeting;
-        sendChat("GT-DisableArmorStandTargeting: toggled " + c.disableArmorStandTargeting);
+        c.targetingDisableArmorStand = !c.targetingDisableArmorStand;
+        sendChat("GT-DisableArmorStandTargeting: toggled " + c.targetingDisableArmorStand);
+    }
+
+    public void toggleDisablePlayerTargeting()
+    {
+        c.targetingDisablePlayer = !c.targetingDisablePlayer;
+        sendChat("GT-DisablePlayerTargeting: toggled " + c.targetingDisablePlayer);
     }
 
     public void toggleOnlyTargetOpenableGift()
     {
-        c.onlyTargetOpenableGift = !c.onlyTargetOpenableGift;
-        sendChat("GT-OnlyTargetOpenableGift: toggled " + c.onlyTargetOpenableGift);
+        c.targetingOnlyOpenableGift = !c.targetingOnlyOpenableGift;
+        sendChat("GT-OnlyTargetOpenableGift: toggled " + c.targetingOnlyOpenableGift);
     }
 
     public void resetTargeting()
     {
         GlobalTweaksConfig newConfig = new GlobalTweaksConfig();
-        c.disableDeadMobTargeting = newConfig.disableDeadMobTargeting;
-        c.disableArmorStandTargeting = newConfig.disableArmorStandTargeting;
-        c.onlyTargetOpenableGift = newConfig.onlyTargetOpenableGift;
+        c.targetingDisableDeadMob = newConfig.targetingDisableDeadMob;
+        c.targetingDisableArmorStand = newConfig.targetingDisableArmorStand;
+        c.targetingDisablePlayer = newConfig.targetingDisablePlayer;
+        c.targetingOnlyOpenableGift = newConfig.targetingOnlyOpenableGift;
         sendChat("GT: reset all targeting options");
     }
 

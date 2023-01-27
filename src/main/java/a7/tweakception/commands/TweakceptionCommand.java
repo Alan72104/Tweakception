@@ -331,6 +331,8 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.globalTweaks.toggleDisableDeadMobTargeting()),
                 new Command("disablearmorstandtargeting",
                     args -> Tweakception.globalTweaks.toggleDisableArmorStandTargeting()),
+                new Command("disableplayertargeting",
+                    args -> Tweakception.globalTweaks.toggleDisablePlayerTargeting()),
                 new Command("onlytargetopenablegifts",
                     args -> Tweakception.globalTweaks.toggleOnlyTargetOpenableGift()),
                 new Command("reset",

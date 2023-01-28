@@ -153,8 +153,10 @@ public class DungeonTweaks extends Tweak
     private int salvageLastClickTick = 0;
     private String salvagingEssenceType = "";
     private int salvagingEssencegAmount = 0;
-    private final Matcher essenceMatcher = Pattern.compile("^ {2}§[\\da-f](\\w+) Essence §[\\da-f]x(\\d+)").matcher("");
-    private final Matcher partyRequestMatcher = Pattern.compile(" (.*) has invited you to join (?:their|.*) party!").matcher("");
+    private final Matcher essenceMatcher = Pattern.compile(
+        "^ {2}§[\\da-f](\\w+) Essence §[\\da-f]x(\\d+)").matcher("");
+    private final Matcher partyRequestMatcher = Pattern.compile(
+        " (.*) has invited you to join (?:their|.*) party!").matcher("");
     private boolean fragGotten = false;
     private boolean fragRunTracking = false;
     private long fragrunStartTime = 0L; // long = millis, int = ticks
@@ -172,11 +174,13 @@ public class DungeonTweaks extends Tweak
     private final ConcurrentMap<Entity, ConcurrentLinkedQueue<Integer>> entityHurtTimes = new ConcurrentHashMap<>();
     private Entity hitDisplayTargetNameTag = null;
     private final Map<String, MaskUsage> maskUsages = new ConcurrentHashMap<>();
-    private final Matcher maskCooldownMatcher = Pattern.compile("^§8Cooldown: §a(\\d+)s").matcher("");
+    private final Matcher maskCooldownMatcher = Pattern.compile(
+        "^§8Cooldown: §a(\\d+)s").matcher("");
     private final Matcher dungeonItemStatMatcher = Pattern.compile(
         " §8\\(([-+])?(\\d+(?:,\\d+)*(?:\\.\\d+)?)(%?)\\)(.*)").matcher("");
     private final Map<String, DungeonStats> uuidToDungeonStatsMap = new HashMap<>();
-    private final Matcher partyFinderTitleMatcher = Pattern.compile("^§o§6(?:§[\\da-f])?([^']+)'s Party(.*)").matcher("");
+    private final Matcher partyFinderTitleMatcher = Pattern.compile(
+        "^§o§6(?:§[\\da-f])?([^']+)'s Party(.*)").matcher("");
     private final Matcher partyFinderPlayerMatcher = Pattern.compile(
         "^§5§o (?:§[\\da-f])?([\\w\\d]+)(§f: §e\\w+§b \\(§e\\d{1,2}§b\\))").matcher("");
     private long partyFinderLastRefreshMillis = 0L;
@@ -337,6 +341,8 @@ public class DungeonTweaks extends Tweak
         Tweakception.overlayManager.addOverlay(new TargetMobNametagOverlay());
         Tweakception.overlayManager.addOverlay(new DamageHistoryOverlay());
     }
+    
+    // region Events
     
     public void onTick(TickEvent.ClientTickEvent event)
     {
@@ -1232,41 +1238,9 @@ public class DungeonTweaks extends Tweak
             prevInventoryItemCounts.clear();
     }
     
-    public boolean isTrackingMaskUsage()
-    {
-        return c.trackMaskUsage;
-    }
+    // endregion Events
     
-    public boolean isMaskUsed(String uuid)
-    {
-        return maskUsages.containsKey(uuid);
-    }
-    
-    public boolean isBlockingOpheliaShopClicks()
-    {
-        return c.blockOpheliaShopClicks;
-    }
-    
-    public boolean isPartyFinderRefreshCooldownEnbaled()
-    {
-        return c.partyFinderRefreshCooldown;
-    }
-    
-    public long getPartyFinderRefreshCooldown()
-    {
-        long elapsed = System.currentTimeMillis() - partyFinderLastRefreshMillis;
-        return Math.max(3100L - elapsed, 0L);
-    }
-    
-    public void setPartyFinderRefreshCooldown()
-    {
-        partyFinderLastRefreshMillis = System.currentTimeMillis();
-    }
-    
-    public boolean isAutoSwapSpiritSceptreAoteOn()
-    {
-        return c.autoSwapSpiritSceptreAote;
-    }
+    // region Misc
     
     private void resetLivid()
     {
@@ -1436,6 +1410,50 @@ public class DungeonTweaks extends Tweak
         uuidToDungeonStatsMap.put(uuid, stats);
         return stats;
     }
+    
+    // endregion Misc
+    
+    // region Feature access
+    
+    public boolean isTrackingMaskUsage()
+    {
+        return c.trackMaskUsage;
+    }
+    
+    public boolean isMaskUsed(String uuid)
+    {
+        return maskUsages.containsKey(uuid);
+    }
+    
+    public boolean isBlockingOpheliaShopClicks()
+    {
+        return c.blockOpheliaShopClicks;
+    }
+    
+    public boolean isPartyFinderRefreshCooldownEnbaled()
+    {
+        return c.partyFinderRefreshCooldown;
+    }
+    
+    public long getPartyFinderRefreshCooldown()
+    {
+        long elapsed = System.currentTimeMillis() - partyFinderLastRefreshMillis;
+        return Math.max(3100L - elapsed, 0L);
+    }
+    
+    public void setPartyFinderRefreshCooldown()
+    {
+        partyFinderLastRefreshMillis = System.currentTimeMillis();
+    }
+    
+    public boolean isAutoSwapSpiritSceptreAoteOn()
+    {
+        return c.autoSwapSpiritSceptreAote;
+    }
+    
+    // endregion Feature access
+    
+    // region Overlays
     
     private class FragRunOverlay extends TextOverlay
     {
@@ -1652,6 +1670,10 @@ public class DungeonTweaks extends Tweak
             return list;
         }
     }
+    
+    // endregion Overlay
+    
+    // region Commands
     
     public void toggleNoFog()
     {
@@ -2264,4 +2286,6 @@ public class DungeonTweaks extends Tweak
         c.autoSwapSpiritSceptreAote = !c.autoSwapSpiritSceptreAote;
         sendChat("DT-AutoSwapSpiritSceptreAote: toggled " + c.autoSwapSpiritSceptreAote);
     }
+    
+    // endregion Commands
 }

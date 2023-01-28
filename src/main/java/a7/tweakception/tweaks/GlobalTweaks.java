@@ -167,7 +167,7 @@ public class GlobalTweaks extends Tweak
     private String lastSkyblockLevelExpGainMsg = "";
     private int lastSkyblockLevelExpGainTicks = 0;
     
-    enum InvFeature
+    private enum InvFeature
     {
         None, DropGiftShit, MoveGift, AutoDropGiftShit
     }

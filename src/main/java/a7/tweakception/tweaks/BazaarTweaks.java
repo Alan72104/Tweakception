@@ -39,8 +39,7 @@ public class BazaarTweaks extends Tweak
     // §7Filled: §a1k§7/1.2k §8(79.5%)
     // §7Filled: §a1.2k§7/1.2k §a§l100%!
     private final Matcher orderStatusMatcher = Pattern.compile(
-            "^§7Filled: §[\\da-f]((\\d+(?:\\.\\d+)?)(k?)§7/(\\d+(?:\\.\\d+)?)(k?)) (?:(§a§l100%!)|§8\\((\\d+(?:\\.\\d+)?%)\\))$")
-        .matcher("");
+        "^§7Filled: §[\\da-f]((\\d+(?:\\.\\d+)?)(k?)§7/(\\d+(?:\\.\\d+)?)(k?)) (?:(§a§l100%!)|§8\\((\\d+(?:\\.\\d+)?%)\\))$").matcher("");
     // §7Price per unit: §6343,998.5 coins
     private final Matcher orderPriceMatcher = Pattern.compile(
         "^§7Price per unit: §6((?:\\d+,?)+(?:\\.\\d+)?) coins$").matcher("");

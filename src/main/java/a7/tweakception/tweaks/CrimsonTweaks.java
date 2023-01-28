@@ -34,6 +34,7 @@ public class CrimsonTweaks extends Tweak
         public float mapMarkerScale = 1.0f;
         public boolean highlightSulfur = false;
     }
+    
     private final CrimsonTweaksConfig c;
     private final ResourceLocation MAP_TEXTURE = new ResourceLocation("tweakception:crimson_map.png");
     private final ResourceLocation MAP_PLAYER_MARKER_TEXTURE = new ResourceLocation("tweakception:map_player_marker.png");
@@ -76,8 +77,8 @@ public class CrimsonTweaks extends Tweak
                     EntityPlayerSP p = getPlayer();
                     sponges = spongesTemp;
                     spongesTemp = new ArrayList<>(20);
-                    searchThread = new BlockSearchTask((int)p.posX - 64, 70, (int)p.posZ - 64,
-                        (int)p.posX + 64, 150, (int)p.posZ + 64, getWorld(), Blocks.sponge, spongesTemp);
+                    searchThread = new BlockSearchTask((int) p.posX - 64, 70, (int) p.posZ - 64,
+                        (int) p.posX + 64, 150, (int) p.posZ + 64, getWorld(), Blocks.sponge, spongesTemp);
                     Tweakception.threadPool.execute(searchThread);
                 }
             }
@@ -110,9 +111,9 @@ public class CrimsonTweaks extends Tweak
             RenderUtils.drawTexturedRect(0.0f, 0.0f, MAP_WIDTH, MAP_HEIGHT, GL11.GL_NEAREST);
             GlStateManager.popMatrix();
             
-            float playerX = (float)getPlayer().posX;
+            float playerX = (float) getPlayer().posX;
 //            float playerX = WORLD_SPAWNPOINT_X;
-            float playerZ = (float)getPlayer().posZ;
+            float playerZ = (float) getPlayer().posZ;
 //            float playerZ = WORLD_SPAWNPOINT_Z;
             getMc().getTextureManager().bindTexture(MAP_PLAYER_MARKER_TEXTURE);
             GlStateManager.translate(

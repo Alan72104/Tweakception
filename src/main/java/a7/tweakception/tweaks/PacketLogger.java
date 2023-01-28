@@ -22,7 +22,7 @@ public class PacketLogger
     private boolean logPacket = false;
     private BufferedWriter packetLogWriter = null;
     private boolean logAll = false;
-
+    
     public void toggle()
     {
         if (logPacket)
@@ -35,7 +35,7 @@ public class PacketLogger
             start();
         }
     }
-
+    
     public void start()
     {
         logPacket = true;
@@ -48,7 +48,7 @@ public class PacketLogger
                 packetLogWriter = Tweakception.configuration.createWriterFor(file);
             }
             McUtils.getPlayer().addChatMessage(new ChatComponentTranslation("Output written to file %s",
-                    McUtils.makeFileLink(file)));
+                McUtils.makeFileLink(file)));
             sendChat("PacketLogger: toggled on packet log");
         }
         catch (IOException e)
@@ -57,7 +57,7 @@ public class PacketLogger
             logPacket = false;
         }
     }
-
+    
     public void stop()
     {
         logPacket = false;
@@ -73,7 +73,7 @@ public class PacketLogger
             }
         }
     }
-
+    
     public void toggleAllowedPacket(String name)
     {
         if (allowedPacketClasses.contains(name))
@@ -87,13 +87,13 @@ public class PacketLogger
             sendChat("PacketLogger: added " + name);
         }
     }
-
+    
     public void toggleLogAll()
     {
         logAll = !logAll;
         sendChat("PacketLogger: toggled log all " + logAll);
     }
-
+    
     public void logPacket(String direction, Packet<?> packet)
     {
         if (logPacket)
@@ -122,12 +122,12 @@ public class PacketLogger
             }
         }
     }
-
+    
     private void printFields(Object obj)
     {
         printFields(obj, obj.getClass());
     }
-
+    
     private void printFields(Object obj, Class<?> clazz)
     {
         Field[] fields = clazz.getDeclaredFields();
@@ -137,7 +137,7 @@ public class PacketLogger
             {
                 field.setAccessible(true);
                 Object value = field.get(obj);
-
+                
                 String modifiers = Modifier.toString(field.getModifiers());
                 String type = field.getType().getSimpleName();
                 String name = field.getName();
@@ -149,14 +149,14 @@ public class PacketLogger
             {
             }
         }
-
+        
         Class<?> superclass = clazz.getSuperclass();
         if (superclass != null)
         {
             printFields(obj, superclass);
         }
     }
-
+    
     private String objToString(Class<?> clazz, Object obj)
     {
         if (clazz.isPrimitive())
@@ -167,7 +167,7 @@ public class PacketLogger
         {
             return "null";
         }
-
+        
         try
         {
             if (obj.getClass().getMethod("toString").getDeclaringClass() != Object.class)
@@ -182,10 +182,10 @@ public class PacketLogger
         catch (NoSuchMethodException ignored)
         {
         }
-
+        
         return "NOWAY";
     }
-
+    
     private static void write(BufferedWriter writer, String... strings) throws IOException
     {
         for (String s : strings)

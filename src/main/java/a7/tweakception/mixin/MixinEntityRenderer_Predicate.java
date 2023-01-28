@@ -2,14 +2,13 @@ package a7.tweakception.mixin;
 
 import a7.tweakception.Tweakception;
 import net.minecraft.client.entity.EntityOtherPlayerMP;
-import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityArmorStand;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
 
 @Mixin(targets = "net/minecraft/client/renderer/EntityRenderer$1")
 public abstract class MixinEntityRenderer_Predicate
@@ -20,7 +19,7 @@ public abstract class MixinEntityRenderer_Predicate
         boolean cancel = false;
         if (Tweakception.globalTweaks.isDisableDeadMobTargetingOn() &&
             entity instanceof EntityLivingBase &&
-            ((EntityLivingBase)entity).getHealth() <= 0f)
+            ((EntityLivingBase) entity).getHealth() <= 0f)
         {
             cancel = true;
         }
@@ -39,7 +38,7 @@ public abstract class MixinEntityRenderer_Predicate
         {
             cancel = true;
         }
-
+        
         if (cancel)
         {
             cir.setReturnValue(false);

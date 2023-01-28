@@ -106,9 +106,9 @@ public class RenderUtils
         GlStateManager.color(c.getRed() / 255.0f, c.getGreen() / 255.0f, c.getBlue() / 255.0f, c.getAlpha() / 255.0f);
         
         Vec3 renderPos = new Vec3(
-            (float)(entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * partialTicks),
-            (float)(entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * partialTicks),
-            (float)(entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * partialTicks)
+            (float) (entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * partialTicks),
+            (float) (entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * partialTicks),
+            (float) (entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * partialTicks)
         );
         GlStateManager.translate(axisAlignedBB.minX + renderPos.xCoord, axisAlignedBB.minY + renderPos.yCoord, axisAlignedBB.minZ + renderPos.zCoord);
         
@@ -403,7 +403,7 @@ public class RenderUtils
     {
         drawBeaconBeamOrBoundingBox(block, c, partialTicks, type, 10);
     }
-
+    
     public static void drawBeaconBeamOrBoundingBox(BlockPos block, Color c, float partialTicks, int type, float range)
     {
         Vector3d viewer = getInterpolatedViewingPos(partialTicks);
@@ -418,7 +418,7 @@ public class RenderUtils
         else
             RenderUtils.drawFilledBoundingBoxBlockSize(x, y, z, c);
     }
-
+    
     // Type -1 is beacon beam
     // Type 0 is auto
     // Type 1 is bounding box
@@ -426,16 +426,16 @@ public class RenderUtils
     {
         drawBeaconBeamOrBoundingBox(e, c, partialTicks, type, 10);
     }
-
+    
     public static void drawBeaconBeamOrBoundingBox(Entity e, Color c, float partialTicks, int type, float range)
     {
         Vector3d viewer = getInterpolatedViewingPos(partialTicks);
         double x = e.posX - viewer.x;
         double y = e.posY - viewer.y;
         double z = e.posZ - viewer.z;
-
+        
         double distSq = x * x + y * y + z * z;
-
+        
         if (type < 0 || (type == 0 && distSq > range * range))
             RenderUtils.drawBeaconBeam(x, y, z, c, partialTicks, false);
         else
@@ -498,8 +498,8 @@ public class RenderUtils
         GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);
         
-        double time = Minecraft.getMinecraft().theWorld.getTotalWorldTime() + (double)partialTicks;
-        double d1 = MathHelper.func_181162_h(-time * 0.2D - (double)MathHelper.floor_double(-time * 0.1D));
+        double time = Minecraft.getMinecraft().theWorld.getTotalWorldTime() + (double) partialTicks;
+        double d1 = MathHelper.func_181162_h(-time * 0.2D - (double) MathHelper.floor_double(-time * 0.1D));
         
         float r = c.getRed() / 255f;
         float g = c.getGreen() / 255f;
@@ -515,7 +515,7 @@ public class RenderUtils
         double d10 = 0.5D + Math.cos(d2 + 5.497787143782138D) * 0.2D;
         double d11 = 0.5D + Math.sin(d2 + 5.497787143782138D) * 0.2D;
         double d14 = -1.0D + d1;
-        double d15 = (double)(height) * 2.5D + d14;
+        double d15 = (double) (height) * 2.5D + d14;
         worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
         worldrenderer.pos(x + d4, y + topOffset, z + d5).tex(1.0D, d15).color(r, g, b, a).endVertex();
         worldrenderer.pos(x + d4, y + bottomOffset, z + d5).tex(1.0D, d14).color(r, g, b, 1.0F).endVertex();

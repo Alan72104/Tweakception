@@ -43,6 +43,7 @@ public class FishingTweaks extends Tweak
         public boolean displayThunderBottleCharge = false;
         public int thunderBottleChargeIncrementResetDuration = 30;
     }
+    
     private final AutoFishConfig c;
     private static boolean exceptionThrown = false;
     private boolean reflectionTried = false;
@@ -116,7 +117,7 @@ public class FishingTweaks extends Tweak
                     if (id != null && id.equals("THUNDER_IN_A_BOTTLE_EMPTY") && uuid != null)
                     {
                         int charge = McUtils.getExtraAttributes(stack).getInteger("thunder_charge");
-    
+                        
                         // Only display the first bottle fill count
                         if (thunderBottleCharge == null)
                             thunderBottleCharge = charge;
@@ -226,10 +227,10 @@ public class FishingTweaks extends Tweak
             if (movingTicks < movingTicksTarget)
             {
                 movingTicks++;
-                float dy = movingTargetDeltaYaw * easingOutExpo((float)movingTicks / movingTicksTarget) -
-                    movingTargetDeltaYaw * easingOutExpo((float)(movingTicks - 1) / movingTicksTarget);
-                float dp = movingTargetDeltaPitch * easingOutExpo((float)movingTicks / movingTicksTarget) -
-                    movingTargetDeltaPitch * easingOutExpo((float)(movingTicks - 1) / movingTicksTarget);
+                float dy = movingTargetDeltaYaw * easingOutExpo((float) movingTicks / movingTicksTarget) -
+                    movingTargetDeltaYaw * easingOutExpo((float) (movingTicks - 1) / movingTicksTarget);
+                float dp = movingTargetDeltaPitch * easingOutExpo((float) movingTicks / movingTicksTarget) -
+                    movingTargetDeltaPitch * easingOutExpo((float) (movingTicks - 1) / movingTicksTarget);
                 getPlayer().rotationYaw += dy;
                 getPlayer().rotationPitch += dp;
             }
@@ -246,7 +247,7 @@ public class FishingTweaks extends Tweak
                 {
                     EntityPlayerSP p = McUtils.getPlayer();
                     ISound sound = new PositionedSoundRecord(new ResourceLocation("random.levelup"),
-                        1.0f, 2.0f, (float)p.posX, (float)p.posY, (float)p.posZ);
+                        1.0f, 2.0f, (float) p.posX, (float) p.posY, (float) p.posZ);
                     getMc().getSoundHandler().playSound(sound);
                 };
                 
@@ -268,16 +269,16 @@ public class FishingTweaks extends Tweak
         int neuStateOrdinal = 0;
         try
         {
-            neuWarningState = (Enum<?>)neuWarningStateField.get(neuFishingHelperInstance);
+            neuWarningState = (Enum<?>) neuWarningStateField.get(neuFishingHelperInstance);
             neuStateOrdinal = neuWarningState.ordinal();
-            neuLastRodCastMillis = (long)neuLastRodCastMillisField.get(neuFishingHelperInstance);
+            neuLastRodCastMillis = (long) neuLastRodCastMillisField.get(neuFishingHelperInstance);
         }
         catch (Exception e)
         {
             // Should not throw here
             if (!exceptionThrown)
             {
-                sendChat("FishingTweaks: " + e.toString() + ", stopping");
+                sendChat("FishingTweaks: " + e + ", stopping");
                 exceptionThrown = true;
             }
         }
@@ -294,14 +295,14 @@ public class FishingTweaks extends Tweak
             neuWarningStateField = neuFishingHelperClass.getDeclaredField("warningState");
             neuLastRodCastMillisField = neuFishingHelperClass.getDeclaredField("lastCastRodMillis");
             neuLastRodCastMillisField.setAccessible(true);
-            neuWarningState = (Enum<?>)neuWarningStateField.get(neuFishingHelperInstance);
-            neuLastRodCastMillis = (long)neuLastRodCastMillisField.get(neuFishingHelperInstance);
+            neuWarningState = (Enum<?>) neuWarningStateField.get(neuFishingHelperInstance);
+            neuLastRodCastMillis = (long) neuLastRodCastMillisField.get(neuFishingHelperInstance);
         }
         catch (Exception e)
         {
             if (!exceptionThrown)
             {
-                sendChat("FishingTweaks: " + e.toString() + ", stopping");
+                sendChat("FishingTweaks: " + e + ", stopping");
                 exceptionThrown = true;
             }
         }
@@ -314,14 +315,14 @@ public class FishingTweaks extends Tweak
     // All normalized
     private static float easingOutExpo(float t)
     {
-        return t == 1.0f ? 1.0f : 1.0f - (float)Math.pow(2, -10 * t);
+        return t == 1.0f ? 1.0f : 1.0f - (float) Math.pow(2, -10 * t);
     }
     
     private static float easingOutQuart(float t)
     {
         return 1.0f - --t * t * t * t;
     }
-    
+
 //    public boolean isDisplayThunderBottleChargeOn()
 //    {
 //        return c.displayThunderBottleCharge;

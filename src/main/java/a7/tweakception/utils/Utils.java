@@ -14,8 +14,8 @@ import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -25,13 +25,13 @@ import static a7.tweakception.utils.McUtils.getPlayer;
 public class Utils
 {
     private static final NumberFormat NUMBER_FORMAT = NumberFormat.getInstance(Locale.US);
-
+    
     @SafeVarargs
     public static <T> HashSet<T> hashSet(T... array)
     {
         return new HashSet<T>(Arrays.asList(array));
     }
-
+    
     // Supports comma
     public static int parseInt(String s)
     {
@@ -94,7 +94,7 @@ public class Utils
     
     public static float roundToDigits(float f, int d)
     {
-        float t = (float)Math.pow(10, d);
+        float t = (float) Math.pow(10, d);
         return Math.round(f * t) / t;
     }
     
@@ -220,7 +220,7 @@ public class Utils
     {
         if (item == null)
             return null;
-    
+        
         NBTTagCompound tag = item.getTagCompound();
         if (tag != null)
         {
@@ -235,7 +235,7 @@ public class Utils
     {
         if (item == null)
             return null;
-    
+        
         NBTTagCompound tag = item.getTagCompound();
         if (tag != null)
         {
@@ -245,7 +245,7 @@ public class Utils
         }
         return null;
     }
-
+    
     public static int findInHotbarById(String... ids)
     {
         return findInHotbarById(id ->
@@ -256,7 +256,7 @@ public class Utils
             return false;
         });
     }
-
+    
     public static int findInHotbarById(Predicate<String> predicate)
     {
         for (int i = 0; i < 9; i++)
@@ -270,7 +270,7 @@ public class Utils
         }
         return -1;
     }
-
+    
     public static int findInHotbarBy(Predicate<ItemStack> predicate)
     {
         for (int i = 0; i < 9; i++)
@@ -318,7 +318,7 @@ public class Utils
         
         return sb.toString();
     }
-
+    
     public static <T> T setAccessibleAndGetField(Object o, String... names) throws Exception
     {
         return setAccessibleAndGetField(o.getClass(), names);
@@ -334,7 +334,7 @@ public class Utils
                 Field field = clazz.getDeclaredField(name);
                 field.setAccessible(true);
                 //noinspection unchecked
-                return (T)field.get(o);
+                return (T) field.get(o);
             }
             catch (Exception e)
             {
@@ -355,7 +355,7 @@ public class Utils
         String s;
         try
         {
-            s = (String)Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
+            s = (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
         }
         catch (Exception e)
         {
@@ -363,7 +363,7 @@ public class Utils
         }
         return s;
     }
-
+    
     public static void fileCopy(File source, File dest) throws IOException
     {
         try (InputStream is = Files.newInputStream(source.toPath());

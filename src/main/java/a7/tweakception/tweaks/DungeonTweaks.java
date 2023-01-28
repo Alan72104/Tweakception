@@ -33,7 +33,10 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.play.server.S04PacketEntityEquipment;
 import net.minecraft.network.play.server.S0DPacketCollectItem;
 import net.minecraft.network.play.server.S19PacketEntityStatus;
-import net.minecraft.util.*;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.util.IChatComponent;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
@@ -81,7 +84,7 @@ public class DungeonTweaks extends Tweak
         public boolean autoJoinPartyWhitelistEnable = true;
         public boolean autoSalvage = false;
         public boolean blockOpheliaShopClicks = true;
-//        public boolean displaySoulName = false;
+        //public boolean displaySoulName = false;
         public boolean displayTargetMobNameTag = false;
         public boolean enableNoFog = false;
         public boolean enableNoFogAutoToggle = false;
@@ -112,6 +115,7 @@ public class DungeonTweaks extends Tweak
         public long fastestBloodRush = 0L;
         public long fastestFragrun = 0L;
     }
+    
     private final DungeonTweaksConfig c;
     private static final Set<String> SECRET_CHEST_ITEMS = new HashSet<>();
     private static final Set<String> TRASH_ITEMS = new HashSet<>();
@@ -553,7 +557,7 @@ public class DungeonTweaks extends Tweak
         if (getMc().currentScreen instanceof GuiChest)
         {
             GuiChest chest = (GuiChest) getMc().currentScreen;
-            ContainerChest container = (ContainerChest)chest.inventorySlots;
+            ContainerChest container = (ContainerChest) chest.inventorySlots;
             if (secretChestOpened)
             {
                 secretChestOpened = false;
@@ -740,7 +744,7 @@ public class DungeonTweaks extends Tweak
         
         if (entity instanceof EntityArmorStand)
         {
-            String tex = McUtils.getArmorStandHeadTexture((EntityArmorStand)entity);
+            String tex = McUtils.getArmorStandHeadTexture((EntityArmorStand) entity);
             if (tex != null)
             {
                 String witherKeyTexture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzRkYjRhZGZhOWJmNDhmZjVkNDE3MDdhZTM0ZWE3OGJkMjM3MTY1OWZjZDhjZDg5MzQ3NDlhZjRjY2U5YiJ9fX0=";
@@ -907,8 +911,8 @@ public class DungeonTweaks extends Tweak
     {
         if (event.gui instanceof GuiChest)
         {
-            GuiChest chest = (GuiChest)event.gui;
-            ContainerChest container = (ContainerChest)chest.inventorySlots;
+            GuiChest chest = (GuiChest) event.gui;
+            ContainerChest container = (ContainerChest) chest.inventorySlots;
             String containerName = container.getLowerChestInventory().getName();
             if (getCurrentIsland() == SkyblockIsland.DUNGEON && c.autoCloseSecretChest && containerName.equals("Chest"))
                 secretChestOpened = true;
@@ -1040,8 +1044,8 @@ public class DungeonTweaks extends Tweak
         }
         else if (getMc().currentScreen instanceof GuiChest)
         {
-            GuiChest chest = (GuiChest)getMc().currentScreen;
-            ContainerChest container = (ContainerChest)chest.inventorySlots;
+            GuiChest chest = (GuiChest) getMc().currentScreen;
+            ContainerChest container = (ContainerChest) chest.inventorySlots;
             String containerName = container.getLowerChestInventory().getName();
             if (containerName.equals("Party Finder"))
             {
@@ -1258,7 +1262,7 @@ public class DungeonTweaks extends Tweak
     {
         partyFinderLastRefreshMillis = System.currentTimeMillis();
     }
-
+    
     public boolean isAutoSwapSpiritSceptreAoteOn()
     {
         return c.autoSwapSpiritSceptreAote;
@@ -1427,7 +1431,7 @@ public class DungeonTweaks extends Tweak
         else
             apiDisabled = true;
         
-        DungeonStats stats = new DungeonStats(cata, cataExp, secretsPerRun, (long)secrets,
+        DungeonStats stats = new DungeonStats(cata, cataExp, secretsPerRun, (long) secrets,
             wBlade, term, bestF7SecretsFound, apiDisabled);
         uuidToDungeonStatsMap.put(uuid, stats);
         return stats;
@@ -1600,7 +1604,7 @@ public class DungeonTweaks extends Tweak
         {
             super.update();
             List<String> list = new ArrayList<>();
-            float count = (float)arrowSpawnTimes.size() / c.shootingSpeedTrackingSampleSecs;
+            float count = (float) arrowSpawnTimes.size() / c.shootingSpeedTrackingSampleSecs;
             String s = f("Arrows/s: %.3f", count);
             list.add(s);
             setContent(list);
@@ -1878,7 +1882,7 @@ public class DungeonTweaks extends Tweak
             sendChat("DT-AutoJoinParty: player " + name + " is not in the list");
         }
     }
-
+    
     public void autoJoinPartyToggleWhitelist()
     {
         c.autoJoinPartyWhitelistEnable = !c.autoJoinPartyWhitelistEnable;
@@ -1898,7 +1902,7 @@ public class DungeonTweaks extends Tweak
         List<Map.Entry<String, Integer>> sorted = c.fragDrops.entrySet().stream()
             .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
             .collect(Collectors.toList());
-    
+        
         sb.append("Total runs: ").append(c.totalFragruns).append(sep);
         for (Map.Entry<String, Integer> e : sorted)
             sb.append(FRAGS_AND_NAMES.get(e.getKey())).append(": ").append(e.getValue()).append(sep);
@@ -2228,7 +2232,7 @@ public class DungeonTweaks extends Tweak
             sendChat("DT-TrackDamageHistory: feature is off");
             return;
         }
-    
+        
         List<String> list = new ArrayList<>();
         list.add("With commas");
         list.add("");
@@ -2239,7 +2243,7 @@ public class DungeonTweaks extends Tweak
         list.add("");
         for (Map.Entry<Long, Long> entry : damageHistoriesSorted)
             list.add(entry.getKey() + " - " + entry.getValue());
-    
+        
         try
         {
             File file = Tweakception.configuration.createWriteFileWithCurrentDateTime("damagehistories_$.txt", list);
@@ -2254,7 +2258,7 @@ public class DungeonTweaks extends Tweak
             sendChat("GT: exception occurred when making and opening file");
         }
     }
-
+    
     public void toggleAutoSwapSpiritSceptreAote()
     {
         c.autoSwapSpiritSceptreAote = !c.autoSwapSpiritSceptreAote;

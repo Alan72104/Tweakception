@@ -24,9 +24,11 @@ import static a7.tweakception.utils.McUtils.*;
 public class BazaarTweaks extends Tweak
 {
     private final BazaarTweaksConfig c;
+    
     public static class BazaarTweaksConfig
     {
     }
+    
     private final Map<String, List<BazaarOrder>> sellOrders = new HashMap<>();
     private final Map<String, List<BazaarOrder>> buyOrders = new HashMap<>();
     // §7Offer amount: §a5§7x
@@ -37,7 +39,7 @@ public class BazaarTweaks extends Tweak
     // §7Filled: §a1k§7/1.2k §8(79.5%)
     // §7Filled: §a1.2k§7/1.2k §a§l100%!
     private final Matcher orderStatusMatcher = Pattern.compile(
-        "^§7Filled: §[\\da-f]((\\d+(?:\\.\\d+)?)(k?)§7/(\\d+(?:\\.\\d+)?)(k?)) (?:(§a§l100%!)|§8\\((\\d+(?:\\.\\d+)?%)\\))$")
+            "^§7Filled: §[\\da-f]((\\d+(?:\\.\\d+)?)(k?)§7/(\\d+(?:\\.\\d+)?)(k?)) (?:(§a§l100%!)|§8\\((\\d+(?:\\.\\d+)?%)\\))$")
         .matcher("");
     // §7Price per unit: §6343,998.5 coins
     private final Matcher orderPriceMatcher = Pattern.compile(
@@ -48,6 +50,7 @@ public class BazaarTweaks extends Tweak
         "^§5§o§8- §6((?:\\d,?)+(?:\\.\\d+)?) coins §7each \\| §a(?:\\d,?)+§7x §7(?:in|from) §f(?:\\d,?)+ §7(?:order|offer)s?$").matcher("");
     private boolean hadMenu = false;
     private int lastUpdateTicks = 0;
+    
     private static class BazaarOrder
     {
         public double price;
@@ -55,8 +58,15 @@ public class BazaarTweaks extends Tweak
         public int currentAmount;
         public int totalAmount;
         public String amountString;
+        
         public BazaarOrder(double p, int c, int t, String a, String ps)
-        { price = p; currentAmount = c; totalAmount = t; amountString = a; priceString = ps; }
+        {
+            price = p;
+            currentAmount = c;
+            totalAmount = t;
+            amountString = a;
+            priceString = ps;
+        }
     }
     
     public BazaarTweaks(Configuration configuration)
@@ -71,8 +81,8 @@ public class BazaarTweaks extends Tweak
         
         if (getMc().currentScreen instanceof GuiChest)
         {
-            GuiChest chest = (GuiChest)getMc().currentScreen;
-            ContainerChest container = (ContainerChest)chest.inventorySlots;
+            GuiChest chest = (GuiChest) getMc().currentScreen;
+            ContainerChest container = (ContainerChest) chest.inventorySlots;
             IInventory inv = container.getLowerChestInventory();
             if (inv.getName().endsWith("Bazaar Orders") &&
                 (!hadMenu || getTicks() - lastUpdateTicks >= 5))
@@ -127,7 +137,7 @@ public class BazaarTweaks extends Tweak
     public void onItemTooltip(ItemTooltipEvent event)
     {
         if (event.itemStack == null || event.toolTip == null) return;
-
+        
         int type = -1;
         String itemName = event.itemStack.getDisplayName();
         if (itemName.equals("§6Create Sell Offer"))
@@ -136,11 +146,11 @@ public class BazaarTweaks extends Tweak
             type = 1;
         else
             return;
-
+        
         String name = null;
         Map<String, List<BazaarOrder>> orders = type == 0 ? sellOrders : buyOrders;
         List<BazaarOrder> list = null;
-
+        
         for (int i = 0; i < event.toolTip.size(); i++)
         {
             String s = event.toolTip.get(i);
@@ -159,9 +169,9 @@ public class BazaarTweaks extends Tweak
                 else if (orderListMatcher.reset(s).matches())
                 {
                     double price = Utils.parseDouble(orderListMatcher.group(1));
-
+                    
                     if (GlobalTweaks.t)
-                        sendChat(""+price);
+                        sendChat("" + price);
                     if (price == 0.0)
                         continue;
                     
@@ -209,7 +219,7 @@ public class BazaarTweaks extends Tweak
         
         if (extraOrdersLineIndex == -1)
             extraOrdersLineIndex = event.toolTip.size();
-    
+        
         
         if (getTicks() - lastUpdateTicks >= 20 * 60)
         {
@@ -289,8 +299,8 @@ public class BazaarTweaks extends Tweak
                 float total = Float.parseFloat(orderStatusMatcher.group(4));
                 if (!orderStatusMatcher.group(5).isEmpty())
                     total *= 1000.0f;
-                curAmount = (int)cur;
-                totalAmount = (int)total;
+                curAmount = (int) cur;
+                totalAmount = (int) total;
                 
                 String filled = orderStatusMatcher.group(6);
                 if (filled != null && !filled.isEmpty())

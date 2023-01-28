@@ -22,13 +22,13 @@ public class MixinRenderGlobal
     @Final
     @Shadow
     private Map<Integer, DestroyBlockProgress> damagedBlocks;
-
+    
     @Inject(method = "sendBlockBreakProgress", at = @At("HEAD"), cancellable = true)
     public void sendBlockBreakProgress(int entityId, BlockPos pos, int stage, CallbackInfo ci)
     {
         if (Tweakception.miningTweaks.isSimulateBlockHardnessOn() &&
             (GlobalTweaks.getCurrentIsland() == SkyblockIsland.DWARVEN_MINES ||
-            GlobalTweaks.getCurrentIsland() == SkyblockIsland.CRYSTAL_HOLLOWS))
+                GlobalTweaks.getCurrentIsland() == SkyblockIsland.CRYSTAL_HOLLOWS))
         {
             float blockHardness = Tweakception.miningTweaks.getSpecialBlockHardness(McUtils.getWorld(), pos);
             if (blockHardness != 0.0f)

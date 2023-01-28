@@ -60,7 +60,7 @@ public abstract class MixinGuiContainer extends GuiScreen
         if (!(slot != null && this.inventorySlots instanceof ContainerChest))
             return;
         
-        ContainerChest chest = (ContainerChest)this.inventorySlots;
+        ContainerChest chest = (ContainerChest) this.inventorySlots;
         IInventory inv = chest.getLowerChestInventory();
         String name = inv.getName();
         
@@ -137,7 +137,7 @@ public abstract class MixinGuiContainer extends GuiScreen
         if (Keyboard.isRepeatEvent())
             return;
         
-        ContainerChest chest = (ContainerChest)this.inventorySlots;
+        ContainerChest chest = (ContainerChest) this.inventorySlots;
         IInventory inv = chest.getLowerChestInventory();
         String name = inv.getName();
         
@@ -145,7 +145,7 @@ public abstract class MixinGuiContainer extends GuiScreen
             inv.getSizeInventory() == 54 &&
             name.equals("Craft Item"))
         {
-            Slot slot = ((GuiContainer)(GuiScreen)this).getSlotUnderMouse();
+            Slot slot = ((GuiContainer) (GuiScreen) this).getSlotUnderMouse();
             if (slot != null && slot.getHasStack() && slot.slotNumber % 9 == 7 &&
                 slot.slotNumber / 9 >= 1 && slot.slotNumber / 9 <= 3 &&
                 key == Keyboard.KEY_LMENU)

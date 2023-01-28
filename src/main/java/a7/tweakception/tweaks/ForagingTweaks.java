@@ -29,6 +29,7 @@ public class ForagingTweaks extends Tweak
     public static class ForagingTweaksConfig
     {
     }
+    
     private final ForagingTweaksConfig c;
     private boolean enableTreeIndicator = false;
     private final boolean[] treeGrowthStates = new boolean[Constants.PARK_DARK_TREES.length];

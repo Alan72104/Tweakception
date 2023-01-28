@@ -26,39 +26,41 @@ import static a7.tweakception.utils.McUtils.*;
 public class AutoRunes extends Tweak
 {
     private final AutoRunesConfig c;
+    
     public static class AutoRunesConfig
     {
         long totalFused = 0;
     }
+    
     private boolean enabled = false;
     private boolean inMenu = false;
     private State state = State.NONE;
     private RuneType typeToPut = null;
     private int nextClickTicks = 0;
     private int count = 0;
-
+    
     private enum State
     {
         NONE, PUTTING, CLICKING, SAVING
     }
-
+    
     private static class RuneType
     {
         public final String name;
         public final int level;
-
+        
         public RuneType(String name, int level)
         {
             this.name = name;
             this.level = level;
         }
-
+        
         @Override
         public int hashCode()
         {
             return name.hashCode() * level * level * level;
         }
-
+        
         @Override
         public boolean equals(Object o)
         {
@@ -66,28 +68,28 @@ public class AutoRunes extends Tweak
                 return true;
             else if (o instanceof RuneType)
             {
-                RuneType other = (RuneType)o;
+                RuneType other = (RuneType) o;
                 return this.name.equals(other.name) && this.level == other.level;
             }
             return false;
         }
     }
-
+    
     public AutoRunes(Configuration configuration)
     {
         super(configuration);
         c = configuration.config.autoRunes;
     }
-
+    
     public void onTick(TickEvent.ClientTickEvent event)
     {
         if (event.phase != TickEvent.Phase.END)
             return;
-
+        
         if (getMc().currentScreen instanceof GuiChest)
         {
-            GuiChest chest = (GuiChest)getMc().currentScreen;
-            ContainerChest container = (ContainerChest)chest.inventorySlots;
+            GuiChest chest = (GuiChest) getMc().currentScreen;
+            ContainerChest container = (ContainerChest) chest.inventorySlots;
             IInventory inv = container.getLowerChestInventory();
             if (inv.getName().equals("Runic Pedestal") &&
                 inv.getSizeInventory() == 54 &&
@@ -99,7 +101,7 @@ public class AutoRunes extends Tweak
                     typeToPut = null;
                     state = State.NONE;
                 }
-
+                
                 if (enabled)
                 {
                     int[] slots = {2 + 9 * 2 - 1, 8 + 9 * 2 - 1};
@@ -118,7 +120,7 @@ public class AutoRunes extends Tweak
                                     break;
                                 }
                             }
-
+                            
                             Map<RuneType, Integer> runesWeHave = new HashMap<>();
                             for (ItemStack stack : getPlayer().inventory.mainInventory)
                             {
@@ -155,16 +157,16 @@ public class AutoRunes extends Tweak
                                             getMc().playerController.windowClick(container.windowId,
                                                 i < 9 ? i + 54 + 9 * 3 : i + 54 - 9,
                                                 0, 1, getPlayer());
-
+                                            
                                             if (count == 2)
                                                 state = State.CLICKING;
-
+                                            
                                             clicked = true;
                                             break;
                                         }
                                     }
                                 }
-
+                                
                                 if (!clicked)
                                 {
                                     state = State.NONE;
@@ -172,7 +174,7 @@ public class AutoRunes extends Tweak
                                 }
                             }
                             break;
-
+                            
                         }
                         case CLICKING:
                         {
@@ -207,14 +209,14 @@ public class AutoRunes extends Tweak
                                     c.totalFused++;
                                 }
                             }
-
+                            
                             if (getTicks() >= nextClickTicks + 20 * 4)
                             {
                                 getMc().playerController.windowClick(container.windowId, 5 + 9 * 3 - 1,
                                     0, 1, getPlayer());
                                 state = State.NONE;
                                 typeToPut = null;
-
+                                
                                 if (getRuneType(result) != null)
                                     c.totalFused++;
                             }
@@ -222,27 +224,27 @@ public class AutoRunes extends Tweak
                         }
                     }
                 }
-
+                
                 inMenu = true;
                 return;
             }
         }
-
+        
         inMenu = false;
     }
-
+    
     public void onGuiDrawPost(GuiScreenEvent.DrawScreenEvent.Post event)
     {
         if (!inMenu)
             return;
-
+        
         try
         {
             int xSize = Utils.setAccessibleAndGetField(GuiContainer.class, event.gui, "xSize", "field_146999_f");
             int ySize = Utils.setAccessibleAndGetField(GuiContainer.class, event.gui, "ySize", "field_147000_g");
             int guiLeft = Utils.setAccessibleAndGetField(GuiContainer.class, event.gui, "guiLeft", "field_147003_i");
             int guiTop = Utils.setAccessibleAndGetField(GuiContainer.class, event.gui, "guiTop", "field_147009_r");
-
+            
             Color color;
             if (enabled)
                 color = new Color(50, 50, 50);
@@ -263,19 +265,19 @@ public class AutoRunes extends Tweak
         {
         }
     }
-
+    
     public void onGuiMouseInput(GuiScreenEvent.MouseInputEvent.Pre event, int x, int y)
     {
         if (!inMenu)
             return;
-
+        
         try
         {
             int xSize = Utils.setAccessibleAndGetField(GuiContainer.class, event.gui, "xSize", "field_146999_f");
             int ySize = Utils.setAccessibleAndGetField(GuiContainer.class, event.gui, "ySize", "field_147000_g");
             int guiLeft = Utils.setAccessibleAndGetField(GuiContainer.class, event.gui, "guiLeft", "field_147003_i");
             int guiTop = Utils.setAccessibleAndGetField(GuiContainer.class, event.gui, "guiTop", "field_147009_r");
-
+            
             if (Mouse.getEventButtonState() && Mouse.getEventButton() == 0 &&
                 x >= guiLeft + xSize + 20 && x <= guiLeft + xSize + 20 + 60 &&
                 y >= guiTop && y <= guiTop + 10)
@@ -288,7 +290,7 @@ public class AutoRunes extends Tweak
         {
         }
     }
-
+    
     private RuneType getRuneType(ItemStack stack)
     {
         if (stack == null)

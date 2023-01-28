@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.TreeSet;
 
-import static a7.tweakception.tweaks.GlobalTweaks.getTicks;
 import static a7.tweakception.utils.McUtils.*;
 import static a7.tweakception.utils.Utils.getClipboard;
 import static a7.tweakception.utils.Utils.setClipboard;
@@ -27,6 +26,7 @@ public class FairyTracker extends Tweak
     {
         public boolean enabled = false;
     }
+    
     private final FairyTrackerConfig c;
     private boolean fairyTrackingEnabled = false;
     private boolean giftTrackingEnabled = false;
@@ -57,7 +57,7 @@ public class FairyTracker extends Tweak
                     color = new Color(206, 57, 199);
                 RenderUtils.drawBeaconBeamOrBoundingBox(new BlockPos(pos.x, pos.y, pos.z), color, event.partialTicks, 0);
             }
-
+        
         if (giftTrackingEnabled)
             for (PosMark pos : giftSet)
             {
@@ -69,31 +69,31 @@ public class FairyTracker extends Tweak
                 RenderUtils.drawBeaconBeamOrBoundingBox(new BlockPos(pos.x, pos.y, pos.z), color, event.partialTicks, 0);
             }
     }
-
+    
     public void onEntityUpdate(LivingEvent.LivingUpdateEvent event)
     {
         if (c.enabled && fairyTrackingEnabled && event.entity instanceof EntityArmorStand)
         {
             String fairyTexture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjk2OTIzYWQyNDczMTAwMDdmNmFlNWQzMjZkODQ3YWQ1Mzg2NGNmMTZjMzU2NWExODFkYzhlNmIyMGJlMjM4NyJ9fX0=";
-
-            PosMark pos = tryAdd((EntityArmorStand)event.entity, fairyTexture, fairySet);
+            
+            PosMark pos = tryAdd((EntityArmorStand) event.entity, fairyTexture, fairySet);
             if (pos != null)
             {
                 sendChatf("Fairy: found new %d, %d, %d (count: %d)", pos.x, pos.y, pos.z, fairySet.size());
                 return;
             }
         }
-
+        
         if (giftTrackingEnabled && event.entity instanceof EntityArmorStand)
         {
             String giftTexture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTBmNTM5ODUxMGIxYTA1YWZjNWIyMDFlYWQ4YmZjNTgzZTU3ZDcyMDJmNTE5M2IwYjc2MWZjYmQwYWUyIn19fQ==";
-
-            PosMark pos = tryAdd((EntityArmorStand)event.entity, giftTexture, giftSet);
+            
+            PosMark pos = tryAdd((EntityArmorStand) event.entity, giftTexture, giftSet);
             if (pos != null)
                 sendChatf("Fairy-Gift: found new %d, %d, %d (count: %d)", pos.x, pos.y, pos.z, giftSet.size());
         }
     }
-
+    
     private PosMark tryAdd(EntityArmorStand armorStand, String texture, Set<PosMark> set)
     {
         String tex = McUtils.getArmorStandHeadTexture(armorStand);
@@ -106,14 +106,14 @@ public class FairyTracker extends Tweak
                 return pos;
             }
         }
-
+        
         return null;
     }
-
+    
     public void onKeyInput(InputEvent.KeyInputEvent event)
     {
         if (!(c.enabled || giftTrackingEnabled)) return;
-
+        
         if (getMc().gameSettings.keyBindSneak.isPressed())
         {
             if (!wasSneaking)
@@ -131,7 +131,7 @@ public class FairyTracker extends Tweak
         else
             wasSneaking = false;
     }
-
+    
     public PosMark findClosest(double x, double y, double z, double range)
     {
         Set<PosMark> set = new TreeSet<>();
@@ -139,7 +139,7 @@ public class FairyTracker extends Tweak
             set.addAll(fairySet);
         if (giftTrackingEnabled)
             set.addAll(giftSet);
-
+        
         for (PosMark pos : set)
         {
             double dX = pos.x - x;
@@ -151,22 +151,22 @@ public class FairyTracker extends Tweak
                 return pos;
             }
         }
-
+        
         return null;
     }
-
+    
     public void toggle()
     {
         c.enabled = !c.enabled;
         sendChat("Fairy: toggled " + c.enabled + ", count: " + fairySet.size());
     }
-
+    
     public void toggleTracking()
     {
         fairyTrackingEnabled = !fairyTrackingEnabled;
         sendChat("Fairy: toggled tracking " + fairyTrackingEnabled);
     }
-
+    
     public void toggleGiftTracking()
     {
         giftTrackingEnabled = !giftTrackingEnabled;
@@ -211,7 +211,7 @@ public class FairyTracker extends Tweak
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < a.length; i++)
         {
-            PosMark p = (PosMark)a[i];
+            PosMark p = (PosMark) a[i];
             sb.append(p.isFound ? "1" : "0");
             sb.append("@" + p.x + "," + p.y + "," + p.z);
             if (i < a.length - 1)
@@ -285,9 +285,9 @@ public class FairyTracker extends Tweak
         
         public PosI(double x, double y, double z)
         {
-            this.x = (int)x;
-            this.y = (int)y;
-            this.z = (int)z;
+            this.x = (int) x;
+            this.y = (int) y;
+            this.z = (int) z;
         }
         
         @Override
@@ -295,7 +295,7 @@ public class FairyTracker extends Tweak
         {
             if (!(o instanceof PosI))
                 return false;
-            PosI p = (PosI)o;
+            PosI p = (PosI) o;
             return this.x == p.x && this.y == p.y && this.z == p.z;
         }
         

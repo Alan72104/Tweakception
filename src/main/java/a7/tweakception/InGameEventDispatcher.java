@@ -117,7 +117,7 @@ public class InGameEventDispatcher
     {
         globalTweaks.onPacketReceive(event);
     }
-
+    
     @SubscribeEvent
     public void onPacketSend(PacketSendEvent event)
     {
@@ -242,7 +242,7 @@ public class InGameEventDispatcher
     {
         globalTweaks.onChatReceivedGlobal(event);
         if (!isInSkyblock()) return;
-
+        
         globalTweaks.onChatReceived(event);
         dungeonTweaks.onChatReceived(event);
         fishingTweaks.onChatReceived(event);
@@ -294,7 +294,7 @@ public class InGameEventDispatcher
     public void onGuiOpen(GuiOpenEvent event)
     {
         if (!isInSkyblock()) return;
-
+        
         dungeonTweaks.onGuiOpen(event);
         enchantingTweaks.onGuiOpen(event);
     }
@@ -303,9 +303,9 @@ public class InGameEventDispatcher
     public void onGuiDrawPost(GuiScreenEvent.DrawScreenEvent.Post event)
     {
         if (!isInSkyblock()) return;
-
+        
         GlStateManager.disableLighting();
-
+        
         enchantingTweaks.onGuiDrawPost(event);
         autoRunes.onGuiDrawPost(event);
     }
@@ -314,7 +314,7 @@ public class InGameEventDispatcher
     public void onItemTooltipHighest(ItemTooltipEvent event)
     {
         if (!isInSkyblock()) return;
-
+        
         bazaarTweaks.onItemTooltip(event);
     }
     
@@ -332,41 +332,41 @@ public class InGameEventDispatcher
     public void onGuiKeyInputPre(GuiScreenEvent.KeyboardInputEvent.Pre event)
     {
         if (!isInSkyblock()) return;
-
+        
         globalTweaks.onGuiKeyInputPre(event);
     }
-
+    
     @SubscribeEvent
     public void onGuiScreenMouse(GuiScreenEvent.MouseInputEvent.Pre event)
     {
         if (!isInSkyblock()) return;
-
+        
         final ScaledResolution scaledresolution = new ScaledResolution(getMc());
         final int scaledWidth = scaledresolution.getScaledWidth();
         final int scaledHeight = scaledresolution.getScaledHeight();
         int mouseX = Mouse.getX() / scaledresolution.getScaleFactor();
         int mouseY = scaledHeight - Mouse.getY() / scaledresolution.getScaleFactor();
-
+        
         autoRunes.onGuiMouseInput(event, mouseX, mouseY);
         if (event.isCanceled())
             return;
     }
-
+    
     @SubscribeEvent
     public void onKeyInput(InputEvent.KeyInputEvent event)
     {
         if (!isInGame()) return;
         if (!isInSkyblock()) return;
-
+        
         fairyTracker.onKeyInput(event);
         globalTweaks.onKeyInput(event);
     }
-
+    
     @SubscribeEvent
     public void onEntityJoinWorld(EntityJoinWorldEvent event)
     {
         if (!isInSkyblock()) return;
-
+        
         dungeonTweaks.onEntityJoinWorld(event);
         slayerTweaks.onEntityJoinWorld(event);
     }

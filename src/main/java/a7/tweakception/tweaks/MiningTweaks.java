@@ -43,6 +43,7 @@ public class MiningTweaks extends Tweak
         public boolean simulateBlockHardness = false;
         public int miningSpeedBoostValue = 3;
     }
+    
     private static final Color CHEST_COLOR_OPENED = new Color(0x2a00ff00, true);
     private static final Color CHEST_COLOR_CLOSED = new Color(255, 0, 0, 255 / 6);
     private static final Color CHEST_COLOR_WARNING = new Color(255, 255, 0, 255 / 6);
@@ -54,17 +55,17 @@ public class MiningTweaks extends Tweak
     private static final Matcher miningItemStatMatcher = Pattern.compile(
         "^§7Mining Speed: §a\\+(\\d+(?:,\\d+)*)").matcher("");
     private int miningSpeedBoostStartTicks = 0;
-
+    
     public MiningTweaks(Configuration configuration)
     {
         super(configuration);
         c = configuration.config.miningTweaks;
     }
-
+    
     public void onTick(TickEvent.ClientTickEvent event)
     {
         if (event.phase == TickEvent.Phase.END) return;
-
+        
         if (getCurrentIsland() == SkyblockIsland.CRYSTAL_HOLLOWS)
         {
             if (!treasureChests.isEmpty())
@@ -77,7 +78,7 @@ public class MiningTweaks extends Tweak
                     TileEntity te = getWorld().getTileEntity(bp);
                     if (te instanceof TileEntityChest)
                     {
-                        TileEntityChest teChest = (TileEntityChest)te;
+                        TileEntityChest teChest = (TileEntityChest) te;
                         if (!chest.opened && teChest.numPlayersUsing > 0)
                             chest.opened = true;
                     }
@@ -86,11 +87,11 @@ public class MiningTweaks extends Tweak
                 }
             }
         }
-
+        
         if (getMc().currentScreen instanceof GuiChest)
         {
-            GuiChest chest = (GuiChest)getMc().currentScreen;
-            ContainerChest container = (ContainerChest)chest.inventorySlots;
+            GuiChest chest = (GuiChest) getMc().currentScreen;
+            ContainerChest container = (ContainerChest) chest.inventorySlots;
             IInventory inv = container.getLowerChestInventory();
             if (inv.getSizeInventory() == 54 &&
                 inv.getName().equals("SkyBlock Menu"))
@@ -104,14 +105,14 @@ public class MiningTweaks extends Tweak
                         if (miningStatMatcher.reset(s).matches())
                         {
                             miningSpeedCache = Utils.parseFloat(miningStatMatcher.group(1));
-
+                            
                             if (getTicks() - miningSpeedBoostStartTicks <= 20 * 20)
                                 miningSpeedCache /= c.miningSpeedBoostValue + 1;
-
+                            
                             float toolSpeed = getHeldToolMiningSpeed();
                             if (toolSpeed != 0.0f)
                                 miningSpeedCache -= toolSpeed;
-
+                            
                             break;
                         }
                     }
@@ -119,7 +120,7 @@ public class MiningTweaks extends Tweak
             }
         }
     }
-
+    
     public void onRenderLast(RenderWorldLastEvent event)
     {
         if (getCurrentIsland() == SkyblockIsland.CRYSTAL_HOLLOWS)
@@ -195,7 +196,7 @@ public class MiningTweaks extends Tweak
 //                treasureChests.remove(pos);
 //        }
     }
-
+    
     public void onChatReceived(ClientChatReceivedEvent event)
     {
         String msg = event.message.getUnformattedText();
@@ -216,35 +217,35 @@ public class MiningTweaks extends Tweak
     {
         treasureChests.clear();
     }
-
+    
     private static class TreasureChest
     {
         public BlockPos pos;
         public int spawnTicks = 0;
         public boolean opened = false;
-
+        
         public TreasureChest(BlockPos pos)
         {
             this.pos = pos;
         }
-
+        
         public TreasureChest(BlockPos pos, int spawnTicks)
         {
             this.pos = pos;
             this.spawnTicks = spawnTicks;
         }
     }
-
+    
     public boolean isSimulateBlockHardnessOn()
     {
         return c.simulateBlockHardness;
     }
-
+    
     public float getCachedMiningSpeed()
     {
         return miningSpeedCache;
     }
-
+    
     public float getHeldToolMiningSpeed()
     {
         ItemStack stack = getPlayer().inventory.getCurrentItem();
@@ -262,12 +263,12 @@ public class MiningTweaks extends Tweak
         }
         return 0.0f;
     }
-
+    
     public float getMiningSpeedBoostScale()
     {
         return getTicks() - miningSpeedBoostStartTicks <= 20 * 20 ? 1.0f + c.miningSpeedBoostValue : 1.0f;
     }
-
+    
     public float getSpecialBlockHardness(World world, BlockPos pos)
     {
         IBlockState state = world.getBlockState(pos);
@@ -312,26 +313,26 @@ public class MiningTweaks extends Tweak
         }
         return 0;
     }
-
+    
     public void toggleHighlightChests()
     {
         c.highlightChests = !c.highlightChests;
         sendChat("MT-HighlightChests: toggled " + c.highlightChests);
     }
-
+    
     public void toggleSimulateBlockHardness()
     {
         c.simulateBlockHardness = !c.simulateBlockHardness;
         sendChat("MT-SimulateBlockHardness: toggled " + c.simulateBlockHardness);
     }
-
+    
     public void setMiningSpeedBoostValue(int v)
     {
         v = Utils.clamp(v, 2, 4);
         c.miningSpeedBoostValue = v;
         sendChat("MT: set mining speed boost value to " + c.highlightChests);
     }
-
+    
     public void printMiningSpeedCache()
     {
         sendChat("MT: current tool mining speed is " + getHeldToolMiningSpeed());

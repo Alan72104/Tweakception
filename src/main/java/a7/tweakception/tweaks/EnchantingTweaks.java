@@ -25,14 +25,15 @@ public class EnchantingTweaks extends Tweak
     {
         public boolean autoSolve = false;
     }
+    
     private final EnchantingTweaksConfig c;
     private SolverType currentType = SolverType.NONE;
-    private boolean hasAdded = false;
-    private int clicks = 0;
-    private long lastClickTime = 0L;
-    private List<Pair<Integer, String>> chronomatronOrder = new ArrayList<>(28);
-    private int lastAdded = 0;
-    private HashMap<Integer, Integer> ultrasequencerOrder = new HashMap<>();
+    private final boolean hasAdded = false;
+    private final int clicks = 0;
+    private final long lastClickTime = 0L;
+    private final List<Pair<Integer, String>> chronomatronOrder = new ArrayList<>(28);
+    private final int lastAdded = 0;
+    private final HashMap<Integer, Integer> ultrasequencerOrder = new HashMap<>();
     
     private enum SolverType
     {
@@ -52,15 +53,15 @@ public class EnchantingTweaks extends Tweak
     {
         if (event.phase != TickEvent.Phase.END)
             return;
-    
+        
         if (!c.autoSolve)
             return;
         
         
         if (getMc().currentScreen instanceof GuiChest)
         {
-            GuiChest chest = (GuiChest)getMc().currentScreen;
-            ContainerChest container = (ContainerChest)chest.inventorySlots;
+            GuiChest chest = (GuiChest) getMc().currentScreen;
+            ContainerChest container = (ContainerChest) chest.inventorySlots;
             IInventory inv = container.getLowerChestInventory();
             switch (currentType)
             {
@@ -85,8 +86,8 @@ public class EnchantingTweaks extends Tweak
         
         if (event.gui instanceof GuiChest)
         {
-            GuiChest chest = (GuiChest)event.gui;
-            ContainerChest container = (ContainerChest)chest.inventorySlots;
+            GuiChest chest = (GuiChest) event.gui;
+            ContainerChest container = (ContainerChest) chest.inventorySlots;
             String name = container.getLowerChestInventory().getDisplayName().getUnformattedText();
             
             if (container.getLowerChestInventory().getSizeInventory() == 54)
@@ -108,7 +109,7 @@ public class EnchantingTweaks extends Tweak
         if (currentType == SolverType.NONE)
             return;
         
-        GuiChest chest = (GuiChest)event.gui;
+        GuiChest chest = (GuiChest) event.gui;
         FontRenderer r = getMc().fontRendererObj;
         int x = chest.guiLeft + 176 + 20;
         int y = chest.guiTop;

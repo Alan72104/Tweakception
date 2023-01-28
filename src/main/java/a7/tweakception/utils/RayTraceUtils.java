@@ -32,14 +32,14 @@ public class RayTraceUtils
     
     public static RayTraceResult rayTraceBlock(EntityPlayerSP player, float partialTicks, float dist, float step)
     {
-        Vector3f pos = new Vector3f((float)player.posX, (float)player.posY + player.getEyeHeight(), (float)player.posZ);
+        Vector3f pos = new Vector3f((float) player.posX, (float) player.posY + player.getEyeHeight(), (float) player.posZ);
         
         Vec3 lookVec3 = player.getLook(partialTicks);
         
-        Vector3f look = new Vector3f((float)lookVec3.xCoord, (float)lookVec3.yCoord, (float)lookVec3.zCoord);
+        Vector3f look = new Vector3f((float) lookVec3.xCoord, (float) lookVec3.yCoord, (float) lookVec3.zCoord);
         look.scale(step / look.length());
         
-        int stepCount = (int)Math.ceil(dist / step);
+        int stepCount = (int) Math.ceil(dist / step);
         
         for (int i = 0; i < stepCount; i++)
         {

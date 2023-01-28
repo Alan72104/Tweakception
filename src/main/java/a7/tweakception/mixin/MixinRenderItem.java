@@ -32,7 +32,7 @@ public class MixinRenderItem
     {
         if (stack == null || stack.stackSize != 1)
             return;
-        
+
 //        StringBuilder sb = new StringBuilder();
         String tip = "";
         String stackCount = "";
@@ -44,7 +44,7 @@ public class MixinRenderItem
         if (Tweakception.globalTweaks.isRenderPotionTierOn() && extra.hasKey("potion_level"))
             stackCount = String.valueOf(extra.getInteger("potion_level"));
         else if (Tweakception.globalTweaks.isRenderEnchantedBooksTypeOn() &&
-                 stack.getItem() == Items.enchanted_book && extra.hasKey("enchantments"))
+            stack.getItem() == Items.enchanted_book && extra.hasKey("enchantments"))
         {
             NBTTagCompound enchantments = extra.getCompoundTag("enchantments");
             Set<String> ids = enchantments.getKeySet();
@@ -56,7 +56,7 @@ public class MixinRenderItem
             }
         }
         else if (Tweakception.globalTweaks.isRenderSacksTypeOn() &&
-                 stack.getItem() != Items.dye)
+            stack.getItem() != Items.dye)
         {
             String id = Utils.getSkyblockItemId(stack);
             if (id != null && id.endsWith("_SACK"))
@@ -64,7 +64,7 @@ public class MixinRenderItem
                 tip = getSackDisplayName(id);
             }
         }
-    
+        
         if (!tip.isEmpty()) // || !(tip = sb.toString()).isEmpty())
         {
             GlStateManager.disableLighting();
@@ -86,8 +86,8 @@ public class MixinRenderItem
             GlStateManager.disableBlend();
             getMc().fontRendererObj.drawStringWithShadow(
                 stackCount,
-                (float)(x + 17 - getMc().fontRendererObj.getStringWidth(stackCount)),
-                (float)(y + 9),
+                (float) (x + 17 - getMc().fontRendererObj.getStringWidth(stackCount)),
+                (float) (y + 9),
                 0xffffffff);
             GlStateManager.enableLighting();
             GlStateManager.enableDepth();
@@ -99,7 +99,7 @@ public class MixinRenderItem
         String displayName = ENCHANT_DISPLAY_NAMES.get(id);
         if (displayName != null)
             return displayName;
-    
+        
         StringBuilder sb = new StringBuilder();
         String enchantName = Constants.ENCHANTS.get(id);
         
@@ -107,7 +107,7 @@ public class MixinRenderItem
         {
             String[] parts = enchantName.split(" ");
             if (parts.length > 1)
-                for (int i = 0 ; i < parts.length && i < 3; i++)
+                for (int i = 0; i < parts.length && i < 3; i++)
                     sb.append(Character.toUpperCase(parts[i].charAt(0)));
             else
                 sb.append(parts[0], 0, Math.min(parts[0].length(), 3));
@@ -116,15 +116,15 @@ public class MixinRenderItem
         {
             String[] parts = id.split("_");
             int start = 0;
-        
+            
             if (parts[0].equals("ultimate"))
                 start = 1;
-        
+            
             if (parts.length > 1 + start)
                 for (int i = start; i < parts.length && i < 3 + start; i++)
                     sb.append(Character.toUpperCase(parts[i].charAt(0)));
             else
-                sb.append(Utils.captilize(parts[start]),0, Math.min(parts[start].length(), 3));
+                sb.append(Utils.captilize(parts[start]), 0, Math.min(parts[start].length(), 3));
         }
         
         if (id.startsWith("ultimate"))
@@ -143,11 +143,11 @@ public class MixinRenderItem
         
         StringBuilder sb = new StringBuilder();
         String[] split = id.split("_");
-    
+        
         int start = 0;
         if (split[0].equals("SMALL") || split[0].equals("MEDIUM") || split[0].equals("LARGE"))
             start = 1;
-    
+        
         if (split.length > start + 2) // Size? + name + SACK
             for (int i = start; i < split.length - 1 && i < 3 + start; i++)
                 sb.append(split[i].charAt(0));

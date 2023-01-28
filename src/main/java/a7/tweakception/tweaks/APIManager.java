@@ -33,6 +33,7 @@ public class APIManager extends Tweak
     {
         public String apiKey = "";
     }
+    
     private final APIManagerConfig c;
     // Value can be "null" indicating the name is invalid
     // Name should always be all lower case
@@ -268,7 +269,7 @@ public class APIManager extends Tweak
         String url = makeHypixelApiUrl(apiKey, method, args);
         
         System.out.println(f("AM: hypixel api request started, url: %s", url));
-
+        
         fetchHypixelAsync(url,
             result -> Tweakception.scheduler.add(() ->
             {
@@ -302,7 +303,7 @@ public class APIManager extends Tweak
             (jsonObject) ->
             {
                 if (jsonObject.has("id") && jsonObject.get("id").isJsonPrimitive() &&
-                    ((JsonPrimitive)jsonObject.get("id")).isString())
+                    ((JsonPrimitive) jsonObject.get("id")).isString())
                 {
                     String uuid = jsonObject.get("id").getAsString();
                     
@@ -345,12 +346,12 @@ public class APIManager extends Tweak
             try
             {
                 URLConnection connection = openConnection(url);
-
+                
                 String content = IOUtils.toString(connection.getInputStream(), StandardCharsets.UTF_8);
-
+                
                 String s = connection.getHeaderField("RateLimit-Remaining");
                 String s1 = connection.getHeaderField("RateLimit-Reset");
-
+                
                 if (s != null && s1 != null)
                 {
                     try
@@ -369,12 +370,12 @@ public class APIManager extends Tweak
                     {
                     }
                 }
-
+                
                 JsonObject json = gson.fromJson(content, JsonObject.class);
-
+                
                 if (json == null)
                     throw new ConnectException("Invalid JSON");
-
+                
                 onSuccess.accept(json);
             }
             catch (Exception e)
@@ -386,7 +387,7 @@ public class APIManager extends Tweak
             }
         });
     }
-
+    
     // This executes off the main thread
     private void fetchAsync(String url, Consumer<JsonObject> onSuccess, Runnable onError)
     {
@@ -395,14 +396,14 @@ public class APIManager extends Tweak
             try
             {
                 URLConnection connection = openConnection(url);
-
+                
                 String content = IOUtils.toString(connection.getInputStream(), StandardCharsets.UTF_8);
-
+                
                 JsonObject json = gson.fromJson(content, JsonObject.class);
-
+                
                 if (json == null)
                     throw new ConnectException("Invalid JSON");
-
+                
                 onSuccess.accept(json);
             }
             catch (Exception e)

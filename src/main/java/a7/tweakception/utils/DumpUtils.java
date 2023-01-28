@@ -146,7 +146,7 @@ public class DumpUtils
         
         if (anotherState instanceof IExtendedBlockState)
         {
-            IExtendedBlockState extendedState = (IExtendedBlockState)anotherState;
+            IExtendedBlockState extendedState = (IExtendedBlockState) anotherState;
             
             if (extendedState.getUnlistedProperties().size() > 0)
             {
@@ -210,7 +210,7 @@ public class DumpUtils
         
         if (entity instanceof EntityLivingBase)
         {
-            Collection<PotionEffect> effects = ((EntityLivingBase)entity).getActivePotionEffects();
+            Collection<PotionEffect> effects = ((EntityLivingBase) entity).getActivePotionEffects();
             
             if (!effects.isEmpty())
             {
@@ -236,7 +236,7 @@ public class DumpUtils
         if (entity instanceof AbstractClientPlayer)
         {
             lines.add("Entity is of AbstractClientPlayer");
-            AbstractClientPlayer player = (AbstractClientPlayer)entity;
+            AbstractClientPlayer player = (AbstractClientPlayer) entity;
             ResourceLocation skinLocation = player.getLocationSkin();
             lines.add("Skin location: " + skinLocation.toString());
             

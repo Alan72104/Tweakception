@@ -35,7 +35,7 @@ public class MixinGuiEditSign extends GuiScreen
                 return;
             
             if (ONLY_CARET_MATCHER.reset(this.tileSign.signText[1].getUnformattedText()).matches() ||
-                ONLY_CARET_MATCHER.reset(this.tileSign.signText[2].getUnformattedText()).matches() )
+                ONLY_CARET_MATCHER.reset(this.tileSign.signText[2].getUnformattedText()).matches())
             {
                 this.actionPerformed(this.doneBtn);
                 ci.cancel();

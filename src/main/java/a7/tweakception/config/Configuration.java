@@ -13,10 +13,10 @@ import java.util.List;
 
 public class Configuration
 {
-    private String path;
-    private String fileName;
-    private File dirFile;
-    private File file;
+    private final String path;
+    private final String fileName;
+    private final File dirFile;
+    private final File file;
     private final Gson gson;
     public TweakceptionConfig config;
     
@@ -28,14 +28,14 @@ public class Configuration
         file = createFile(fileName);
         gson = new GsonBuilder().setPrettyPrinting().create();
     }
-
+    
     public void initConfig() throws Exception
     {
         if (!dirFile.exists())
         {
             boolean ignored = dirFile.mkdirs();
         }
-
+        
         if (!file.exists())
         {
             boolean ignored = file.createNewFile();

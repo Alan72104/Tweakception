@@ -18,7 +18,6 @@ import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.passive.EntityWolf;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
@@ -99,7 +98,7 @@ public class SlayerTweaks extends Tweak
         public int hashCode() {return nameTag.hashCode();}
         
         @Override
-        public boolean equals(Object o) {return o instanceof SlayerRecord && ((SlayerRecord)o).nameTag.equals(this.nameTag);}
+        public boolean equals(Object o) {return o instanceof SlayerRecord && ((SlayerRecord) o).nameTag.equals(this.nameTag);}
     }
     
     static
@@ -151,7 +150,7 @@ public class SlayerTweaks extends Tweak
                         EntityPlayerSP p = getPlayer();
                         glyphs = glyphsTemp;
                         glyphsTemp = new ArrayList<>(20);
-                        searchThread = new BlockSearchTask((int)p.posX, (int)p.posY, (int)p.posZ, 30, 15, getWorld(), Blocks.beacon, glyphsTemp);
+                        searchThread = new BlockSearchTask((int) p.posX, (int) p.posY, (int) p.posZ, 30, 15, getWorld(), Blocks.beacon, glyphsTemp);
                         Tweakception.threadPool.execute(searchThread);
                     }
                 }
@@ -204,9 +203,9 @@ public class SlayerTweaks extends Tweak
                         currentSlayer.fishingRodThrown = true;
                         int slot = Utils.findInHotbarBy(stack ->
                             stack != null &&
-                            stack.getItem() == Items.fishing_rod &&
-                            Utils.getSkyblockItemId(stack) != null &&
-                            !Utils.getSkyblockItemId(stack).equals("GRAPPLING_HOOK"));
+                                stack.getItem() == Items.fishing_rod &&
+                                Utils.getSkyblockItemId(stack) != null &&
+                                !Utils.getSkyblockItemId(stack).equals("GRAPPLING_HOOK"));
                         
                         if (slot == -1)
                             sendChat("ST-AutoThrowFishingRod: cannot find any fishing rod in your hotbar!");
@@ -300,7 +299,7 @@ public class SlayerTweaks extends Tweak
         {
             if (c.highlightGlyph)
                 for (BlockPos p : glyphs)
-                    RenderUtils.drawFilledBoundingBox(p, new Color(255, 0, 106, (int)(255 * 0.9f)), event.partialTicks);
+                    RenderUtils.drawFilledBoundingBox(p, new Color(255, 0, 106, (int) (255 * 0.9f)), event.partialTicks);
         }
         
         if (c.highlightSlayers)
@@ -404,8 +403,8 @@ public class SlayerTweaks extends Tweak
             else
                 s = f("Slayer: %s, health: %s (%d%%), threshold: %s%d%%",
                     currentSlayer.type,
-                    Utils.formatMetric((long)currentSlayer.health),
-                    (int)(currentSlayer.health / currentSlayer.maxHealth * 100.0f),
+                    Utils.formatMetric((long) currentSlayer.health),
+                    (int) (currentSlayer.health / currentSlayer.maxHealth * 100.0f),
                     currentSlayer.fishingRodThrown ? "§6" : "",
                     c.autoThrowFishingRodThreshold);
             list.add(s);

@@ -21,7 +21,7 @@ public abstract class MixinNetworkManager extends SimpleChannelInboundHandler<Pa
         if (MinecraftForge.EVENT_BUS.post(new PacketReceiveEvent(msg)))
             ci.cancel();
     }
-
+    
     @Inject(method = "sendPacket(Lnet/minecraft/network/Packet;)V", at = @At("HEAD"), cancellable = true)
     protected void sendPacket(Packet<?> packet, CallbackInfo ci)
     {

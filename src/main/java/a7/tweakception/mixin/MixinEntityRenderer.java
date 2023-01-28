@@ -1,7 +1,6 @@
 package a7.tweakception.mixin;
 
 import a7.tweakception.Tweakception;
-import a7.tweakception.tweaks.Tweak;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.resources.IResourceManagerReloadListener;

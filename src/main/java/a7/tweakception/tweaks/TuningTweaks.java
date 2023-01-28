@@ -110,7 +110,7 @@ public class TuningTweaks extends Tweak
         {
             try
             {
-                return (Tuning)super.clone();
+                return (Tuning) super.clone();
             }
             catch (CloneNotSupportedException e)
             {
@@ -131,8 +131,8 @@ public class TuningTweaks extends Tweak
         
         if (getMc().currentScreen instanceof GuiChest)
         {
-            GuiChest chest = (GuiChest)getMc().currentScreen;
-            ContainerChest container = (ContainerChest)chest.inventorySlots;
+            GuiChest chest = (GuiChest) getMc().currentScreen;
+            ContainerChest container = (ContainerChest) chest.inventorySlots;
             String containerName = container.getLowerChestInventory().getName();
             if (containerName.equals("Stats Tuning") && remainingToSwitch != null)
             {
@@ -178,8 +178,8 @@ public class TuningTweaks extends Tweak
         if (!(getMc().currentScreen instanceof GuiChest))
             return;
         
-        GuiChest chest = (GuiChest)getMc().currentScreen;
-        ContainerChest container = (ContainerChest)chest.inventorySlots;
+        GuiChest chest = (GuiChest) getMc().currentScreen;
+        ContainerChest container = (ContainerChest) chest.inventorySlots;
         String containerName = container.getLowerChestInventory().getName();
         if (!containerName.equals("Stats Tuning"))
             return;
@@ -273,8 +273,8 @@ public class TuningTweaks extends Tweak
     {
         if (c.tuningTemplates[index] == null)
             return;
-        GuiChest chest = (GuiChest)getMc().currentScreen;
-        ContainerChest container = (ContainerChest)chest.inventorySlots;
+        GuiChest chest = (GuiChest) getMc().currentScreen;
+        ContainerChest container = (ContainerChest) chest.inventorySlots;
         IInventory inv = container.getLowerChestInventory();
         ItemStack stack = inv.getStackInSlot(4 + 9 * 5 - 1);
         if (stack != null && stack.getDisplayName().equals("§cClear Points"))
@@ -285,8 +285,8 @@ public class TuningTweaks extends Tweak
     
     public void setTemplate(int index)
     {
-        GuiChest chest = (GuiChest)getMc().currentScreen;
-        ContainerChest container = (ContainerChest)chest.inventorySlots;
+        GuiChest chest = (GuiChest) getMc().currentScreen;
+        ContainerChest container = (ContainerChest) chest.inventorySlots;
         IInventory inv = container.getLowerChestInventory();
         Tuning tuning = new Tuning();
         for (int j = 0; j < 2; j++)

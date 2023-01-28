@@ -153,7 +153,7 @@ public class LagSpikeWatcher
         
         private final Thread mainThread;
         private final Map<String, Integer> lagSources = new HashMap<>();
-    
+        
         public LagSpikeWatcherThread(Thread mainThread)
         {
             setName("LagSpikeWatcherThread");
@@ -182,7 +182,7 @@ public class LagSpikeWatcher
                         timedOut(repeatTimeout);
                     }
                 }
-    
+                
                 Thread.yield();
                 if (Thread.interrupted())
                 {

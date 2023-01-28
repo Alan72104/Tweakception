@@ -73,7 +73,7 @@ public class Tweakception
         enchantingTweaks = new EnchantingTweaks(configuration);
         bazaarTweaks = new BazaarTweaks(configuration);
         autoRunes = new AutoRunes(configuration);
-
+        
         ClientCommandHandler.instance.registerCommand(new TweakceptionCommand());
         MinecraftForge.EVENT_BUS.register(inGameEventDispatcher);
         MinecraftForge.EVENT_BUS.register(scheduler);

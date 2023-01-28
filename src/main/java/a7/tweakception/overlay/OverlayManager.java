@@ -108,7 +108,7 @@ public class OverlayManager extends Tweak
         {
             drawDefaultBackground();
             boolean oneIsHovered = false;
-    
+            
             for (Overlay overlay : overlays)
             {
                 overlay.draw();
@@ -155,7 +155,7 @@ public class OverlayManager extends Tweak
                     return;
                 }
             }
-    
+            
             selectedOverlay = null;
             
             // Nothing was hovered or selected, find the selected overlay
@@ -233,7 +233,7 @@ public class OverlayManager extends Tweak
             int y = overlay.getDrawY();
             int w = overlay.getWidth();
             int h = overlay.getHeight();
-    
+            
             Color overlayBgColor = new Color(255, 255, 255, 64);
             Color overlayBgColorHovered = new Color(255, 255, 255, 128);
             boolean hovered = inBox(mouseX, mouseY, x, y, w, h);
@@ -247,7 +247,7 @@ public class OverlayManager extends Tweak
             int w = overlay.getWidth();
             int h = overlay.getHeight();
             int origin = overlay.getOrigin();
-    
+            
             Color originColor = new Color(0, 255, 0, 128);
             Color originColorHovered = new Color(0, 255, 0, 192);
             int[] originPos = Anchor.apply(x, y, w, h, origin);
@@ -260,7 +260,7 @@ public class OverlayManager extends Tweak
         {
             int anchor = overlay.getAnchor();
             ScaledResolution res = new ScaledResolution(getMc());
-    
+            
             Color anchorColor = new Color(255, 0, 0, 128);
             Color anchorColorHovered = new Color(255, 0, 0, 192);
             int[] anchorPos = Anchor.apply(0, 0, res.getScaledWidth(), res.getScaledHeight(), anchor);

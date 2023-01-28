@@ -107,8 +107,9 @@ public class GlobalTweaks extends Tweak
         public int afkFpsLimit = 60;
         public boolean sendSkyblockLevelExpGainMessage = false;
     }
+    
     private final GlobalTweaksConfig c;
-//    private static final HashMap<String, SkyblockIsland> SUBPLACE_TO_ISLAND_MAP = new HashMap<>();
+    //private static final HashMap<String, SkyblockIsland> SUBPLACE_TO_ISLAND_MAP = new HashMap<>();
     private static final List<SkyblockIsland> ISLANDS_THAT_HAS_SUBAREAS = new ArrayList<>();
     private static final HashMap<String, Predicate<ItemStack>> GIFT_SHITS = new HashMap<>();
     private static int ticks = 0;
@@ -152,7 +153,7 @@ public class GlobalTweaks extends Tweak
     private Tweakception.BlockSearchTask skullsSearchThread;
     private int lastBitsMsgTicks = 0;
     private boolean minionAutoClaim = false;
-    private int[] minionAutoclaimPos = { -2, -2 };
+    private final int[] minionAutoclaimPos = {-2, -2};
     private boolean minionAutoclaimWasInScreen = false;
     private InvFeature invFeature = InvFeature.None;
     private int invFeatureIndex = 0;
@@ -162,14 +163,15 @@ public class GlobalTweaks extends Tweak
     private int lastPickupStashTicks = 0;
     private boolean fakePowerScrolls = false;
     private final Matcher skyblockLevelExpGainMatcher = Pattern.compile(
-            "§b\\+\\d+ SkyBlock XP §7\\(.*§7\\)§b \\(\\d+\\/100\\)").matcher("");
+        "§b\\+\\d+ SkyBlock XP §7\\(.*§7\\)§b \\(\\d+\\/100\\)").matcher("");
     private String lastSkyblockLevelExpGainMsg = "";
     private int lastSkyblockLevelExpGainTicks = 0;
+    
     enum InvFeature
     {
         None, DropGiftShit, MoveGift, AutoDropGiftShit
     }
-
+    
     static
     {
         for (SkyblockIsland island : SkyblockIsland.values())
@@ -209,14 +211,14 @@ public class GlobalTweaks extends Tweak
         npcSkins.add("minecraft:skins/57a517865b820a4451cd3cc6765f370fd0522b6489c9c94fb345fdee2689451a"); // Shaman
         npcSkins.add("minecraft:skins/1642a06cd75ef307c1913ba7a224fb2082d8a2c5254fd1bf006125a087a9a868"); // Taurus
     }
-
+    
     // region Events
-
+    
     public void onPacketReceive(PacketReceiveEvent event)
     {
         packetLogger.logPacket("Receive", event.getPacket());
     }
-
+    
     public void onPacketSend(PacketSendEvent event)
     {
         packetLogger.logPacket("Send", event.getPacket());
@@ -266,7 +268,7 @@ public class GlobalTweaks extends Tweak
                                 area.box,
                                 e ->
                                 {
-                                    String skin = ((AbstractClientPlayer)e).getLocationSkin().toString();
+                                    String skin = ((AbstractClientPlayer) e).getLocationSkin().toString();
                                     return !npcSkins.contains(skin) && !e.isInvisible(); // Watchdog player is invisible
                                 });
                             for (Entity p : players)
@@ -275,15 +277,15 @@ public class GlobalTweaks extends Tweak
                     Tweakception.overlayManager.setEnable(PlayersInAreasDisplayOverlay.NAME, !playersInAreas.isEmpty());
                 }
             }
-
+            
             if (minionAutoClaim && getMc().currentScreen instanceof GuiChest)
             {
-                GuiChest chest = (GuiChest)McUtils.getMc().currentScreen;
-                ContainerChest container = (ContainerChest)chest.inventorySlots;
+                GuiChest chest = (GuiChest) McUtils.getMc().currentScreen;
+                ContainerChest container = (ContainerChest) chest.inventorySlots;
                 IInventory inv = container.getLowerChestInventory();
                 String[] words = inv.getName().split(" ");
-                int[] pos1 = { -1, -1 }; // Both 0 based
-                int[] pos2 = { -1, -1 };
+                int[] pos1 = {-1, -1}; // Both 0 based
+                int[] pos2 = {-1, -1};
                 if (words.length == 3 && words[1].equals("Minion") &&
                     inv.getSizeInventory() == 54 &&
                     inv.getStackInSlot(54 - 1) != null &&
@@ -302,7 +304,7 @@ public class GlobalTweaks extends Tweak
                     pos2[0] = 8;
                     pos2[1] = 2;
                 }
-
+                
                 if (pos1[0] != -1)
                 {
                     if (!minionAutoclaimWasInScreen)
@@ -310,14 +312,14 @@ public class GlobalTweaks extends Tweak
                         minionAutoclaimPos[0] = pos2[0];
                         minionAutoclaimPos[1] = pos2[1];
                     }
-
+                    
                     minionAutoclaimWasInScreen = true;
-
+                    
                     if (getTicks() - minionAutoClaimLastClickTicks >= minionAutoClaimClickDelay)
                     {
                         minionAutoClaimLastClickTicks = getTicks();
                         minionAutoClaimClickDelay = c.minionAutoclaimDelayTicksMin + getWorld().rand.nextInt(3);
-
+                        
                         findLoop:
                         for (; minionAutoclaimPos[1] >= pos1[1];
                              minionAutoclaimPos[1]--, minionAutoclaimPos[0] = pos2[0])
@@ -349,19 +351,19 @@ public class GlobalTweaks extends Tweak
             }
             else
                 minionAutoclaimWasInScreen = false;
-
+            
             if (lastTooltip != null && getTicks() - tooltipUpdateTicks > 10)
             {
                 lastTooltip = null;
             }
-
+            
             if (c.trevorHighlightAnimal || c.trevorQuestAutoAccept || c.trevorQuestAutoStart)
             {
                 GuiScreen screen = getMc().currentScreen;
                 if (trevorQuestPendingStart && screen instanceof GuiChest)
                 {
-                    GuiChest chest = (GuiChest)screen;
-                    ContainerChest container = (ContainerChest)chest.inventorySlots;
+                    GuiChest chest = (GuiChest) screen;
+                    ContainerChest container = (ContainerChest) chest.inventorySlots;
                     IInventory inv = container.getLowerChestInventory();
                     String containerName = inv.getName();
                     if (containerName.startsWith("Abiphone "))
@@ -379,11 +381,11 @@ public class GlobalTweaks extends Tweak
                         }
                     }
                 }
-
+                
                 if (trevorQuestStartTicks != 0)
                 {
                     int elapsed = getTicks() - trevorQuestStartTicks;
-
+                    
                     if (elapsed >= 20 * 60 * 10 && trevorQuestOngoing)
                     {
                         sendChat("GT-Trevor: quest timed out");
@@ -391,7 +393,7 @@ public class GlobalTweaks extends Tweak
                         trevorAnimalNametag = null;
                         trevorQuestOngoing = false;
                     }
-
+                    
                     if (elapsed >= 20 * 60)
                     {
                         if (!trevorQuestCooldownNoticed)
@@ -399,7 +401,7 @@ public class GlobalTweaks extends Tweak
                             trevorQuestCooldownNoticed = true;
                             sendChat("GT-Trevor: quest cooldown elapsed");
                         }
-
+                        
                         if (c.trevorQuestAutoStart && !trevorQuestOngoing)
                         {
                             // To prevent failing right after killing the animal
@@ -407,13 +409,13 @@ public class GlobalTweaks extends Tweak
                             trevorQuestStartTicks = 0;
                         }
                     }
-
+                    
                 }
-
+                
                 if (getTicks() - trevorQuestPendingStartStartTicks >= 20 * 11)
                     trevorQuestPendingStart = false;
             }
-
+            
             if (highlightSkulls && getTicks() % 5 == 0)
             {
                 if (skullsSearchThread == null || skullsSearchThread.done)
@@ -421,12 +423,12 @@ public class GlobalTweaks extends Tweak
                     EntityPlayerSP p = getPlayer();
                     skulls = skullsTemp;
                     skullsTemp = new ArrayList<>(20);
-                    skullsSearchThread = new Tweakception.BlockSearchTask((int)p.posX - 64, 40, (int)p.posZ - 64,
-                            (int)p.posX + 64, 150, (int)p.posZ + 64, getWorld(), Blocks.skull, skullsTemp);
+                    skullsSearchThread = new Tweakception.BlockSearchTask((int) p.posX - 64, 40, (int) p.posZ - 64,
+                        (int) p.posX + 64, 150, (int) p.posZ + 64, getWorld(), Blocks.skull, skullsTemp);
                     Tweakception.threadPool.execute(skullsSearchThread);
                 }
             }
-
+            
             if (c.giftFeatures && getMc().currentScreen instanceof GuiInventory)
             {
                 if (invFeature == InvFeature.None)
@@ -448,7 +450,7 @@ public class GlobalTweaks extends Tweak
                         invFeature = InvFeature.MoveGift;
                     }
                 }
-
+                
                 if (getTicks() - invFeatureLastTicks >= invFeatureClickDelay)
                 {
                     switch (invFeature)
@@ -472,10 +474,10 @@ public class GlobalTweaks extends Tweak
             }
         }
     }
-
+    
     private boolean doDropGiftShit()
     {
-        List<ItemStack> inv = ((GuiInventory)getMc().currentScreen).inventorySlots.getInventory();
+        List<ItemStack> inv = ((GuiInventory) getMc().currentScreen).inventorySlots.getInventory();
         for (; invFeatureIndex <= 44; invFeatureIndex++)
         {
             ItemStack stack = inv.get(invFeatureIndex);
@@ -484,7 +486,7 @@ public class GlobalTweaks extends Tweak
                 GIFT_SHITS.containsKey(id) && GIFT_SHITS.get(id).test(stack))
             {
                 getMc().playerController.windowClick(0, invFeatureIndex,
-                        0, 4, getPlayer());
+                    0, 4, getPlayer());
                 invFeatureLastTicks = getTicks();
                 invFeatureClickDelay = 3 + getWorld().rand.nextInt(3);
                 invFeatureIndex++;
@@ -494,10 +496,10 @@ public class GlobalTweaks extends Tweak
         invFeatureIndex = 9;
         return false;
     }
-
+    
     private void invMoveGift()
     {
-        List<ItemStack> inv = ((GuiInventory)getMc().currentScreen).inventorySlots.getInventory();
+        List<ItemStack> inv = ((GuiInventory) getMc().currentScreen).inventorySlots.getInventory();
         HashSet<String> gifts = Utils.hashSet("WHITE_GIFT", "GREEN_GIFT", "RED_GIFT");
         for (; invFeatureIndex <= 7; invFeatureIndex++)
         {
@@ -508,7 +510,7 @@ public class GlobalTweaks extends Tweak
                 if (stack != null && id != null && gifts.contains(id))
                     continue;
             }
-
+            
             int backpackGiftSlot = 0;
             for (int backpack = 9; backpack <= 35; backpack++)
             {
@@ -520,11 +522,11 @@ public class GlobalTweaks extends Tweak
                     break;
                 }
             }
-
+            
             if (backpackGiftSlot != 0)
             {
                 getMc().playerController.windowClick(0, backpackGiftSlot,
-                        invFeatureIndex, 2, getPlayer());
+                    invFeatureIndex, 2, getPlayer());
                 invFeatureLastTicks = getTicks();
                 invFeatureClickDelay = 3 + getWorld().rand.nextInt(3);
                 invFeatureIndex++;
@@ -533,7 +535,7 @@ public class GlobalTweaks extends Tweak
         }
         invFeature = InvFeature.None;
     }
-
+    
     private void invAutoDropGiftShit()
     {
         boolean dropped = doDropGiftShit();
@@ -544,8 +546,8 @@ public class GlobalTweaks extends Tweak
                 invFeature = InvFeature.None;
                 return;
             }
-
-
+            
+            
             if (getTicks() - lastPickupStashTicks >= 60)
             {
                 lastPickupStashTicks = getTicks();
@@ -553,7 +555,7 @@ public class GlobalTweaks extends Tweak
             }
         }
     }
-
+    
     public void onEntityUpdate(LivingEvent.LivingUpdateEvent event)
     {
         if (c.trevorHighlightAnimal &&
@@ -602,7 +604,7 @@ public class GlobalTweaks extends Tweak
             RenderUtils.drawFilledBoundingBox(areaPoints[selectedAreaPointIndex], new Color(255, 0, 0, 64), t);
             RenderUtils.drawFilledBoundingBox(areaPoints[1 - selectedAreaPointIndex], new Color(0, 255, 0, 64), t);
         }
-
+        
         if (!playersToHighlight.isEmpty())
         {
             for (EntityPlayer player : getWorld().playerEntities)
@@ -613,7 +615,7 @@ public class GlobalTweaks extends Tweak
                 }
             }
         }
-
+        
         if (c.trevorHighlightAnimal)
         {
             if (trevorAnimalNametag != null && !trevorAnimalNametag.isDead)
@@ -621,7 +623,7 @@ public class GlobalTweaks extends Tweak
             else
                 trevorAnimalNametag = null;
         }
-
+        
         if (highlightSkulls)
         {
             for (BlockPos pos : skulls)
@@ -703,7 +705,7 @@ public class GlobalTweaks extends Tweak
             }
         }
     }
-
+    
     public void onItemTooltip(ItemTooltipEvent event)
     {
         if (c.tooltipDisplaySkyblockItemId && event.itemStack != null)
@@ -714,10 +716,10 @@ public class GlobalTweaks extends Tweak
                 event.toolTip.add("ID: " + id);
             }
         }
-
+        
         if (c.disableTooltips)
             event.toolTip.clear();
-
+        
         if (fakePowerScrolls)
         {
             for (int i = 0; i < event.toolTip.size(); i++)
@@ -740,7 +742,7 @@ public class GlobalTweaks extends Tweak
         trevorAnimalNametag = null;
         trevorQuestOngoing = false;
     }
-
+    
     public void onChatReceivedGlobal(ClientChatReceivedEvent event)
     {
         String msg = event.message.getUnformattedText();
@@ -788,7 +790,7 @@ public class GlobalTweaks extends Tweak
             }
         }
     }
-
+    
     public void onChatReceived(ClientChatReceivedEvent event)
     {
         String msg = event.message.getUnformattedText();
@@ -803,7 +805,7 @@ public class GlobalTweaks extends Tweak
             }
             else if (c.trevorHighlightAnimal &&
                 (msg.startsWith("Your mob died randomly, you are rewarded ") ||
-                msg.startsWith("Killing the animal rewarded you ")))
+                    msg.startsWith("Killing the animal rewarded you ")))
             {
                 trevorAnimalNametag = null;
                 trevorQuestOngoing = false;
@@ -827,8 +829,8 @@ public class GlobalTweaks extends Tweak
             }
             else if (invFeature == InvFeature.AutoDropGiftShit &&
                 (msg.equals("Your stash isn't holding any item!") ||
-                msg.equals("You picked up all items from your item stash!") ||
-                msg.equals("Couldn't unstash your items! Your inventory is full!")))
+                    msg.equals("You picked up all items from your item stash!") ||
+                    msg.equals("Couldn't unstash your items! Your inventory is full!")))
             {
                 stashEmptied = true;
             }
@@ -843,7 +845,7 @@ public class GlobalTweaks extends Tweak
             else if (c.sendSkyblockLevelExpGainMessage &&
                 skyblockLevelExpGainMatcher.reset(msg).find() &&
                 (getTicks() - lastSkyblockLevelExpGainTicks >= 20 * 5 ||
-                !lastSkyblockLevelExpGainMsg.equals(skyblockLevelExpGainMatcher.group(0))))
+                    !lastSkyblockLevelExpGainMsg.equals(skyblockLevelExpGainMatcher.group(0))))
             {
                 lastSkyblockLevelExpGainMsg = skyblockLevelExpGainMatcher.group(0);
                 lastSkyblockLevelExpGainTicks = getTicks();
@@ -851,9 +853,9 @@ public class GlobalTweaks extends Tweak
             }
         }
     }
-
+    
     // endregion Events
-
+    
     // region Misc
     
     public void printIsland()
@@ -925,22 +927,22 @@ public class GlobalTweaks extends Tweak
 //            }
 //            else
 //            {
-                if (line.contains("⏣"))
-                {
-                    currentLocationRaw = line;
-                    line = cleanColor(cleanDuplicateColorCodes(line)).replaceAll("[^A-Za-z0-9() \\-']", "").trim();
-                    currentLocationRawCleaned = line;
-
-                    islandLoop:
-                    for (SkyblockIsland island : SkyblockIsland.values())
-                        for (String subPlace : island.areas)
-                            if (line.contains(subPlace))
-                            {
-                                currentIsland = island;
-                                break islandLoop;
-                            }
-                    break;
-                }
+            if (line.contains("⏣"))
+            {
+                currentLocationRaw = line;
+                line = cleanColor(cleanDuplicateColorCodes(line)).replaceAll("[^A-Za-z0-9() \\-']", "").trim();
+                currentLocationRawCleaned = line;
+                
+                islandLoop:
+                for (SkyblockIsland island : SkyblockIsland.values())
+                    for (String subPlace : island.areas)
+                        if (line.contains(subPlace))
+                        {
+                            currentIsland = island;
+                            break islandLoop;
+                        }
+                break;
+            }
 //            }
         }
     }
@@ -961,7 +963,7 @@ public class GlobalTweaks extends Tweak
         GuiScreen screen = getMc().currentScreen;
         if (screen instanceof GuiContainer)
         {
-            GuiContainer container = (GuiContainer)screen;
+            GuiContainer container = (GuiContainer) screen;
             Slot currentSlot = container.getSlotUnderMouse();
             
             if (currentSlot != null && currentSlot.getHasStack())
@@ -978,9 +980,9 @@ public class GlobalTweaks extends Tweak
                     return;
                 String nbt = hoveredStack.serializeNBT().toString();
                 doRealCopy(copyToFile,
-                           DumpUtils.prettifyJson(nbt),
-                           "nbt",
-                           McUtils.cleanColor(hoveredStack.getDisplayName()));
+                    DumpUtils.prettifyJson(nbt),
+                    "nbt",
+                    McUtils.cleanColor(hoveredStack.getDisplayName()));
                 break;
             case "tooltip":
                 if (hoveredStack == null)
@@ -991,18 +993,18 @@ public class GlobalTweaks extends Tweak
                 else
                 {
                     doRealCopy(copyToFile,
-                               String.join(System.lineSeparator(), tooltip),
-                               "tooltip",
-                               tooltip.get(0));
+                        String.join(System.lineSeparator(), tooltip),
+                        "tooltip",
+                        tooltip.get(0));
                 }
                 break;
             case "tooltipfinal":
                 if (lastTooltip != null)
                 {
                     doRealCopy(copyToFile,
-                               String.join(System.lineSeparator(), lastTooltip),
-                               "tooltipfinal",
-                               lastTooltip.get(0));
+                        String.join(System.lineSeparator(), lastTooltip),
+                        "tooltipfinal",
+                        lastTooltip.get(0));
                 }
                 break;
         }
@@ -1050,7 +1052,7 @@ public class GlobalTweaks extends Tweak
             sendChat("GT: copied item " + type + " to clipboard");
         }
     }
-
+    
     public static boolean isInSkyblock()
     {
         return isInSkyblock;
@@ -1100,14 +1102,14 @@ public class GlobalTweaks extends Tweak
             sendChat("GT: cannot find island in implemented island list");
         }
     }
-
+    
     public long getWorldJoinMillis()
     {
         return lastWorldJoin;
     }
-
+    
     // endregion Misc
-
+    
     // region Feature access
     
     public boolean isInDevMode()
@@ -1164,17 +1166,17 @@ public class GlobalTweaks extends Tweak
     {
         return c.renderPotionTier;
     }
-
+    
     public boolean isAfkModeActive()
     {
         return c.afkMode && (!c.afkOnlyUnfocused || !Display.isActive());
     }
-
+    
     public int getAfkFpsLimit()
     {
         return c.afkFpsLimit;
     }
-
+    
     public boolean isAfkSkipWorldRenderingOn()
     {
         return c.afkSkipWorldRendering;
@@ -1274,7 +1276,7 @@ public class GlobalTweaks extends Tweak
     {
         if (pingNanos != 0L)
         {
-            ping = (int)((System.nanoTime() - pingNanos) / 1_000_000L);
+            ping = (int) ((System.nanoTime() - pingNanos) / 1_000_000L);
             pingNanos = 0L;
             if (isInGame() && pingingFromCommand)
             {
@@ -1283,43 +1285,43 @@ public class GlobalTweaks extends Tweak
             }
         }
     }
-
-
+    
+    
     public PacketLogger getPacketLogger()
     {
         return packetLogger;
     }
-
+    
     public boolean isDisableDeadMobTargetingOn()
     {
         return c.targetingDisableDeadMob;
     }
-
+    
     public boolean isDisableArmorStandTargetingOn()
     {
         return c.targetingDisableArmorStand;
     }
-
+    
     public boolean isDisablePlayerTargetingOn()
     {
         return c.targetingDisablePlayer;
     }
-
+    
     public boolean isGiftFeaturesOn()
     {
         return c.giftFeatures;
     }
-
+    
     public boolean isOnlyTargetOpenableGiftOn()
     {
         return c.targetingOnlyOpenableGift;
     }
-
+    
     public boolean isAutoSwitchGiftSlotOn()
     {
         return c.autoSwitchGiftSlot;
     }
-
+    
     private void trevorStartFromAbiphone()
     {
         int slot = Utils.findInHotbarById(id -> id.startsWith("ABIPHONE_"));
@@ -1336,11 +1338,11 @@ public class GlobalTweaks extends Tweak
             sendChat("GT-Trevor: can't find abiphone in hotbar");
         }
     }
-
+    
     // endregion Feature access
-
+    
     // region Overlays
-
+    
     private class PlayersInAreasDisplayOverlay extends TextOverlay
     {
         public static final String NAME = "PlayersInAreasDisplayOverlay";
@@ -1360,7 +1362,7 @@ public class GlobalTweaks extends Tweak
         {
             super.update();
             List<String> list = new ArrayList<>();
-    
+            
             sorted.clear();
             sorted.addAll(playersInAreas.entrySet());
             sorted.sort((a, b) ->
@@ -1472,7 +1474,7 @@ public class GlobalTweaks extends Tweak
                         else
                             break;
                     
-                    long xp = (long)xpDouble;
+                    long xp = (long) xpDouble;
                     
                     if (lastExp == 0L) // Just switched to this item, set the last exp
                     {
@@ -1485,7 +1487,7 @@ public class GlobalTweaks extends Tweak
                         lastIncrementTicks = getTicks();
                     }
                     else if (increment > 0 &&
-                             getTicks() - lastIncrementTicks >= 20 * c.championExpIncrementResetDuration)
+                        getTicks() - lastIncrementTicks >= 20 * c.championExpIncrementResetDuration)
                     {
                         increment = 0;
                     }
@@ -1521,11 +1523,11 @@ public class GlobalTweaks extends Tweak
             return list;
         }
     }
-
+    
     private class OnlineStatusOverlay extends TextOverlay
     {
         public static final String NAME = "OnlineStatusOverlay";
-
+        
         public OnlineStatusOverlay()
         {
             super(NAME);
@@ -1534,12 +1536,12 @@ public class GlobalTweaks extends Tweak
             setX(200);
             setY(-20);
         }
-
+        
         @Override
         public void update()
         {
             super.update();
-
+            
             String text;
             switch (c.lastOnlineStatus)
             {
@@ -1564,10 +1566,10 @@ public class GlobalTweaks extends Tweak
                     text = "Invalid cached status";
                     break;
             }
-
+            
             setContent(Collections.singletonList(text));
         }
-
+        
         @Override
         public List<String> getDefaultContent()
         {
@@ -1576,11 +1578,11 @@ public class GlobalTweaks extends Tweak
             return list;
         }
     }
-
+    
     private class TrevorOverlay extends TextOverlay
     {
         public static final String NAME = "TrevorOverlay";
-
+        
         public TrevorOverlay()
         {
             super(NAME);
@@ -1589,12 +1591,12 @@ public class GlobalTweaks extends Tweak
             setX(-200);
             setY(-20);
         }
-
+        
         @Override
         public void update()
         {
             super.update();
-
+            
             List<String> list = new ArrayList<>();
             if (trevorQuestStartTicks != 0)
             {
@@ -1603,7 +1605,7 @@ public class GlobalTweaks extends Tweak
                 {
                     list.add("§aOngoing quest >>>");
                     list.add("Trevor quest time: " + Utils.msToMMSSmmm(elapsed));
-
+                    
                     if (trevorAnimalNametag != null)
                     {
                         list.add("§aANIMAL IN RANGE");
@@ -1611,9 +1613,9 @@ public class GlobalTweaks extends Tweak
                             Utils.roundToDigits(getPlayer().getDistanceToEntity(trevorAnimalNametag), 1) +
                             " blocks");
                         list.add(f("Coords: §a%d§r, §a%d§r, §a%d",
-                            (int)trevorAnimalNametag.posX,
-                            (int)trevorAnimalNametag.posY,
-                            (int)trevorAnimalNametag.posZ));
+                            (int) trevorAnimalNametag.posX,
+                            (int) trevorAnimalNametag.posY,
+                            (int) trevorAnimalNametag.posZ));
                     }
                 }
                 else
@@ -1621,10 +1623,10 @@ public class GlobalTweaks extends Tweak
                     list.add("Trevor quest cooldown: " + Utils.msToMMSSmmm(Math.max(60000 - elapsed, 0)));
                 }
             }
-
+            
             setContent(list);
         }
-
+        
         @Override
         public List<String> getDefaultContent()
         {
@@ -1759,7 +1761,7 @@ public class GlobalTweaks extends Tweak
                     new AxisAlignedBB(-351, 78, -102, -399, 49, 36),
                     e ->
                     {
-                        String skin = ((AbstractClientPlayer)e).getLocationSkin().toString();
+                        String skin = ((AbstractClientPlayer) e).getLocationSkin().toString();
                         return !skin.equals(shamanSkin) && !e.isInvisible(); // Watchdog player is invisible
                     });
                 break;
@@ -1917,7 +1919,7 @@ public class GlobalTweaks extends Tweak
     {
         packetLogger.toggleAllowedPacket(name);
     }
-
+    
     public void toggleLogPacketLogAll()
     {
         packetLogger.toggleLogAll();
@@ -1960,13 +1962,13 @@ public class GlobalTweaks extends Tweak
         c.renderPotionTier = !c.renderPotionTier;
         sendChat("GT-RenderPotionTier: toggled " + c.renderPotionTier);
     }
-
+    
     public void toggleMinionAutoClaim()
     {
         minionAutoClaim = !minionAutoClaim;
         sendChat("GT-MinionAutoClaim: toggled " + minionAutoClaim);
     }
-
+    
     public void addMinionAutoClaimWhitelist(String id)
     {
         if (id.isEmpty())
@@ -1978,7 +1980,7 @@ public class GlobalTweaks extends Tweak
             sendChat("GT-MinionAutoClaim: added " + id);
         }
     }
-
+    
     public void removeMinionAutoClaimWhitelist(int i)
     {
         if (i < 1)
@@ -2000,20 +2002,20 @@ public class GlobalTweaks extends Tweak
             }
         }
     }
-
+    
     public void setMinionAutoClaimClickDelayMin(int i)
     {
         i = Utils.clamp(i, 1, 20);
         c.minionAutoclaimDelayTicksMin = i;
         sendChat("GT-MinionAutoClaim: set min delay ticks to " + i);
     }
-
+    
     public void toggleTooltipDisplayId()
     {
         c.tooltipDisplaySkyblockItemId = !c.tooltipDisplaySkyblockItemId;
         sendChat("GT-TooltipDisplayItemId: toggled " + c.tooltipDisplaySkyblockItemId);
     }
-
+    
     public void setPlayerToHighlight(String name)
     {
         if (name.equals(""))
@@ -2036,20 +2038,20 @@ public class GlobalTweaks extends Tweak
             }
         }
     }
-
+    
     public void toggleOnlineStatusOverlay()
     {
         c.enableOnlineStatusOverlay = !c.enableOnlineStatusOverlay;
         Tweakception.overlayManager.setEnable(OnlineStatusOverlay.NAME, c.enableOnlineStatusOverlay);
         sendChat("GT-OnlineStatusOverlay: toggled " + c.enableOnlineStatusOverlay);
     }
-
+    
     public void toggleOnlineStatusOverlayShowAlreadyOn()
     {
         c.showOnlineStatusAlreadyOn = !c.showOnlineStatusAlreadyOn;
         sendChat("GT-OnlineStatusOverlay: toggled show already on " + c.showOnlineStatusAlreadyOn);
     }
-
+    
     public void toggleTrevorAnimalHighlight()
     {
         c.trevorHighlightAnimal = !c.trevorHighlightAnimal;
@@ -2059,7 +2061,7 @@ public class GlobalTweaks extends Tweak
         Tweakception.overlayManager.setEnable(TrevorOverlay.NAME,
             c.trevorHighlightAnimal || c.trevorQuestAutoAccept || c.trevorQuestAutoStart);
     }
-
+    
     public void toggleTrevorQuestAutoAccept()
     {
         c.trevorQuestAutoAccept = !c.trevorQuestAutoAccept;
@@ -2067,7 +2069,7 @@ public class GlobalTweaks extends Tweak
         Tweakception.overlayManager.setEnable(TrevorOverlay.NAME,
             c.trevorHighlightAnimal || c.trevorQuestAutoAccept || c.trevorQuestAutoStart);
     }
-
+    
     public void toggleTrevorQuestAutoStart()
     {
         c.trevorQuestAutoStart = !c.trevorQuestAutoStart;
@@ -2076,7 +2078,7 @@ public class GlobalTweaks extends Tweak
         Tweakception.overlayManager.setEnable(TrevorOverlay.NAME,
             c.trevorHighlightAnimal || c.trevorQuestAutoAccept || c.trevorQuestAutoStart);
     }
-
+    
     public void toggleHighlightSkulls()
     {
         highlightSkulls = !highlightSkulls;
@@ -2088,37 +2090,37 @@ public class GlobalTweaks extends Tweak
             skullsSearchThread = null;
         }
     }
-
+    
     public void toggleSendBitsMessage()
     {
         c.sendBitsMessage = !c.sendBitsMessage;
         sendChat("GT-SendBitsMessage: toggled " + c.sendBitsMessage);
     }
-
+    
     public void toggleDisableDeadMobTargeting()
     {
         c.targetingDisableDeadMob = !c.targetingDisableDeadMob;
         sendChat("GT-DisableDeadMobTargeting: toggled " + c.targetingDisableDeadMob);
     }
-
+    
     public void toggleDisableArmorStandTargeting()
     {
         c.targetingDisableArmorStand = !c.targetingDisableArmorStand;
         sendChat("GT-DisableArmorStandTargeting: toggled " + c.targetingDisableArmorStand);
     }
-
+    
     public void toggleDisablePlayerTargeting()
     {
         c.targetingDisablePlayer = !c.targetingDisablePlayer;
         sendChat("GT-DisablePlayerTargeting: toggled " + c.targetingDisablePlayer);
     }
-
+    
     public void toggleOnlyTargetOpenableGift()
     {
         c.targetingOnlyOpenableGift = !c.targetingOnlyOpenableGift;
         sendChat("GT-OnlyTargetOpenableGift: toggled " + c.targetingOnlyOpenableGift);
     }
-
+    
     public void resetTargeting()
     {
         GlobalTweaksConfig newConfig = new GlobalTweaksConfig();
@@ -2128,25 +2130,25 @@ public class GlobalTweaks extends Tweak
         c.targetingOnlyOpenableGift = newConfig.targetingOnlyOpenableGift;
         sendChat("GT: reset all targeting options");
     }
-
+    
     public void toggleAutoSwitchGiftSlot()
     {
         c.autoSwitchGiftSlot = !c.autoSwitchGiftSlot;
         sendChat("GT-AutoSwitchGiftSlot: toggled " + c.autoSwitchGiftSlot);
     }
-
+    
     public void toggleGiftFeatures()
     {
         c.giftFeatures = !c.giftFeatures;
         sendChat("GT-GiftFeatures: toggled " + c.giftFeatures);
     }
-
+    
     public void toggleAfkMode()
     {
         c.afkMode = !c.afkMode;
         sendChat("GT-AfkMode: toggled " + c.afkMode);
     }
-
+    
     public void setAfkFpsLimit(int i)
     {
         if (i == 0)
@@ -2154,30 +2156,30 @@ public class GlobalTweaks extends Tweak
         c.afkFpsLimit = Utils.clamp(i, 5, 120);
         sendChat("GT-AfkMode: set fps limit to " + c.afkFpsLimit);
     }
-
+    
     public void toggleAfkOnlyUnfocosed()
     {
         c.afkOnlyUnfocused = !c.afkOnlyUnfocused;
         sendChat("GT-AfkMode: toggled only when unfocused " + c.afkOnlyUnfocused);
     }
-
+    
     public void toggleAfkSkipWorldRendering()
     {
         c.afkSkipWorldRendering = !c.afkSkipWorldRendering;
         sendChat("GT-AfkMode: toggled skip world rendering " + c.afkSkipWorldRendering);
     }
-
+    
     public void toggleFakePowerScrolls()
     {
         fakePowerScrolls = !fakePowerScrolls;
         sendChat("GT-FakePowerScrolls: toggled " + fakePowerScrolls);
     }
-
+    
     public void toggleSendSkyblockLevelExpGainMessage()
     {
         c.sendSkyblockLevelExpGainMessage = !c.sendSkyblockLevelExpGainMessage;
         sendChat("GT-SendSkyblockLevelExpGainMessage: toggled " + c.sendSkyblockLevelExpGainMessage);
     }
-
+    
     // endregion Commands
 }

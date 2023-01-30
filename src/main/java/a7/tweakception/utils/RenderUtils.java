@@ -437,7 +437,7 @@ public class RenderUtils
         double distSq = x * x + y * y + z * z;
         
         if (type < 0 || (type == 0 && distSq > range * range))
-            RenderUtils.drawBeaconBeam(x, y, z, c, partialTicks, false);
+            RenderUtils.drawBeaconBeam(x - 0.5, y, z - 0.5, c, partialTicks, false);
         else
             RenderUtils.drawDefaultHighlightBoxForEntity(e, c, false);
     }

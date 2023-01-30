@@ -139,6 +139,7 @@ public class GlobalTweaks extends Tweak
     private int minionAutoClaimLastClickTicks = 0;
     private int minionAutoClaimClickDelay = 0;
     private final Set<String> playersToHighlight = new HashSet<>();
+    private final Set<String> armorStandsToHighlight = new HashSet<>();
     private final Matcher trevorAnimalNametagMatcher = Pattern.compile(
         "\\[Lv[0-9]+] (?<rarity>[a-zA-Z]+) (?<animal>[a-zA-Z]+) .*❤").matcher("");
     private Entity trevorAnimalNametag = null;
@@ -547,7 +548,6 @@ public class GlobalTweaks extends Tweak
                 return;
             }
             
-            
             if (getTicks() - lastPickupStashTicks >= 60)
             {
                 lastPickupStashTicks = getTicks();
@@ -612,6 +612,21 @@ public class GlobalTweaks extends Tweak
                 if (player.isEntityAlive() && playersToHighlight.contains(player.getName().toLowerCase()))
                 {
                     RenderUtils.drawBeaconBeamOrBoundingBox(player, new Color(0, 255, 0, 64), event.partialTicks, 0, 15);
+                }
+            }
+        }
+        
+        if (!armorStandsToHighlight.isEmpty())
+        {
+            for (EntityArmorStand armorstand : getWorld().getEntities(EntityArmorStand.class, e -> true))
+            {
+                for (String name : armorStandsToHighlight)
+                {
+                    if (armorstand.isEntityAlive() && armorstand.getName().toLowerCase().contains(name))
+                    {
+                        RenderUtils.drawBeaconBeamOrBoundingBox(armorstand, new Color(0, 255, 0, 64), event.partialTicks, 0, 15);
+                        break;
+                    }
                 }
             }
         }
@@ -2035,6 +2050,29 @@ public class GlobalTweaks extends Tweak
             {
                 playersToHighlight.add(name);
                 sendChat("GT-HighlightPlayer: added " + name);
+            }
+        }
+    }
+    
+    public void setArmorStandToHighlight(String name)
+    {
+        if (name.equals(""))
+        {
+            armorStandsToHighlight.clear();
+            sendChat("GT-HighlightArmorStand: cleared list");
+        }
+        else
+        {
+            name = name.toLowerCase();
+            if (armorStandsToHighlight.contains(name))
+            {
+                armorStandsToHighlight.remove(name);
+                sendChat("GT-HighlightArmorStand: removed " + name);
+            }
+            else
+            {
+                armorStandsToHighlight.add(name);
+                sendChat("GT-HighlightArmorStand: added " + name);
             }
         }
     }

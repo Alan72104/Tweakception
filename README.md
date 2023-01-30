@@ -118,6 +118,7 @@ All command prefix - /tc
 - gt highlightshinypigs
 - gt highlightshinypigs setname - **Example:** `setname [vip] alan72104`
 - gt highlightplayer `[string name]` - **Leave blank to clear list**
+- gt highlightarmorstand `[string name]` - **Leave blank to clear list**
 - gt highlightskulls - **Highlights all skull blocks**
 - gt island - **Prints current location**
 - gt minionautoclaim *(ins)*

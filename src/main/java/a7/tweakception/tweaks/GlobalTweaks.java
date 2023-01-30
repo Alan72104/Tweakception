@@ -95,8 +95,9 @@ public class GlobalTweaks extends Tweak
         public boolean trevorQuestAutoStart = false;
         public boolean trevorHighlightAnimal = false;
         public boolean sendBitsMessage = false;
-        public boolean targetingDisableDeadMob = false;
         public boolean targetingDisableArmorStand = false;
+        public boolean targetingDisableBat = false;
+        public boolean targetingDisableDeadMob = false;
         public boolean targetingDisablePlayer = false;
         public boolean targetingOnlyOpenableGift = false;
         public boolean autoSwitchGiftSlot = false;
@@ -1317,6 +1318,12 @@ public class GlobalTweaks extends Tweak
         return c.targetingDisableArmorStand;
     }
     
+    
+    public boolean isDisableBatTargetingOn()
+    {
+        return c.targetingDisableBat;
+    }
+    
     public boolean isDisablePlayerTargetingOn()
     {
         return c.targetingDisablePlayer;
@@ -2135,16 +2142,22 @@ public class GlobalTweaks extends Tweak
         sendChat("GT-SendBitsMessage: toggled " + c.sendBitsMessage);
     }
     
-    public void toggleDisableDeadMobTargeting()
-    {
-        c.targetingDisableDeadMob = !c.targetingDisableDeadMob;
-        sendChat("GT-DisableDeadMobTargeting: toggled " + c.targetingDisableDeadMob);
-    }
-    
     public void toggleDisableArmorStandTargeting()
     {
         c.targetingDisableArmorStand = !c.targetingDisableArmorStand;
         sendChat("GT-DisableArmorStandTargeting: toggled " + c.targetingDisableArmorStand);
+    }
+    
+    public void toggleDisableBatTargeting()
+    {
+        c.targetingDisableBat = !c.targetingDisableBat;
+        sendChat("GT-DisableBatTargeting: toggled " + c.targetingDisableBat);
+    }
+    
+    public void toggleDisableDeadMobTargeting()
+    {
+        c.targetingDisableDeadMob = !c.targetingDisableDeadMob;
+        sendChat("GT-DisableDeadMobTargeting: toggled " + c.targetingDisableDeadMob);
     }
     
     public void toggleDisablePlayerTargeting()
@@ -2162,8 +2175,9 @@ public class GlobalTweaks extends Tweak
     public void resetTargeting()
     {
         GlobalTweaksConfig newConfig = new GlobalTweaksConfig();
-        c.targetingDisableDeadMob = newConfig.targetingDisableDeadMob;
         c.targetingDisableArmorStand = newConfig.targetingDisableArmorStand;
+        c.targetingDisableBat = newConfig.targetingDisableBat;
+        c.targetingDisableDeadMob = newConfig.targetingDisableDeadMob;
         c.targetingDisablePlayer = newConfig.targetingDisablePlayer;
         c.targetingOnlyOpenableGift = newConfig.targetingOnlyOpenableGift;
         sendChat("GT: reset all targeting options");

@@ -84,7 +84,6 @@ public class DungeonTweaks extends Tweak
         public boolean autoJoinPartyWhitelistEnable = true;
         public boolean autoSalvage = false;
         public boolean blockOpheliaShopClicks = true;
-        //public boolean displaySoulName = false;
         public boolean displayTargetMobNameTag = false;
         public boolean enableNoFog = false;
         public boolean enableNoFogAutoToggle = false;

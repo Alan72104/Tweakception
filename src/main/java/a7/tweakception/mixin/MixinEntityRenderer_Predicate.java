@@ -5,6 +5,7 @@ import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityArmorStand;
+import net.minecraft.entity.passive.EntityBat;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -25,6 +26,11 @@ public abstract class MixinEntityRenderer_Predicate
         }
         else if (Tweakception.globalTweaks.isDisableArmorStandTargetingOn() &&
             entity instanceof EntityArmorStand)
+        {
+            cancel = true;
+        }
+        else if (Tweakception.globalTweaks.isDisableBatTargetingOn() &&
+            entity instanceof EntityBat)
         {
             cancel = true;
         }

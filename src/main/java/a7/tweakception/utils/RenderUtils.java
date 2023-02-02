@@ -442,6 +442,26 @@ public class RenderUtils
             RenderUtils.drawDefaultHighlightBoxForEntity(e, c, false);
     }
     
+    public static void drawBeaconBeamOrBoundingBoxWithBoxSize(Entity e, Color c, float partialTicks, int type,
+                                                              float range, float boxWidth, float boxHeight)
+    {
+        Vector3d viewer = getInterpolatedViewingPos(partialTicks);
+        double x = e.posX - viewer.x;
+        double y = e.posY - viewer.y;
+        double z = e.posZ - viewer.z;
+        
+        double distSq = x * x + y * y + z * z;
+        
+        if (type < 0 || (type == 0 && distSq > range * range))
+            RenderUtils.drawBeaconBeam(x - 0.5, y, z - 0.5, c, partialTicks, false);
+        else
+        {
+            AxisAlignedBB bb = new AxisAlignedBB(0.0, 0.0, 0.0, boxWidth, boxHeight, boxWidth);
+            bb = bb.offset(-bb.maxX / 2.0, 0.0, -bb.maxZ / 2.0);
+            drawHighlightBox(e, bb, c, getMc().timer.renderPartialTicks, false);
+        }
+    }
+    
     public static void drawFilledBoundingBox(AxisAlignedBB bb, Color c, float partialTicks)
     {
         Vector3d viewer = getInterpolatedViewingPos(partialTicks);

@@ -619,13 +619,18 @@ public class GlobalTweaks extends Tweak
         
         if (!armorStandsToHighlight.isEmpty())
         {
-            for (EntityArmorStand armorstand : getWorld().getEntities(EntityArmorStand.class, e -> true))
+            for (EntityArmorStand armorStand : getWorld().getEntities(EntityArmorStand.class, e -> true))
             {
                 for (String name : armorStandsToHighlight)
                 {
-                    if (armorstand.isEntityAlive() && armorstand.getName().toLowerCase().contains(name))
+                    if (armorStand.isEntityAlive() && armorStand.getName().toLowerCase().contains(name))
                     {
-                        RenderUtils.drawBeaconBeamOrBoundingBox(armorstand, new Color(0, 255, 0, 64), event.partialTicks, 0, 15);
+                        if (armorStand.hasMarker())
+                            RenderUtils.drawBeaconBeamOrBoundingBoxWithBoxSize(
+                                armorStand, new Color(0, 255, 0, 64), event.partialTicks, 0, 15, 0.3f, 1.2f);
+                        else
+                            RenderUtils.drawBeaconBeamOrBoundingBox(
+                                armorStand, new Color(0, 255, 0, 64), event.partialTicks, 0, 15);
                         break;
                     }
                 }

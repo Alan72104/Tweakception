@@ -168,9 +168,9 @@ public class GlobalTweaks extends Tweak
     private int fakeStarsRed = 5;
     private int fakeStarsPurple = 5;
     private int fakeStarsAqua = 2;
-    private final Matcher fakeStarsMatcher = Pattern.compile("^(.+)(?:§.✪)+[➊➋➌➍➎]?(.*)$").matcher("");
+    private final Matcher fakeStarsMatcher = Pattern.compile("(?:§.✪)+(?:§c[➊➋➌➍➎])?").matcher("");
     private final Matcher skyblockLevelExpGainMatcher = Pattern.compile(
-        "§b\\+\\d+ SkyBlock XP §7\\(.*§7\\)§b \\(\\d+\\/100\\)").matcher("");
+        "§b\\+\\d+ SkyBlock XP §7\\(.*§7\\)§b \\(\\d+/100\\)").matcher("");
     private String lastSkyblockLevelExpGainMsg = "";
     private int lastSkyblockLevelExpGainTicks = 0;
     
@@ -762,22 +762,20 @@ public class GlobalTweaks extends Tweak
         {
             for (int i = 0; i < event.toolTip.size(); i++)
             {
-                if (fakeStarsMatcher.reset(event.toolTip.get(i)).matches())
+                if (fakeStarsMatcher.reset(event.toolTip.get(i)).find())
                 {
-                    String[] stars = new String[6];
+                    String[] stars = new String[5];
                     for (int j = 0; j < fakeStarsPurple; j++)
-                        stars[j] = "§d⦾";
+                        stars[j] = "§d✪";
                     for (int j = 0; j < fakeStarsAqua; j++)
-                        stars[j] = "§b⦾";
+                        stars[j] = "§b✪";
                     StringBuilder sb = new StringBuilder();
-                    sb.append(fakeStarsMatcher.group(1));
                     for (String s : stars)
                         if (s != null)
                             sb.append(s);
                     if (fakeStarsRed > 0)
-                        sb.append("➊➋➌➍➎".charAt(fakeStarsRed - 1));
-                    sb.append(fakeStarsMatcher.group(2));
-                    event.toolTip.set(i, sb.toString());
+                        sb.append("§c").append("➊➋➌➍➎".charAt(fakeStarsRed - 1));
+                    event.toolTip.set(i, fakeStarsMatcher.replaceAll(sb.toString()));
                     break;
                 }
             }

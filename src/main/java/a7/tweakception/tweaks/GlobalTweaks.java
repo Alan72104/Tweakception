@@ -164,6 +164,11 @@ public class GlobalTweaks extends Tweak
     private boolean stashEmptied = false;
     private int lastPickupStashTicks = 0;
     private boolean fakePowerScrolls = false;
+    private boolean fakeStars = false;
+    private int fakeStarsRed = 5;
+    private int fakeStarsPurple = 5;
+    private int fakeStarsAqua = 2;
+    private final Matcher fakeStarsMatcher = Pattern.compile("^(.+)(?:§.✪)+[➊➋➌➍➎]?(.*)$").matcher("");
     private final Matcher skyblockLevelExpGainMatcher = Pattern.compile(
         "§b\\+\\d+ SkyBlock XP §7\\(.*§7\\)§b \\(\\d+\\/100\\)").matcher("");
     private String lastSkyblockLevelExpGainMsg = "";
@@ -749,6 +754,31 @@ public class GlobalTweaks extends Tweak
                 {
                     event.toolTip.set(i, "§6§l⦾§5§l⦾§d§l⦾§c§l⦾§b§l⦾§f§l⦾ " +
                         event.toolTip.get(i).replaceAll("§.§l⦾ ", ""));
+                }
+            }
+        }
+        
+        if (fakeStars)
+        {
+            for (int i = 0; i < event.toolTip.size(); i++)
+            {
+                if (fakeStarsMatcher.reset(event.toolTip.get(i)).matches())
+                {
+                    String[] stars = new String[6];
+                    for (int j = 0; j < fakeStarsPurple; j++)
+                        stars[j] = "§d⦾";
+                    for (int j = 0; j < fakeStarsAqua; j++)
+                        stars[j] = "§b⦾";
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(fakeStarsMatcher.group(1));
+                    for (String s : stars)
+                        if (s != null)
+                            sb.append(s);
+                    if (fakeStarsRed > 0)
+                        sb.append("➊➋➌➍➎".charAt(fakeStarsRed - 1));
+                    sb.append(fakeStarsMatcher.group(2));
+                    event.toolTip.set(i, sb.toString());
+                    break;
                 }
             }
         }
@@ -2214,7 +2244,7 @@ public class GlobalTweaks extends Tweak
         sendChat("GT-AfkMode: set fps limit to " + c.afkFpsLimit);
     }
     
-    public void toggleAfkOnlyUnfocosed()
+    public void toggleAfkOnlyUnfocused()
     {
         c.afkOnlyUnfocused = !c.afkOnlyUnfocused;
         sendChat("GT-AfkMode: toggled only when unfocused " + c.afkOnlyUnfocused);
@@ -2230,6 +2260,30 @@ public class GlobalTweaks extends Tweak
     {
         fakePowerScrolls = !fakePowerScrolls;
         sendChat("GT-FakePowerScrolls: toggled " + fakePowerScrolls);
+    }
+    
+    public void toggleFakeStars()
+    {
+        fakeStars = !fakeStars;
+        sendChat("GT-FakeStars: toggled " + fakeStars);
+    }
+    
+    public void setFakeStarsRed(int i)
+    {
+        fakeStarsRed = Utils.clamp(i, 0, 5);
+        sendChat("GT-FakeStars: set red count to " + fakeStarsRed);
+    }
+    
+    public void setFakeStarsPurple(int i)
+    {
+        fakeStarsPurple = Utils.clamp(i, 0, 5);
+        sendChat("GT-FakeStars: set purple count to " + fakeStarsPurple);
+    }
+    
+    public void setFakeStarsAqua(int i)
+    {
+        fakeStarsAqua = Utils.clamp(i, 0, 5);
+        sendChat("GT-FakeStars: set aqua count to " + fakeStarsAqua);
     }
     
     public void toggleSendSkyblockLevelExpGainMessage()

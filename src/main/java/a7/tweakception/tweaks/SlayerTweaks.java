@@ -68,8 +68,9 @@ public class SlayerTweaks extends Tweak
     private final Set<SlayerRecord> slayersCache = new HashSet<>(); // The nametags
     private final Set<SlayerRecord> slayerMinibossCache = new HashSet<>();
     private SlayerRecord currentSlayer = null;
+    // §64,232/3,932❤     §a1,042§a? Defense     §b943/943? §3400?
     private final Matcher healthMatcher = Pattern.compile(
-        "^(?<health>[0-9]+)/(?<maxHealth>[0-9]+)❤(?<wand>\\+(?<wandHeal>[0-9]+)[▆▅▄▃▂▁])?").matcher("");
+        "^§[0-9a-f](?<health>(?:[0-9]{1,3},?)+)\\/(?<maxHealth>(?:[0-9]{1,3},?)+)❤").matcher("");
     private int currentHealth = 0;
     private int maxHealth = 0;
     private int lastHealWandTicks = 0;
@@ -328,8 +329,8 @@ public class SlayerTweaks extends Tweak
             {
                 if (healthMatcher.reset(sec).matches())
                 {
-                    currentHealth = Integer.parseInt(healthMatcher.group("health"));
-                    maxHealth = Integer.parseInt(healthMatcher.group("maxHealth"));
+                    currentHealth = Utils.parseInt(healthMatcher.group("health"));
+                    maxHealth = Utils.parseInt(healthMatcher.group("maxHealth"));
                     break;
                 }
             }

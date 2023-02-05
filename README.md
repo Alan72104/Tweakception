@@ -131,7 +131,9 @@ All command prefix - /tc
 - gt rendersackstype
 - gt renderpotiontier
 - gt setinvisibleentityalphapercentage `[int percentage]`
-- gt sendbitsmessage - **Sends bits gaining message to chat**
+- gt snipe `string name` `string warpCmd...` - **Automatically warps to hub and then to warpCmd until the player is found, press Ctrl+X to stop**
+- gt snipe stop
+- gt snipe warpdelay `[int ticks]` - **Sets the minimum delay between entering a world and performing the warp**
 - gt skipworldrendering - **Reduces cpu usage when afk**
 - gt targeting disabledeadmobtargeting - **Best paired with `drawselectedentityoutline`**
 - gt targeting disablearmorstandtargeting
@@ -151,6 +153,7 @@ All command prefix - /tc
 - gt playercount crimson stronghold front topright
 - gt playersinareas - **Overlay, displays loaded players in implemented areas**
 - gt setisland `[string name...]` - **Sets or removes location override**
+- stop - **An alias for `gt snipe stop`**
 - gt logpackets *(dev)* *(ins)* - **Logs packets to a file**
 - gt logpackets setallowed *(dev)* *(ins)* `string className`
 - gt logpackets logall *(dev)* *(ins)* - **Doubt anyone needs**

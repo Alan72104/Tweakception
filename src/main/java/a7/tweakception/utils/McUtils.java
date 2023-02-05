@@ -20,6 +20,7 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.util.Constants;
 
 import java.io.File;
@@ -51,6 +52,12 @@ public class McUtils
     public static boolean isInGame()
     {
         return getWorld() != null && getPlayer() != null;
+    }
+    
+    public static void executeCommand(String cmd)
+    {
+        if (ClientCommandHandler.instance.executeCommand(getPlayer(), cmd) == 0)
+            getPlayer().sendChatMessage(cmd);
     }
     
     public static <T> T sendDebug(T v)

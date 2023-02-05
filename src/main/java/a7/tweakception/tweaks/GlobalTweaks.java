@@ -9,10 +9,12 @@ import a7.tweakception.events.PacketSendEvent;
 import a7.tweakception.overlay.Anchor;
 import a7.tweakception.overlay.TextOverlay;
 import a7.tweakception.utils.*;
+import com.google.common.collect.Ordering;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.gui.GuiPlayerTabOverlay;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -107,12 +109,14 @@ public class GlobalTweaks extends Tweak
         public boolean afkSkipWorldRendering = true;
         public int afkFpsLimit = 60;
         public boolean sendSkyblockLevelExpGainMessage = false;
+        public int snipeWarpDelayTicks = 40;
     }
     
     private final GlobalTweaksConfig c;
     //private static final HashMap<String, SkyblockIsland> SUBPLACE_TO_ISLAND_MAP = new HashMap<>();
     private static final List<SkyblockIsland> ISLANDS_THAT_HAS_SUBAREAS = new ArrayList<>();
     private static final HashMap<String, Predicate<ItemStack>> GIFT_SHITS = new HashMap<>();
+    private static final Ordering<NetworkPlayerInfo> TAB_LIST_ORDERING = GuiPlayerTabOverlay.field_175252_a;
     private static int ticks = 0;
     private static boolean islandUpdatedThisTick = false;
     private static boolean isInSkyblock = false;
@@ -135,6 +139,7 @@ public class GlobalTweaks extends Tweak
     private int ping = 0;
     private boolean pingingFromCommand = false;
     private long lastWorldJoin = 0;
+    private int lastWorldJoinTicks = 0;
     private List<String> lastTooltip = null;
     private int tooltipUpdateTicks = 0;
     private int minionAutoClaimLastClickTicks = 0;
@@ -173,6 +178,18 @@ public class GlobalTweaks extends Tweak
         "§b\\+\\d+ SkyBlock XP §7\\(.*§7\\)§b \\(\\d+/100\\)").matcher("");
     private String lastSkyblockLevelExpGainMsg = "";
     private int lastSkyblockLevelExpGainTicks = 0;
+    private String snipePlayerName = "";
+    private String snipeWarpCmd = "";
+    private int snipeLastTpTicks = 0;
+    private final List<String> snipeCurPlayerList = new ArrayList<>();
+    // §r         §r§a§lPlayers §r§f(21)§r
+    private final Matcher tabListPlayerSectionNameMatcher = Pattern.compile(
+        "§r *§r§a§lPlayers §r§f\\(([0-9]{1,2})\\)§r").matcher("");
+    private final Matcher minecraftUsernameMatcher = Pattern.compile(
+        "[A-Za-z0-9_]{1,16}").matcher("");
+    private boolean snipeWarping = false;
+    private int snipeTimesWarped = 0;
+    private boolean snipeWaitingAtHub = false;
     
     private enum InvFeature
     {
@@ -478,6 +495,108 @@ public class GlobalTweaks extends Tweak
             else
             {
                 invFeature = InvFeature.None;
+            }
+            
+            if (!snipePlayerName.isEmpty())
+            {
+                if (getTicks() - snipeLastTpTicks >= 20 * 10)
+                {
+                    sendChat("GT-Snipe: timeout");
+                    snipeStop();
+                }
+                else if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) && Keyboard.isKeyDown(Keyboard.KEY_X))
+                {
+                    sendChat("GT-Snipe: cancelled with Lctrl+X");
+                    snipeStop();
+                }
+                else if (!snipeWarping)
+                {
+                    if (!snipeWaitingAtHub)
+                    {
+                        List<NetworkPlayerInfo> list = TAB_LIST_ORDERING
+                            .sortedCopy(getPlayer().sendQueue.getPlayerInfoMap());
+                        
+                        snipeCurPlayerList.clear();
+                        
+                        if (list.size() >= 80)
+                        {
+                            list = list.subList(0, 80);
+                            GuiPlayerTabOverlay tabList = getMc().ingameGUI.getTabList();
+                            int playerCount = 0;
+                            // 4 section columns, 20 per column
+                            for (int i = 0; i < 80; i += 20)
+                            {
+                                NetworkPlayerInfo sectionEle = list.get(i);
+                                if (tabListPlayerSectionNameMatcher.reset(tabList.getPlayerName(sectionEle)).matches())
+                                {
+                                    int playerCountNew = Integer.parseInt(tabListPlayerSectionNameMatcher.group(1));
+                                    if (i != 0 && playerCount != playerCountNew)
+                                    {
+                                        sendChat("GT-Snipe: sanity check failed");
+                                        stopSnipe();
+                                        break;
+                                    }
+                                    playerCount = playerCountNew;
+                                    
+                                    for (int j = i + 1; j <= i + 19; j += 1)
+                                    {
+                                        List<IChatComponent> playerEleParts = list.get(j).getDisplayName().getSiblings();
+                                        // Reverse because parts in crimson are:[,241,] ,Alan72104 ,⚒️
+                                        for (int k = playerEleParts.size() - 1; k >= 0; k--)
+                                        {
+                                            IChatComponent playerElePart = playerEleParts.get(k);
+                                            if (minecraftUsernameMatcher
+                                                .reset(playerElePart.getUnformattedText().trim())
+                                                .matches())
+                                            {
+                                                snipeCurPlayerList.add(minecraftUsernameMatcher.group());
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            if (playerCount == snipeCurPlayerList.size())
+                            {
+                                boolean found = false;
+                                for (String name : snipeCurPlayerList)
+                                {
+                                    if (name.equalsIgnoreCase(snipePlayerName))
+                                    {
+                                        sendChat("GT-Snipe: sniped player: " + snipePlayerName + ", times warped: " + snipeTimesWarped);
+                                        if (!playersToHighlight.contains(snipePlayerName))
+                                        {
+                                            sendChat("GT-Snipe: also highlighting them");
+                                            setPlayerToHighlight(snipePlayerName);
+                                        }
+                                        found = true;
+                                        snipeStop();
+                                        break;
+                                    }
+                                }
+                                
+                                if (!found && getTicks() - getWorldJoinTicks() >= c.snipeWarpDelayTicks)
+                                {
+                                    sendChat("GT-Snipe: full player list detected and player not found, warping to hub");
+                                    McUtils.executeCommand("/hub");
+                                    snipeWarping = true;
+                                    snipeWaitingAtHub = true;
+                                    snipeLastTpTicks = getTicks();
+                                }
+                            }
+                        }
+                    }
+                    else if (getTicks() - getWorldJoinTicks() >= c.snipeWarpDelayTicks) // Going to hub
+                    {
+                        snipeTimesWarped++;
+                        sendChat("GT-Snipe: warping using: /" + snipeWarpCmd + ", times warped: " + snipeTimesWarped);
+                        McUtils.executeCommand("/" + snipeWarpCmd);
+                        snipeWarping = true;
+                        snipeWaitingAtHub = false;
+                        snipeLastTpTicks = getTicks();
+                    }
+                }
             }
         }
     }
@@ -785,11 +904,13 @@ public class GlobalTweaks extends Tweak
     public void onWorldLoad(WorldEvent.Load event)
     {
         lastWorldJoin = System.currentTimeMillis();
+        lastWorldJoinTicks = getTicks();
         trevorQuestStartTicks = 0;
         trevorQuestCooldownNoticed = false;
         trevorQuestPendingStart = false;
         trevorAnimalNametag = null;
         trevorQuestOngoing = false;
+        snipeWarping = false;
     }
     
     public void onChatReceivedGlobal(ClientChatReceivedEvent event)
@@ -1157,6 +1278,11 @@ public class GlobalTweaks extends Tweak
         return lastWorldJoin;
     }
     
+    public long getWorldJoinTicks()
+    {
+        return lastWorldJoinTicks;
+    }
+    
     // endregion Misc
     
     // region Feature access
@@ -1392,6 +1518,34 @@ public class GlobalTweaks extends Tweak
         {
             sendChat("GT-Trevor: can't find abiphone in hotbar");
         }
+    }
+    
+    private void snipeStart(String name, String warpCmd)
+    {
+        snipePlayerName = name;
+        snipeWarpCmd = warpCmd;
+        snipeLastTpTicks = getTicks();
+        snipeCurPlayerList.clear();
+        snipeTimesWarped = 0;
+        updateIslandNow();
+        if (getCurrentIsland() == SkyblockIsland.HUB)
+        {
+            snipeWarping = true;
+            snipeWaitingAtHub = true;
+            Tweakception.scheduler.addDelayed(() -> McUtils.executeCommand("/hub"), 5);
+        }
+        else
+        {
+            snipeWarping = false;
+            snipeWaitingAtHub = false;
+        }
+    }
+    
+    private void snipeStop()
+    {
+        snipePlayerName = "";
+        snipeWarpCmd = "";
+        snipeCurPlayerList.clear();
     }
     
     // endregion Feature access
@@ -2288,6 +2442,42 @@ public class GlobalTweaks extends Tweak
     {
         c.sendSkyblockLevelExpGainMessage = !c.sendSkyblockLevelExpGainMessage;
         sendChat("GT-SendSkyblockLevelExpGainMessage: toggled " + c.sendSkyblockLevelExpGainMessage);
+    }
+    
+    public void startSnipe(String name, String warpCmd)
+    {
+        if (!snipePlayerName.isEmpty())
+        {
+            sendChat("GT-Snipe: snipe already running");
+            return;
+        }
+        
+        name = name.toLowerCase().trim();
+        warpCmd = warpCmd.toLowerCase().trim();
+        if (name.isEmpty() || warpCmd.isEmpty())
+        {
+            sendChat("GT-Snipe: snipe params empty");
+            return;
+        }
+        snipeStart(name, warpCmd);
+        sendChat("GT-Snipe: starting sniping of player: " + snipePlayerName + ", warp cmd: " + snipeWarpCmd);
+    }
+    
+    public void stopSnipe()
+    {
+        if (snipePlayerName.isEmpty())
+        {
+            sendChat("GT-Snipe: snipe not active");
+            return;
+        }
+        snipeStop();
+        sendChat("GT-Snipe: stopping sniping");
+    }
+    
+    public void setSnipeWarpDelay(int delay)
+    {
+        c.snipeWarpDelayTicks = Utils.clamp(delay, 0, 20 * 10);
+        sendChat("GT-Snipe: set minimum warp delay to " + c.snipeWarpDelayTicks);
     }
     
     // endregion Commands

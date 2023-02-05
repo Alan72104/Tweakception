@@ -4,10 +4,7 @@ import a7.tweakception.Tweakception;
 import a7.tweakception.config.Configuration;
 import a7.tweakception.utils.DumpUtils;
 import a7.tweakception.utils.Utils;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+import com.google.gson.*;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
@@ -222,6 +219,12 @@ public class APIManager extends Tweak
                         if (members.has(uuid))
                         {
                             JsonObject member = members.get(uuid).getAsJsonObject();
+                            if (profile.has("selected") && profile.get("selected").getAsBoolean())
+                            {
+                                selectedProfileMember = member;
+                                break;
+                            }
+                            
                             if (member.has("last_save"))
                             {
                                 long lastSave = member.get("last_save").getAsLong();
@@ -454,11 +457,25 @@ public class APIManager extends Tweak
         return url.toString();
     }
     
+    public JsonElement get(JsonElement e, String path)
+    {
+        String[] split = path.split("\\.", 2);
+        if (split.length == 0)
+            throw new JsonSyntaxException("Path is empty");
+        if (e.isJsonObject())
+        {
+            if (split.length > 1)
+                return get(e.getAsJsonObject().get(split[0]), split[1]);
+            else
+                return e.getAsJsonObject().get(split[0]);
+        }
+        return null;
+    }
+    
     public boolean hasApiKey()
     {
         return !c.apiKey.equals("");
     }
-    
     
     public void toggleDebug()
     {

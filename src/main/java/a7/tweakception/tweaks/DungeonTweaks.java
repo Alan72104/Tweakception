@@ -368,6 +368,7 @@ public class DungeonTweaks extends Tweak
                     {
                         c.enableNoFog = false;
                         wasNoFogAutoToggled = false;
+                        
                         sendChat("DT-NoFog: auto toggled off");
                     }
                 }

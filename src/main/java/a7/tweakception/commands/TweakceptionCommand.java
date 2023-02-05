@@ -341,6 +341,16 @@ public class TweakceptionCommand extends CommandBase
                 new Command("setinvisibleentityalphapercentage",
                     args -> Tweakception.globalTweaks.setInvisibleEntityAlphaPercentage(
                         args.length > 0 ? toInt(args[0]) : 0)),
+                new Command("snipe",
+                    args -> Tweakception.globalTweaks.startSnipe(
+                        args.length > 0 ? args[0] : "",
+                        args.length > 1 ? String.join(" ", Arrays.copyOfRange(args, 1, args.length)) : ""),
+                    new Command("stop",
+                        args -> Tweakception.globalTweaks.stopSnipe()),
+                    new Command("warpdelay",
+                        args -> Tweakception.globalTweaks.setSnipeWarpDelay(
+                            args.length > 0 ? toInt(args[0]) : 0))
+                ),
                 new Command("skipworldrendering",
                     args -> Tweakception.globalTweaks.toggleSkipWorldRendering()),
                 new Command("targeting",
@@ -530,6 +540,11 @@ public class TweakceptionCommand extends CommandBase
         {
             addSub(new Command("dailies",
                 args -> Tweakception.dungeonTweaks.getDailyRuns(args.length > 0 ? args[0] : "")));
+        }
+        // stop
+        {
+            addSub(new Command("stop",
+                args -> Tweakception.globalTweaks.stopSnipe()));
         }
         // fish
         {

@@ -131,7 +131,9 @@ All command prefix - /tc
 - gt rendersackstype
 - gt renderpotiontier
 - gt setinvisibleentityalphapercentage `[int percentage]`
-- gt snipe `string name` `string warpCmd...` - **Automatically warps to hub and then to warpCmd until the player is found, press Ctrl+X to stop**
+- gt snipe `string name` `string warpCmd...`
+  - **Automatically warps to hub and then to warpCmd until the player is found, press Ctrl+X to stop**
+  - **If target island is hub, use hub as warpCmd to change the transfer island to dhub**
 - gt snipe stop
 - gt snipe warpdelay `[int ticks]` - **Sets the minimum delay between entering a world and performing the warp**
 - gt skipworldrendering - **Reduces cpu usage when afk**

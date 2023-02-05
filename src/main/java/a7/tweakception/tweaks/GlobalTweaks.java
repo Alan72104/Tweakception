@@ -578,8 +578,9 @@ public class GlobalTweaks extends Tweak
                                 
                                 if (!found && getTicks() - getWorldJoinTicks() >= c.snipeWarpDelayTicks)
                                 {
-                                    sendChat("GT-Snipe: full player list detected and player not found, warping to hub");
-                                    McUtils.executeCommand("/hub");
+                                    String transferIsland = snipeWarpCmd.equals("hub") ? "dhub" : "hub";
+                                    sendChat("GT-Snipe: full player list detected and player not found, warping to " + transferIsland);
+                                    McUtils.executeCommand("/warp " + transferIsland);
                                     snipeWarping = true;
                                     snipeWaitingAtHub = true;
                                     snipeLastTpTicks = getTicks();
@@ -1528,16 +1529,19 @@ public class GlobalTweaks extends Tweak
         snipeCurPlayerList.clear();
         snipeTimesWarped = 0;
         updateIslandNow();
-        if (getCurrentIsland() == SkyblockIsland.HUB)
+        snipeWarping = false;
+        snipeWaitingAtHub = false;
+        if (!snipeWarpCmd.equals("hub") && getCurrentIsland() != SkyblockIsland.HUB)
         {
             snipeWarping = true;
             snipeWaitingAtHub = true;
             Tweakception.scheduler.addDelayed(() -> McUtils.executeCommand("/hub"), 5);
         }
-        else
+        else if (getCurrentIsland() != SkyblockIsland.DUNGEON_HUB)
         {
-            snipeWarping = false;
-            snipeWaitingAtHub = false;
+            snipeWarping = true;
+            snipeWaitingAtHub = true;
+            Tweakception.scheduler.addDelayed(() -> McUtils.executeCommand("/warp dhub"), 5);
         }
     }
     

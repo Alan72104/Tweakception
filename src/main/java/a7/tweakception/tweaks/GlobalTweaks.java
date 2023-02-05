@@ -530,12 +530,12 @@ public class GlobalTweaks extends Tweak
                                 if (tabListPlayerSectionNameMatcher.reset(tabList.getPlayerName(sectionEle)).matches())
                                 {
                                     int playerCountNew = Integer.parseInt(tabListPlayerSectionNameMatcher.group(1));
-                                    if (i != 0 && playerCount != playerCountNew)
-                                    {
-                                        sendChat("GT-Snipe: sanity check failed");
-                                        stopSnipe();
-                                        break;
-                                    }
+//                                    if (i != 0 && playerCount != playerCountNew)
+//                                    {
+//                                        sendChat("GT-Snipe: sanity check failed");
+//                                        stopSnipe();
+//                                        break;
+//                                    }
                                     playerCount = playerCountNew;
                                     
                                     for (int j = i + 1; j <= i + 19; j += 1)
@@ -557,7 +557,7 @@ public class GlobalTweaks extends Tweak
                                 }
                             }
                             
-                            if (playerCount == snipeCurPlayerList.size())
+                            if (Math.min(playerCount, 40 - 2) == snipeCurPlayerList.size())
                             {
                                 boolean found = false;
                                 for (String name : snipeCurPlayerList)
@@ -1530,17 +1530,15 @@ public class GlobalTweaks extends Tweak
         snipeTimesWarped = 0;
         updateIslandNow();
         snipeWarping = false;
-        snipeWaitingAtHub = false;
+        snipeWaitingAtHub = true;
         if (!snipeWarpCmd.equals("hub") && getCurrentIsland() != SkyblockIsland.HUB)
         {
             snipeWarping = true;
-            snipeWaitingAtHub = true;
             Tweakception.scheduler.addDelayed(() -> McUtils.executeCommand("/hub"), 5);
         }
-        else if (getCurrentIsland() != SkyblockIsland.DUNGEON_HUB)
+        else if (snipeWarpCmd.equals("hub") && getCurrentIsland() != SkyblockIsland.DUNGEON_HUB)
         {
             snipeWarping = true;
-            snipeWaitingAtHub = true;
             Tweakception.scheduler.addDelayed(() -> McUtils.executeCommand("/warp dhub"), 5);
         }
     }

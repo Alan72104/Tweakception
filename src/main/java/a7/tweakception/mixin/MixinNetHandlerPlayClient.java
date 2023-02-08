@@ -1,6 +1,7 @@
 package a7.tweakception.mixin;
 
 import a7.tweakception.Tweakception;
+import a7.tweakception.tweaks.GlobalTweaks;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.network.play.server.*;
 import org.spongepowered.asm.mixin.Mixin;
@@ -74,7 +75,13 @@ public class MixinNetHandlerPlayClient
     }
     
     @Inject(method = "handleSetSlot", at = @At(value = "RETURN"))
-    public void handleSetSlot(S2FPacketSetSlot p_handleSetSlot_1_, CallbackInfo ci)
+    public void handleSetSlot(S2FPacketSetSlot packet, CallbackInfo ci)
     {
+    }
+    
+    @Inject(method = "handleSoundEffect", at = @At(value = "RETURN"))
+    public void handleSoundEffect(S29PacketSoundEffect packet, CallbackInfo ci)
+    {
+        Tweakception.globalTweaks.onPacketSoundEffect(packet);
     }
 }

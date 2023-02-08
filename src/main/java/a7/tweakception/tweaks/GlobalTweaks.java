@@ -14,6 +14,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiPlayerTabOverlay;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiChest;
@@ -33,6 +34,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.play.client.C16PacketClientStatus;
+import net.minecraft.network.play.server.S29PacketSoundEffect;
 import net.minecraft.scoreboard.Score;
 import net.minecraft.scoreboard.ScoreObjective;
 import net.minecraft.scoreboard.ScorePlayerTeam;
@@ -191,6 +193,9 @@ public class GlobalTweaks extends Tweak
     private boolean snipeWarping = false;
     private int snipeTimesWarped = 0;
     private boolean snipeWaitingAtHub = false;
+    private boolean abiphoneRelayHint = false;
+    private boolean abiphoneRelayInMenu = false;
+    private final Queue<String> abiphoneRelaySoundStrings = new ArrayDeque<>();
     
     private enum InvFeature
     {
@@ -600,6 +605,22 @@ public class GlobalTweaks extends Tweak
                     }
                 }
             }
+    
+            if (abiphoneRelayHint && getMc().currentScreen instanceof GuiChest)
+            {
+                GuiChest chest = (GuiChest) McUtils.getMc().currentScreen;
+                ContainerChest container = (ContainerChest) chest.inventorySlots;
+                IInventory inv = container.getLowerChestInventory();
+                if (inv.getName().equals("9f™ Network Relay") && inv.getSizeInventory() == 54)
+                    abiphoneRelayInMenu = true;
+                else
+                    abiphoneRelayInMenu = false;
+            }
+            else
+                abiphoneRelayInMenu = false;
+            if (!abiphoneRelayInMenu)
+                abiphoneRelaySoundStrings.clear();
+            
         }
     }
     
@@ -832,6 +853,32 @@ public class GlobalTweaks extends Tweak
         }
     }
     
+    public void onGuiDrawPost(GuiScreenEvent.DrawScreenEvent.Post event)
+    {
+        if (!abiphoneRelayInMenu)
+            return;
+        
+        try
+        {
+            int xSize = Utils.setAccessibleAndGetField(GuiContainer.class, event.gui, "xSize", "field_146999_f");
+            int ySize = Utils.setAccessibleAndGetField(GuiContainer.class, event.gui, "ySize", "field_147000_g");
+            int guiLeft = Utils.setAccessibleAndGetField(GuiContainer.class, event.gui, "guiLeft", "field_147003_i");
+            int guiTop = Utils.setAccessibleAndGetField(GuiContainer.class, event.gui, "guiTop", "field_147009_r");
+            
+            FontRenderer fr = getMc().fontRendererObj;
+            int y = guiTop + fr.FONT_HEIGHT;
+            for (String soundString : abiphoneRelaySoundStrings)
+            {
+                getMc().fontRendererObj.drawString(soundString,
+                    guiLeft + xSize + 20, y, 0xFFFFFFFF);
+                y += fr.FONT_HEIGHT;
+            }
+        }
+        catch (Exception ignored)
+        {
+        }
+    }
+    
     public void onKeyInput(InputEvent.KeyInputEvent event)
     {
         if (editingAreas &&
@@ -914,6 +961,24 @@ public class GlobalTweaks extends Tweak
         trevorAnimalNametag = null;
         trevorQuestOngoing = false;
         snipeWarping = false;
+    }
+    
+    public void onPacketSoundEffect(S29PacketSoundEffect packet)
+    {
+        if (abiphoneRelayInMenu)
+        {
+            if (!(packet.getSoundName().equals("game.player.hurt") &&
+                packet.getPitch() == 0.0f &&
+                packet.getVolume() == 0.0f))
+            {
+                Tweakception.scheduler.add(() ->
+                {
+                    abiphoneRelaySoundStrings.offer(f("%s   %.3f   %.3f", packet.getSoundName(), packet.getPitch(), packet.getVolume()));
+                    if (abiphoneRelaySoundStrings.size() > 15)
+                        abiphoneRelaySoundStrings.remove();
+                });
+            }
+        }
     }
     
     public void onChatReceivedGlobal(ClientChatReceivedEvent event)
@@ -2482,6 +2547,12 @@ public class GlobalTweaks extends Tweak
     {
         c.snipeWarpDelayTicks = Utils.clamp(delay, 0, 20 * 10);
         sendChat("GT-Snipe: set minimum warp delay to " + c.snipeWarpDelayTicks);
+    }
+    
+    public void toggleAbiphoneRelayHint()
+    {
+        abiphoneRelayHint = !abiphoneRelayHint;
+        sendChat("GT-AbiphoneRelayHint: toggled " + abiphoneRelayHint);
     }
     
     // endregion Commands

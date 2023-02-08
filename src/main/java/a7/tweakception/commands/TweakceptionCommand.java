@@ -194,6 +194,8 @@ public class TweakceptionCommand extends CommandBase
         {
             addSub(new Command("gt",
                 null,
+                new Command("abiphonerelayhint",
+                    args -> Tweakception.globalTweaks.toggleAbiphoneRelayHint()),
                 new Command("actionbar",
                     null,
                     new Command("sendbitsmessage",

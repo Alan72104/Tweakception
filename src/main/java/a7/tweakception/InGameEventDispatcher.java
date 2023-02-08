@@ -308,6 +308,7 @@ public class InGameEventDispatcher
         
         enchantingTweaks.onGuiDrawPost(event);
         autoRunes.onGuiDrawPost(event);
+        globalTweaks.onGuiDrawPost(event);
     }
     
     @SubscribeEvent(priority = EventPriority.HIGHEST)

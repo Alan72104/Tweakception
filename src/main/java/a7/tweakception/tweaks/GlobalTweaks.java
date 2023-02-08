@@ -173,7 +173,8 @@ public class GlobalTweaks extends Tweak
     private int fakeStarsRed = 5;
     private int fakeStarsPurple = 5;
     private int fakeStarsAqua = 2;
-    private final Matcher fakeStarsMatcher = Pattern.compile("(?:§.✪)+(?:§c[➊➋➌➍➎])?").matcher("");
+    private final Matcher fakeStarsMatcher = Pattern.compile(
+        "(?:(?:§.✪)+(?:§c[➊➋➌➍➎])?)?(?<id>§r \\(#\\d{4}(?:/\\d+)?\\))?$").matcher("");
     private final Matcher skyblockLevelExpGainMatcher = Pattern.compile(
         "§b\\+\\d+ SkyBlock XP §7\\(.*§7\\)§b \\(\\d+/100\\)").matcher("");
     private String lastSkyblockLevelExpGainMsg = "";
@@ -895,7 +896,8 @@ public class GlobalTweaks extends Tweak
                             sb.append(s);
                     if (fakeStarsRed > 0)
                         sb.append("§c").append("➊➋➌➍➎".charAt(fakeStarsRed - 1));
-                    event.toolTip.set(i, fakeStarsMatcher.replaceAll(sb.toString()));
+                    String idPart = fakeStarsMatcher.group("id");
+                    event.toolTip.set(i, fakeStarsMatcher.replaceFirst(sb.toString()) + (idPart == null ? "" : idPart));
                     break;
                 }
             }

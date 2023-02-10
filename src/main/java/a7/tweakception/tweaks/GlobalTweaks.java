@@ -54,6 +54,7 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Queue;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -112,6 +113,7 @@ public class GlobalTweaks extends Tweak
         public int afkFpsLimit = 60;
         public boolean sendSkyblockLevelExpGainMessage = false;
         public int snipeWarpDelayTicks = 40;
+        public Set<String> strangerWhitelist = new TreeSet<>();
     }
     
     private final GlobalTweaksConfig c;
@@ -579,6 +581,21 @@ public class GlobalTweaks extends Tweak
             if (!abiphoneRelayInMenu)
                 abiphoneRelaySoundStrings.clear();
             
+            
+            if (hideFromStrangers && getTicks() - hideFromStrangersLastWarpTicks >= 20 * 5)
+            {
+                if (getPlayerListFromTabList()
+                    .stream()
+                    .map(String::toLowerCase)
+                    .anyMatch(name ->
+                        !(name.equalsIgnoreCase(getPlayer().getName()) || c.strangerWhitelist.contains(name)))
+                )
+                {
+                    sendChat("GT-HideFromStrangers: evacuating to private island...");
+                    McUtils.executeCommand("/is");
+                    hideFromStrangersLastWarpTicks = getTicks();
+                }
+            }
         }
     }
     
@@ -2562,6 +2579,38 @@ public class GlobalTweaks extends Tweak
     {
         abiphoneRelayHint = !abiphoneRelayHint;
         sendChat("GT-AbiphoneRelayHint: toggled " + abiphoneRelayHint);
+    }
+    
+    public void toggleHideFromStrangers()
+    {
+        hideFromStrangers = !hideFromStrangers;
+        sendChat("GT-HideFromStrangers: toggled " + hideFromStrangers);
+    }
+    
+    public void setHideFromStrangersWhitelist(String name)
+    {
+        if (name == null || name.isEmpty())
+        {
+            sendChat("GT-HideFromStrangers: printing list");
+            int i = 0;
+            for (String n : c.strangerWhitelist)
+            {
+                sendChat(++i + ": " + n);
+            }
+            return;
+        }
+        
+        name = name.toLowerCase();
+        if (c.strangerWhitelist.contains(name))
+        {
+            c.strangerWhitelist.remove(name);
+            sendChat("GT-HideFromStrangers: removed " + name + " from whitelist");
+        }
+        else
+        {
+            c.strangerWhitelist.add(name);
+            sendChat("GT-HideFromStrangers: added " + name + " to whitelist");
+        }
     }
     
     // endregion Commands

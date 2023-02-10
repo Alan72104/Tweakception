@@ -58,7 +58,7 @@ All command prefix - /tc
 - dungeon partyfinder clearcaches
 - dungeon partyfinder quickplayerinfo
   - **Displays quick cata/secret/item info of every player in party tooltip**
-  - **Format: <cata> | <secrets per run/total secrets/secrets per 50k exp(optional)> WBlade? Term?**
+  - **Format: \<cata> | <secrets per run/total secrets/secrets per 50k exp(optional)> WBlade? Term?**
   - **[35.70 | 11.2/18k/27.1 WBladex2 Term]**
   - **[35.70 | 11.2/18k/27.1 API disabled]** 
 - dungeon partyfinder quickplayerinfo secretperexp
@@ -108,12 +108,18 @@ All command prefix - /tc
 - gt entertoclosesign
   - **Closes number typing signs when enter is pressed, hold left alt to override**
   - **It only activates if the second line equals "^^^^^^^^^^^^^^^"**
+- gt fakepowerscrolls - **⦾⦾⦾⦾⦾⦾**
+- gt fakestars - **✪✪✪✪✪**
+- gt fakestars red `[int count]`
+- gt fakestars purple `[int count]`
+- gt fakestars aqua `[int count]`
 - gt gift
   - **Toggles all gift features**
   - **In inventory, press D to drop all gift trash, Ctrl+D to throw trash plus emptying the stash, M to move gifts to hotbar**
-- gt fakepowerscrolls - **⦾⦾⦾⦾⦾⦾**
 - gt gift autoswitchgiftslot
   - **Auto switches to slot that has any gift on any entity right click**
+- gt hidefromstrangers - **Automatically warps to private island when there's non whitelisted player in the tab list**
+- gt hidefromstrangers whitelist `[string name]` - **Leave empty to see the list**
 - gt hideplayers - **Hides ALL online players**
 - gt highlightshinypigs
 - gt highlightshinypigs setname - **Example:** `setname [vip] alan72104`

@@ -1,7 +1,6 @@
 package a7.tweakception.mixin;
 
 import a7.tweakception.Tweakception;
-import a7.tweakception.tweaks.GlobalTweaks;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.network.play.server.*;
 import org.spongepowered.asm.mixin.Mixin;

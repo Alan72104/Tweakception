@@ -289,8 +289,12 @@ public class TweakceptionCommand extends CommandBase
                     new Command("autoswitchgiftslot",
                         args -> Tweakception.globalTweaks.toggleAutoSwitchGiftSlot())
                 ),
-                new Command("setisland",
-                    args -> Tweakception.globalTweaks.forceSetIsland(args.length > 0 ? String.join(" ", args) : "")),
+                new Command("hidefromstrangers",
+                    args -> Tweakception.globalTweaks.toggleHideFromStrangers(),
+                    new Command("whitelist",
+                        args -> Tweakception.globalTweaks.setHideFromStrangersWhitelist(
+                            args.length > 0 ? args[0] : ""))
+                ),
                 new Command("hideplayers",
                     args -> Tweakception.globalTweaks.toggleHidePlayers()),
                 new Command("highlightshinypigs",
@@ -343,6 +347,8 @@ public class TweakceptionCommand extends CommandBase
                 new Command("setinvisibleentityalphapercentage",
                     args -> Tweakception.globalTweaks.setInvisibleEntityAlphaPercentage(
                         args.length > 0 ? toInt(args[0]) : 0)),
+                new Command("setisland",
+                    args -> Tweakception.globalTweaks.forceSetIsland(args.length > 0 ? String.join(" ", args) : "")),
                 new Command("snipe",
                     args -> Tweakception.globalTweaks.startSnipe(
                         args.length > 0 ? args[0] : "",

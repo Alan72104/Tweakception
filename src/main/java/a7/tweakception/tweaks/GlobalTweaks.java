@@ -1358,17 +1358,21 @@ public class GlobalTweaks extends Tweak
                     
                     for (int j = i + 1; j <= i + 19; j += 1)
                     {
-                        List<IChatComponent> playerEleParts = list.get(j).getDisplayName().getSiblings();
-                        // Reverse because parts in crimson are:[,241,] ,Alan72104 ,⚒️
-                        for (int k = playerEleParts.size() - 1; k >= 0; k--)
+                        NetworkPlayerInfo playerEle = list.get(j);
+                        if (playerEle.getDisplayName() != null)
                         {
-                            IChatComponent playerElePart = playerEleParts.get(k);
-                            if (minecraftUsernameMatcher
-                                .reset(playerElePart.getUnformattedText().trim())
-                                .matches())
+                            List<IChatComponent> playerEleParts = playerEle.getDisplayName().getSiblings();
+                            // Reverse because parts in crimson are:[,241,] ,Alan72104 ,⚒️
+                            for (int k = playerEleParts.size() - 1; k >= 0; k--)
                             {
-                                playerList.add(minecraftUsernameMatcher.group());
-                                break;
+                                IChatComponent playerElePart = playerEleParts.get(k);
+                                if (minecraftUsernameMatcher
+                                    .reset(playerElePart.getUnformattedText().trim())
+                                    .matches())
+                                {
+                                    playerList.add(minecraftUsernameMatcher.group());
+                                    break;
+                                }
                             }
                         }
                     }

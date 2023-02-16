@@ -334,6 +334,8 @@ public class TweakceptionCommand extends CommandBase
                         args -> Tweakception.globalTweaks.setMinionAutoClaimClickDelayMin(
                             args.length > 0 ? toInt(args[0]) : 0))
                 ),
+                new Command("ranchersbootsspeednote",
+                    args -> Tweakception.globalTweaks.toggleRanchersBootsTooltipSpeedNote()),
                 new Command("renderinvisiblearmorstands",
                     args -> Tweakception.globalTweaks.toggleRenderInvisibleArmorStands()),
                 new Command("renderinvisibleenities",

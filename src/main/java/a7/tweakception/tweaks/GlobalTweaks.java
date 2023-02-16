@@ -114,6 +114,7 @@ public class GlobalTweaks extends Tweak
         public boolean sendSkyblockLevelExpGainMessage = false;
         public int snipeWarpDelayTicks = 40;
         public Set<String> strangerWhitelist = new TreeSet<>();
+        public boolean ranchersBootsTooltipSpeedNote = false;
     }
     
     private final GlobalTweaksConfig c;
@@ -877,35 +878,40 @@ public class GlobalTweaks extends Tweak
     
     public void onItemTooltip(ItemTooltipEvent event)
     {
+        List<String> tooltip = event.toolTip;
+        
+        if (c.disableTooltips)
+        {
+            tooltip.clear();
+            return;
+        }
+        
         if (c.tooltipDisplaySkyblockItemId && event.itemStack != null)
         {
             String id = Utils.getSkyblockItemId(event.itemStack);
             if (id != null && !id.isEmpty())
             {
-                event.toolTip.add("ID: " + id);
+                tooltip.add("ID: " + id);
             }
         }
         
-        if (c.disableTooltips)
-            event.toolTip.clear();
-        
         if (fakePowerScrolls)
         {
-            for (int i = 0; i < event.toolTip.size(); i++)
+            for (int i = 0; i < tooltip.size(); i++)
             {
-                if (event.toolTip.get(i).contains(" §e§lRIGHT CLICK"))
+                if (tooltip.get(i).contains(" §e§lRIGHT CLICK"))
                 {
-                    event.toolTip.set(i, "§6§l⦾§5§l⦾§d§l⦾§c§l⦾§b§l⦾§f§l⦾ " +
-                        event.toolTip.get(i).replaceAll("§.§l⦾ ", ""));
+                    tooltip.set(i, "§6§l⦾§5§l⦾§d§l⦾§c§l⦾§b§l⦾§f§l⦾ " +
+                        tooltip.get(i).replaceAll("§.§l⦾ ", ""));
                 }
             }
         }
         
         if (fakeStars)
         {
-            for (int i = 0; i < event.toolTip.size(); i++)
+            for (int i = 0; i < tooltip.size(); i++)
             {
-                if (fakeStarsMatcher.reset(event.toolTip.get(i)).find())
+                if (fakeStarsMatcher.reset(tooltip.get(i)).find())
                 {
                     String[] stars = new String[5];
                     for (int j = 0; j < fakeStarsPurple; j++)
@@ -919,7 +925,28 @@ public class GlobalTweaks extends Tweak
                     if (fakeStarsRed > 0)
                         sb.append("§c").append("➊➋➌➍➎".charAt(fakeStarsRed - 1));
                     String idPart = fakeStarsMatcher.group("id");
-                    event.toolTip.set(i, fakeStarsMatcher.replaceFirst(sb.toString()) + (idPart == null ? "" : idPart));
+                    tooltip.set(i, fakeStarsMatcher.replaceFirst(sb.toString()) + (idPart == null ? "" : idPart));
+                    break;
+                }
+            }
+        }
+        
+        if (c.ranchersBootsTooltipSpeedNote &&
+            "RANCHERS_BOOTS".equals(Utils.getSkyblockItemId(event.itemStack)) &&
+            Keyboard.isKeyDown(Keyboard.KEY_LCONTROL))
+        {
+            for (int i = 0; i < tooltip.size(); i++)
+            {
+                if (tooltip.get(i).contains("Current Speed Cap: "))
+                {
+                    int t = 1;
+                    tooltip.add(i + t++, "§7 Base: 4.317 m/s");
+                    tooltip.add(i + t++, "§7 5 m/s: 116%");
+                    tooltip.add(i + t++, "§7 10 m/s: 232%");
+                    tooltip.add(i + t++, "§7 20 m/s: 464%");
+                    tooltip.add(i + t++, "§7 45° 10 m/s: 328%");
+                    tooltip.add(i + t++, "§7 Pumpkin: 260%");
+                    tooltip.add(i + t, "§7 Cocoa: 120%");
                     break;
                 }
             }
@@ -2615,6 +2642,12 @@ public class GlobalTweaks extends Tweak
             c.strangerWhitelist.add(name);
             sendChat("GT-HideFromStrangers: added " + name + " to whitelist");
         }
+    }
+    
+    public void toggleRanchersBootsTooltipSpeedNote()
+    {
+        c.ranchersBootsTooltipSpeedNote = !c.ranchersBootsTooltipSpeedNote;
+        sendChat("GT-RanchersBootsTooltipSpeedNote: toggled " + c.ranchersBootsTooltipSpeedNote);
     }
     
     // endregion Commands

@@ -131,6 +131,7 @@ All command prefix - /tc
 - gt minionautoclaim whitelist `string id`
 - gt minionautoclaim whitelist remove `string id`
 - gt minionautoclaim setdelay `[int minTicks]`
+- gt ranchersbootsspeednote - **Speed notes in tooltip**
 - gt renderinvisiblearmorstands
 - gt renderinvisibleenities
 - gt renderenchantedbookstype

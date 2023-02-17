@@ -62,6 +62,7 @@ import java.util.regex.Pattern;
 
 import static a7.tweakception.utils.McUtils.*;
 import static a7.tweakception.utils.Utils.f;
+import static a7.tweakception.utils.Utils.parseDouble;
 
 public class GlobalTweaks extends Tweak
 {
@@ -202,6 +203,10 @@ public class GlobalTweaks extends Tweak
         "[A-Za-z0-9_]{1,16}").matcher("");
     private boolean hideFromStrangers = false;
     private int hideFromStrangersLastWarpTicks = 0;
+    private final Matcher auctionPriceMatcher = Pattern.compile(
+        "§7(?:Buy it now|Starting bid|Top bid): §6((?:\\d{1,3},?)+) coins$").matcher("");
+    private final Matcher petItemJsonExpMatcher = Pattern.compile(
+        "\\\"exp\\\":(\\d+.?\\d*E?\\d*)").matcher("");
     
     private enum InvFeature
     {
@@ -948,6 +953,28 @@ public class GlobalTweaks extends Tweak
                     tooltip.add(i + t++, "§7 Pumpkin: 260%");
                     tooltip.add(i + t, "§7 Cocoa: 120%");
                     break;
+                }
+            }
+        }
+        
+        if (getMc().currentScreen instanceof GuiChest &&
+            ((ContainerChest) ((GuiChest) getMc().currentScreen).inventorySlots)
+            .getLowerChestInventory().getName().startsWith("Auctions"))
+        {
+            for (int i = 0; i < tooltip.size(); i++)
+            {
+                if (auctionPriceMatcher.reset(tooltip.get(i)).find())
+                {
+                    NBTTagCompound extra = McUtils.getExtraAttributes(event.itemStack);
+                    if (extra != null && petItemJsonExpMatcher.reset(extra.getString("petInfo")).find())
+                    {
+                        double price = Utils.parseDouble(auctionPriceMatcher.group(1));
+                        double exp = Utils.parseDouble(petItemJsonExpMatcher.group(1));
+                        double pricePer1mExp = exp == 0.0 ? 0.0 : price / exp * 1_000_000;
+                        String string = Utils.formatCommas((long) pricePer1mExp);
+                        tooltip.add(i + 1, "§6 " + string + " coins/1m exp");
+                        break;
+                    }
                 }
             }
         }

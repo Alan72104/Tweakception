@@ -5,6 +5,7 @@ import a7.tweakception.Tweakception;
 import a7.tweakception.tweaks.GlobalTweaks;
 import a7.tweakception.utils.DumpUtils;
 import a7.tweakception.utils.McUtils;
+import a7.tweakception.utils.Utils;
 import net.minecraft.block.Block;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
@@ -687,6 +688,20 @@ public class TweakceptionCommand extends CommandBase
                             sendChat("Cannot create file");
                     }))
             );
+        }
+        {
+            addSub(new Command("setyaw",
+                args ->
+                {
+                    if (args.length > 0)
+                        McUtils.getPlayer().rotationYaw = Utils.clamp(toFloat(args[0]), -180, 180);
+                }));
+            addSub(new Command("setpitch",
+                args ->
+                {
+                    if (args.length > 0)
+                        McUtils.getPlayer().rotationPitch = Utils.clamp(toFloat(args[0]), -90, 90);
+                }));
         }
         // dev
         {

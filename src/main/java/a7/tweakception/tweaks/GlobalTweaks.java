@@ -946,6 +946,7 @@ public class GlobalTweaks extends Tweak
                 {
                     int t = 1;
                     tooltip.add(i + t++, "§7 Base: 4.317 m/s");
+                    tooltip.add(i + t++, "§7 5 blocks: 93%");
                     tooltip.add(i + t++, "§7 5 m/s: 116%");
                     tooltip.add(i + t++, "§7 3 blocks: 155%");
                     tooltip.add(i + t++, "§7 10 m/s: 232%");

@@ -1511,13 +1511,18 @@ public class GlobalTweaks extends Tweak
         return c.afkSkipWorldRendering;
     }
     
-    public void toggleQuickCraftWhitelist(String id)
+    public boolean toggleQuickCraftWhitelist(String id)
     {
         if (c.quickCraftWhitelist.contains(id))
+        {
             c.quickCraftWhitelist.remove(id);
+            return false;
+        }
         else
+        {
             c.quickCraftWhitelist.add(id);
-        McUtils.playCoolDing();
+            return true;
+        }
     }
     
     public String registerChatAction(Runnable action, int timeoutTicks, Runnable timeoutAction)

@@ -153,8 +153,10 @@ public abstract class MixinGuiContainer extends GuiScreen
                 String id = Utils.getSkyblockItemId(slot.getStack());
                 if (id != null)
                 {
-                    Tweakception.globalTweaks.toggleQuickCraftWhitelist(id);
-                    McUtils.playCoolDing();
+                    if (Tweakception.globalTweaks.toggleQuickCraftWhitelist(id))
+                        McUtils.playCoolDing();
+                    else
+                        McUtils.playCoolDing(0.3f);
                 }
             }
             

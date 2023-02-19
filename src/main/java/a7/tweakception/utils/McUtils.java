@@ -253,9 +253,14 @@ public class McUtils
     
     public static void playCoolDing()
     {
+        playCoolDing(0.943f);
+    }
+    
+    public static void playCoolDing(float pitch)
+    {
         EntityPlayerSP p = McUtils.getPlayer();
         ISound sound = new PositionedSoundRecord(new ResourceLocation("random.orb"),
-            1.0f, 0.943f, (float) p.posX, (float) p.posY, (float) p.posZ);
+            1.0f, pitch, (float) p.posX, (float) p.posY, (float) p.posZ);
         
         float oldLevel = getMc().gameSettings.getSoundLevel(SoundCategory.PLAYERS);
         getMc().gameSettings.setSoundLevel(SoundCategory.PLAYERS, 1);

@@ -56,13 +56,13 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Queue;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static a7.tweakception.utils.McUtils.*;
 import static a7.tweakception.utils.Utils.f;
-import static a7.tweakception.utils.Utils.parseDouble;
 
 public class GlobalTweaks extends Tweak
 {
@@ -116,6 +116,8 @@ public class GlobalTweaks extends Tweak
         public int snipeWarpDelayTicks = 40;
         public Set<String> strangerWhitelist = new TreeSet<>();
         public boolean ranchersBootsTooltipSpeedNote = false;
+        public boolean displayPersonalCompactorItems = true;
+        public boolean displayPersonalDeletorItems = true;
     }
     
     private final GlobalTweaksConfig c;
@@ -884,6 +886,7 @@ public class GlobalTweaks extends Tweak
     public void onItemTooltip(ItemTooltipEvent event)
     {
         List<String> tooltip = event.toolTip;
+        ItemStack itemStack = event.itemStack;
         
         if (c.disableTooltips)
         {
@@ -891,9 +894,9 @@ public class GlobalTweaks extends Tweak
             return;
         }
         
-        if (c.tooltipDisplaySkyblockItemId && event.itemStack != null)
+        if (c.tooltipDisplaySkyblockItemId && itemStack != null)
         {
-            String id = Utils.getSkyblockItemId(event.itemStack);
+            String id = Utils.getSkyblockItemId(itemStack);
             if (id != null && !id.isEmpty())
             {
                 tooltip.add("ID: " + id);
@@ -937,7 +940,7 @@ public class GlobalTweaks extends Tweak
         }
         
         if (c.ranchersBootsTooltipSpeedNote &&
-            "RANCHERS_BOOTS".equals(Utils.getSkyblockItemId(event.itemStack)) &&
+            "RANCHERS_BOOTS".equals(Utils.getSkyblockItemId(itemStack)) &&
             Keyboard.isKeyDown(Keyboard.KEY_LCONTROL))
         {
             for (int i = 0; i < tooltip.size(); i++)
@@ -966,7 +969,7 @@ public class GlobalTweaks extends Tweak
             {
                 if (auctionPriceMatcher.reset(tooltip.get(i)).find())
                 {
-                    NBTTagCompound extra = McUtils.getExtraAttributes(event.itemStack);
+                    NBTTagCompound extra = McUtils.getExtraAttributes(itemStack);
                     if (extra != null && petItemJsonExpMatcher.reset(extra.getString("petInfo")).find())
                     {
                         double price = Utils.parseDouble(auctionPriceMatcher.group(1));
@@ -978,6 +981,37 @@ public class GlobalTweaks extends Tweak
                     }
                 }
             }
+        }
+    
+        Consumer<String> addTheItems = keyStart ->
+        {
+            NBTTagCompound extra = getExtraAttributes(itemStack);
+            if (extra == null)
+                return;
+            TreeMap<Integer, String> map = new TreeMap<>();
+            for (String key : extra.getKeySet())
+            {
+                if (key.startsWith(keyStart))
+                {
+                    int index = Utils.parseInt(key.split(keyStart, 2)[1]);
+                    map.put(index, extra.getString(key));
+                }
+            }
+            for (Map.Entry<Integer, String> entry : map.entrySet())
+                tooltip.add("Item " + (entry.getKey() + 1) + ": " + entry.getValue());
+        };
+        
+        if (c.displayPersonalCompactorItems && itemStack != null &&
+            Utils.getSkyblockItemId(itemStack) != null &&
+            Utils.getSkyblockItemId(itemStack).startsWith("PERSONAL_COMPACTOR_"))
+        {
+            addTheItems.accept("personal_compact_");
+        }
+        else if (c.displayPersonalDeletorItems && itemStack != null &&
+            Utils.getSkyblockItemId(itemStack) != null &&
+            Utils.getSkyblockItemId(itemStack).startsWith("PERSONAL_DELETOR_"))
+        {
+            addTheItems.accept("personal_deletor_");
         }
     }
     
@@ -2681,6 +2715,18 @@ public class GlobalTweaks extends Tweak
     {
         c.ranchersBootsTooltipSpeedNote = !c.ranchersBootsTooltipSpeedNote;
         sendChat("GT-RanchersBootsTooltipSpeedNote: toggled " + c.ranchersBootsTooltipSpeedNote);
+    }
+    
+    public void toggleDisplayPersonalCompactorItems()
+    {
+        c.displayPersonalCompactorItems = !c.displayPersonalCompactorItems;
+        sendChat("GT-DisplayPersonalCompactorItems: toggled " + c.displayPersonalCompactorItems);
+    }
+    
+    public void toggleDisplayPersonalDeletorItems()
+    {
+        c.displayPersonalDeletorItems = !c.displayPersonalDeletorItems;
+        sendChat("GT-DisplayPersonalDeletorItems: toggled " + c.displayPersonalDeletorItems);
     }
     
     // endregion Commands

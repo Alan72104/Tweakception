@@ -102,6 +102,8 @@ All command prefix - /tc
 - gt championoverlay incrementresetdelay `[int secs]` - **Sets the increment number reset duration, leave blank to reset**
 - gt copylocation - **Copies raw current location to clipboard**
 - gt disabletooltips
+- gt displaypersonalcompactoritems - **Adds the items in the format of "Item 123: id" in the tooltip**
+- gt displaypersonaldeletoritems
 - gt drawselectedentityoutline
 - gt drawselectedentityoutline width `[float w]`
 - gt drawselectedentityoutline color `[int r]` `[int g]` `[int b]` `[int a]`

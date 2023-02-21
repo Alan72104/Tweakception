@@ -47,6 +47,7 @@ public class Tweakception
     public static EnchantingTweaks enchantingTweaks;
     public static BazaarTweaks bazaarTweaks;
     public static AutoRunes autoRunes;
+    public static GardenTweaks gardenTweaks;
     
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) throws Exception
@@ -73,6 +74,7 @@ public class Tweakception
         enchantingTweaks = new EnchantingTweaks(configuration);
         bazaarTweaks = new BazaarTweaks(configuration);
         autoRunes = new AutoRunes(configuration);
+        gardenTweaks = new GardenTweaks(configuration);
         
         ClientCommandHandler.instance.registerCommand(new TweakceptionCommand());
         MinecraftForge.EVENT_BUS.register(inGameEventDispatcher);

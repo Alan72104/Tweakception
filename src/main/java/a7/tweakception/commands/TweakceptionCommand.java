@@ -455,6 +455,14 @@ public class TweakceptionCommand extends CommandBase
                 ).setVisibility(false)
             ));
         }
+        // garden
+        {
+            addSub(new Command("garden",
+                null,
+                new Command("visitororderneuprice",
+                    args -> Tweakception.gardenTweaks.toggleDisplayVisitorOrderNeuPrice())
+            ));
+        }
         // slayer
         {
             addSub(new Command("slayer",

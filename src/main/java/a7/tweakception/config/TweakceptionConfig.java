@@ -19,4 +19,5 @@ public class TweakceptionConfig
     public EnchantingTweaks.EnchantingTweaksConfig enchantingTweaks = new EnchantingTweaks.EnchantingTweaksConfig();
     public BazaarTweaks.BazaarTweaksConfig bazaarTweaks = new BazaarTweaks.BazaarTweaksConfig();
     public AutoRunes.AutoRunesConfig autoRunes = new AutoRunes.AutoRunesConfig();
+    public GardenTweaks.GardenTweaksConfig gardenTweaks = new GardenTweaks.GardenTweaksConfig();
 }

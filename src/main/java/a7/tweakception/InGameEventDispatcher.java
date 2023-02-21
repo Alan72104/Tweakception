@@ -145,6 +145,7 @@ public class InGameEventDispatcher
         enchantingTweaks.onTick(event);
         bazaarTweaks.onTick(event);
         autoRunes.onTick(event);
+        gardenTweaks.onTick(event);
         overlayManager.onTick(event);
         
         endFuncAndAddNum(event.phase, 0);
@@ -326,6 +327,7 @@ public class InGameEventDispatcher
         
         dungeonTweaks.onItemTooltip(event);
         tuningTweaks.onItemTooltip(event);
+        gardenTweaks.onItemTooltip(event);
         globalTweaks.onItemTooltip(event);
     }
     

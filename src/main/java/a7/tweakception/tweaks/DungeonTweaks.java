@@ -105,6 +105,7 @@ public class DungeonTweaks extends Tweak
         public boolean trackShootingSpeed = false;
         public boolean trackWitherDamageTags = false;
         public boolean autoSwapSpiritSceptreAote = false;
+        public boolean autoSwapHyperionAote = false;
         public int damageTagHistoryTimeoutTicks = 20 * 30;
         public int damageTagTrackingCount = 10;
         public int damageHistoryOverlayMaxLines = 15;
@@ -1451,6 +1452,11 @@ public class DungeonTweaks extends Tweak
         return c.autoSwapSpiritSceptreAote;
     }
     
+    public boolean IsAutoSwapHyperionAoteOn()
+    {
+        return c.autoSwapHyperionAote;
+    }
+    
     // endregion Feature access
     
     // region Overlays
@@ -2285,6 +2291,12 @@ public class DungeonTweaks extends Tweak
     {
         c.autoSwapSpiritSceptreAote = !c.autoSwapSpiritSceptreAote;
         sendChat("DT-AutoSwapSpiritSceptreAote: toggled " + c.autoSwapSpiritSceptreAote);
+    }
+    
+    public void toggleAutoSwapHyperionAote()
+    {
+        c.autoSwapHyperionAote = !c.autoSwapHyperionAote;
+        sendChat("DT-AutoSwapHyperionAote: toggled " + c.autoSwapHyperionAote);
     }
     
     // endregion Commands

@@ -50,6 +50,8 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.dungeonTweaks.toggleAutoSalvage()),
                 new Command("autoswapsceptreaote",
                     args -> Tweakception.dungeonTweaks.toggleAutoSwapSpiritSceptreAote()),
+                new Command("autoswaphypeaote",
+                    args -> Tweakception.dungeonTweaks.toggleAutoSwapHyperionAote()),
                 new Command("blockopheliaclicks",
                     args -> Tweakception.dungeonTweaks.toggleBlockOpheliaShopClicks()),
                 new Command("blockrightclick",

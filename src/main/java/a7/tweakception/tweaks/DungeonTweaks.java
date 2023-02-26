@@ -932,6 +932,27 @@ public class DungeonTweaks extends Tweak
         }
     }
     
+    public void onChatReceivedGlobal(ClientChatReceivedEvent event)
+    {
+        if (event.type != 0) return;
+    
+        String msg = event.message.getUnformattedText();
+        if (c.autoJoinParty &&
+            msg.startsWith("-----------------------------------------------------"))
+        {
+            if (partyRequestMatcher.reset(msg).find())
+            {
+                String name = partyRequestMatcher.group(1)/*.replaceAll("[.*]", "").trim()*/.toLowerCase();
+                if (!c.autoJoinPartyWhitelistEnable || c.autoJoinPartyOwners.contains(name))
+                {
+                    sendChat("DT-AutoJoinParty: joining " + name + "'s party" +
+                        (!c.autoJoinPartyWhitelistEnable ? " (whitelist disabled)" : ""));
+                    McUtils.getPlayer().sendChatMessage("/p " + name);
+                }
+            }
+        }
+    }
+    
     public void onChatReceived(ClientChatReceivedEvent event)
     {
         if (event.type != 0) return;
@@ -1003,20 +1024,6 @@ public class DungeonTweaks extends Tweak
                 else
                 {
                     sendChat("DT-TrackMaskUsage: cannot retrieve the id of your mask (or not registered), this will not be tracked!");
-                }
-            }
-        }
-        else if (c.autoJoinParty &&
-            msg.startsWith("-----------------------------------------------------"))
-        {
-            if (partyRequestMatcher.reset(msg).find())
-            {
-                String name = partyRequestMatcher.group(1)/*.replaceAll("[.*]", "").trim()*/.toLowerCase();
-                if (!c.autoJoinPartyWhitelistEnable || c.autoJoinPartyOwners.contains(name))
-                {
-                    sendChat("DT-AutoJoinParty: joining " + name + "'s party" +
-                        (!c.autoJoinPartyWhitelistEnable ? " (whitelist disabled)" : ""));
-                    McUtils.getPlayer().sendChatMessage("/p " + name);
                 }
             }
         }

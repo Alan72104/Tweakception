@@ -242,6 +242,7 @@ public class InGameEventDispatcher
     public void onClientChatReceived(ClientChatReceivedEvent event)
     {
         globalTweaks.onChatReceivedGlobal(event);
+        dungeonTweaks.onChatReceivedGlobal(event);
         if (!isInSkyblock()) return;
         
         globalTweaks.onChatReceived(event);

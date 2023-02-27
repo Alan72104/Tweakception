@@ -247,13 +247,19 @@ public class SlayerTweaks extends Tweak
                 {
                     switchingSlot = true;
                     int lastSlot = getPlayer().inventory.currentItem;
-                    getPlayer().inventory.currentItem = wandSlot;
-                    Tweakception.scheduler.addDelayed(() -> getMc().rightClickMouse(), 3)
-                        .thenDelayed(() ->
-                        {
+                    getPlayer().inventory.currentItem = wandSlot; // Switch 2 ticks before
+                    
+                    Tweakception.scheduler.addDelayed(() ->
+                    {
+                        getPlayer().inventory.currentItem = wandSlot; // Or again in the same tick
+                        getMc().rightClickMouse();
+                    }, 2)
+                    .thenDelayed(() ->
+                    {
+                        if (getPlayer().inventory.currentItem == wandSlot)
                             getPlayer().inventory.currentItem = lastSlot;
-                            switchingSlot = false;
-                        }, 5);
+                        switchingSlot = false;
+                    }, 3);
                 }
             }
         }

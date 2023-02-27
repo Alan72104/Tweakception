@@ -324,13 +324,14 @@ public class SlayerTweaks extends Tweak
     {
         if (autoHealWand && event.type == 2)
         {
-            String[] sections = McUtils.cleanColor(event.message.getFormattedText()).split(" {3,}");
+            String[] sections = event.message.getFormattedText().split(" {3,}");
             for (String sec : sections)
             {
                 if (healthMatcher.reset(sec).matches())
                 {
                     currentHealth = Utils.parseInt(healthMatcher.group("health"));
                     maxHealth = Utils.parseInt(healthMatcher.group("maxHealth"));
+//                    sendChatf("hp: %d max: %d", currentHealth, maxHealth);
                     break;
                 }
             }
@@ -467,7 +468,7 @@ public class SlayerTweaks extends Tweak
     
     public void setAutoHealWandHealthThreshold(int percent)
     {
-        c.autoHealWandHealthThreshold = percent > 0 ? Utils.clamp(percent, 10, 90) :
+        c.autoHealWandHealthThreshold = percent > 0 ? Utils.clamp(percent, 1, 99) :
             new SlayerTweaksConfig().autoHealWandHealthThreshold;
         sendChat("ST-AutoHealWand: set health threshold to " + c.autoHealWandHealthThreshold);
     }

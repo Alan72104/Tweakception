@@ -4,6 +4,10 @@ import net.minecraft.util.AxisAlignedBB;
 
 public enum SkyblockIsland
 {
+    PRIVATE_ISLAND("Your Island", new String[]
+    {
+        "Your Island"
+    }),
     HUB("Hub", new String[]
     {
         "Archery Range",

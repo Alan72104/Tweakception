@@ -282,7 +282,7 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.globalTweaks.toggleEnterToCloseNumberTypingSign()),
                 new Command("fakepowerscrolls",
                     args -> Tweakception.globalTweaks.toggleFakePowerScrolls()),
-                new Command("fakeStars",
+                new Command("fakestars",
                     args -> Tweakception.globalTweaks.toggleFakeStars(),
                     new Command("red",
                         args -> Tweakception.globalTweaks.setFakeStarsRed(args.length > 0 ? toInt(args[0]) : 0)),

@@ -212,7 +212,7 @@ public class GlobalTweaks extends Tweak
     
     private enum InvFeature
     {
-        None, DropGiftShit, MoveGift, AutoDropGiftShit
+        None, DropGiftShit, MoveGift, AutoDropGiftShit, DumpItems
     }
     
     static
@@ -473,25 +473,33 @@ public class GlobalTweaks extends Tweak
                 }
             }
             
-            if (c.giftFeatures && getMc().currentScreen instanceof GuiInventory)
+            boolean isInv = getMc().currentScreen instanceof GuiInventory;
+            boolean isChest = getMc().currentScreen instanceof GuiChest;
+            
+            if (c.giftFeatures && (isInv || isChest))
             {
                 if (invFeature == InvFeature.None)
                 {
-                    if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) && Keyboard.isKeyDown(Keyboard.KEY_D))
+                    if (isInv && Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) && Keyboard.isKeyDown(Keyboard.KEY_D))
                     {
                         invFeatureIndex = 9;
                         invFeature = InvFeature.AutoDropGiftShit;
                         stashEmptied = false;
                     }
-                    else if (Keyboard.isKeyDown(Keyboard.KEY_D))
+                    else if (isInv && Keyboard.isKeyDown(Keyboard.KEY_D))
                     {
                         invFeatureIndex = 9;
                         invFeature = InvFeature.DropGiftShit;
                     }
-                    else if (Keyboard.isKeyDown(Keyboard.KEY_M))
+                    else if (isInv && Keyboard.isKeyDown(Keyboard.KEY_M))
                     {
                         invFeatureIndex = 0;
                         invFeature = InvFeature.MoveGift;
+                    }
+                    else if (isChest && Keyboard.isKeyDown(Keyboard.KEY_D) && getCurrentIsland() == SkyblockIsland.PRIVATE_ISLAND)
+                    {
+                        invFeatureIndex = 0;
+                        invFeature = InvFeature.DumpItems;
                     }
                 }
                 
@@ -508,6 +516,9 @@ public class GlobalTweaks extends Tweak
                             break;
                         case AutoDropGiftShit:
                             invAutoDropGiftShit();
+                            break;
+                        case DumpItems:
+                            dumpItemsToChest();
                             break;
                     }
                 }
@@ -535,7 +546,7 @@ public class GlobalTweaks extends Tweak
                     {
                         List<String> playerList = getPlayerListFromTabList();
                         
-                        if (playerList.size() <= 40 - 2)
+                        if (playerList != null && playerList.size() <= 40 - 2)
                         {
                             boolean found = false;
                             for (String name : playerList)
@@ -633,9 +644,9 @@ public class GlobalTweaks extends Tweak
     {
         List<ItemStack> inv = ((GuiInventory) getMc().currentScreen).inventorySlots.getInventory();
         HashSet<String> gifts = Utils.hashSet("WHITE_GIFT", "GREEN_GIFT", "RED_GIFT");
+        // Hotbar index
         for (; invFeatureIndex <= 7; invFeatureIndex++)
         {
-            // Hotbar
             {
                 ItemStack stack = inv.get(36 + invFeatureIndex);
                 String id = Utils.getSkyblockItemId(stack);
@@ -643,21 +654,21 @@ public class GlobalTweaks extends Tweak
                     continue;
             }
             
-            int backpackGiftSlot = 0;
+            int invGiftSlot = 0;
             for (int backpack = 9; backpack <= 35; backpack++)
             {
                 ItemStack stack = inv.get(backpack);
                 String id = Utils.getSkyblockItemId(stack);
                 if (stack != null && id != null && gifts.contains(id))
                 {
-                    backpackGiftSlot = backpack;
+                    invGiftSlot = backpack;
                     break;
                 }
             }
             
-            if (backpackGiftSlot != 0)
+            if (invGiftSlot != 0)
             {
-                getMc().playerController.windowClick(0, backpackGiftSlot,
+                getMc().playerController.windowClick(0, invGiftSlot,
                     invFeatureIndex, 2, getPlayer());
                 invFeatureLastTicks = getTicks();
                 invFeatureClickDelay = 3 + getWorld().rand.nextInt(3);
@@ -685,6 +696,71 @@ public class GlobalTweaks extends Tweak
                 getPlayer().sendChatMessage("/pickupstash");
             }
         }
+    }
+    
+    private void dumpItemsToChest()
+    {
+        GuiChest chest = (GuiChest) McUtils.getMc().currentScreen;
+        ContainerChest container = (ContainerChest) chest.inventorySlots;
+        IInventory inv = container.getLowerChestInventory();
+        if (inv.getSizeInventory() != 54)
+        {
+            invFeature = InvFeature.None;
+            return;
+        }
+        
+        ItemStack firstStack = inv.getStackInSlot(0);
+        if (firstStack == null)
+        {
+            invFeature = InvFeature.None;
+            return;
+        }
+        
+        boolean hasEmptySlot = false;
+        for (int i = 0; i < 54; i++)
+        {
+            ItemStack stack = inv.getStackInSlot(i);
+            if (stack == null || stack.stackSize > 1 && stack.stackSize < 64)
+            {
+                hasEmptySlot = true;
+                break;
+            }
+        }
+        
+        if (!hasEmptySlot)
+        {
+            invFeature = InvFeature.None;
+            return;
+        }
+        
+        String targetId = Utils.getSkyblockItemId(firstStack);
+        if (targetId == null)
+        {
+            invFeature = InvFeature.None;
+            return;
+        }
+        
+        for (; invFeatureIndex < 36; invFeatureIndex++)
+        {
+            if (invFeatureIndex == 8)
+                continue;
+            
+            ItemStack stack = getPlayer().inventory.getStackInSlot(invFeatureIndex);
+            String id = Utils.getSkyblockItemId(stack);
+            if (stack != null && id != null && id.equals(targetId))
+            {
+                if (invFeatureIndex < 9)
+                    getMc().playerController.windowClick(container.windowId, 54 + 27 + invFeatureIndex, 0, 1, getPlayer());
+                else
+                    getMc().playerController.windowClick(container.windowId, 54 + invFeatureIndex - 9, 0, 1, getPlayer());
+                invFeatureLastTicks = getTicks();
+                invFeatureClickDelay = 3 + getWorld().rand.nextInt(3);
+                invFeatureIndex++;
+                return;
+            }
+        }
+        
+        invFeature = InvFeature.None;
     }
     
     public void onEntityUpdate(LivingEvent.LivingUpdateEvent event)
@@ -1415,7 +1491,7 @@ public class GlobalTweaks extends Tweak
         return lastWorldJoinTicks;
     }
     
-    // Returns a new list, or empty list if both list sections are not in sync
+    // Returns a new list, or null if both list sections (count) are not in sync or no list
     public List<String> getPlayerListFromTabList()
     {
         if (playerListUpdatedThisTick)
@@ -1426,6 +1502,7 @@ public class GlobalTweaks extends Tweak
         playerList.clear();
         playerListUpdatedThisTick = true;
         
+        boolean foundSection = false;
         if (list.size() >= 80)
         {
             list = list.subList(0, 80);
@@ -1437,11 +1514,12 @@ public class GlobalTweaks extends Tweak
                 NetworkPlayerInfo sectionEle = list.get(i);
                 if (tabListPlayerSectionNameMatcher.reset(tabList.getPlayerName(sectionEle)).matches())
                 {
+                    foundSection = true;
                     int playerCountNew = Integer.parseInt(tabListPlayerSectionNameMatcher.group(1));
                     if (i != 0 && playerCount != playerCountNew)
                     {
                         playerList.clear();
-                        return new ArrayList<>(playerList);
+                        return null;
                     }
                     playerCount = playerCountNew;
                     
@@ -1469,7 +1547,10 @@ public class GlobalTweaks extends Tweak
             }
         }
         
-        return new ArrayList<>(playerList);
+        if (foundSection)
+            return new ArrayList<>(playerList);
+        else
+            return null;
     }
     
     // endregion Misc

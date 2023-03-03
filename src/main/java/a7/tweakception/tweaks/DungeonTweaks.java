@@ -1391,6 +1391,7 @@ public class DungeonTweaks extends Tweak
             {
                 final int TAG_COMPOUND = net.minecraftforge.common.util.Constants.NBT.TAG_COMPOUND;
                 NBTTagList items = invNbt.getTagList("i", TAG_COMPOUND);
+                Set<String> witherBladeIds = Utils.hashSet("HYPERION", "SCYLLA", "VALKYRIE", "ASTRAEA");
                 for (int i = 0; i < items.tagCount(); i++)
                 {
                     NBTTagCompound item = items.getCompoundTagAt(i);
@@ -1405,7 +1406,7 @@ public class DungeonTweaks extends Tweak
                         String id = extra.getString("id");
                         if (id != null)
                         {
-                            if (id.equals("HYPERION") || id.equals("SCYLLA") || id.equals("VALKYRIE") || id.equals("ASTRAEA"))
+                            if (witherBladeIds.contains(id))
                                 wBlade++;
                             else if (id.equals("TERMINATOR"))
                                 term++;

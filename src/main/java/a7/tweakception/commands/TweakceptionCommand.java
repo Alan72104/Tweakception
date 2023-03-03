@@ -3,6 +3,7 @@ package a7.tweakception.commands;
 import a7.tweakception.LagSpikeWatcher;
 import a7.tweakception.Tweakception;
 import a7.tweakception.tweaks.GlobalTweaks;
+import a7.tweakception.tweaks.Tweak;
 import a7.tweakception.utils.DumpUtils;
 import a7.tweakception.utils.McUtils;
 import a7.tweakception.utils.Utils;
@@ -704,6 +705,23 @@ public class TweakceptionCommand extends CommandBase
             );
         }
         {
+            addSub(new Command("guildbridge",
+                args -> Tweakception.guildBridge.status(),
+                new Command("connent",
+                    args ->
+                    {
+                        if (args.length >= 1)
+                            Tweakception.guildBridge.connect(toLong(args[0]));
+                        else
+                            sendChat("Need 1 arg");
+                    }),
+                new Command("disconnect",
+                    args -> Tweakception.guildBridge.disconnect()),
+                new Command("setlevenshteinthreshold",
+                    args -> Tweakception.guildBridge.setLevenshteinThreshold(args.length > 0 ? toInt(args[0]) : -1))
+            ));
+        }
+        {
             addSub(new Command("setyaw",
                 args ->
                 {
@@ -878,6 +896,12 @@ public class TweakceptionCommand extends CommandBase
     private static int toInt(String s)
     {
         return Integer.parseInt(s.replaceAll(",$", ""));
+    }
+    
+    
+    private static long toLong(String s)
+    {
+        return Long.parseLong(s.replaceAll(",$", ""));
     }
     
     private static float toFloat(String s)

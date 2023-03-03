@@ -129,6 +129,7 @@ public class GlobalTweaks extends Tweak
     private static boolean islandUpdatedThisTick = false;
     private static boolean playerListUpdatedThisTick = false;
     private static boolean isInSkyblock = false;
+    private static boolean isInHypixel = false;
     private static boolean overrideIslandDetection = false;
     private static SkyblockIsland prevIsland = null;
     private static SkyblockIsland currentIsland = null;
@@ -1257,6 +1258,7 @@ public class GlobalTweaks extends Tweak
         
         Minecraft mc = getMc();
         isInSkyblock = false;
+        isInHypixel = false;
         currentIsland = null;
         currentLocationRaw = "";
         
@@ -1269,6 +1271,7 @@ public class GlobalTweaks extends Tweak
         if (mc.theWorld == null || mc.thePlayer == null || serverBrand == null ||
             !serverBrand.toLowerCase().contains("hypixel"))
             return;
+        isInHypixel = true;
         Scoreboard scoreboard = mc.theWorld.getScoreboard();
         ScoreObjective sidebarObjective = scoreboard.getObjectiveInDisplaySlot(1);
         if (sidebarObjective == null)
@@ -1436,6 +1439,11 @@ public class GlobalTweaks extends Tweak
         return isInSkyblock;
     }
     
+    public static boolean isInHypixel()
+    {
+        return isInHypixel;
+    }
+    
     public static String getCurrentLocationRaw()
     {
         return currentLocationRawCleaned;
@@ -1472,6 +1480,7 @@ public class GlobalTweaks extends Tweak
                 {
                     overrideIslandDetection = true;
                     isInSkyblock = true;
+                    isInHypixel = true;
                     currentIsland = island;
                     islandUpdatedThisTick = true;
                     sendChat("GT: overridden current island with " + island.name);

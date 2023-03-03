@@ -147,6 +147,7 @@ public class InGameEventDispatcher
         autoRunes.onTick(event);
         gardenTweaks.onTick(event);
         overlayManager.onTick(event);
+        guildBridge.onTick(event);
         
         endFuncAndAddNum(event.phase, 0);
     }
@@ -243,6 +244,7 @@ public class InGameEventDispatcher
     {
         globalTweaks.onChatReceivedGlobal(event);
         dungeonTweaks.onChatReceivedGlobal(event);
+        guildBridge.onChatReceivedGlobal(event);
         if (!isInSkyblock()) return;
         
         globalTweaks.onChatReceived(event);

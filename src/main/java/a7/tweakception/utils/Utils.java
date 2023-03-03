@@ -189,12 +189,12 @@ public class Utils
             ms % 1_000);
     }
     
-    public static <T> void removeWhile(Collection<T> queue, Predicate<T> predicate)
+    public static <T> void removeWhile(Iterable<T> queue, Predicate<T> predicate)
     {
         removeWhile(queue, predicate, null);
     }
     
-    public static <T> void removeWhile(Collection<T> queue, Predicate<T> predicate, Consumer<T> beforeRemove)
+    public static <T> void removeWhile(Iterable<T> queue, Predicate<T> predicate, Consumer<T> beforeRemove)
     {
         Iterator<T> it2 = queue.iterator();
         while (it2.hasNext())

@@ -4,6 +4,7 @@ import a7.tweakception.commands.TweakceptionCommand;
 import a7.tweakception.config.Configuration;
 import a7.tweakception.overlay.OverlayManager;
 import a7.tweakception.tweaks.*;
+import a7.tweakception.utils.DiscordGuildBridge;
 import net.minecraft.block.Block;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
@@ -48,6 +49,7 @@ public class Tweakception
     public static BazaarTweaks bazaarTweaks;
     public static AutoRunes autoRunes;
     public static GardenTweaks gardenTweaks;
+    public static DiscordGuildBridge guildBridge;
     
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) throws Exception
@@ -75,6 +77,7 @@ public class Tweakception
         bazaarTweaks = new BazaarTweaks(configuration);
         autoRunes = new AutoRunes(configuration);
         gardenTweaks = new GardenTweaks(configuration);
+        guildBridge = new DiscordGuildBridge();
         
         ClientCommandHandler.instance.registerCommand(new TweakceptionCommand());
         MinecraftForge.EVENT_BUS.register(inGameEventDispatcher);
@@ -88,6 +91,7 @@ public class Tweakception
                 threadPool.shutdownNow();
                 LagSpikeWatcher.stopWatcher();
                 globalTweaks.getPacketLogger().stop();
+                guildBridge.disconnectNow();
             }
             catch (Exception ignored)
             {

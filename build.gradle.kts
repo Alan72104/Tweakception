@@ -104,6 +104,10 @@ repositories {
 dependencies {
     implementation("org.spongepowered:mixin:0.7.11-SNAPSHOT")
     annotationProcessor("org.spongepowered:mixin:0.7.11-SNAPSHOT")
+    implementation("org.java-websocket:Java-WebSocket:1.5.3")
+    implementation("org.apache.commons:commons-text:1.10.0")
+    implementation("org.slf4j:slf4j-api:1.7.25")
+    testImplementation("org.slf4j:slf4j-simple:1.7.25")
 //    implementation("com.fasterxml.jackson.core:jackson-core:2.13.1")
 //    implementation("info.bliki.wiki:bliki-core:3.1.0")
 //    testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
@@ -140,6 +144,10 @@ tasks.shadowJar {
     )
     dependencies {
         include(dependency("org.spongepowered:mixin:0.7.11-SNAPSHOT"))
+        include(dependency("org.java-websocket:Java-WebSocket:1.5.3"))
+        include(dependency("org.apache.commons:commons-text:1.10.0"))
+        include(dependency("org.slf4j:slf4j-api:1.7.25"))
+        include(dependency("org.slf4j:slf4j-simple:1.7.25"))
 
 //        include(dependency("commons-io:commons-io"))
 //        include(dependency("org.apache.commons:commons-lang3"))

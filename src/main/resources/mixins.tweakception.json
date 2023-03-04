@@ -15,6 +15,7 @@
     "MixinEntityRenderer",
     "MixinGuiContainer",
     "MixinGuiEditSign",
+    "MixinGuiNewChat",
     "MixinGuiScreen",
     "MixinMinecraft",
     "MixinNetHandlerPlayClient",

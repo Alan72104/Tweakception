@@ -118,6 +118,7 @@ public class GlobalTweaks extends Tweak
         public boolean ranchersBootsTooltipSpeedNote = false;
         public boolean displayPersonalCompactorItems = true;
         public boolean displayPersonalDeletorItems = true;
+        public boolean chatLogForceFormatted = false;
     }
     
     private final GlobalTweaksConfig c;
@@ -1787,6 +1788,11 @@ public class GlobalTweaks extends Tweak
         return c.autoSwitchGiftSlot;
     }
     
+    public boolean isChatLogForceFormattedOn()
+    {
+        return c.chatLogForceFormatted;
+    }
+    
     private void trevorStartFromAbiphone()
     {
         int slot = Utils.findInHotbarById(id -> id.startsWith("ABIPHONE_"));
@@ -2817,6 +2823,12 @@ public class GlobalTweaks extends Tweak
     {
         c.displayPersonalDeletorItems = !c.displayPersonalDeletorItems;
         sendChat("GT-DisplayPersonalDeletorItems: toggled " + c.displayPersonalDeletorItems);
+    }
+    
+    public void toggleChatLogForceFormatted()
+    {
+        c.chatLogForceFormatted = !c.chatLogForceFormatted;
+        sendChat("GT-ChatLogForceFormatted: toggled " + c.chatLogForceFormatted);
     }
     
     // endregion Commands

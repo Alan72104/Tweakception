@@ -109,12 +109,13 @@ All command prefix - /tc
 - gt drawselectedentityoutline color `[int r]` `[int g]` `[int b]` `[int a]`
 - gt entertoclosesign
   - **Closes number typing signs when enter is pressed, hold left alt to override**
-  - **It only activates if the second line equals "^^^^^^^^^^^^^^^"**
+  - **It only activates when the 2nd or 3rd line equals only contains ^**
 - gt fakepowerscrolls - **⦾⦾⦾⦾⦾⦾**
 - gt fakestars - **✪✪✪✪✪**
 - gt fakestars red `[int count]`
 - gt fakestars purple `[int count]`
 - gt fakestars aqua `[int count]`
+- gt forceformattedchatlog - **Use formatted chat message when logging if possible**
 - gt gift
   - **Toggles all gift features**
   - **In inventory, press D to drop all gift trash, Ctrl+D to throw trash plus emptying the stash, M to move gifts to hotbar**

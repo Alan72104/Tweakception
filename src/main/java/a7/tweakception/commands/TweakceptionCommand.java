@@ -292,6 +292,8 @@ public class TweakceptionCommand extends CommandBase
                     new Command("aqua",
                         args -> Tweakception.globalTweaks.setFakeStarsAqua(args.length > 0 ? toInt(args[0]) : 0))
                 ),
+                new Command("forceFormattedChatLog",
+                    args -> Tweakception.globalTweaks.toggleChatLogForceFormatted()),
                 new Command("gift",
                     args -> Tweakception.globalTweaks.toggleGiftFeatures(),
                     new Command("autoswitchgiftslot",
@@ -840,7 +842,7 @@ public class TweakceptionCommand extends CommandBase
         {
             for (Command sub : subCommands)
             {
-                if (sub.isVisible() && args[0].equals(sub.getName()))
+                if (sub.isVisible() && args[0].equalsIgnoreCase(sub.getName()))
                 {
                     sub.processCommands(Arrays.copyOfRange(args, 1, args.length));
                     return;
@@ -859,7 +861,7 @@ public class TweakceptionCommand extends CommandBase
             return getPossibleCompletions(args[0], getVisibleSubCommandNames());
         else
             for (Command sub : subCommands)
-                if (sub.isVisible() && args[0].equals(sub.getName()))
+                if (sub.isVisible() && args[0].equalsIgnoreCase(sub.getName()))
                     return sub.getTabCompletions(Arrays.copyOfRange(args, 1, args.length));
         return null;
     }
@@ -882,7 +884,7 @@ public class TweakceptionCommand extends CommandBase
         List<String> list = new ArrayList<>();
         
         for (String opt : opts)
-            if (opt.startsWith(arg))
+            if (opt.toLowerCase().startsWith(arg.toLowerCase()))
                 list.add(opt);
         
         return list;

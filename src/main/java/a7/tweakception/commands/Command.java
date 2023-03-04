@@ -56,7 +56,7 @@ public class Command implements Comparable<Command>
             return getPossibleCompletions(args[0], getVisibleSubCommandNames());
         else
             for (Command sub : subCommands)
-                if (sub.isVisible() && args[0].equals(sub.getName()))
+                if (sub.isVisible() && args[0].equalsIgnoreCase(sub.getName()))
                     return sub.getTabCompletions(Arrays.copyOfRange(args, 1, args.length));
         return null;
     }
@@ -82,10 +82,10 @@ public class Command implements Comparable<Command>
     
     private static List<String> getPossibleCompletions(String arg, List<String> opts)
     {
-        List<String> list = new ArrayList<String>();
+        List<String> list = new ArrayList();
         
         for (String opt : opts)
-            if (opt.startsWith(arg))
+            if (opt.toLowerCase().startsWith(arg.toLowerCase()))
                 list.add(opt);
         
         return list;

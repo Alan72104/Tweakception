@@ -15,19 +15,23 @@ import java.util.regex.Pattern;
 
 import static a7.tweakception.tweaks.GlobalTweaks.getTicks;
 import static a7.tweakception.tweaks.GlobalTweaks.isInHypixel;
-import static a7.tweakception.utils.McUtils.sendChat;
-import static a7.tweakception.utils.McUtils.sendChatf;
+import static a7.tweakception.utils.McUtils.*;
 
 public class DiscordGuildBridge
 {
-    private static final String[] list;
-    private static final Matcher matcher;
-    private static final int defLevenshteinThreshold = 5;
+    private static final String[] LIST;
+    private static final Pattern PATTERN;
+    private static final int DEF_LEVENSHTEIN_THRESHOLD = 5;
+    private static final String SAME_MESSAGE_WARNING = "You cannot say the same message twice!";
+    private final Matcher matcher = PATTERN.matcher("");
     private MinimalDiscordClient client = null;
     private long bridgingChannelId = 0;
-    private final LevenshteinDistance levenshteinDistance = new LevenshteinDistance();
+    private final LevenshteinDistance levenshteinDistance = LevenshteinDistance.getDefaultInstance();
+    // All should be in lower case
     private final ConcurrentHashMap<String, Integer> recentMsgs = new ConcurrentHashMap<>();
-    private int levenshteinThreshold = defLevenshteinThreshold;
+    private int levenshteinThreshold = DEF_LEVENSHTEIN_THRESHOLD;
+    private final Matcher guildChatHeaderMatcher = Pattern.compile(
+        "^(?<rank>\\[[^]]+?] )?(?<name>[A-Za-z0-9_]{1,16})(?<guildRank> \\[[^]]+?])?$").matcher("");
     
     public DiscordGuildBridge()
     {
@@ -58,28 +62,38 @@ public class DiscordGuildBridge
             if (msg.startsWith("Guild > "))
             {
                 msg = msg.substring(8);
-                if (msg.indexOf(':') > -1) // Guild chat
+                // Assumes tht other "Guild > " messages don't contain a :
+                int colon = msg.indexOf(':');
+                if (colon > -1) // Guild chat
                 {
-                    sendToDiscord(msg);
+                    if (guildChatHeaderMatcher.reset(msg.substring(0, colon)).matches())
+                    {
+                        String name = guildChatHeaderMatcher.group("name");
+                        // Of course, when not nicked
+                        boolean fromSelfBridge = name.equalsIgnoreCase(getPlayer().getName()) &&
+                            msg.substring(colon + 2).startsWith("> ");
+                        if (!fromSelfBridge)
+                            sendToDiscord("> "+msg);
+                    }
                 }
                 else if (msg.endsWith(" joined."))
                 {
-                    sendToDiscord(msg);
+                    sendToDiscord("> "+msg);
                 }
                 else if (msg.endsWith(" left."))
                 {
-                    sendToDiscord(msg);
+                    sendToDiscord("> "+msg);
                 }
             }
         }
     }
     
-    private void sendToGuild(String msg, String author)
+    private void sendToGuild(String header, String msg)
     {
         if (isInHypixel() && !recentMsgs.containsKey(msg))
         {
-            recentMsgs.put(msg, getTicks());
-            McUtils.executeCommand("/gc " + author + ": " + msg);
+            recentMsgs.put(msg.toLowerCase(), getTicks());
+            McUtils.executeCommand("/gc " + header + msg);
         }
     }
     
@@ -91,7 +105,7 @@ public class DiscordGuildBridge
         }
     }
     
-    private static String sanitize(String msg)
+    private String sanitize(String msg)
     {
         return matcher.reset(msg).replaceAll("REDACTED");
     }
@@ -144,27 +158,48 @@ public class DiscordGuildBridge
                 boolean system = user.has("system");
                 String content = msg.get("content").getAsString();
                 // Check the correct channel, not from self, not from bot/system, content isn't empty
-                if (!(channelId == bridgingChannelId &&
-                    userId != client.getClientUserId() &&
-                    !bot && !system &&
-                    !content.isEmpty()))
-                {
+                if (channelId != bridgingChannelId)
                     return;
-                }
+                if (userId == client.getClientUserId() &&
+                    (content.startsWith("> ") || content.equals(SAME_MESSAGE_WARNING)))
+                    return;
+                if (bot || system || content.isEmpty())
+                    return;
     
                 JsonObject member = msg.get("member").getAsJsonObject();
                 long guildId = msg.get("guild_id").getAsLong();
                 String username = user.get("username").getAsString();
                 String nick = member.has("nick") ? member.get("nick").isJsonNull() ? null : member.get("nick").getAsString() : null;
                 
-                String contentFinal = sanitize(content);
-                if (recentMsgs.containsKey(contentFinal))
+                // Final output should be: "> name: content"
+                String displayName = sanitize(nick == null ? username : nick);
+                String sanitizedContent = sanitize(content);
+                String displayContent = sanitizedContent.substring(0,
+                    Math.min(100 - 2 - displayName.length() - 2, sanitizedContent.length()));
+                String normalized = displayContent.toLowerCase();
+                boolean spam = false;
+                if (recentMsgs.containsKey(normalized))
+                    spam = true;
+                else
                 {
-                    client.createReply(channelId, "You cannot say the same message twice!", guildId, msg.get("id").getAsLong());
+                    for (String recentMsg : recentMsgs.keySet())
+                    {
+                        int dist = levenshteinDistance.apply(normalized, recentMsg);
+                        if (dist <= 5)
+                        {
+                            spam = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (spam)
+                {
+                    client.createReply(channelId, SAME_MESSAGE_WARNING, guildId, msg.get("id").getAsLong());
                     return;
                 }
-                String displayName = sanitize(nick == null ? username : nick);
-                Tweakception.scheduler.add(() -> sendToGuild(contentFinal, displayName));
+                
+                Tweakception.scheduler.add(() -> sendToGuild("> "+displayName+": ",displayContent));
             });
     }
     
@@ -203,7 +238,7 @@ public class DiscordGuildBridge
     
     public void setLevenshteinThreshold(int t)
     {
-        levenshteinThreshold = t == -1 ? defLevenshteinThreshold : Utils.clamp(t, 0, 100);
+        levenshteinThreshold = t == -1 ? DEF_LEVENSHTEIN_THRESHOLD : Utils.clamp(t, 0, 100);
         sendChat("GB: Set levenshtein threshold to " + levenshteinThreshold);
     }
     
@@ -258,13 +293,12 @@ public class DiscordGuildBridge
             "cmEgcGxheQp1cm9waGlsaWEKdmFnaW5hCnZlbnVzIG1vdW5kCnZpYnJhdG9yCnZpb2xldCB3YW5kCnZvcmFyZXBoaWxpYQp2b3ll" +
             "dXIKdnVsdmEKd2Fuawp3ZXRiYWNrCndldCBkcmVhbQp3aGl0ZSBwb3dlcgp3cmFwcGluZyBtZW4Kd3JpbmtsZWQgc3RhcmZpc2gK" +
             "eWFvaQp5ZWxsb3cgc2hvd2Vycwp5aWZmeQp6b29waGlsaWEK8J+WlQ==";
-        String[] res;
         byte[] decoded = Base64.getDecoder().decode(s);
-        list = new String(decoded, StandardCharsets.UTF_8).split("\\R");
+        LIST = new String(decoded, StandardCharsets.UTF_8).split("\\R");
         StringBuilder sb = new StringBuilder();
-        for (String e : list)
+        for (String e : LIST)
             sb.append(e).append('|');
         sb.deleteCharAt(sb.length() - 1);
-        matcher = Pattern.compile(sb.toString(), Pattern.CASE_INSENSITIVE).matcher("");
+        PATTERN = Pattern.compile(sb.toString(), Pattern.CASE_INSENSITIVE);
     }
 }

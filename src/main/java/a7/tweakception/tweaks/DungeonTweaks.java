@@ -114,6 +114,7 @@ public class DungeonTweaks extends Tweak
         public int totalFragruns = 0;
         public long fastestBloodRush = 0L;
         public long fastestFragrun = 0L;
+        public boolean pickaxeMiddleClickRemoveBlock = false;
     }
     
     private final DungeonTweaksConfig c;
@@ -1464,9 +1465,14 @@ public class DungeonTweaks extends Tweak
         return c.autoSwapSpiritSceptreAote;
     }
     
-    public boolean IsAutoSwapHyperionAoteOn()
+    public boolean isAutoSwapHyperionAoteOn()
     {
         return c.autoSwapHyperionAote;
+    }
+    
+    public boolean isPickaxeMiddleClickRemoveBlockOn()
+    {
+        return c.pickaxeMiddleClickRemoveBlock;
     }
     
     // endregion Feature access
@@ -2309,6 +2315,12 @@ public class DungeonTweaks extends Tweak
     {
         c.autoSwapHyperionAote = !c.autoSwapHyperionAote;
         sendChat("DT-AutoSwapHyperionAote: toggled " + c.autoSwapHyperionAote);
+    }
+    
+    public void togglePickaxeMiddleClickRemoveBlock()
+    {
+        c.pickaxeMiddleClickRemoveBlock = !c.pickaxeMiddleClickRemoveBlock;
+        sendChat("DT-PickaxeMiddleClickRemoveBlock: toggled " + c.pickaxeMiddleClickRemoveBlock);
     }
     
     // endregion Commands

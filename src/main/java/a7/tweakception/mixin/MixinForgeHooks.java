@@ -3,13 +3,19 @@ package a7.tweakception.mixin;
 import a7.tweakception.Tweakception;
 import a7.tweakception.tweaks.GlobalTweaks;
 import a7.tweakception.tweaks.SkyblockIsland;
+import a7.tweakception.tweaks.Tweak;
+import a7.tweakception.utils.McUtils;
 import a7.tweakception.utils.Utils;
+import jdk.nashorn.internal.objects.Global;
+import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeHooks;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,6 +25,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static a7.tweakception.utils.McUtils.getWorld;
 
 @Mixin(ForgeHooks.class)
 public class MixinForgeHooks
@@ -89,6 +97,22 @@ public class MixinForgeHooks
             }
             
             cir.setReturnValue(pickaxeBreakSpeed / blockHardness / 30.0f);
+            cir.cancel();
+        }
+    }
+    
+    @Inject(method = "onPickBlock", at = @At("HEAD"), remap = false, cancellable = true)
+    private static void onPickBlock(MovingObjectPosition target, EntityPlayer player, World world, CallbackInfoReturnable<Boolean> cir)
+    {
+        if (Tweakception.dungeonTweaks.isPickaxeMiddleClickRemoveBlockOn() &&
+            GlobalTweaks.getCurrentIsland() == SkyblockIsland.DUNGEON)
+        {
+            if (target.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK)
+            {
+                BlockPos pos = target.getBlockPos();
+                world.setBlockToAir(pos);
+            }
+            cir.setReturnValue(false);
             cir.cancel();
         }
     }

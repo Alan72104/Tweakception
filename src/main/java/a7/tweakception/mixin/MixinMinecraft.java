@@ -118,7 +118,7 @@ public abstract class MixinMinecraft
         }
         
         if (AOTE_IDS.contains(id) &&
-            Tweakception.dungeonTweaks.IsAutoSwapHyperionAoteOn() &&
+            Tweakception.dungeonTweaks.isAutoSwapHyperionAoteOn() &&
             GlobalTweaks.getCurrentIsland() == SkyblockIsland.DUNGEON && !inAutoSwap)
         {
             slot = Utils.findInHotbarById(WITHER_BLADE_IDS.toArray(new String[0]));
@@ -138,7 +138,7 @@ public abstract class MixinMinecraft
     {
 //        sendChat("rclick block");
         if ((Tweakception.dungeonTweaks.isAutoSwapSpiritSceptreAoteOn() ||
-            Tweakception.dungeonTweaks.IsAutoSwapHyperionAoteOn()) &&
+            Tweakception.dungeonTweaks.isAutoSwapHyperionAoteOn()) &&
             GlobalTweaks.getCurrentIsland() == SkyblockIsland.DUNGEON && !inAutoSwap)
         {
             String id = Utils.getSkyblockItemId(getPlayer().getCurrentEquippedItem());
@@ -205,7 +205,7 @@ public abstract class MixinMinecraft
     {
 //        sendChat("rclick air");
         if ((Tweakception.dungeonTweaks.isAutoSwapSpiritSceptreAoteOn() ||
-            Tweakception.dungeonTweaks.IsAutoSwapHyperionAoteOn()) &&
+            Tweakception.dungeonTweaks.isAutoSwapHyperionAoteOn()) &&
             GlobalTweaks.getCurrentIsland() == SkyblockIsland.DUNGEON && !inAutoSwap)
         {
             String id = Utils.getSkyblockItemId(getPlayer().getCurrentEquippedItem());
@@ -239,7 +239,7 @@ public abstract class MixinMinecraft
     {
 //        sendChat("click mouse");
         if ((Tweakception.dungeonTweaks.isAutoSwapSpiritSceptreAoteOn() ||
-            Tweakception.dungeonTweaks.IsAutoSwapHyperionAoteOn()) &&
+            Tweakception.dungeonTweaks.isAutoSwapHyperionAoteOn()) &&
             GlobalTweaks.getCurrentIsland() == SkyblockIsland.DUNGEON && !inAutoSwap)
         {
             String id = Utils.getSkyblockItemId(getPlayer().getCurrentEquippedItem());
@@ -262,7 +262,7 @@ public abstract class MixinMinecraft
                     (Tweakception.dungeonTweaks.isAutoSwapSpiritSceptreAoteOn() &&
                         id.equals("BAT_WAND") && // Do not swap when attacking with both buttons
                         !Mouse.isButtonDown(1)) ||
-                    (Tweakception.dungeonTweaks.IsAutoSwapHyperionAoteOn() &&
+                    (Tweakception.dungeonTweaks.isAutoSwapHyperionAoteOn() &&
                         WITHER_BLADE_IDS.contains(id))
                 )
                 {
@@ -299,7 +299,7 @@ public abstract class MixinMinecraft
     
         if (Tweakception.dungeonTweaks.isAutoSwapSpiritSceptreAoteOn())
             slot = Utils.findInHotbarById("BAT_WAND");
-        if (slot == -1 && Tweakception.dungeonTweaks.IsAutoSwapHyperionAoteOn())
+        if (slot == -1 && Tweakception.dungeonTweaks.isAutoSwapHyperionAoteOn())
             slot = Utils.findInHotbarById(WITHER_BLADE_IDS.toArray(new String[0]));
         
         return slot;

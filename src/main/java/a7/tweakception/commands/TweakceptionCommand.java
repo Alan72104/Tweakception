@@ -122,6 +122,8 @@ public class TweakceptionCommand extends CommandBase
                     new Command("refreshcooldown",
                         args -> Tweakception.dungeonTweaks.partyFinderRefreshCooldownToggle())
                 ),
+                new Command("pickaxeMiddleClickRemoveBlock",
+                    args -> Tweakception.dungeonTweaks.togglePickaxeMiddleClickRemoveBlock()),
                 new Command("trackdamage",
                     args -> Tweakception.dungeonTweaks.toggleTrackDamageTags(),
                     new Command("noncrit",

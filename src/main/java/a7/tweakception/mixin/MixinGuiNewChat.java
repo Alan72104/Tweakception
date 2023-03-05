@@ -20,7 +20,8 @@ public class MixinGuiNewChat
     
 //    @Redirect(method = "printChatMessageWithOptionalDeletion",
     @Inject(method = "printChatMessageWithOptionalDeletion", cancellable = true,
-        at = @At(value = "INVOKE", target = "Lorg/apache/logging/log4j/Logger;info(Ljava/lang/String;)V")
+        at = @At(value = "INVOKE", shift = At.Shift.AFTER,
+            target = "Lnet/minecraft/client/gui/GuiNewChat;setChatLine(Lnet/minecraft/util/IChatComponent;IIZ)V")
 //        at = @At(value = "INVOKE", opcode = Opcodes.INVOKEINTERFACE,
 //            target = "Lnet/minecraft/util/IChatComponent;getUnformattedText()Ljava/lang/String;"),
 //        slice = @Slice(
@@ -31,13 +32,14 @@ public class MixinGuiNewChat
     private void redirectChatLoggingGetString(IChatComponent chatComponent, int lineId, CallbackInfo ci)
     {
         if (Tweakception.globalTweaks.isChatLogForceFormattedOn())
+        {
             logger.info("[CHAT] " + chatComponent.getFormattedText());
+            ci.cancel();
+        }
         
 //        if (Tweakception.globalTweaks.isCatLogForceFormattedOn())
 //            return chatComponent.getFormattedText();
 //        else
 //            return chatComponent.getUnformattedText();
-        
-        ci.cancel();
     }
 }

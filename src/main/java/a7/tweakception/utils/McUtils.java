@@ -226,7 +226,7 @@ public class McUtils
         {
             if ((int) c > 50000) continue;
             
-            if (c == '\u00a7')
+            if (c == '§')
             {
                 sectionSymbolLast = true;
             }

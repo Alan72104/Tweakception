@@ -12,6 +12,8 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
+import net.minecraft.item.ItemPickaxe;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MovingObjectPosition;
@@ -105,11 +107,15 @@ public class MixinForgeHooks
     private static void onPickBlock(MovingObjectPosition target, EntityPlayer player, World world, CallbackInfoReturnable<Boolean> cir)
     {
         if (Tweakception.dungeonTweaks.isPickaxeMiddleClickRemoveBlockOn() &&
-            GlobalTweaks.getCurrentIsland() == SkyblockIsland.DUNGEON)
+            GlobalTweaks.getCurrentIsland() == SkyblockIsland.DUNGEON &&
+            player.getCurrentEquippedItem() != null &&
+            player.getCurrentEquippedItem().getItem() instanceof ItemPickaxe)
         {
             if (target.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK)
             {
                 BlockPos pos = target.getBlockPos();
+                if (world.getBlockState(pos).getBlock() == Blocks.chest)
+                    return;
                 world.setBlockToAir(pos);
             }
             cir.setReturnValue(false);

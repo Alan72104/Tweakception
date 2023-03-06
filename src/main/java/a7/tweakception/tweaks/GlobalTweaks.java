@@ -212,6 +212,7 @@ public class GlobalTweaks extends Tweak
         "§7(?:Buy it now|Starting bid|Top bid): §6((?:\\d{1,3},?)+) coins$").matcher("");
     private final Matcher petItemJsonExpMatcher = Pattern.compile(
         "\\\"exp\\\":(\\d+.?\\d*E?\\d*)").matcher("");
+    private boolean dojoDisciplineHelper = false;
     
     private enum InvFeature
     {
@@ -1794,6 +1795,11 @@ public class GlobalTweaks extends Tweak
         return c.chatLogForceFormatted;
     }
     
+    public boolean isDojoDisciplineHelperOn()
+    {
+        return dojoDisciplineHelper;
+    }
+    
     private void trevorStartFromAbiphone()
     {
         int slot = Utils.findInHotbarById(id -> id.startsWith("ABIPHONE_"));
@@ -2838,6 +2844,12 @@ public class GlobalTweaks extends Tweak
     {
         c.chatLogForceFormatted = !c.chatLogForceFormatted;
         sendChat("GT-ChatLogForceFormatted: toggled " + c.chatLogForceFormatted);
+    }
+    
+    public void toggleDojoDisciplineHelper()
+    {
+        dojoDisciplineHelper = !dojoDisciplineHelper;
+        sendChat("GT-DojoDisciplineHelper: toggled " + dojoDisciplineHelper);
     }
     
     // endregion Commands

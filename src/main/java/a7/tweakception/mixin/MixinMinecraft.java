@@ -4,12 +4,16 @@ import a7.tweakception.LagSpikeWatcher;
 import a7.tweakception.Tweakception;
 import a7.tweakception.tweaks.GlobalTweaks;
 import a7.tweakception.tweaks.SkyblockIsland;
+import a7.tweakception.utils.MapBuilder;
+import a7.tweakception.utils.McUtils;
 import a7.tweakception.utils.Utils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.PlayerControllerMP;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.EntityRenderer;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MovingObjectPosition;
@@ -25,6 +29,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import static a7.tweakception.utils.McUtils.getPlayer;
@@ -51,6 +57,12 @@ public abstract class MixinMinecraft
     private boolean inAutoSwap = false;
     private static final Set<String> AOTE_IDS = Utils.hashSet("ASPECT_OF_THE_END", "ASPECT_OF_THE_VOID");
     private static final Set<String> WITHER_BLADE_IDS = Utils.hashSet("ASTRAEA", "HYPERION", "SCYLLA", "VALKYRIE");
+    private static final Map<String, String> HELMET_TO_SWORD_IDS = MapBuilder.stringHashMap()
+        .put("LEATHER_HELMET", "WOOD_SWORD")
+        .put("IRON_HELMET", "IRON_SWORD")
+        .put("GOLD_HELMET", "GOLD_SWORD")
+        .put("DIAMOND_HELMET", "DIAMOND_SWORD")
+        .getMap();
     
     @Shadow
     public abstract void rightClickMouse();
@@ -121,7 +133,7 @@ public abstract class MixinMinecraft
             Tweakception.dungeonTweaks.isAutoSwapHyperionAoteOn() &&
             GlobalTweaks.getCurrentIsland() == SkyblockIsland.DUNGEON && !inAutoSwap)
         {
-            slot = Utils.findInHotbarById(WITHER_BLADE_IDS.toArray(new String[0]));
+            slot = Utils.findInHotbarById(WITHER_BLADE_IDS);
             if (slot != -1)
             {
                 getPlayer().inventory.currentItem = slot;
@@ -266,7 +278,7 @@ public abstract class MixinMinecraft
                         WITHER_BLADE_IDS.contains(id))
                 )
                 {
-                    int slot = Utils.findInHotbarById(AOTE_IDS.toArray(new String[0]));
+                    int slot = Utils.findInHotbarById(AOTE_IDS);
                     if (slot != -1)
                     {
                         getPlayer().inventory.currentItem = slot;
@@ -276,6 +288,27 @@ public abstract class MixinMinecraft
                         inAutoSwap = false;
                         
                         ci.cancel();
+                    }
+                }
+            }
+        }
+        else if (Tweakception.globalTweaks.isDojoDisciplineHelperOn() &&
+            objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY)
+        {
+            Entity target = objectMouseOver.entityHit;
+            if (target instanceof EntityZombie)
+            {
+                ItemStack helmet = ((EntityZombie) target).getCurrentArmor(3);
+                if (helmet != null)
+                {
+                    String id = Utils.getSkyblockItemId(helmet);
+                    if (HELMET_TO_SWORD_IDS.containsKey(id))
+                    {
+                        int slot = Utils.findInHotbarById(HELMET_TO_SWORD_IDS.get(id));
+                        if (slot != -1)
+                        {
+                            getPlayer().inventory.currentItem = slot;
+                        }
                     }
                 }
             }
@@ -300,7 +333,7 @@ public abstract class MixinMinecraft
         if (Tweakception.dungeonTweaks.isAutoSwapSpiritSceptreAoteOn())
             slot = Utils.findInHotbarById("BAT_WAND");
         if (slot == -1 && Tweakception.dungeonTweaks.isAutoSwapHyperionAoteOn())
-            slot = Utils.findInHotbarById(WITHER_BLADE_IDS.toArray(new String[0]));
+            slot = Utils.findInHotbarById(WITHER_BLADE_IDS);
         
         return slot;
     }

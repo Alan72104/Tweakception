@@ -104,6 +104,7 @@ All command prefix - /tc
 - gt disabletooltips
 - gt displaypersonalcompactoritems - **Adds the items in the format of "Item 123: id" in the tooltip**
 - gt displaypersonaldeletoritems
+- gt dojo discipline - **Auto switches to the correct sword on hit**
 - gt drawselectedentityoutline
 - gt drawselectedentityoutline width `[float w]`
 - gt drawselectedentityoutline color `[int r]` `[int g]` `[int b]` `[int a]`

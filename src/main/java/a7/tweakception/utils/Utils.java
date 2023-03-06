@@ -257,6 +257,16 @@ public class Utils
         });
     }
     
+    public static int findInHotbarById(Collection<String> ids)
+    {
+        return findInHotbarById(id ->
+        {
+            if (ids.contains(id))
+                return true;
+            return false;
+        });
+    }
+    
     public static int findInHotbarById(Predicate<String> predicate)
     {
         for (int i = 0; i < 9; i++)

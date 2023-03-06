@@ -299,7 +299,9 @@ public class TweakceptionCommand extends CommandBase
                 new Command("gift",
                     args -> Tweakception.globalTweaks.toggleGiftFeatures(),
                     new Command("autoswitchgiftslot",
-                        args -> Tweakception.globalTweaks.toggleAutoSwitchGiftSlot())
+                        args -> Tweakception.globalTweaks.toggleAutoSwitchGiftSlot()),
+                    new Command("setGiftFeaturesMinDelay",
+                        args -> Tweakception.globalTweaks.setGiftFeaturesMinDelay(getInt(args, 0, -1)))
                 ),
                 new Command("hidefromstrangers",
                     args -> Tweakception.globalTweaks.toggleHideFromStrangers(),
@@ -895,6 +897,38 @@ public class TweakceptionCommand extends CommandBase
     private static void sendCommandNotFound()
     {
         sendChat("Tweakception: command not found or wrong syntax");
+    }
+    
+    private static int getInt(String[] args, int index, int defaultWhenNoArg)
+    {
+        if (index < args.length)
+            return toInt(args[index]);
+        else
+            return defaultWhenNoArg;
+    }
+    
+    private static long getLong(String[] args, int index, long defaultWhenNoArg)
+    {
+        if (index < args.length)
+            return toLong(args[index]);
+        else
+            return defaultWhenNoArg;
+    }
+    
+    private static float getFloat(String[] args, int index, float defaultWhenNoArg)
+    {
+        if (index < args.length)
+            return toFloat(args[index]);
+        else
+            return defaultWhenNoArg;
+    }
+    
+    private static double getDouble(String[] args, int index, double defaultWhenNoArg)
+    {
+        if (index < args.length)
+            return toDouble(args[index]);
+        else
+            return defaultWhenNoArg;
     }
     
     private static int toInt(String s)

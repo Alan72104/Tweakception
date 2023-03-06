@@ -108,6 +108,7 @@ public class GlobalTweaks extends Tweak
         public boolean targetingOnlyOpenableGift = false;
         public boolean autoSwitchGiftSlot = false;
         public boolean giftFeatures = false;
+        public int giftFeaturesMinDelay = 0;
         public boolean afkMode = false;
         public boolean afkOnlyUnfocused = true;
         public boolean afkSkipWorldRendering = true;
@@ -633,7 +634,7 @@ public class GlobalTweaks extends Tweak
                 getMc().playerController.windowClick(0, invFeatureIndex,
                     0, 4, getPlayer());
                 invFeatureLastTicks = getTicks();
-                invFeatureClickDelay = 3 + getWorld().rand.nextInt(3);
+                invFeatureClickDelay = c.giftFeaturesMinDelay + getWorld().rand.nextInt(3);
                 invFeatureIndex++;
                 return true;
             }
@@ -673,7 +674,7 @@ public class GlobalTweaks extends Tweak
                 getMc().playerController.windowClick(0, invGiftSlot,
                     invFeatureIndex, 2, getPlayer());
                 invFeatureLastTicks = getTicks();
-                invFeatureClickDelay = 3 + getWorld().rand.nextInt(3);
+                invFeatureClickDelay = c.giftFeaturesMinDelay + getWorld().rand.nextInt(3);
                 invFeatureIndex++;
                 return;
             }
@@ -756,7 +757,7 @@ public class GlobalTweaks extends Tweak
                 else
                     getMc().playerController.windowClick(container.windowId, 54 + invFeatureIndex - 9, 0, 1, getPlayer());
                 invFeatureLastTicks = getTicks();
-                invFeatureClickDelay = 3 + getWorld().rand.nextInt(3);
+                invFeatureClickDelay = c.giftFeaturesMinDelay + getWorld().rand.nextInt(3);
                 invFeatureIndex++;
                 return;
             }
@@ -2668,7 +2669,15 @@ public class GlobalTweaks extends Tweak
     public void toggleGiftFeatures()
     {
         c.giftFeatures = !c.giftFeatures;
+        c.autoSwitchGiftSlot = c.giftFeatures;
         sendChat("GT-GiftFeatures: toggled " + c.giftFeatures);
+    }
+    
+    public void setGiftFeaturesMinDelay(int ticks)
+    {
+        c.giftFeaturesMinDelay =
+            ticks == -1 ? new GlobalTweaksConfig().giftFeaturesMinDelay : Utils.clamp(ticks, 0, 20);
+        sendChat("GT-GiftFeatures: set min delay ticks to " + c.giftFeaturesMinDelay);
     }
     
     public void toggleAfkMode()

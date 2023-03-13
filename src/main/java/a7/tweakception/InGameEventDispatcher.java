@@ -146,6 +146,7 @@ public class InGameEventDispatcher
         bazaarTweaks.onTick(event);
         autoRunes.onTick(event);
         gardenTweaks.onTick(event);
+        giftTweaks.onTick(event);
         overlayManager.onTick(event);
         guildBridge.onTick(event);
         
@@ -252,6 +253,7 @@ public class InGameEventDispatcher
         fishingTweaks.onChatReceived(event);
         slayerTweaks.onChatReceived(event);
         miningTweaks.onChatReceived(event);
+        giftTweaks.onChatReceived(event);
     }
     
     @SubscribeEvent

@@ -49,6 +49,7 @@ public class Tweakception
     public static BazaarTweaks bazaarTweaks;
     public static AutoRunes autoRunes;
     public static GardenTweaks gardenTweaks;
+    public static GiftTweaks giftTweaks;
     public static DiscordGuildBridge guildBridge;
     
     @EventHandler
@@ -77,6 +78,7 @@ public class Tweakception
         bazaarTweaks = new BazaarTweaks(configuration);
         autoRunes = new AutoRunes(configuration);
         gardenTweaks = new GardenTweaks(configuration);
+        giftTweaks = new GiftTweaks(configuration);
         guildBridge = new DiscordGuildBridge();
         
         ClientCommandHandler.instance.registerCommand(new TweakceptionCommand());

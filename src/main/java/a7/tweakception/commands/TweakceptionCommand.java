@@ -300,13 +300,6 @@ public class TweakceptionCommand extends CommandBase
                 ),
                 new Command("forceFormattedChatLog",
                     args -> Tweakception.globalTweaks.toggleChatLogForceFormatted()),
-                new Command("gift",
-                    args -> Tweakception.globalTweaks.toggleGiftFeatures(),
-                    new Command("autoswitchgiftslot",
-                        args -> Tweakception.globalTweaks.toggleAutoSwitchGiftSlot()),
-                    new Command("setGiftFeaturesMinDelay",
-                        args -> Tweakception.globalTweaks.setGiftFeaturesMinDelay(getInt(args, 0, -1)))
-                ),
                 new Command("hidefromstrangers",
                     args -> Tweakception.globalTweaks.toggleHideFromStrangers(),
                     new Command("whitelist",
@@ -391,8 +384,6 @@ public class TweakceptionCommand extends CommandBase
                         args -> Tweakception.globalTweaks.toggleDisableDeadMobTargeting()),
                     new Command("playerDisable",
                         args -> Tweakception.globalTweaks.toggleDisablePlayerTargeting()),
-                    new Command("giftsOpenableOnly",
-                        args -> Tweakception.globalTweaks.toggleOnlyTargetOpenableGift()),
                     new Command("reset",
                         args -> Tweakception.globalTweaks.resetTargeting())
                 ),
@@ -542,6 +533,36 @@ public class TweakceptionCommand extends CommandBase
                 null,
                 new Command("autosolve",
                     args -> Tweakception.enchantingTweaks.toggleAutoSolve())
+            ));
+        }
+        // gift
+        {
+            addSub(new Command("gift",
+                args -> Tweakception.giftTweaks.toggleGiftFeatures(),
+                new Command("autoSwitchGiftSlot",
+                    args -> Tweakception.giftTweaks.toggleAutoSwitchGiftSlot()),
+                new Command("autoSetTargeting",
+                    args -> Tweakception.giftTweaks.toggleAutoSetTargeting()),
+                new Command("autoReleaseRightClick",
+                    args -> Tweakception.giftTweaks.toggleAutoReleaseRightClick(),
+                    new Command("setDistance",
+                        args -> Tweakception.giftTweaks.setAutoReleaseRightClickDistance(getInt(args, 0, -1))),
+                    new Command("setWhitelist",
+                        args -> Tweakception.giftTweaks.setAutoReleaseRightClickWhitelist(getString(args, 0, "")))
+                ),
+                new Command("invFeatures",
+                    args -> Tweakception.giftTweaks.toggleInvFeatures()),
+                new Command("setInvFeaturesMinDelay",
+                    args -> Tweakception.giftTweaks.setInvFeaturesMinDelay(getInt(args, 0, -1))),
+                new Command("targeting",
+                    null,
+                    new Command("armorStandDisable",
+                        args -> Tweakception.giftTweaks.toggleDisableArmorStandTargeting()),
+                    new Command("giftsOpenableOnly",
+                        args -> Tweakception.giftTweaks.toggleTargetOnlyOpenableGift())
+                ),
+                new Command("toggleRecipient",
+                    args -> Tweakception.giftTweaks.toggleRecipient())
             ));
         }
         // overlay
@@ -901,6 +922,14 @@ public class TweakceptionCommand extends CommandBase
     private static void sendCommandNotFound()
     {
         sendChat("Tweakception: command not found or wrong syntax");
+    }
+    
+    private static String getString(String[] args, int index, String defaultWhenNoArg)
+    {
+        if (index < args.length)
+            return args[index];
+        else
+            return defaultWhenNoArg;
     }
     
     private static int getInt(String[] args, int index, int defaultWhenNoArg)

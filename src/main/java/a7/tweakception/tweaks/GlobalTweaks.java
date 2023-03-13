@@ -105,17 +105,13 @@ public class GlobalTweaks extends Tweak
         public boolean targetingDisableBat = false;
         public boolean targetingDisableDeadMob = false;
         public boolean targetingDisablePlayer = false;
-        public boolean targetingOnlyOpenableGift = false;
-        public boolean autoSwitchGiftSlot = false;
-        public boolean giftFeatures = false;
-        public int giftFeaturesMinDelay = 0;
         public boolean afkMode = false;
         public boolean afkOnlyUnfocused = true;
         public boolean afkSkipWorldRendering = true;
         public int afkFpsLimit = 60;
         public boolean sendSkyblockLevelExpGainMessage = false;
         public int snipeWarpDelayTicks = 40;
-        public Set<String> strangerWhitelist = new TreeSet<>();
+        public TreeSet<String> strangerWhitelist = new TreeSet<>();
         public boolean ranchersBootsTooltipSpeedNote = false;
         public boolean displayPersonalCompactorItems = true;
         public boolean displayPersonalDeletorItems = true;
@@ -125,7 +121,6 @@ public class GlobalTweaks extends Tweak
     private final GlobalTweaksConfig c;
     //private static final HashMap<String, SkyblockIsland> SUBPLACE_TO_ISLAND_MAP = new HashMap<>();
     private static final List<SkyblockIsland> ISLANDS_THAT_HAS_SUBAREAS = new ArrayList<>();
-    private static final HashMap<String, Predicate<ItemStack>> GIFT_SHITS = new HashMap<>();
     private static final Ordering<NetworkPlayerInfo> TAB_LIST_ORDERING = GuiPlayerTabOverlay.field_175252_a;
     private static int ticks = 0;
     private static boolean islandUpdatedThisTick = false;
@@ -175,12 +170,6 @@ public class GlobalTweaks extends Tweak
     private boolean minionAutoClaim = false;
     private final int[] minionAutoclaimPos = {-2, -2};
     private boolean minionAutoclaimWasInScreen = false;
-    private InvFeature invFeature = InvFeature.None;
-    private int invFeatureIndex = 0;
-    private int invFeatureLastTicks = 0;
-    private int invFeatureClickDelay = 0;
-    private boolean stashEmptied = false;
-    private int lastPickupStashTicks = 0;
     private boolean fakePowerScrolls = false;
     private boolean fakeStars = false;
     private int fakeStarsRed = 5;
@@ -214,11 +203,6 @@ public class GlobalTweaks extends Tweak
         "\\\"exp\\\":(\\d+.?\\d*E?\\d*)").matcher("");
     private boolean dojoDisciplineHelper = false;
     
-    private enum InvFeature
-    {
-        None, DropGiftShit, MoveGift, AutoDropGiftShit, DumpItems
-    }
-    
     static
     {
         for (SkyblockIsland island : SkyblockIsland.values())
@@ -226,24 +210,6 @@ public class GlobalTweaks extends Tweak
             if (island.subAreas != null)
                 ISLANDS_THAT_HAS_SUBAREAS.add(island);
         }
-        GIFT_SHITS.put("BATTLE_DISC", s -> true);
-        GIFT_SHITS.put("WINTER_DISC", s -> true);
-        GIFT_SHITS.put("POTION", s -> McUtils.getExtraAttributes(s).getString("potion").endsWith("_xp_boost"));
-        HashMap<String, Integer> crap = new HashMap<>();
-        crap.put("scavenger", 4);
-        crap.put("looting", 4);
-        crap.put("luck", 6);
-        GIFT_SHITS.put("ENCHANTED_BOOK", s ->
-        {
-            NBTTagCompound enchs = McUtils.getExtraAttributes(s).getCompoundTag("enchantments");
-            Set<String> ids = enchs.getKeySet();
-            if (ids.size() == 1)
-            {
-                String next = ids.iterator().next();
-                return crap.containsKey(next) && crap.get(next) == enchs.getInteger(next);
-            }
-            return false;
-        });
     }
     
     public GlobalTweaks(Configuration configuration)
@@ -477,61 +443,6 @@ public class GlobalTweaks extends Tweak
                 }
             }
             
-            boolean isInv = getMc().currentScreen instanceof GuiInventory;
-            boolean isChest = getMc().currentScreen instanceof GuiChest;
-            
-            if (c.giftFeatures && (isInv || isChest))
-            {
-                if (invFeature == InvFeature.None)
-                {
-                    if (isInv && Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) && Keyboard.isKeyDown(Keyboard.KEY_D))
-                    {
-                        invFeatureIndex = 9;
-                        invFeature = InvFeature.AutoDropGiftShit;
-                        stashEmptied = false;
-                    }
-                    else if (isInv && Keyboard.isKeyDown(Keyboard.KEY_D))
-                    {
-                        invFeatureIndex = 9;
-                        invFeature = InvFeature.DropGiftShit;
-                    }
-                    else if (isInv && Keyboard.isKeyDown(Keyboard.KEY_M))
-                    {
-                        invFeatureIndex = 0;
-                        invFeature = InvFeature.MoveGift;
-                    }
-                    else if (isChest && Keyboard.isKeyDown(Keyboard.KEY_D) && getCurrentIsland() == SkyblockIsland.PRIVATE_ISLAND)
-                    {
-                        invFeatureIndex = 0;
-                        invFeature = InvFeature.DumpItems;
-                    }
-                }
-                
-                if (getTicks() - invFeatureLastTicks >= invFeatureClickDelay)
-                {
-                    switch (invFeature)
-                    {
-                        case DropGiftShit:
-                            if (!doDropGiftShit())
-                                invFeature = InvFeature.None;
-                            break;
-                        case MoveGift:
-                            invMoveGift();
-                            break;
-                        case AutoDropGiftShit:
-                            invAutoDropGiftShit();
-                            break;
-                        case DumpItems:
-                            dumpItemsToChest();
-                            break;
-                    }
-                }
-            }
-            else
-            {
-                invFeature = InvFeature.None;
-            }
-            
             if (!snipePlayerName.isEmpty())
             {
                 if (getTicks() - snipeLastTpTicks >= 20 * 10)
@@ -615,156 +526,11 @@ public class GlobalTweaks extends Tweak
                 )
                 {
                     sendChat("GT-HideFromStrangers: evacuating to private island...");
-                    McUtils.executeCommand("/is");
+                    getPlayer().sendChatMessage("/is");
                     hideFromStrangersLastWarpTicks = getTicks();
                 }
             }
         }
-    }
-    
-    private boolean doDropGiftShit()
-    {
-        List<ItemStack> inv = ((GuiInventory) getMc().currentScreen).inventorySlots.getInventory();
-        for (; invFeatureIndex <= 44; invFeatureIndex++)
-        {
-            ItemStack stack = inv.get(invFeatureIndex);
-            String id = Utils.getSkyblockItemId(stack);
-            if (stack != null && id != null &&
-                GIFT_SHITS.containsKey(id) && GIFT_SHITS.get(id).test(stack))
-            {
-                getMc().playerController.windowClick(0, invFeatureIndex,
-                    0, 4, getPlayer());
-                invFeatureLastTicks = getTicks();
-                invFeatureClickDelay = c.giftFeaturesMinDelay + getWorld().rand.nextInt(3);
-                invFeatureIndex++;
-                return true;
-            }
-        }
-        invFeatureIndex = 9;
-        return false;
-    }
-    
-    private void invMoveGift()
-    {
-        List<ItemStack> inv = ((GuiInventory) getMc().currentScreen).inventorySlots.getInventory();
-        HashSet<String> gifts = Utils.hashSet("WHITE_GIFT", "GREEN_GIFT", "RED_GIFT");
-        // Hotbar index
-        for (; invFeatureIndex <= 7; invFeatureIndex++)
-        {
-            {
-                ItemStack stack = inv.get(36 + invFeatureIndex);
-                String id = Utils.getSkyblockItemId(stack);
-                if (stack != null && id != null && gifts.contains(id))
-                    continue;
-            }
-            
-            int invGiftSlot = 0;
-            for (int backpack = 9; backpack <= 35; backpack++)
-            {
-                ItemStack stack = inv.get(backpack);
-                String id = Utils.getSkyblockItemId(stack);
-                if (stack != null && id != null && gifts.contains(id))
-                {
-                    invGiftSlot = backpack;
-                    break;
-                }
-            }
-            
-            if (invGiftSlot != 0)
-            {
-                getMc().playerController.windowClick(0, invGiftSlot,
-                    invFeatureIndex, 2, getPlayer());
-                invFeatureLastTicks = getTicks();
-                invFeatureClickDelay = c.giftFeaturesMinDelay + getWorld().rand.nextInt(3);
-                invFeatureIndex++;
-                return;
-            }
-        }
-        invFeature = InvFeature.None;
-    }
-    
-    private void invAutoDropGiftShit()
-    {
-        boolean dropped = doDropGiftShit();
-        if (!dropped)
-        {
-            if (getTicks() - lastPickupStashTicks >= 20 && stashEmptied)
-            {
-                invFeature = InvFeature.None;
-                return;
-            }
-            
-            if (getTicks() - lastPickupStashTicks >= 60)
-            {
-                lastPickupStashTicks = getTicks();
-                getPlayer().sendChatMessage("/pickupstash");
-            }
-        }
-    }
-    
-    private void dumpItemsToChest()
-    {
-        GuiChest chest = (GuiChest) McUtils.getMc().currentScreen;
-        ContainerChest container = (ContainerChest) chest.inventorySlots;
-        IInventory inv = container.getLowerChestInventory();
-        if (inv.getSizeInventory() != 54)
-        {
-            invFeature = InvFeature.None;
-            return;
-        }
-        
-        ItemStack firstStack = inv.getStackInSlot(0);
-        if (firstStack == null)
-        {
-            invFeature = InvFeature.None;
-            return;
-        }
-        
-        boolean hasEmptySlot = false;
-        for (int i = 0; i < 54; i++)
-        {
-            ItemStack stack = inv.getStackInSlot(i);
-            if (stack == null || stack.stackSize > 1 && stack.stackSize < 64)
-            {
-                hasEmptySlot = true;
-                break;
-            }
-        }
-        
-        if (!hasEmptySlot)
-        {
-            invFeature = InvFeature.None;
-            return;
-        }
-        
-        String targetId = Utils.getSkyblockItemId(firstStack);
-        if (targetId == null)
-        {
-            invFeature = InvFeature.None;
-            return;
-        }
-        
-        for (; invFeatureIndex < 36; invFeatureIndex++)
-        {
-            if (invFeatureIndex == 8)
-                continue;
-            
-            ItemStack stack = getPlayer().inventory.getStackInSlot(invFeatureIndex);
-            String id = Utils.getSkyblockItemId(stack);
-            if (stack != null && id != null && id.equals(targetId))
-            {
-                if (invFeatureIndex < 9)
-                    getMc().playerController.windowClick(container.windowId, 54 + 27 + invFeatureIndex, 0, 1, getPlayer());
-                else
-                    getMc().playerController.windowClick(container.windowId, 54 + invFeatureIndex - 9, 0, 1, getPlayer());
-                invFeatureLastTicks = getTicks();
-                invFeatureClickDelay = c.giftFeaturesMinDelay + getWorld().rand.nextInt(3);
-                invFeatureIndex++;
-                return;
-            }
-        }
-        
-        invFeature = InvFeature.None;
     }
     
     public void onEntityUpdate(LivingEvent.LivingUpdateEvent event)
@@ -1208,13 +974,6 @@ public class GlobalTweaks extends Tweak
                         }
                     }
                 }
-            }
-            else if (invFeature == InvFeature.AutoDropGiftShit &&
-                (msg.equals("Your stash isn't holding any item!") ||
-                    msg.equals("You picked up all items from your item stash!") ||
-                    msg.equals("Couldn't unstash your items! Your inventory is full!")))
-            {
-                stashEmptied = true;
             }
         }
         else if (event.type == 2)
@@ -1764,7 +1523,6 @@ public class GlobalTweaks extends Tweak
         return c.targetingDisableArmorStand;
     }
     
-    
     public boolean isDisableBatTargetingOn()
     {
         return c.targetingDisableBat;
@@ -1773,21 +1531,6 @@ public class GlobalTweaks extends Tweak
     public boolean isDisablePlayerTargetingOn()
     {
         return c.targetingDisablePlayer;
-    }
-    
-    public boolean isGiftFeaturesOn()
-    {
-        return c.giftFeatures;
-    }
-    
-    public boolean isOnlyTargetOpenableGiftOn()
-    {
-        return c.targetingOnlyOpenableGift;
-    }
-    
-    public boolean isAutoSwitchGiftSlotOn()
-    {
-        return c.autoSwitchGiftSlot;
     }
     
     public boolean isChatLogForceFormattedOn()
@@ -2649,12 +2392,6 @@ public class GlobalTweaks extends Tweak
         sendChat("GT-DisablePlayerTargeting: toggled " + c.targetingDisablePlayer);
     }
     
-    public void toggleOnlyTargetOpenableGift()
-    {
-        c.targetingOnlyOpenableGift = !c.targetingOnlyOpenableGift;
-        sendChat("GT-OnlyTargetOpenableGift: toggled " + c.targetingOnlyOpenableGift);
-    }
-    
     public void resetTargeting()
     {
         GlobalTweaksConfig newConfig = new GlobalTweaksConfig();
@@ -2662,28 +2399,7 @@ public class GlobalTweaks extends Tweak
         c.targetingDisableBat = newConfig.targetingDisableBat;
         c.targetingDisableDeadMob = newConfig.targetingDisableDeadMob;
         c.targetingDisablePlayer = newConfig.targetingDisablePlayer;
-        c.targetingOnlyOpenableGift = newConfig.targetingOnlyOpenableGift;
         sendChat("GT: reset all targeting options");
-    }
-    
-    public void toggleAutoSwitchGiftSlot()
-    {
-        c.autoSwitchGiftSlot = !c.autoSwitchGiftSlot;
-        sendChat("GT-AutoSwitchGiftSlot: toggled " + c.autoSwitchGiftSlot);
-    }
-    
-    public void toggleGiftFeatures()
-    {
-        c.giftFeatures = !c.giftFeatures;
-        c.autoSwitchGiftSlot = c.giftFeatures;
-        sendChat("GT-GiftFeatures: toggled " + c.giftFeatures);
-    }
-    
-    public void setGiftFeaturesMinDelay(int ticks)
-    {
-        c.giftFeaturesMinDelay =
-            ticks == -1 ? new GlobalTweaksConfig().giftFeaturesMinDelay : Utils.clamp(ticks, 0, 20);
-        sendChat("GT-GiftFeatures: set min delay ticks to " + c.giftFeaturesMinDelay);
     }
     
     public void toggleAfkMode()

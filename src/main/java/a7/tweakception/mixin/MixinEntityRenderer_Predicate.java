@@ -24,7 +24,8 @@ public abstract class MixinEntityRenderer_Predicate
         {
             cancel = true;
         }
-        else if (Tweakception.globalTweaks.isDisableArmorStandTargetingOn() &&
+        else if ((Tweakception.globalTweaks.isDisableArmorStandTargetingOn() ||
+                Tweakception.giftTweaks.isDisableArmorStandTargetingOn()) &&
             entity instanceof EntityArmorStand)
         {
             cancel = true;
@@ -39,7 +40,7 @@ public abstract class MixinEntityRenderer_Predicate
         {
             cancel = true;
         }
-        else if (Tweakception.globalTweaks.isOnlyTargetOpenableGiftOn() &&
+        else if (Tweakception.giftTweaks.isOnlyTargetOpenableGiftOn() &&
             (!(entity instanceof EntityArmorStand) || !(entity.getName().equals("§e§lCLICK TO OPEN"))))
         {
             cancel = true;

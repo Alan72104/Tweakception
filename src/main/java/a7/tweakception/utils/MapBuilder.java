@@ -27,4 +27,9 @@ public class MapBuilder<K, V>
     {
         return new MapBuilder<>(new HashMap<>());
     }
+    
+    public static MapBuilder<String, Integer> stringIntHashMap()
+    {
+        return new MapBuilder<>(new HashMap<>());
+    }
 }

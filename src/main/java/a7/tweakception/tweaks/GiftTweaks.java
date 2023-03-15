@@ -149,6 +149,7 @@ public class GiftTweaks extends Tweak
                 List<EntityOtherPlayerMP> closePlayers = getWorld().getEntities(EntityOtherPlayerMP.class, p ->
                 {
                     return
+                        getMc().getNetHandler().getPlayerInfo(p.getUniqueID()) != null &&
                         p.getDistanceSqToEntity(getPlayer()) <= c.autoReleaseRightClickDistance * c.autoReleaseRightClickDistance &&
                         !c.autoReleaseRightClickWhitelist.contains(p.getName().toLowerCase()) &&
                         p.getDisplayName().getFormattedText().length() >= 4 &&
@@ -394,7 +395,7 @@ public class GiftTweaks extends Tweak
     public void setAutoReleaseRightClickDistance(int blocks)
     {
         c.autoReleaseRightClickDistance = Utils.clamp(blocks, 5, 50);
-        sendChat("Gift: set the distance of a player needed to release right click to " + c.autoSwitchGiftSlot);
+        sendChat("Gift: set the distance of a player needed to release right click to " + c.autoReleaseRightClickDistance);
     }
     
     public void toggleDisableArmorStandTargeting()

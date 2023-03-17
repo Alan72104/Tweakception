@@ -115,6 +115,7 @@ public class DungeonTweaks extends Tweak
         public long fastestBloodRush = 0L;
         public long fastestFragrun = 0L;
         public boolean pickaxeMiddleClickRemoveBlock = false;
+        public boolean blockFlowerPlacement = false;
     }
     
     private final DungeonTweaksConfig c;
@@ -138,7 +139,6 @@ public class DungeonTweaks extends Tweak
     private final LinkedList<Pair<Integer, String>> damageTags = new LinkedList<>();
     private final LinkedList<Pair<Integer, Entity>> armorStandsTemp = new LinkedList<>();
     private final Set<Entity> starredMobs = new HashSet<>();
-    private Entity spiritBear = null;
     private final Matcher anyDamageTagMatcher = Pattern.compile(
         "^(?:§[\\da-f][✧✯]?)?((?:(?:(?:§[\\da-f])?\\d){1,3}(?:§[\\da-f])?,?)+)(?:§[\\da-f][✧✯]?)?").matcher("");
     // §f✧§f1§e3§6,§e7§66§c9§c✧§d♥
@@ -256,7 +256,7 @@ public class DungeonTweaks extends Tweak
         TRASH_ITEMS.add("ROTTEN_CHESTPLATE");
         TRASH_ITEMS.add("ROTTEN_HELMET");
         TRASH_ITEMS.add("ROTTEN_LEGGINGS");
-        TRASH_ITEMS.add("SILENT_DEATH");
+//        TRASH_ITEMS.add("SILENT_DEATH");
         TRASH_ITEMS.add("SKELETON_GRUNT_BOOTS");
         TRASH_ITEMS.add("SKELETON_GRUNT_CHESTPLATE");
         TRASH_ITEMS.add("SKELETON_GRUNT_HELMET");
@@ -742,9 +742,6 @@ public class DungeonTweaks extends Tweak
             for (Entity sa : shadowAssassins)
                 RenderUtils.drawDefaultHighlightBoxForEntity(sa, new Color(255, 76, 76, 85), false);
         
-        if (c.highlightSpiritBear && spiritBear != null)
-            RenderUtils.drawDefaultHighlightBox(spiritBear, 7, new Color(0, 255, 0, 192), false);
-        
         if (c.highlightStarredMobs)
             for (Entity e : starredMobs)
                 RenderUtils.drawDefaultHighlightBoxForEntity(e, RenderUtils.DEFAULT_HIGHLIGHT_COLOR, false);
@@ -770,6 +767,15 @@ public class DungeonTweaks extends Tweak
                         RenderUtils.drawBeaconBeamAtEntity(entity, new Color(84, 166, 102, 128));
                 }
             }
+        }
+    }
+    
+    public void onLivingRenderPost(RenderLivingEvent.Post<?> event)
+    {
+        if (c.highlightSpiritBear && event.entity instanceof EntityOtherPlayerMP &&
+            event.entity.getName().equals("Spirit Bear"))
+        {
+            RenderUtils.drawDefaultHighlightBoxForEntity(event.entity, new Color(0, 255, 0, 192), false);
         }
     }
     
@@ -850,12 +856,6 @@ public class DungeonTweaks extends Tweak
                 shadowAssassins.add(entity);
                 return;
             }
-            if (c.highlightSpiritBear &&
-                entity.getName().equals("Spirit Bear"))
-            {
-                spiritBear = entity;
-                return;
-            }
         }
         
         if (c.trackShootingSpeed)
@@ -889,10 +889,22 @@ public class DungeonTweaks extends Tweak
                         }
                         else
                         {
-                            event.setCanceled(true);
                             sendChat("DT-BlockRightClick: blocked click for item (" + name + "§r), hold alt to override it");
+                            event.setCanceled(true);
+                            return;
                         }
                     }
+                }
+            }
+            
+            if (event.action == PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK && c.blockFlowerPlacement)
+            {
+                String id = Utils.getSkyblockItemId(event.entityPlayer.getCurrentEquippedItem());
+                if (id != null && (id.equals("BAT_WAND") || id.equals("FLOWER_OF_TRUTH")))
+                {
+                    Block block = event.world.getBlockState(event.pos).getBlock();
+                    if (block == Blocks.dirt || block == Blocks.grass || block == Blocks.tallgrass)
+                        event.setCanceled(true);
                 }
             }
         }
@@ -926,7 +938,8 @@ public class DungeonTweaks extends Tweak
             GuiChest chest = (GuiChest) event.gui;
             ContainerChest container = (ContainerChest) chest.inventorySlots;
             String containerName = container.getLowerChestInventory().getName();
-            if (getCurrentIsland() == SkyblockIsland.DUNGEON && c.autoCloseSecretChest && containerName.equals("Chest"))
+            if (getCurrentIsland() == SkyblockIsland.DUNGEON &&
+                c.autoCloseSecretChest && (containerName.equals("Chest") || containerName.equals("Large Chest")))
                 secretChestOpened = true;
             else if (c.autoSalvage && containerName.equals("Dungeon Blacksmith"))
             {
@@ -1235,8 +1248,6 @@ public class DungeonTweaks extends Tweak
         }
         if (c.highlightStarredMobs)
             starredMobs.clear();
-        if (c.highlightSpiritBear)
-            spiritBear = null;
         if (c.highlightBats)
             bats.clear();
         if (c.highlightShadowAssassins)
@@ -1473,6 +1484,11 @@ public class DungeonTweaks extends Tweak
     public boolean isPickaxeMiddleClickRemoveBlockOn()
     {
         return c.pickaxeMiddleClickRemoveBlock;
+    }
+    
+    public boolean isBlockFlowerPlacementOn()
+    {
+        return c.blockFlowerPlacement;
     }
     
     // endregion Feature access
@@ -2321,6 +2337,12 @@ public class DungeonTweaks extends Tweak
     {
         c.pickaxeMiddleClickRemoveBlock = !c.pickaxeMiddleClickRemoveBlock;
         sendChat("DT-PickaxeMiddleClickRemoveBlock: toggled " + c.pickaxeMiddleClickRemoveBlock);
+    }
+    
+    public void toggleBlockFlowerPlacement()
+    {
+        c.blockFlowerPlacement = !c.blockFlowerPlacement;
+        sendChat("DT-BlockFlowerPlacement: toggled " + c.blockFlowerPlacement);
     }
     
     // endregion Commands

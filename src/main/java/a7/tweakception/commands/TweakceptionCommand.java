@@ -3,7 +3,6 @@ package a7.tweakception.commands;
 import a7.tweakception.LagSpikeWatcher;
 import a7.tweakception.Tweakception;
 import a7.tweakception.tweaks.GlobalTweaks;
-import a7.tweakception.tweaks.Tweak;
 import a7.tweakception.utils.DumpUtils;
 import a7.tweakception.utils.McUtils;
 import a7.tweakception.utils.Utils;
@@ -55,6 +54,8 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.dungeonTweaks.toggleAutoSwapHyperionAote()),
                 new Command("blockopheliaclicks",
                     args -> Tweakception.dungeonTweaks.toggleBlockOpheliaShopClicks()),
+                new Command("blockFlowerPlacement",
+                    args -> Tweakception.dungeonTweaks.toggleBlockFlowerPlacement()),
                 new Command("blockrightclick",
                     null,
                     new Command("list",

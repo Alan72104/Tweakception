@@ -13,7 +13,6 @@ import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -193,7 +192,7 @@ public class InGameEventDispatcher
     }
     
     @SubscribeEvent()
-    public void onLivingRenderPre(RenderLivingEvent.Pre event)
+    public void onLivingRenderPre(RenderLivingEvent.Pre<?> event)
     {
         startFunc(3);
         if (!isInSkyblock()) return;
@@ -204,9 +203,17 @@ public class InGameEventDispatcher
         endFuncAndAddNum(3);
     }
     
+    @SubscribeEvent()
+    public void onLivingRenderPost(RenderLivingEvent.Post<?> event)
+    {
+        if (!isInSkyblock()) return;
+        
+        dungeonTweaks.onLivingRenderPost(event);
+    }
+    
     // Called on RenderLivingEntity.renderName()
     @SubscribeEvent
-    public void onLivingSpecialRenderPre(RenderLivingEvent.Specials.Pre event)
+    public void onLivingSpecialRenderPre(RenderLivingEvent.Specials.Pre<?> event)
     {
         startFunc(4);
         if (!isInSkyblock()) return;
@@ -232,12 +239,6 @@ public class InGameEventDispatcher
         if (!isInSkyblock()) return;
         
         dungeonTweaks.onInteract(event);
-    }
-    
-    @SubscribeEvent
-    public void onChunkLoad(ChunkEvent.Load event)
-    {
-        if (!isInSkyblock()) return;
     }
     
     @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)

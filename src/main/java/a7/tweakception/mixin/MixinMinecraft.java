@@ -5,7 +5,6 @@ import a7.tweakception.Tweakception;
 import a7.tweakception.tweaks.GlobalTweaks;
 import a7.tweakception.tweaks.SkyblockIsland;
 import a7.tweakception.utils.MapBuilder;
-import a7.tweakception.utils.McUtils;
 import a7.tweakception.utils.Utils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -29,7 +28,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 

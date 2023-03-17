@@ -19,7 +19,6 @@ import net.minecraft.client.gui.GuiPlayerTabOverlay;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityArmorStand;
@@ -57,7 +56,6 @@ import java.util.List;
 import java.util.Queue;
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -638,7 +636,7 @@ public class GlobalTweaks extends Tweak
         }
     }
     
-    public void onLivingRenderPre(RenderLivingEvent.Pre event)
+    public void onLivingRenderPre(RenderLivingEvent.Pre<?> event)
     {
         if (c.hidePlayers)
         {
@@ -652,7 +650,7 @@ public class GlobalTweaks extends Tweak
         }
     }
     
-    public void onLivingSpecialRenderPre(RenderLivingEvent.Specials.Pre event)
+    public void onLivingSpecialRenderPre(RenderLivingEvent.Specials.Pre<?> event)
     {
         if (c.highlightShinyPigs && getCurrentIsland() == SkyblockIsland.HUB)
         {

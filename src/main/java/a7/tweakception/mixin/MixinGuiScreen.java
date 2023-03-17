@@ -1,7 +1,6 @@
 package a7.tweakception.mixin;
 
 import a7.tweakception.Tweakception;
-import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;

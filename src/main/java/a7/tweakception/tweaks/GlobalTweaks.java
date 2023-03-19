@@ -1272,11 +1272,11 @@ public class GlobalTweaks extends Tweak
         playerListUpdatedThisTick = true;
         
         boolean foundSection = false;
+        int playerCount = 0;
         if (list.size() >= 80)
         {
             list = list.subList(0, 80);
             GuiPlayerTabOverlay tabList = getMc().ingameGUI.getTabList();
-            int playerCount = 0;
             // 4 section columns, 20 per column
             for (int i = 0; i < 80; i += 20)
             {
@@ -1316,7 +1316,7 @@ public class GlobalTweaks extends Tweak
             }
         }
         
-        if (foundSection)
+        if (foundSection && playerList.size() == playerCount)
             return new ArrayList<>(playerList);
         else
             return null;

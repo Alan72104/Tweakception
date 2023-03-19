@@ -42,7 +42,7 @@ public class GiftTweaks extends Tweak
         public boolean targetingOnlyOpenableGift = false;
     }
     private final GiftTweaksConfig c;
-    private static final HashMap<String, Predicate<ItemStack>> GIFT_SHITS = new HashMap<>();
+    private static final Map<String, Predicate<ItemStack>> GIFT_SHITS = new HashMap<>();
     private InvFeature invFeature = InvFeature.None;
     private int invFeatureIndex = 0;
     private int invFeatureLastTicks = 0;
@@ -57,8 +57,9 @@ public class GiftTweaks extends Tweak
     
     static
     {
-        GIFT_SHITS.put("BATTLE_DISC", s -> true);
-        GIFT_SHITS.put("WINTER_DISC", s -> true);
+        GIFT_SHITS.put("BATTLE_DISC", null);
+        GIFT_SHITS.put("WINTER_DISC", null);
+        GIFT_SHITS.put("GLASS_BOTTLE", null);
         GIFT_SHITS.put("POTION", s -> McUtils.getExtraAttributes(s).getString("potion").endsWith("_xp_boost"));
         Map<String, Integer> crap = MapBuilder.stringIntHashMap()
             .put("scavenger", 4)
@@ -181,15 +182,18 @@ public class GiftTweaks extends Tweak
         {
             ItemStack stack = inv.get(invFeatureIndex);
             String id = Utils.getSkyblockItemId(stack);
-            if (stack != null && id != null &&
-                GIFT_SHITS.containsKey(id) && GIFT_SHITS.get(id).test(stack))
+            if (stack != null && id != null && GIFT_SHITS.containsKey(id))
             {
-                getMc().playerController.windowClick(0, invFeatureIndex,
-                    0, 4, getPlayer());
-                invFeatureLastTicks = getTicks();
-                invFeatureClickDelay = c.invFeaturesMinDelay + getWorld().rand.nextInt(3);
-                invFeatureIndex++;
-                return true;
+                Predicate<ItemStack> itemPredicate = GIFT_SHITS.get(id);
+                if (itemPredicate == null || itemPredicate.test(stack))
+                {
+                    getMc().playerController.windowClick(0, invFeatureIndex,
+                        0, 4, getPlayer());
+                    invFeatureLastTicks = getTicks();
+                    invFeatureClickDelay = c.invFeaturesMinDelay + getWorld().rand.nextInt(3);
+                    invFeatureIndex++;
+                    return true;
+                }
             }
         }
         invFeatureIndex = 9;

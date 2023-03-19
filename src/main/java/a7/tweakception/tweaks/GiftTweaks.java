@@ -4,10 +4,12 @@ import a7.tweakception.config.Configuration;
 import a7.tweakception.utils.MapBuilder;
 import a7.tweakception.utils.McUtils;
 import a7.tweakception.utils.Utils;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -146,21 +148,27 @@ public class GiftTweaks extends Tweak
             if (getMc().gameSettings.keyBindUseItem.isKeyDown() &&
                 Utils.findInHotbarById("WHITE_GIFT", "GREEN_GIFT", "RED_GIFT") != -1)
             {
-                List<EntityOtherPlayerMP> closePlayers = getWorld().getEntities(EntityOtherPlayerMP.class, p ->
+                List<EntityPlayer> players = getWorld().playerEntities;
+                EntityPlayer closePlayer = null;
+                for (EntityPlayer p : players)
                 {
-                    return
+                    if (p instanceof EntityOtherPlayerMP &&
                         getMc().getNetHandler().getPlayerInfo(p.getUniqueID()) != null &&
                         p.getDistanceSqToEntity(getPlayer()) <= c.autoReleaseRightClickDistance * c.autoReleaseRightClickDistance &&
                         !c.autoReleaseRightClickWhitelist.contains(p.getName().toLowerCase()) &&
                         p.getDisplayName().getFormattedText().length() >= 4 &&
-                        p.getDisplayName().getFormattedText().charAt(2) == '§';
-                });
+                        p.getDisplayName().getFormattedText().charAt(2) == '§')
+                    {
+                        closePlayer = p;
+                        break;
+                    }
+                }
             
-                if (closePlayers.size() > 0)
+                if (closePlayer != null)
                 {
                     KeyBinding.setKeyBindState(getMc().gameSettings.keyBindUseItem.getKeyCode(),
                         false);
-                    sendChat("Gift: released use keybind because " + closePlayers.get(0).getName() + " came");
+                    sendChat("Gift: released use keybind because " + closePlayer.getName() + " came");
                 }
             }
         }
@@ -394,7 +402,7 @@ public class GiftTweaks extends Tweak
     
     public void setAutoReleaseRightClickDistance(int blocks)
     {
-        c.autoReleaseRightClickDistance = Utils.clamp(blocks, 5, 50);
+        c.autoReleaseRightClickDistance = Utils.clamp(blocks, 5, 500);
         sendChat("Gift: set the distance of a player needed to release right click to " + c.autoReleaseRightClickDistance);
     }
     

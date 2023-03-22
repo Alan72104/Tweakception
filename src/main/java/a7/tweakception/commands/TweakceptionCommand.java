@@ -247,6 +247,8 @@ public class TweakceptionCommand extends CommandBase
                                 sendChat("Give me 6 args");
                         })
                 ),
+                new Command("autoGuildWelcome",
+                    args -> Tweakception.globalTweaks.toggleAutoGuildWelcome()),
                 new Command("blockquickcraft",
                     args -> Tweakception.globalTweaks.toggleBlockQuickCraft(),
                     new Command("remove",
@@ -523,9 +525,7 @@ public class TweakceptionCommand extends CommandBase
                 new Command("setnotfound",
                     args -> Tweakception.fairyTracker.setNotFound()),
                 new Command("toggletracking",
-                    args -> Tweakception.fairyTracker.toggleTracking()),
-                new Command("togglegift",
-                    args -> Tweakception.fairyTracker.toggleGiftTracking())
+                    args -> Tweakception.fairyTracker.toggleTracking())
             ));
         }
         // enchanting
@@ -563,7 +563,9 @@ public class TweakceptionCommand extends CommandBase
                         args -> Tweakception.giftTweaks.toggleTargetOnlyOpenableGift())
                 ),
                 new Command("toggleRecipient",
-                    args -> Tweakception.giftTweaks.toggleRecipient())
+                    args -> Tweakception.giftTweaks.toggleRecipient()),
+                new Command("trackWhiteGifts",
+                    args -> Tweakception.giftTweaks.toggleWhiteGiftTracking())
             ));
         }
         // overlay

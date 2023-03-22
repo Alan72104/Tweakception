@@ -1,24 +1,32 @@
 package a7.tweakception.tweaks;
 
 import a7.tweakception.config.Configuration;
-import a7.tweakception.utils.MapBuilder;
-import a7.tweakception.utils.McUtils;
-import a7.tweakception.utils.Utils;
-import net.minecraft.client.Minecraft;
+import a7.tweakception.utils.*;
 import net.minecraft.client.entity.EntityOtherPlayerMP;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.Vec3;
+import net.minecraft.util.Vec3i;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.event.entity.living.LivingEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 import java.util.function.Predicate;
 
 import static a7.tweakception.tweaks.GlobalTweaks.getCurrentIsland;
@@ -43,12 +51,17 @@ public class GiftTweaks extends Tweak
     }
     private final GiftTweaksConfig c;
     private static final Map<String, Predicate<ItemStack>> GIFT_SHITS = new HashMap<>();
+    private static final String GIFT_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTBmNTM5ODUxMGIxYTA1YWZjNWIyMDFlYWQ4YmZjNTgzZTU3ZDcyMDJmNTE5M2IwYjc2MWZjYmQwYWUyIn19fQ==";
     private InvFeature invFeature = InvFeature.None;
     private int invFeatureIndex = 0;
     private int invFeatureLastTicks = 0;
     private int invFeatureClickDelay = 0;
     private boolean stashEmptied = false;
     private int lastPickupStashTicks = 0;
+    private boolean trackWhiteGifts = false;
+    private Map<Entity, PosMark> whiteGifts = new HashMap<>();
+    // Entity, detection start tick, start pos
+    private Map<Entity, Pair<Integer, Vec3>> whiteGiftsTemp = new HashMap<>();
     
     private enum InvFeature
     {
@@ -174,6 +187,69 @@ public class GiftTweaks extends Tweak
             }
         }
     }
+    
+    public void onRenderLast(RenderWorldLastEvent event)
+    {
+        if (trackWhiteGifts)
+        {
+            for (PosMark pos : whiteGifts.values())
+            {
+                Color color;
+                if (pos.isFound)
+                    color = new Color(84, 166, 102, 128);
+                else
+                    color = new Color(206, 57, 199, 128);
+                RenderUtils.drawBeaconBeamOrBoundingBox(new BlockPos(pos.getX(), pos.getY(), pos.getZ()),
+                    color, event.partialTicks, 0);
+            }
+        }
+    }
+    
+    public void onEntityUpdate(LivingEvent.LivingUpdateEvent event)
+    {
+        if (trackWhiteGifts && event.entity instanceof EntityArmorStand)
+        {
+            Entity entity = event.entity;
+            EntityArmorStand stand = (EntityArmorStand) entity;
+            String tex = McUtils.getArmorStandHeadTexture(stand);
+            if (tex != null && tex.equals(GIFT_TEXTURE))
+            {
+                if (!whiteGifts.containsKey(entity))
+                {
+                    Pair<Integer, Vec3> pair = whiteGiftsTemp.computeIfAbsent(entity,
+                        e -> new Pair<>(getTicks(), new Vec3(e.posX, e.posY, e.posZ)));
+                    // 0 means failed
+                    if (pair.a != 0)
+                    {
+                        if (getTicks() - pair.a >= 20)
+                        {
+                            whiteGiftsTemp.remove(entity);
+                            whiteGifts.put(entity, new PosMark(entity.posX, entity.posY + 2, entity.posZ));
+                        }
+                        else
+                        {
+                            if (entity.posX != pair.b.xCoord ||
+                                entity.posY != pair.b.yCoord ||
+                                entity.posZ != pair.b.zCoord)
+                            {
+                                // This entity failed the detection
+                                whiteGiftsTemp.put(entity, new Pair<>(0, null));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    public void onWorldUnload(WorldEvent.Unload event)
+    {
+        trackWhiteGifts = false;
+        whiteGifts.clear();
+        whiteGiftsTemp.clear();
+    }
+    
+    
     
     private boolean doDropGiftShit()
     {
@@ -335,6 +411,35 @@ public class GiftTweaks extends Tweak
             {
                 stashEmptied = true;
             }
+            else if (trackWhiteGifts &&
+                (msg.startsWith("GIFT! You found a White Gift! ") ||
+                    msg.equals("You have already found this Gift this year!")))
+            {
+                markNearestFound();
+            }
+        }
+    }
+    
+    private void markNearestFound()
+    {
+        EntityPlayerSP player = getPlayer();
+        double nearestDis = Double.MAX_VALUE;
+        PosMark mark = null;
+        for (Map.Entry<Entity, PosMark> entry : whiteGifts.entrySet())
+        {
+            double dX = player.posX - entry.getKey().posX;
+            double dY = player.posY - entry.getKey().posY;
+            double dZ = player.posZ - entry.getKey().posZ;
+            double distanceSq = dX * dX + dY * dY + dZ * dZ;
+            if (distanceSq < nearestDis)
+            {
+                nearestDis = distanceSq;
+                mark = entry.getValue();
+            }
+        }
+        if (mark != null && nearestDis <= 10 * 10)
+        {
+            mark.isFound = true;
         }
     }
     
@@ -356,6 +461,21 @@ public class GiftTweaks extends Tweak
     public boolean isOnlyTargetOpenableGiftOn()
     {
         return c.giftFeatures && c.targetingOnlyOpenableGift;
+    }
+    
+    private static class PosMark extends Vec3i
+    {
+        public boolean isFound = false;
+        
+        public PosMark(int x, int y, int z)
+        {
+            super(x, y, z);
+        }
+        
+        public PosMark(double x, double y, double z)
+        {
+            super(x, y, z);
+        }
     }
     
     public void toggleGiftFeatures()
@@ -471,5 +591,13 @@ public class GiftTweaks extends Tweak
             c.autoReleaseRightClickWhitelist.add(name);
             sendChat("Gift: added " + name + " to whitelist");
         }
+    }
+    
+    public void toggleWhiteGiftTracking()
+    {
+        trackWhiteGifts = !trackWhiteGifts;
+        sendChat("Gift: toggled white gift tracking " + trackWhiteGifts);
+        whiteGifts.clear();
+        whiteGiftsTemp.clear();
     }
 }

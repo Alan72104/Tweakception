@@ -114,6 +114,7 @@ public class GlobalTweaks extends Tweak
         public boolean displayPersonalCompactorItems = true;
         public boolean displayPersonalDeletorItems = true;
         public boolean chatLogForceFormatted = false;
+        public boolean autoGuildWelcome = false;
     }
     
     private final GlobalTweaksConfig c;
@@ -915,6 +916,12 @@ public class GlobalTweaks extends Tweak
             else if (msg.equals("REMINDER: Your Online Status is currently set to Appear Offline"))
             {
                 c.lastOnlineStatus = "offline";
+            }
+            else if (c.autoGuildWelcome && ((msg = McUtils.cleanColor(msg)) != null) &&
+                msg.startsWith("Guild > ") && msg.endsWith(" joined."))
+            {
+                String name = msg.substring(8, msg.length() - 8);
+                McUtils.executeCommand("/gc welcome " + name);
             }
         }
         else if (event.type == 2)
@@ -2564,6 +2571,12 @@ public class GlobalTweaks extends Tweak
     {
         dojoDisciplineHelper = !dojoDisciplineHelper;
         sendChat("GT-DojoDisciplineHelper: toggled " + dojoDisciplineHelper);
+    }
+    
+    public void toggleAutoGuildWelcome()
+    {
+        c.autoGuildWelcome = !c.autoGuildWelcome;
+        sendChat("GT-AutoGuildWelcome: toggled " + c.autoGuildWelcome);
     }
     
     // endregion Commands

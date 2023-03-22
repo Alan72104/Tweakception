@@ -174,6 +174,7 @@ public class InGameEventDispatcher
         miningTweaks.onRenderLast(event);
         foragingTweaks.onRenderLast(event);
         globalTweaks.onRenderLast(event);
+        giftTweaks.onRenderLast(event);
         
         endFuncAndAddNum(1);
     }
@@ -265,6 +266,7 @@ public class InGameEventDispatcher
         globalTweaks.onEntityUpdate(event);
         dungeonTweaks.onEntityUpdate(event);
         fairyTracker.onEntityUpdate(event);
+        giftTweaks.onEntityUpdate(event);
     }
     
     @SubscribeEvent
@@ -281,6 +283,7 @@ public class InGameEventDispatcher
         crimsonTweaks.onWorldUnload(event);
         slayerTweaks.onWorldUnload(event);
         miningTweaks.onWorldUnload(event);
+        giftTweaks.onWorldUnload(event);
     }
     
     @SubscribeEvent

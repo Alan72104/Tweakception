@@ -360,6 +360,8 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.globalTweaks.toggleRenderSacksType()),
                 new Command("renderpotiontier",
                     args -> Tweakception.globalTweaks.toggleRenderPotionTier()),
+                new Command("setGlassesToStones",
+                    args -> Tweakception.globalTweaks.setGlassesToStones()),
                 new Command("setinvisibleentityalphapercentage",
                     args -> Tweakception.globalTweaks.setInvisibleEntityAlphaPercentage(
                         args.length > 0 ? toInt(args[0]) : 0)),

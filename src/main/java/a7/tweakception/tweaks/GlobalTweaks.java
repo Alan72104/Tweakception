@@ -10,6 +10,7 @@ import a7.tweakception.overlay.Anchor;
 import a7.tweakception.overlay.TextOverlay;
 import a7.tweakception.utils.*;
 import com.google.common.collect.Ordering;
+import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.entity.EntityOtherPlayerMP;
@@ -2577,6 +2578,24 @@ public class GlobalTweaks extends Tweak
     {
         c.autoGuildWelcome = !c.autoGuildWelcome;
         sendChat("GT-AutoGuildWelcome: toggled " + c.autoGuildWelcome);
+    }
+    
+    public void setGlassesToStones()
+    {
+        int count = 0;
+        Vec3i radius = new Vec3i(128, 1, 128);
+        for (BlockPos pos : BlockPos.getAllInBox(
+            new BlockPos(getPlayer()).subtract(radius),
+            new BlockPos(getPlayer()).add(radius)))
+        {
+            Block theBlock = getWorld().getBlockState(pos).getBlock();
+            if (theBlock == Blocks.stained_glass || theBlock == Blocks.glass)
+            {
+                count++;
+                getWorld().setBlockState(pos, Blocks.stone.getDefaultState());
+            }
+        }
+        sendChat("GT: set " + count + " blocks to stone");
     }
     
     // endregion Commands

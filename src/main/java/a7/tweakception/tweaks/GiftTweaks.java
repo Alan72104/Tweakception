@@ -356,7 +356,7 @@ public class GiftTweaks extends Tweak
         for (int i = 0; i < 54; i++)
         {
             ItemStack stack = inv.getStackInSlot(i);
-            if (stack == null || stack.stackSize > 1 && stack.stackSize < 64)
+            if (stack == null || stack.stackSize > 0 && stack.stackSize < 64)
             {
                 hasEmptySlot = true;
                 break;

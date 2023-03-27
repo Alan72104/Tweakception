@@ -318,6 +318,8 @@ public class TweakceptionCommand extends CommandBase
                 ),
                 new Command("highlightplayer",
                     args -> Tweakception.globalTweaks.setPlayerToHighlight(args.length > 0 ? args[0] : "")),
+                new Command("highlightPlayers",
+                    args -> Tweakception.globalTweaks.toggleHighlightPlayers()),
                 new Command("highlightarmorstand",
                     args -> Tweakception.globalTweaks.setArmorStandToHighlight(args.length > 0 ? args[0] : "")),
                 new Command("highlightskulls",

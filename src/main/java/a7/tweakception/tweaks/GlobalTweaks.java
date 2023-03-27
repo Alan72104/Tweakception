@@ -152,6 +152,7 @@ public class GlobalTweaks extends Tweak
     private int tooltipUpdateTicks = 0;
     private int minionAutoClaimLastClickTicks = 0;
     private int minionAutoClaimClickDelay = 0;
+    private boolean highlightPlayers = false;
     private final Set<String> playersToHighlight = new HashSet<>();
     private final Set<String> armorStandsToHighlight = new HashSet<>();
     private final Matcher trevorAnimalNametagMatcher = Pattern.compile(
@@ -582,13 +583,15 @@ public class GlobalTweaks extends Tweak
             RenderUtils.drawFilledBoundingBox(areaPoints[1 - selectedAreaPointIndex], new Color(0, 255, 0, 64), t);
         }
         
-        if (!playersToHighlight.isEmpty())
+        if (!playersToHighlight.isEmpty() || highlightPlayers)
         {
-            for (EntityPlayer player : getWorld().playerEntities)
+            for (EntityPlayer p : getWorld().playerEntities)
             {
-                if (player.isEntityAlive() && playersToHighlight.contains(player.getName().toLowerCase()))
+                if (p.isEntityAlive() &&
+                    ((highlightPlayers && getMc().getNetHandler().getPlayerInfo(p.getUniqueID()) != null) ||
+                    playersToHighlight.contains(p.getName().toLowerCase())))
                 {
-                    RenderUtils.drawBeaconBeamOrBoundingBox(player, new Color(0, 255, 0, 64), event.partialTicks, 0, 15);
+                    RenderUtils.drawBeaconBeamOrBoundingBox(p, new Color(0, 255, 0, 64), event.partialTicks, 0, 15);
                 }
             }
         }
@@ -2268,6 +2271,12 @@ public class GlobalTweaks extends Tweak
     {
         c.tooltipDisplaySkyblockItemId = !c.tooltipDisplaySkyblockItemId;
         sendChat("GT-TooltipDisplayItemId: toggled " + c.tooltipDisplaySkyblockItemId);
+    }
+    
+    public void toggleHighlightPlayers()
+    {
+        highlightPlayers = !highlightPlayers;
+        sendChat("GT-HighlightPlayers: toggled " + highlightPlayers);
     }
     
     public void setPlayerToHighlight(String name)

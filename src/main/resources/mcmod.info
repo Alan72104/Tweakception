@@ -1,16 +1,16 @@
 [
-{
-  "modid": "tweakception",
-  "name": "Tewakception",
-  "description": "The Tweakception mod.",
-  "version": "${mod_version}",
-  "mcversion": "${minecraft_version}",
-  "url": "",
-  "updateUrl": "",
-  "authorList": ["Alan72104"],
-  "credits": "",
-  "logoFile": "",
-  "screenshots": [],
-  "dependencies": []
-}
+  {
+    "modid": "tweakception",
+    "name": "Tewakception",
+    "description": "The Tweakception mod.",
+    "version": "${mod_version}",
+    "mcversion": "${minecraft_version}",
+    "url": "https://github.com/Alan72104/Tweakception",
+    "updateUrl": "",
+    "authorList": ["Alan72104"],
+    "credits": "",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+  }
 ]

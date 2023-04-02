@@ -6,6 +6,8 @@ import a7.tweakception.config.Configuration;
 import a7.tweakception.events.IslandChangedEvent;
 import a7.tweakception.events.PacketReceiveEvent;
 import a7.tweakception.events.PacketSendEvent;
+import a7.tweakception.mixin.AccessorGuiPlayerTabOverlay;
+import a7.tweakception.mixin.AccessorMinecraft;
 import a7.tweakception.overlay.Anchor;
 import a7.tweakception.overlay.TextOverlay;
 import a7.tweakception.utils.*;
@@ -121,7 +123,8 @@ public class GlobalTweaks extends Tweak
     private final GlobalTweaksConfig c;
     //private static final HashMap<String, SkyblockIsland> SUBPLACE_TO_ISLAND_MAP = new HashMap<>();
     private static final List<SkyblockIsland> ISLANDS_THAT_HAS_SUBAREAS = new ArrayList<>();
-    private static final Ordering<NetworkPlayerInfo> TAB_LIST_ORDERING = GuiPlayerTabOverlay.field_175252_a;
+    // Below class loaded in tweakception
+    private static final Ordering<NetworkPlayerInfo> TAB_LIST_ORDERING = AccessorGuiPlayerTabOverlay.getTabListOrdering();
     private static int ticks = 0;
     private static boolean islandUpdatedThisTick = false;
     private static boolean playerListUpdatedThisTick = false;
@@ -619,7 +622,7 @@ public class GlobalTweaks extends Tweak
         if (c.trevorHighlightAnimal)
         {
             if (trevorAnimalNametag != null && !trevorAnimalNametag.isDead)
-                RenderUtils.drawBeaconBeamAtEntity(trevorAnimalNametag, new Color(0, 255, 0, 80));
+                RenderUtils.drawBeaconBeamAtEntity(trevorAnimalNametag, new Color(0, 255, 0, 80), getPartialTicks());
             else
                 trevorAnimalNametag = null;
         }
@@ -1559,7 +1562,7 @@ public class GlobalTweaks extends Tweak
         {
             sendChat("GT-Trevor: starting from abiphone");
             getPlayer().inventory.currentItem = slot;
-            getMc().rightClickMouse();
+            ((AccessorMinecraft) getMc()).rightClickMouse();
             trevorQuestPendingStart = true;
             trevorQuestPendingStartStartTicks = getTicks();
         }

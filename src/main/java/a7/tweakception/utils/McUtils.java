@@ -1,5 +1,6 @@
 package a7.tweakception.utils;
 
+import a7.tweakception.mixin.AccessorMinecraft;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
@@ -16,10 +17,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.IChatComponent;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.*;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.util.Constants;
 
@@ -32,21 +30,28 @@ import java.util.regex.Pattern;
 
 public class McUtils
 {
-    private static final Matcher COLOR_MATCHER = Pattern.compile("§[0-9a-fk-or]").matcher("");
+    private static Minecraft mc = Minecraft.getMinecraft();
+    private static Timer mcTimer = ((AccessorMinecraft) mc).getTimer();
+    private static final Matcher COLOR_MATCHER = Pattern.compile("§[0-9a-fk-orA-FK-OR]").matcher("");
     
     public static Minecraft getMc()
     {
-        return Minecraft.getMinecraft();
+        return mc;
     }
     
     public static EntityPlayerSP getPlayer()
     {
-        return getMc().thePlayer;
+        return mc.thePlayer;
     }
     
     public static WorldClient getWorld()
     {
-        return getMc().theWorld;
+        return mc.theWorld;
+    }
+    
+    public static float getPartialTicks()
+    {
+        return mcTimer.renderPartialTicks;
     }
     
     public static boolean isInGame()

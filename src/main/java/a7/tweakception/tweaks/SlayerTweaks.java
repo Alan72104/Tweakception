@@ -2,6 +2,7 @@ package a7.tweakception.tweaks;
 
 import a7.tweakception.Tweakception;
 import a7.tweakception.config.Configuration;
+import a7.tweakception.mixin.AccessorMinecraft;
 import a7.tweakception.overlay.Anchor;
 import a7.tweakception.overlay.TextOverlay;
 import a7.tweakception.utils.McUtils;
@@ -215,7 +216,7 @@ public class SlayerTweaks extends Tweak
                             switchingSlot = true;
                             int lastSlot = getPlayer().inventory.currentItem;
                             getPlayer().inventory.currentItem = slot;
-                            Tweakception.scheduler.addDelayed(() -> getMc().rightClickMouse(), 4)
+                            Tweakception.scheduler.addDelayed(() -> ((AccessorMinecraft) getMc()).rightClickMouse(), 4)
                                 .thenDelayed(() ->
                                 {
                                     getPlayer().inventory.currentItem = lastSlot;
@@ -252,7 +253,7 @@ public class SlayerTweaks extends Tweak
                     Tweakception.scheduler.addDelayed(() ->
                     {
                         getPlayer().inventory.currentItem = wandSlot; // Or again in the same tick
-                        getMc().rightClickMouse();
+                        ((AccessorMinecraft) getMc()).rightClickMouse();
                     }, 2)
                     .thenDelayed(() ->
                     {

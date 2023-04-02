@@ -762,9 +762,9 @@ public class DungeonTweaks extends Tweak
                 if (c.highlightDoorKeys && getCurrentIsland() == SkyblockIsland.DUNGEON)
                 {
                     if (tex.equals(witherKeyTexture))
-                        RenderUtils.drawBeaconBeamAtEntity(entity, new Color(84, 166, 102, 128));
+                        RenderUtils.drawBeaconBeamAtEntity(entity, new Color(84, 166, 102, 128), getPartialTicks());
                     else if (tex.equals(bloodKeyTexture))
-                        RenderUtils.drawBeaconBeamAtEntity(entity, new Color(84, 166, 102, 128));
+                        RenderUtils.drawBeaconBeamAtEntity(entity, new Color(84, 166, 102, 128), getPartialTicks());
                 }
             }
         }

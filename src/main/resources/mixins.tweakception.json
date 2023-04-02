@@ -12,6 +12,9 @@
     "MixinUtil"
   ],
   "client": [
+    "AccessorGuiContainer",
+    "AccessorGuiPlayerTabOverlay",
+    "AccessorMinecraft",
     "MixinEntityRenderer",
     "MixinGuiContainer",
     "MixinGuiEditSign",
@@ -22,8 +25,7 @@
     "MixinRendererLivingEntity",
     "MixinRenderGlobal",
     "MixinRenderItem",
-    "MixinRenderManager",
-    "PlayerControllerMPInvoker"
+    "MixinRenderManager"
   ],
   "injectors": {
     "defaultRequire": 1

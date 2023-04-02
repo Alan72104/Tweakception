@@ -2,6 +2,7 @@ package a7.tweakception.tweaks;
 
 import a7.tweakception.Tweakception;
 import a7.tweakception.config.Configuration;
+import a7.tweakception.mixin.AccessorMinecraft;
 import a7.tweakception.overlay.Anchor;
 import a7.tweakception.overlay.TextOverlay;
 import a7.tweakception.utils.McUtils;
@@ -188,7 +189,7 @@ public class FishingTweaks extends Tweak
                         if (getTicks() - lastRetrieveClickTicks > 15)
                         {
                             lastRetrieveClickTicks = getTicks();
-                            getMc().rightClickMouse();
+                            ((AccessorMinecraft) getMc()).rightClickMouse();
                             
                             if (getTicks() - lastCatchTicks >= 20 * 60)
                                 catchesLeftToMove = rand.nextInt(c.maxCatchesToMove - c.minCatchesToMove + 1) + c.minCatchesToMove;
@@ -217,7 +218,7 @@ public class FishingTweaks extends Tweak
                         if (getTicks() - lastRecastClickTicks > 20)
                         {
                             lastRecastClickTicks = getTicks();
-                            getMc().rightClickMouse();
+                            ((AccessorMinecraft) getMc()).rightClickMouse();
                         }
                         state = FishingState.NOTHING;
                     }
@@ -259,7 +260,7 @@ public class FishingTweaks extends Tweak
                     .thenDelayed(playSound, 10);
                 
                 if (getPlayer().fishEntity != null)
-                    getMc().rightClickMouse();
+                    ((AccessorMinecraft) getMc()).rightClickMouse();
             }
         }
     }

@@ -2,11 +2,14 @@ package a7.tweakception;
 
 import a7.tweakception.commands.TweakceptionCommand;
 import a7.tweakception.config.Configuration;
+import a7.tweakception.mixin.AccessorMinecraft;
 import a7.tweakception.overlay.OverlayManager;
 import a7.tweakception.tweaks.*;
 import a7.tweakception.utils.DiscordGuildBridge;
 import net.minecraft.block.Block;
+import net.minecraft.client.gui.GuiPlayerTabOverlay;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.Timer;
 import net.minecraft.world.World;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.MinecraftForge;
@@ -20,13 +23,15 @@ import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static a7.tweakception.utils.McUtils.getMc;
+
 @Mod(modid = Tweakception.MOD_ID, version = Tweakception.MOD_VERSION, name = Tweakception.MOD_NAME,
     acceptedMinecraftVersions = "1.8.9", clientSideOnly = true)
 public class Tweakception
 {
     public static final String MOD_ID = "tweakception";
     public static final String MOD_NAME = "Tweakception";
-    public static final String MOD_VERSION = "@MOD_VERSION@";
+    public static final String MOD_VERSION = "1.0";
     @Mod.Instance(MOD_ID)
     public static Tweakception instance;
     public static Logger logger;
@@ -60,6 +65,9 @@ public class Tweakception
         configuration = new Configuration(event.getModConfigurationDirectory().getAbsolutePath() + "/" + MOD_ID + "/");
         configuration.initConfig();
         
+        // Load class for static field accessors
+        Class.forName("net.minecraft.client.gui.GuiPlayerTabOverlay");
+
         inGameEventDispatcher = new InGameEventDispatcher();
         threadPool = Executors.newFixedThreadPool(3);
         scheduler = new Scheduler();

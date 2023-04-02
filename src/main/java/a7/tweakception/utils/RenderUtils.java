@@ -15,6 +15,7 @@ import org.lwjgl.opengl.GL14;
 import java.awt.*;
 
 import static a7.tweakception.utils.McUtils.getMc;
+import static a7.tweakception.utils.McUtils.getPartialTicks;
 
 public class RenderUtils
 {
@@ -65,21 +66,21 @@ public class RenderUtils
 //        bb.offset(-(bb.maxX / 2.0), -bb.maxY, -(bb.maxZ / 2.0));
         double defaultYOffset = 0.19375;
         bb = bb.offset(-(bb.maxX - entity.width) / 2.0, -bb.maxY - defaultYOffset, -(bb.maxZ - entity.height) / 2.0);
-        drawHighlightBox(entity, bb, c, getMc().timer.renderPartialTicks, depth);
+        drawHighlightBox(entity, bb, c, getPartialTicks(), depth);
     }
     
     public static void drawDefaultHighlightBox(Entity entity, int type, Color c, boolean depth)
     {
         AxisAlignedBB bb = getAABBFromType(type);
         bb = bb.offset(-bb.maxX / 2.0, 0.0, -bb.maxZ / 2.0);
-        drawHighlightBox(entity, bb, c, getMc().timer.renderPartialTicks, depth);
+        drawHighlightBox(entity, bb, c, getPartialTicks(), depth);
     }
     
     public static void drawDefaultHighlightBoxForEntity(Entity entity, Color c, boolean depth)
     {
         AxisAlignedBB bb = new AxisAlignedBB(0.0, 0.0, 0.0, entity.width, entity.height, entity.width);
         bb = bb.offset(-bb.maxX / 2.0, 0.0, -bb.maxZ / 2.0);
-        drawHighlightBox(entity, bb, c, getMc().timer.renderPartialTicks, depth);
+        drawHighlightBox(entity, bb, c, getPartialTicks(), depth);
     }
     
     // Draws a box relative to the entity, origin is the entity's center
@@ -458,7 +459,7 @@ public class RenderUtils
         {
             AxisAlignedBB bb = new AxisAlignedBB(0.0, 0.0, 0.0, boxWidth, boxHeight, boxWidth);
             bb = bb.offset(-bb.maxX / 2.0, 0.0, -bb.maxZ / 2.0);
-            drawHighlightBox(e, bb, c, getMc().timer.renderPartialTicks, false);
+            drawHighlightBox(e, bb, c, partialTicks, false);
         }
     }
     
@@ -483,13 +484,13 @@ public class RenderUtils
         drawFilledBoundingBox(new AxisAlignedBB(x, y, z, x + 1d, y + 1d, z + 1d), c, false);
     }
     
-    public static void drawBeaconBeamAtEntity(Entity entity, Color c)
+    public static void drawBeaconBeamAtEntity(Entity entity, Color c, float partialTicks)
     {
-        Vector3d viewer = getInterpolatedViewingPos(getMc().timer.renderPartialTicks);
+        Vector3d viewer = getInterpolatedViewingPos(partialTicks);
         double x = entity.posX - viewer.x - 0.5;
         double y = entity.posY - viewer.y - 0.5;
         double z = entity.posZ - viewer.z - 0.5;
-        RenderUtils.drawBeaconBeam(x, y, z, c, getMc().timer.renderPartialTicks, false);
+        RenderUtils.drawBeaconBeam(x, y, z, c, partialTicks, false);
     }
     
     private static void drawBeaconBeam(
@@ -588,7 +589,7 @@ public class RenderUtils
     
     public static void renderTextInWorldOnEntity(String s, Entity e)
     {
-        Vector3d v = getInterpolatedPos(e, getMc().timer.renderPartialTicks);
+        Vector3d v = getInterpolatedPos(e, getPartialTicks());
         drawTextInWorld(s, v.x, v.y + 0.5f, v.z);
     }
     

@@ -63,7 +63,7 @@ public abstract class MixinMinecraft
         .getMap();
     
     @Shadow
-    public abstract void rightClickMouse();
+    protected abstract void rightClickMouse();
     
     @Inject(method = "runGameLoop", at = @At("HEAD"))
     private void runGameLoop(CallbackInfo ci)

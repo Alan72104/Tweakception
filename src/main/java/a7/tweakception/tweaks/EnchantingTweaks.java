@@ -1,6 +1,7 @@
 package a7.tweakception.tweaks;
 
 import a7.tweakception.config.Configuration;
+import a7.tweakception.mixin.AccessorGuiContainer;
 import a7.tweakception.utils.Pair;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.inventory.GuiChest;
@@ -110,9 +111,10 @@ public class EnchantingTweaks extends Tweak
             return;
         
         GuiChest chest = (GuiChest) event.gui;
+        AccessorGuiContainer accessor = (AccessorGuiContainer) event.gui;
         FontRenderer r = getMc().fontRendererObj;
-        int x = chest.guiLeft + 176 + 20;
-        int y = chest.guiTop;
+        int x = accessor.getGuiLeft() + 176 + 20;
+        int y = accessor.getGuiTop();
         GlStateManager.pushMatrix();
         GlStateManager.translate(0, 0, 500);
         

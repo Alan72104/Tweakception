@@ -46,7 +46,6 @@ import net.minecraftforge.client.event.*;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -119,6 +118,9 @@ public class GlobalTweaks extends Tweak
         public boolean displayPersonalDeletorItems = true;
         public boolean chatLogForceFormatted = false;
         public boolean autoGuildWelcome = false;
+        public int autoHarpClickDelayTicks = 10;
+        public boolean autoHarpAutoClose = false;
+        public boolean autoHarpReplayMode = false;
     }
     
     private final GlobalTweaksConfig c;
@@ -126,6 +128,7 @@ public class GlobalTweaks extends Tweak
     private static final List<SkyblockIsland> ISLANDS_THAT_HAS_SUBAREAS = new ArrayList<>();
     // Below class loaded in tweakception
     private static final Ordering<NetworkPlayerInfo> TAB_LIST_ORDERING = AccessorGuiPlayerTabOverlay.getTabListOrdering();
+    private static final Map<String, String> HARP_DATA = new HashMap<>();
     private static int ticks = 0;
     private static boolean islandUpdatedThisTick = false;
     private static boolean playerListUpdatedThisTick = false;
@@ -207,6 +210,12 @@ public class GlobalTweaks extends Tweak
     private final Matcher petItemJsonExpMatcher = Pattern.compile(
         "\\\"exp\\\":(\\d+.?\\d*E?\\d*)").matcher("");
     private boolean dojoDisciplineHelper = false;
+    private boolean autoHarp = false;
+    private Item[] autoHarpLastChestItems = new Item[28];
+    private int autoHarpReplayIndex = 0;
+    private int autoHarpReplayLastClickTicks = 0;
+    private String autoHarpReplayData = null;
+    private long windowOpenMillis = 0;
     
     static
     {
@@ -215,6 +224,14 @@ public class GlobalTweaks extends Tweak
             if (island.subAreas != null)
                 ISLANDS_THAT_HAS_SUBAREAS.add(island);
         }
+        HARP_DATA.put("Pachelbel",
+            "6...4...|5...2...|3...1...|3...4...|" +
+            "4.3.4.1.|1...3..|4..5..|6..6.7.|" +
+            "6.5.4.7.|6.5.4.3.|2.1.3.3.|432..|" +
+            "6.456.45|61234567|6.234.23|45434656|" +
+            "3.654.32|32123456|4.656.32|345676.|" +
+            "456.54|53456543|4.234.45|67656.545|" +
+            "3.543.32|32123456|4.656.32|345674|");
     }
     
     public GlobalTweaks(Configuration configuration)
@@ -533,6 +550,119 @@ public class GlobalTweaks extends Tweak
                     sendChat("GT-HideFromStrangers: evacuating to private island...");
                     getPlayer().sendChatMessage("/is");
                     hideFromStrangersLastWarpTicks = getTicks();
+                }
+            }
+            
+            // Probably want to check after the whole container is updated
+            if (autoHarp && getMc().currentScreen instanceof GuiChest)
+            {
+                GuiChest chest = (GuiChest) McUtils.getMc().currentScreen;
+                ContainerChest container = (ContainerChest) chest.inventorySlots;
+                IInventory inv = container.getLowerChestInventory();
+                if (inv.getSizeInventory() == 54 && inv.getName().startsWith("Harp - "))
+                {
+                    boolean changed = false;
+                    for (int j = 0; j < 4; j++)
+                    {
+                        for (int i = 1; i < 8; i++)
+                        {
+                            ItemStack stack = inv.getStackInSlot(j * 9 + i);
+                            Item item = stack == null ? null : stack.getItem();
+                            
+                            if (item != null && autoHarpLastChestItems[j*7 + (i-1)] != item)
+                                changed = true;
+                            
+                            autoHarpLastChestItems[j*7 + (i-1)] = item;
+                        }
+                    }
+                    
+                    if (c.autoHarpReplayMode)
+                    {
+                        if (autoHarpReplayData == null)
+                        {
+                            if (autoHarpReplayLastClickTicks == 0)
+                            {
+                                boolean noteAppeared = false;
+                                for (int i = 0; i < 7; i++)
+                                    if (autoHarpLastChestItems[2 * 7 + i] == Item.getItemFromBlock(Blocks.wool))
+                                        noteAppeared = true;
+                                if (noteAppeared)
+                                {
+                                    autoHarpReplayLastClickTicks = getTicks();
+                                }
+                            }
+                            else if (getTicks() - autoHarpReplayLastClickTicks >= c.autoHarpClickDelayTicks)
+                            {
+                                autoHarpReplayData = HARP_DATA.get(inv.getName().substring(7));
+                                if (autoHarpReplayData != null)
+                                    autoHarpReplayData = autoHarpReplayData.replace("|", "");
+                                else
+                                    autoHarpReplayData = "";
+                                autoHarpReplayIndex = 0;
+                                autoHarpReplayLastClickTicks = getTicks() - 5;
+                            }
+                        }
+                        
+                        if (autoHarpReplayData != null &&
+                            !autoHarpReplayData.isEmpty() &&
+                            getTicks() - autoHarpReplayLastClickTicks >= 5)
+                        {
+                            autoHarpReplayLastClickTicks = getTicks();
+                            if (autoHarpReplayIndex < autoHarpReplayData.length())
+                            {
+                                char note = autoHarpReplayData.charAt(autoHarpReplayIndex);
+                                if (note != '.')
+                                {
+                                    getMc().playerController.windowClick(container.windowId,
+                                        4 * 9 + 1 + (note - '1'),
+                                        2, 3, getPlayer());
+                                }
+                            }
+                            autoHarpReplayIndex++;
+                        }
+                    }
+                    else
+                    {
+                        if (changed && System.currentTimeMillis() - getWindowOpenMillis() >= 500)
+                        {
+                            for (int i = 0; i < 7; i++)
+                            {
+                                if (autoHarpLastChestItems[2 * 7 + i] == Item.getItemFromBlock(Blocks.wool))
+                                {
+                                    int index = i;
+                                    Tweakception.scheduler.addDelayed(() ->
+                                    {
+                                        if (getPlayer().openContainer.windowId == container.windowId)
+                                        {
+                                            getMc().playerController.windowClick(container.windowId,
+                                                4 * 9 + index + 1,
+                                                2, 3, getPlayer());
+                                        }
+                                    }, c.autoHarpClickDelayTicks);
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (c.autoHarpAutoClose)
+                    {
+                        for (int i = 1; i < 8; i++)
+                        {
+                            ItemStack stack = inv.getStackInSlot(5 * 9 + 1 + i);
+                            if (stack != null && stack.getItem() == Item.getItemFromBlock(Blocks.wool))
+                            {
+                                getMc().displayGuiScreen(null);
+                                sendChat("GT-AutoHarp: Closed harp (non perfect)");
+                                break;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    autoHarpReplayData = null;
+                    autoHarpReplayIndex = 0;
+                    autoHarpReplayLastClickTicks = 0;
                 }
             }
         }
@@ -896,6 +1026,11 @@ public class GlobalTweaks extends Tweak
                 });
             }
         }
+    }
+    
+    public void onGuiOpen(GuiOpenEvent event)
+    {
+        windowOpenMillis = System.currentTimeMillis();
     }
     
     public void onChatReceivedGlobal(ClientChatReceivedEvent event)
@@ -1273,6 +1408,11 @@ public class GlobalTweaks extends Tweak
     public long getWorldJoinTicks()
     {
         return lastWorldJoinTicks;
+    }
+    
+    public long getWindowOpenMillis()
+    {
+        return windowOpenMillis;
     }
     
     // Returns a new list, or null if both list sections (count) are not in sync or no list
@@ -2621,6 +2761,30 @@ public class GlobalTweaks extends Tweak
             }
         }
         sendChat("GT: set " + count + " blocks to stone");
+    }
+    
+    public void toggleAutoHarp()
+    {
+        autoHarp = !autoHarp;
+        sendChat("GT-AutoHarp: toggled " + autoHarp);
+    }
+    
+    public void setAutoHarpClickDelayTicks(int ticks)
+    {
+        c.autoHarpClickDelayTicks = ticks < 0 ? new GlobalTweaksConfig().autoHarpClickDelayTicks : Utils.clamp(ticks, 0, 30);
+        sendChat("GT-AutoHarp: set click delay (time to wait after the the note appears on the 3rd row) to " + c.autoHarpClickDelayTicks + " ticks");
+    }
+    
+    public void toggleAutoHarpAutoClose()
+    {
+        c.autoHarpAutoClose = !c.autoHarpAutoClose;
+        sendChat("GT-AutoHarp: toggled auto close on non perfect " + c.autoHarpAutoClose);
+    }
+    
+    public void toggleAutoHarpReplayMode()
+    {
+        c.autoHarpReplayMode = !c.autoHarpReplayMode;
+        sendChat("GT-AutoHarp: toggled replay mode " + c.autoHarpReplayMode);
     }
     
     // endregion Commands

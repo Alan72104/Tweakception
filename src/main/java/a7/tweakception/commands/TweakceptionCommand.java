@@ -247,6 +247,15 @@ public class TweakceptionCommand extends CommandBase
                                 sendChat("Give me 6 args");
                         })
                 ),
+                new Command("autoHarp",
+                    args -> Tweakception.globalTweaks.toggleAutoHarp(),
+                    new Command("autoCloseOnNonPerfect",
+                        args -> Tweakception.globalTweaks.toggleAutoHarpAutoClose()),
+                    new Command("replayMode",
+                        args -> Tweakception.globalTweaks.toggleAutoHarpReplayMode()),
+                    new Command("setClickDelayTicks",
+                        args -> Tweakception.globalTweaks.setAutoHarpClickDelayTicks(getInt(args, 0, -1)))
+                ),
                 new Command("autoGuildWelcome",
                     args -> Tweakception.globalTweaks.toggleAutoGuildWelcome()),
                 new Command("blockquickcraft",

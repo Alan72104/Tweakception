@@ -306,6 +306,7 @@ public class InGameEventDispatcher
     {
         if (!isInSkyblock()) return;
         
+        globalTweaks.onGuiOpen(event);
         dungeonTweaks.onGuiOpen(event);
         enchantingTweaks.onGuiOpen(event);
     }

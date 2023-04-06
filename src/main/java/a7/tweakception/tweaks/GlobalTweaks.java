@@ -46,6 +46,7 @@ import net.minecraftforge.client.event.*;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -793,7 +794,7 @@ public class GlobalTweaks extends Tweak
         
         if (c.ranchersBootsTooltipSpeedNote &&
             "RANCHERS_BOOTS".equals(Utils.getSkyblockItemId(itemStack)) &&
-            Keyboard.isKeyDown(Keyboard.KEY_LCONTROL))
+            Keyboard.isKeyDown(Keyboard.KEY_LSHIFT))
         {
             for (int i = 0; i < tooltip.size(); i++)
             {
@@ -801,12 +802,12 @@ public class GlobalTweaks extends Tweak
                 {
                     int t = 1;
                     tooltip.add(i + t++, "§7 Base: 4.317 m/s");
-                    tooltip.add(i + t++, "§7 5 blocks: 93%");
-                    tooltip.add(i + t++, "§7 5 m/s: 116%");
-                    tooltip.add(i + t++, "§7 3 blocks: 155%");
-                    tooltip.add(i + t++, "§7 10 m/s: 232%");
-                    tooltip.add(i + t++, "§7 20 m/s: 464%");
-                    tooltip.add(i + t++, "§7 45° 10 m/s: 328%");
+                    tooltip.add(i + t++, "§7 5 blocks 4 m/s:   93%");
+                    tooltip.add(i + t++, "§7 4 blocks 5 m/s:   116%");
+                    tooltip.add(i + t++, "§7 3 blocks 6.7 m/s: 155%");
+                    tooltip.add(i + t++, "§7 2 blocks 10 m/s:  232%");
+                    tooltip.add(i + t++, "§7 1 block  20 m/s:  464%");
+                    tooltip.add(i + t++, "§7 45°      10 m/s:  328%");
                     tooltip.add(i + t, "§7 Cocoa: 120%");
                     break;
                 }
@@ -1455,6 +1456,18 @@ public class GlobalTweaks extends Tweak
     public boolean isInAreaEditMode()
     {
         return editingAreas;
+    }
+    
+    public AxisAlignedBB getAreaEditSelection()
+    {
+        int minX = Math.min(areaPoints[0].getX(), areaPoints[1].getX());
+        int minY = Math.min(areaPoints[0].getY(), areaPoints[1].getY());
+        int minZ = Math.min(areaPoints[0].getZ(), areaPoints[1].getZ());
+        int maxX = Math.max(areaPoints[0].getX(), areaPoints[1].getX()) + 1;
+        int maxY = Math.max(areaPoints[0].getY(), areaPoints[1].getY()) + 1;
+        int maxZ = Math.max(areaPoints[0].getZ(), areaPoints[1].getZ()) + 1;
+        AxisAlignedBB bb = new AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ);
+        return bb;
     }
     
     public void switchAreaPoints()

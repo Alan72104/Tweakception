@@ -12,6 +12,7 @@ import net.minecraftforge.client.event.sound.PlaySoundEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
@@ -36,14 +37,14 @@ public class InGameEventDispatcher
             "Living",
             "LivingSpe"
         };
-    private boolean notifyLagSpike = false;
-    private float notifyThreshold = 1000.0f;
-    private float avgAggregationValue = 0.4f;
     private final DecimalFormat format = new DecimalFormat("#.##");
     private final long[] tickStartTimes = new long[TICK_TYPES.length];
     private final float[] startPhaseTickTimes = new float[TICK_TYPES.length];
     private final float[] fullTickTimes = new float[TICK_TYPES.length];
     private final float[] lastFullTickTimes = new float[TICK_TYPES.length];
+    private boolean notifyLagSpike = false;
+    private float notifyThreshold = 1000.0f;
+    private float avgAggregationValue = 0.4f;
     
     public void toggleNotifyLagSpike()
     {

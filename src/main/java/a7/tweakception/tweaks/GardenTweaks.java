@@ -27,6 +27,7 @@ public class GardenTweaks extends Tweak
     public static class GardenTweaksConfig
     {
         public boolean displayVisitorOrderNeuPrice = false;
+        public boolean simulateCactusKnifeInstaBreak = false;
     }
     private final GardenTweaksConfig c;
     private static boolean exceptionThrown = false;
@@ -123,6 +124,11 @@ public class GardenTweaks extends Tweak
         }
     }
     
+    public boolean isSimulateCactusKnifeInstaBreakOn()
+    {
+        return c.simulateCactusKnifeInstaBreak;
+    }
+    
     private void getNeuClass()
     {
         try
@@ -172,5 +178,11 @@ public class GardenTweaks extends Tweak
     {
         c.displayVisitorOrderNeuPrice = !c.displayVisitorOrderNeuPrice;
         sendChat("GardenTweaks-DisplayVisitorOrderNeuPrice: toggled " + c.displayVisitorOrderNeuPrice);
+    }
+    
+    public void toggleSimulateCactusKnifeInstaBreak()
+    {
+        c.simulateCactusKnifeInstaBreak = !c.simulateCactusKnifeInstaBreak;
+        sendChat("GardenTweaks-SimulateCactusKnifeInstaBreak: toggled " + c.simulateCactusKnifeInstaBreak);
     }
 }

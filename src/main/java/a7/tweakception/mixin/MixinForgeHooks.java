@@ -4,6 +4,7 @@ import a7.tweakception.Tweakception;
 import a7.tweakception.tweaks.GlobalTweaks;
 import a7.tweakception.tweaks.SkyblockIsland;
 import a7.tweakception.utils.Utils;
+import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -54,9 +55,19 @@ public class MixinForgeHooks
         skyblockPicksToBreakingPower.put("DIVAN_DRILL", 10);
     }
     
+    // Gets the speed at which player can break a block as opposite to a hardness number
     @Inject(method = "blockStrength", at = @At("HEAD"), remap = false, cancellable = true)
     private static void blockStrength(IBlockState state, EntityPlayer player, World world, BlockPos pos, CallbackInfoReturnable<Float> cir)
     {
+        if (Tweakception.gardenTweaks.isSimulateCactusKnifeInstaBreakOn() &&
+            state.getBlock() == Blocks.cactus &&
+            "CACTUS_KNIFE".equals(Utils.getSkyblockItemId(player.getCurrentEquippedItem())))
+        {
+            cir.setReturnValue(100.0f);
+            cir.cancel();
+            return;
+        }
+        
         if (Tweakception.miningTweaks.isSimulateBlockHardnessOn() &&
             (GlobalTweaks.getCurrentIsland() == SkyblockIsland.DWARVEN_MINES ||
                 GlobalTweaks.getCurrentIsland() == SkyblockIsland.CRYSTAL_HOLLOWS))

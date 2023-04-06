@@ -228,9 +228,13 @@ public class GiftTweaks extends Tweak
                         }
                         else
                         {
-                            if (entity.posX != pair.b.xCoord ||
+                            if ((entity.posX != pair.b.xCoord ||
                                 entity.posY != pair.b.yCoord ||
-                                entity.posZ != pair.b.zCoord)
+                                entity.posZ != pair.b.zCoord) ||
+                                getWorld().getEntitiesWithinAABB(EntityArmorStand.class,
+                                    entity.getEntityBoundingBox().expand(2, 5, 2),
+                                    e -> e.getName().startsWith("§eFrom: ")).size() > 0
+                            )
                             {
                                 // This entity failed the detection
                                 whiteGiftsTemp.put(entity, new Pair<>(0, null));

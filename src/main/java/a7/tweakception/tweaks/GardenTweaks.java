@@ -1,18 +1,25 @@
 package a7.tweakception.tweaks;
 
+import a7.tweakception.Tweakception;
 import a7.tweakception.config.Configuration;
+import a7.tweakception.overlay.Anchor;
+import a7.tweakception.overlay.TextOverlay;
 import a7.tweakception.utils.McUtils;
 import a7.tweakception.utils.Utils;
 import com.google.gson.JsonObject;
 import net.minecraft.client.gui.inventory.GuiChest;
+import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.inventory.ContainerChest;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.play.server.S38PacketPlayerListItem;
+import net.minecraft.util.IChatComponent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -39,11 +46,13 @@ public class GardenTweaks extends Tweak
         private Method getBazaarInfoMethod = null;
     private final Matcher requiredItemMatcher = Pattern.compile("^ (.+) x(\\d+)$").matcher("");
     private final Matcher copperRewardMatcher = Pattern.compile("^ \\+(\\d+) Copper$").matcher("");
+    private final MilestoneOverlay milestoneOverlay;
     
     public GardenTweaks(Configuration configuration)
     {
         super(configuration);
         c = configuration.config.gardenTweaks;
+        Tweakception.overlayManager.addOverlay(milestoneOverlay = new MilestoneOverlay());
     }
     
     public void onTick(TickEvent.ClientTickEvent event)
@@ -124,6 +133,20 @@ public class GardenTweaks extends Tweak
         }
     }
     
+    public void onPlayerListItemUpdateDisplayName(S38PacketPlayerListItem.AddPlayerData addPlayerData,
+                                                  NetworkPlayerInfo networkPlayerInfo)
+    {
+        IChatComponent nameComponent = addPlayerData.getDisplayName();
+        if (nameComponent != null)
+        {
+            String name = nameComponent.getFormattedText();
+            if (name.startsWith("§r Milestone: "))
+            {
+                milestoneOverlay.milestoneText = name.substring(3);
+            }
+        }
+    }
+    
     public boolean isSimulateCactusKnifeInstaBreakOn()
     {
         return c.simulateCactusKnifeInstaBreak;
@@ -174,6 +197,40 @@ public class GardenTweaks extends Tweak
         return null;
     }
     
+    private static class MilestoneOverlay extends TextOverlay
+    {
+        public static final String NAME = "MilestoneOverlay";
+        public String milestoneText = null;
+        
+        public MilestoneOverlay()
+        {
+            super(NAME);
+            setAnchor(Anchor.CenterRight);
+            setOrigin(Anchor.CenterRight);
+            setX(-100);
+            setY(-100);
+            setTextAlignment(1);
+        }
+        
+        @Override
+        public void update()
+        {
+            super.update();
+            List<String> list = new ArrayList<>();
+            if (milestoneText != null)
+                list.add(milestoneText);
+            setContent(list);
+        }
+        
+        @Override
+        public List<String> getDefaultContent()
+        {
+            List<String> list = new ArrayList<>();
+            list.add("Milestone: h");
+            return list;
+        }
+    }
+    
     public void toggleDisplayVisitorOrderNeuPrice()
     {
         c.displayVisitorOrderNeuPrice = !c.displayVisitorOrderNeuPrice;
@@ -184,5 +241,11 @@ public class GardenTweaks extends Tweak
     {
         c.simulateCactusKnifeInstaBreak = !c.simulateCactusKnifeInstaBreak;
         sendChat("GardenTweaks-SimulateCactusKnifeInstaBreak: toggled " + c.simulateCactusKnifeInstaBreak);
+    }
+    
+    public void toggleMilestoneOverlay()
+    {
+        boolean state = Tweakception.overlayManager.toggle(MilestoneOverlay.NAME);
+        sendChat("GardenTweaks: toggled milestone overlay " + state);
     }
 }

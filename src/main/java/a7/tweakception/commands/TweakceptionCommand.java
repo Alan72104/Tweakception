@@ -479,6 +479,8 @@ public class TweakceptionCommand extends CommandBase
         {
             addSub(new Command("garden",
                 null,
+                new Command("milestoneOverlay",
+                    args -> Tweakception.gardenTweaks.toggleMilestoneOverlay()),
                 new Command("simulateCactusKnifeInstaBreak",
                     args -> Tweakception.gardenTweaks.toggleSimulateCactusKnifeInstaBreak()),
                 new Command("visitororderneuprice",

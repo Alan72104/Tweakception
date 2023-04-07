@@ -2,11 +2,15 @@ package a7.tweakception.mixin;
 
 import a7.tweakception.Tweakception;
 import net.minecraft.client.network.NetHandlerPlayClient;
+import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.network.play.server.*;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
+
+import java.util.Iterator;
 
 import static a7.tweakception.tweaks.GlobalTweaks.isInSkyblock;
 
@@ -82,5 +86,18 @@ public class MixinNetHandlerPlayClient
     public void handleSoundEffect(S29PacketSoundEffect packet, CallbackInfo ci)
     {
         Tweakception.globalTweaks.onPacketSoundEffect(packet);
+    }
+    
+    @Inject(method = "handlePlayerListItem", at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/client/network/NetworkPlayerInfo;setDisplayName(Lnet/minecraft/util/IChatComponent;)V"),
+        locals = LocalCapture.CAPTURE_FAILEXCEPTION
+    )
+    public void handlePlayerListItem_UpdateDisplayName(S38PacketPlayerListItem packetIn,
+                                                       CallbackInfo ci,
+                                                       Iterator<S38PacketPlayerListItem.AddPlayerData> it,
+                                                       S38PacketPlayerListItem.AddPlayerData addPlayerData,
+                                                       NetworkPlayerInfo networkPlayerInfo)
+    {
+        Tweakception.gardenTweaks.onPlayerListItemUpdateDisplayName(addPlayerData, networkPlayerInfo);
     }
 }

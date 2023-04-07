@@ -88,6 +88,20 @@ public class OverlayManager extends Tweak
             c.configs.get(name).enable = enable;
     }
     
+    public boolean isEnabled(String name)
+    {
+        if (c.configs.containsKey(name))
+            return c.configs.get(name).enable;
+        return false;
+    }
+    
+    public boolean toggle(String name)
+    {
+        if (c.configs.containsKey(name))
+            return c.configs.get(name).enable = !c.configs.get(name).enable;
+        return false;
+    }
+    
     public void editOverlays()
     {
         Tweakception.scheduler.add(() -> getMc().displayGuiScreen(new OverlayEditScreen()));

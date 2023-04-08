@@ -483,6 +483,13 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.gardenTweaks.toggleMilestoneOverlay()),
                 new Command("simulateCactusKnifeInstaBreak",
                     args -> Tweakception.gardenTweaks.toggleSimulateCactusKnifeInstaBreak()),
+                new Command("snapYaw",
+                    args -> Tweakception.gardenTweaks.toggleSnapYaw(),
+                    new Command("angle",
+                        args -> Tweakception.gardenTweaks.setSnapYawAngle(getInt(args, 0, -1))),
+                    new Command("range",
+                        args -> Tweakception.gardenTweaks.setSnapYawRange(getInt(args, 0, -1)))
+                ),
                 new Command("visitororderneuprice",
                     args -> Tweakception.gardenTweaks.toggleDisplayVisitorOrderNeuPrice())
             ));

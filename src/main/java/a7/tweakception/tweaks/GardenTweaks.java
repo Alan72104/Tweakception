@@ -25,8 +25,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static a7.tweakception.tweaks.GlobalTweaks.getCurrentIsland;
-import static a7.tweakception.utils.McUtils.getMc;
-import static a7.tweakception.utils.McUtils.sendChat;
+import static a7.tweakception.utils.McUtils.*;
 import static a7.tweakception.utils.Utils.f;
 
 public class GardenTweaks extends Tweak
@@ -35,6 +34,8 @@ public class GardenTweaks extends Tweak
     {
         public boolean displayVisitorOrderNeuPrice = false;
         public boolean simulateCactusKnifeInstaBreak = false;
+        public int snapYawAngle = 45;
+        public int snapYawRange = 5;
     }
     private final GardenTweaksConfig c;
     private static boolean exceptionThrown = false;
@@ -47,6 +48,8 @@ public class GardenTweaks extends Tweak
     private final Matcher requiredItemMatcher = Pattern.compile("^ (.+) x(\\d+)$").matcher("");
     private final Matcher copperRewardMatcher = Pattern.compile("^ \\+(\\d+) Copper$").matcher("");
     private final MilestoneOverlay milestoneOverlay;
+    private boolean snapYaw = false;
+    private float snapYawPrevAngle = 0.0f;
     
     public GardenTweaks(Configuration configuration)
     {
@@ -57,6 +60,17 @@ public class GardenTweaks extends Tweak
     
     public void onTick(TickEvent.ClientTickEvent event)
     {
+        if (event.phase == TickEvent.Phase.START)
+        {
+            if (snapYaw)
+            {
+                float yaw = getPlayer().rotationYaw;
+                if (snapYawPrevAngle != yaw)
+                {
+                    snapYawPrevAngle = getPlayer().rotationYaw = snapAngle(yaw, c.snapYawAngle, c.snapYawRange);
+                }
+            }
+        }
     }
     
     public void onItemTooltip(ItemTooltipEvent event)
@@ -150,6 +164,17 @@ public class GardenTweaks extends Tweak
     public boolean isSimulateCactusKnifeInstaBreakOn()
     {
         return c.simulateCactusKnifeInstaBreak;
+    }
+    
+    private float snapAngle(float angle, int snapAngle, int snapRange)
+    {
+        float diffToSnapPoint = Math.abs(angle % snapAngle);
+        if (diffToSnapPoint <= snapRange / 2.0f ||
+            diffToSnapPoint >= snapAngle - snapRange / 2.0f)
+        {
+            return Math.round(angle / snapAngle) * snapAngle;
+        }
+        return angle;
     }
     
     private void getNeuClass()
@@ -247,5 +272,23 @@ public class GardenTweaks extends Tweak
     {
         boolean state = Tweakception.overlayManager.toggle(MilestoneOverlay.NAME);
         sendChat("GardenTweaks: toggled milestone overlay " + state);
+    }
+    
+    public void toggleSnapYaw()
+    {
+        snapYaw = !snapYaw;
+        sendChat("GardenTweaks-SnapYaw: toggled " + snapYaw);
+    }
+    
+    public void setSnapYawAngle(int angle)
+    {
+        c.snapYawAngle = angle < 0 ? 45 : Utils.clamp(angle, 1, 180);
+        sendChat("GardenTweaks-SnapYaw: set snap angle to " + c.snapYawAngle);
+    }
+    
+    public void setSnapYawRange(int range)
+    {
+        c.snapYawRange = range < 0 ? 5 : Utils.clamp(range, 0, 90);
+        sendChat("GardenTweaks-SnapYaw: set snap range to " + c.snapYawRange);
     }
 }

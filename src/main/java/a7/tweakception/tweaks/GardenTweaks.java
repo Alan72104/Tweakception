@@ -36,6 +36,8 @@ public class GardenTweaks extends Tweak
         public boolean simulateCactusKnifeInstaBreak = false;
         public int snapYawAngle = 45;
         public int snapYawRange = 5;
+        public int snapPitchAngle = 15;
+        public int snapPitchRange = 5;
     }
     private final GardenTweaksConfig c;
     private static boolean exceptionThrown = false;
@@ -50,6 +52,8 @@ public class GardenTweaks extends Tweak
     private final MilestoneOverlay milestoneOverlay;
     private boolean snapYaw = false;
     private float snapYawPrevAngle = 0.0f;
+    private boolean snapPitch = false;
+    private float snapPitchPrevAngle = 0.0f;
     
     public GardenTweaks(Configuration configuration)
     {
@@ -66,9 +70,13 @@ public class GardenTweaks extends Tweak
             {
                 float yaw = getPlayer().rotationYaw;
                 if (snapYawPrevAngle != yaw)
-                {
                     snapYawPrevAngle = getPlayer().rotationYaw = snapAngle(yaw, c.snapYawAngle, c.snapYawRange);
-                }
+            }
+            if (snapPitch)
+            {
+                float pitch = getPlayer().rotationPitch;
+                if (snapPitchPrevAngle != pitch)
+                    snapPitchPrevAngle = getPlayer().rotationPitch = snapAngle(pitch, c.snapPitchAngle, c.snapPitchRange);
             }
         }
     }
@@ -290,5 +298,23 @@ public class GardenTweaks extends Tweak
     {
         c.snapYawRange = range < 0 ? 5 : Utils.clamp(range, 0, 90);
         sendChat("GardenTweaks-SnapYaw: set snap range to " + c.snapYawRange);
+    }
+    
+    public void toggleSnapPitch()
+    {
+        snapPitch = !snapPitch;
+        sendChat("GardenTweaks-SnapPitch: toggled " + snapPitch);
+    }
+    
+    public void setSnapPitchAngle(int angle)
+    {
+        c.snapPitchAngle = angle < 0 ? 45 : Utils.clamp(angle, 1, 180);
+        sendChat("GardenTweaks-SnapPitch: set snap angle to " + c.snapPitchAngle);
+    }
+    
+    public void setSnapPitchRange(int range)
+    {
+        c.snapPitchRange = range < 0 ? 5 : Utils.clamp(range, 0, 90);
+        sendChat("GardenTweaks-SnapPitch: set snap range to " + c.snapPitchRange);
     }
 }

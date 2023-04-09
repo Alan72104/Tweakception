@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static a7.tweakception.utils.McUtils.getMc;
 import static a7.tweakception.utils.McUtils.getPlayer;
@@ -25,6 +27,8 @@ import static a7.tweakception.utils.McUtils.getPlayer;
 public class Utils
 {
     private static final NumberFormat NUMBER_FORMAT = NumberFormat.getInstance(Locale.US);
+    public static final Matcher auctionPriceMatcher = Pattern.compile(
+        "§7(?<type>Buy it now|Starting bid|Top bid): §6(?<price>(?:\\d{1,3},?)+) coins$").matcher("");
     
     @SafeVarargs
     public static <T> HashSet<T> hashSet(T... array)
@@ -38,6 +42,19 @@ public class Utils
         try
         {
             return NUMBER_FORMAT.parse(s).intValue();
+        }
+        catch (ParseException e)
+        {
+            return 0;
+        }
+    }
+    
+    // Supports comma
+    public static long parseLong(String s)
+    {
+        try
+        {
+            return NUMBER_FORMAT.parse(s).longValue();
         }
         catch (ParseException e)
         {

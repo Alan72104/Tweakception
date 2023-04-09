@@ -11,6 +11,7 @@ import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.inventory.ContainerChest;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.play.server.S38PacketPlayerListItem;
 import net.minecraft.util.IChatComponent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
@@ -22,7 +23,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,7 +37,6 @@ public class GardenTweaks extends Tweak
 {
     public static class GardenTweaksConfig
     {
-        public boolean displayVisitorOrderNeuPrice = false;
         public boolean simulateCactusKnifeInstaBreak = false;
         public int snapYawAngle = 45;
         public int snapYawRange = 5;
@@ -42,20 +44,19 @@ public class GardenTweaks extends Tweak
         public int snapPitchRange = 5;
     }
     private final GardenTweaksConfig c;
-    private static boolean exceptionThrown = false;
-    private boolean reflectionTried = false;
-    private boolean reflectionSuccess = false;
-    private Object neu = null;
-    private Object neuManager = null;
-    private Object auctionManager = null;
-        private Method getBazaarInfoMethod = null;
-    private final Matcher requiredItemMatcher = Pattern.compile("^ (.+) x(\\d+)$").matcher("");
-    private final Matcher copperRewardMatcher = Pattern.compile("^ \\+(\\d+) Copper$").matcher("");
+    private static final Map<String, Integer> FUELS = new HashMap<>();
     private final MilestoneOverlay milestoneOverlay;
     private boolean snapYaw = false;
     private float snapYawPrevAngle = 0.0f;
     private boolean snapPitch = false;
     private float snapPitchPrevAngle = 0.0f;
+    
+    static
+    {
+        FUELS.put("BIOFUEL", 3000);
+        FUELS.put("OIL_BARREL", 10000);
+        FUELS.put("VOLTA", 10000);
+    }
     
     public GardenTweaks(Configuration configuration)
     {
@@ -103,67 +104,24 @@ public class GardenTweaks extends Tweak
         if (tooltip == null || itemStack == null)
             return;
         
-        if (getCurrentIsland() != SkyblockIsland.THE_GARDEN)
-            return;
-        
-        if (!c.displayVisitorOrderNeuPrice)
-            return;
-        
-        if (!reflectionTried)
-            getNeuClass();
-        
-        if (!reflectionSuccess || exceptionThrown)
-            return;
-        
         if (getMc().currentScreen instanceof GuiChest &&
-            ((ContainerChest) ((GuiChest) getMc().currentScreen)
-                .inventorySlots)
-                .getLowerChestInventory()
-                .getSizeInventory() == 54 &&
-            itemStack.getDisplayName().equals("§aAccept Offer"))
+            ((ContainerChest) ((GuiChest) getMc().currentScreen).inventorySlots)
+                .getLowerChestInventory().getName().startsWith("Auctions"))
         {
-            float totalBuyOrderPrice = 0.0f;
-            for (int i = 0; i < tooltip.size(); i++)
+            String id = Utils.getSkyblockItemId(itemStack);
+            if (FUELS.containsKey(id))
             {
-                String ogLine = tooltip.get(i);
-                String line = McUtils.cleanColor(ogLine);
-                if (requiredItemMatcher.reset(line).matches())
+                for (int i = 0; i < tooltip.size(); i++)
                 {
-                    String name = requiredItemMatcher.group(1);
-                    int count = Integer.parseInt(requiredItemMatcher.group(2));
-                    
-                    JsonObject bazaarInfo = getBazaarInfoFromNeuId(
-                        name.toUpperCase()
-                        .replace(" ", "_")
-                        .replace("'", "")
-                        .replace("BALE", "BLOCK")
-                        .replace("WART", "STALK")
-                    );
-                    
-                    if (bazaarInfo == null)
-                        continue;
-                    
-                    float buyOrderPrice = 0.0f;
-                    if (bazaarInfo.has("curr_sell"))
+                    if (Utils.auctionPriceMatcher.reset(tooltip.get(i)).find())
                     {
-                        buyOrderPrice = bazaarInfo.get("curr_sell").getAsFloat() * count;
+                        int count = itemStack.stackSize;
+                        double price = Utils.parseDouble(Utils.auctionPriceMatcher.group("price"));
+                        double unitPrice = price / count / FUELS.get(id) * 10000;
+                        String str = Utils.formatCommas((long) unitPrice);
+                        tooltip.add(i + 1, "§6 " + str + " coins/10k fuel");
+                        return;
                     }
-                    
-                    if (buyOrderPrice > 0.0f)
-                    {
-                        totalBuyOrderPrice += buyOrderPrice;
-                        tooltip.set(i, ogLine + " §7(§e" + Utils.formatMetric((long)buyOrderPrice) + "§7)");
-                    }
-                }
-                else if (copperRewardMatcher.reset(line).matches())
-                {
-                    int count = Integer.parseInt(copperRewardMatcher.group(1));
-                    if (totalBuyOrderPrice > 0.0f)
-                    {
-                        float kCoinsPerCopper = totalBuyOrderPrice / count / 1000.0f;
-                        tooltip.set(i, f("%s §7(§e%.2fk§7 per copper)", ogLine, kCoinsPerCopper));
-                    }
-                    break;
                 }
             }
         }
@@ -199,51 +157,6 @@ public class GardenTweaks extends Tweak
         return angle;
     }
     
-    private void getNeuClass()
-    {
-        try
-        {
-            Class<?> neuClass = Class.forName("io.github.moulberry.notenoughupdates.NotEnoughUpdates");
-            Field instanceField = neuClass.getDeclaredField("INSTANCE");
-            neu = instanceField.get(null);
-            Field managerField = neuClass.getDeclaredField("manager");
-            neuManager = managerField.get(neu);
-            Field auctionManagerField = neuManager.getClass().getDeclaredField("auctionManager");
-            auctionManager = auctionManagerField.get(neuManager);
-            getBazaarInfoMethod = auctionManager.getClass().getDeclaredMethod("getBazaarInfo", String.class);
-        }
-        catch (Exception e)
-        {
-            if (!exceptionThrown)
-            {
-                sendChat("GardenTweaks: " + e + ", stopping");
-                exceptionThrown = true;
-            }
-        }
-        reflectionSuccess = !exceptionThrown;
-        reflectionTried = true;
-    }
-    
-    private JsonObject getBazaarInfoFromNeuId(String id)
-    {
-        try
-        {
-            Object bazaarInfo = getBazaarInfoMethod.invoke(auctionManager, id);
-            if (bazaarInfo != null)
-                return (JsonObject) bazaarInfo;
-        }
-        catch (IllegalAccessException ignored)
-        {
-        }
-        catch (InvocationTargetException e)
-        {
-            sendChat("GardenTweaks: " + e);
-            exceptionThrown = true;
-            reflectionSuccess = false;
-        }
-        return null;
-    }
-    
     private static class MilestoneOverlay extends TextOverlay
     {
         public static final String NAME = "MilestoneOverlay";
@@ -276,12 +189,6 @@ public class GardenTweaks extends Tweak
             list.add("Milestone: h");
             return list;
         }
-    }
-    
-    public void toggleDisplayVisitorOrderNeuPrice()
-    {
-        c.displayVisitorOrderNeuPrice = !c.displayVisitorOrderNeuPrice;
-        sendChat("GardenTweaks-DisplayVisitorOrderNeuPrice: toggled " + c.displayVisitorOrderNeuPrice);
     }
     
     public void toggleSimulateCactusKnifeInstaBreak()

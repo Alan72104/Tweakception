@@ -496,9 +496,7 @@ public class TweakceptionCommand extends CommandBase
                         args -> Tweakception.gardenTweaks.setSnapPitchAngle(getInt(args, 0, -1))),
                     new Command("range",
                         args -> Tweakception.gardenTweaks.setSnapPitchRange(getInt(args, 0, -1)))
-                ),
-                new Command("visitororderneuprice",
-                    args -> Tweakception.gardenTweaks.toggleDisplayVisitorOrderNeuPrice())
+                )
             ));
         }
         // slayer

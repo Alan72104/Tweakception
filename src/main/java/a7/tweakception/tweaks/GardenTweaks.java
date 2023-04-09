@@ -14,7 +14,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.S38PacketPlayerListItem;
 import net.minecraft.util.IChatComponent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
+import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import org.lwjgl.input.Keyboard;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -78,6 +80,18 @@ public class GardenTweaks extends Tweak
                 if (snapPitchPrevAngle != pitch)
                     snapPitchPrevAngle = getPlayer().rotationPitch = snapAngle(pitch, c.snapPitchAngle, c.snapPitchRange);
             }
+        }
+    }
+    
+    public void onKeyInput(InputEvent.KeyInputEvent event)
+    {
+        if (getMc().currentScreen == null && Keyboard.getEventKeyState())
+        {
+            int key = Keyboard.getEventKey();
+            if (key == Tweakception.keybindToggleSnapYaw.getKeyCode())
+                toggleSnapYaw();
+            else if (key == Tweakception.keybindToggleSnapPitch.getKeyCode())
+                toggleSnapPitch();
         }
     }
     

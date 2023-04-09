@@ -374,6 +374,7 @@ public class InGameEventDispatcher
         
         fairyTracker.onKeyInput(event);
         globalTweaks.onKeyInput(event);
+        gardenTweaks.onKeyInput(event);
     }
     
     @SubscribeEvent

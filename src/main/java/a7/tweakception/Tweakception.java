@@ -8,16 +8,19 @@ import a7.tweakception.tweaks.*;
 import a7.tweakception.utils.DiscordGuildBridge;
 import net.minecraft.block.Block;
 import net.minecraft.client.gui.GuiPlayerTabOverlay;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.Timer;
 import net.minecraft.world.World;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.input.Keyboard;
 
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
@@ -34,6 +37,12 @@ public class Tweakception
     public static final String MOD_VERSION = "1.0";
     @Mod.Instance(MOD_ID)
     public static Tweakception instance;
+    
+    public static final KeyBinding keybindToggleSnapYaw =
+        new KeyBinding("Toggle snap yaw", Keyboard.KEY_SUBTRACT, "Tweakception");
+    public static final KeyBinding keybindToggleSnapPitch =
+        new KeyBinding("Toggle snap pitch", Keyboard.KEY_ADD, "Tweakception");
+    
     public static Logger logger;
     public static Configuration configuration;
     public static ExecutorService threadPool;
@@ -92,6 +101,9 @@ public class Tweakception
         ClientCommandHandler.instance.registerCommand(new TweakceptionCommand());
         MinecraftForge.EVENT_BUS.register(inGameEventDispatcher);
         MinecraftForge.EVENT_BUS.register(scheduler);
+        
+        ClientRegistry.registerKeyBinding(keybindToggleSnapYaw);
+        ClientRegistry.registerKeyBinding(keybindToggleSnapPitch);
         
         Runtime.getRuntime().addShutdownHook(new Thread(() ->
         {

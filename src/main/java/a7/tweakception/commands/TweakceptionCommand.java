@@ -264,6 +264,8 @@ public class TweakceptionCommand extends CommandBase
                         args -> Tweakception.globalTweaks.removeBlockQuickCraftWhitelist(
                             args.length > 0 ? toInt(args[0]) : 0))
                 ),
+                new Command("buildersWandItemsTooltip",
+                    args -> Tweakception.globalTweaks.toggleBuildersWandItemsTooltip()),
                 new Command("championoverlay",
                     args -> Tweakception.globalTweaks.toggleChampionOverlay(),
                     new Command("incrementresetdelay",

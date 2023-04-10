@@ -15,6 +15,7 @@ import net.minecraft.init.Items;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.*;
@@ -24,6 +25,7 @@ import net.minecraftforge.common.util.Constants;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -130,6 +132,55 @@ public class McUtils
             return tag.getCompoundTag("ExtraAttributes");
         }
         return null;
+    }
+    
+    // Gets the nbt from a path defined like "tag1.tag2[5].tag"
+    public static NBTBase getNbt(ItemStack stack, String path)
+    {
+        return getNbt(stack.getTagCompound(), path);
+    }
+    
+    // Gets the nbt from ExtraAttributes from a path defined like "tag1.tag2[5].tag"
+    public static NBTBase getExtraAttributes(ItemStack stack, String path)
+    {
+        return getNbt(getExtraAttributes(stack), path);
+    }
+    
+    // Gets the nbt from a path defined like "tag1.tag2[5].tag"
+    public static NBTBase getNbt(NBTBase nbt, String path)
+    {
+        if (nbt == null)
+            return null;
+        NBTBase cur = nbt;
+        String[] eles = path.split("\\.");
+        for (String ele : eles)
+        {
+            if (cur.getId() != NbtType.COMPOUND)
+                return null;
+            
+            NBTTagCompound tagCompound = (NBTTagCompound) cur;
+            cur = tagCompound.getTag(ele);
+            
+            if (cur == null)
+                return null;
+            
+            if (ele.endsWith("]"))
+            {
+                if (!(cur instanceof NBTTagList))
+                    return null;
+                NBTTagList list = (NBTTagList) cur;
+                int index = Integer.parseInt(
+                    ele.substring(
+                        ele.indexOf('['),
+                        ele.length() - 1
+                    )
+                ) - 1;
+                if (index >= list.tagCount())
+                    return null;
+                cur = list.get(index);
+            }
+        }
+        return cur;
     }
     
     public static String getArmorStandHeadTexture(EntityArmorStand armorStand)

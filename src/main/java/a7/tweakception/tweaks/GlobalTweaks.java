@@ -34,7 +34,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.*;
 import net.minecraft.network.play.client.C16PacketClientStatus;
 import net.minecraft.network.play.server.S29PacketSoundEffect;
 import net.minecraft.scoreboard.Score;
@@ -53,6 +53,7 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.Display;
 
 import java.awt.*;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -121,6 +122,7 @@ public class GlobalTweaks extends Tweak
         public int autoHarpClickDelayTicks = 10;
         public boolean autoHarpAutoClose = false;
         public boolean autoHarpReplayMode = false;
+        public boolean buildersWandItemsTooltip = false;
     }
     
     private final GlobalTweaksConfig c;
@@ -875,14 +877,14 @@ public class GlobalTweaks extends Tweak
             return;
         }
         
-        if (c.tooltipDisplaySkyblockItemId && itemStack != null)
-        {
-            String id = Utils.getSkyblockItemId(itemStack);
+        if (itemStack == null)
+            return;
+        
+        String id = Utils.getSkyblockItemId(itemStack);
+        
+        if (c.tooltipDisplaySkyblockItemId)
             if (id != null && !id.isEmpty())
-            {
                 tooltip.add("ID: " + id);
-            }
-        }
         
         if (fakePowerScrolls)
         {
@@ -921,7 +923,7 @@ public class GlobalTweaks extends Tweak
         }
         
         if (c.ranchersBootsTooltipSpeedNote &&
-            "RANCHERS_BOOTS".equals(Utils.getSkyblockItemId(itemStack)) &&
+            "RANCHERS_BOOTS".equals(id) &&
             Keyboard.isKeyDown(Keyboard.KEY_LSHIFT))
         {
             for (int i = 0; i < tooltip.size(); i++)
@@ -982,17 +984,52 @@ public class GlobalTweaks extends Tweak
                 tooltip.add("Item " + (entry.getKey() + 1) + ": " + entry.getValue());
         };
         
-        if (c.displayPersonalCompactorItems && itemStack != null &&
-            Utils.getSkyblockItemId(itemStack) != null &&
-            Utils.getSkyblockItemId(itemStack).startsWith("PERSONAL_COMPACTOR_"))
+        if (c.displayPersonalCompactorItems &&
+            id != null &&
+            id.startsWith("PERSONAL_COMPACTOR_"))
         {
             addTheItems.accept("personal_compact_");
         }
-        else if (c.displayPersonalDeletorItems && itemStack != null &&
-            Utils.getSkyblockItemId(itemStack) != null &&
-            Utils.getSkyblockItemId(itemStack).startsWith("PERSONAL_DELETOR_"))
+        else if (c.displayPersonalDeletorItems &&
+            id != null &&
+            id.startsWith("PERSONAL_DELETOR_"))
         {
             addTheItems.accept("personal_deletor_");
+        }
+        
+        if (c.buildersWandItemsTooltip &&
+            id != null &&
+            (id.equals("BUILDERS_WAND") || id.equals("BUILDERS_RULER")))
+        {
+            NBTTagCompound extra = McUtils.getExtraAttributes(itemStack);
+            byte[] byteArray = extra.getByteArray("builder's_wand_data");
+            if (byteArray.length == 0)
+                byteArray = extra.getByteArray("builder's_ruler_data");
+            try
+            {
+                NBTTagCompound nbt = CompressedStreamTools.readCompressed(new ByteArrayInputStream(byteArray));
+                NBTTagList items = nbt.getTagList("i", NbtType.COMPOUND);
+                Map<String, Integer> map = new TreeMap<>();
+                for (int i = 0; i < items.tagCount(); i++)
+                {
+                    NBTTagCompound item = items.getCompoundTagAt(i);
+//                    int itemId = item.getInteger("id");
+//                    int damage = item.getInteger("Damage");
+                    int count = item.getByte("Count");
+//                    String name = new ItemStack(Item.getItemById(itemId), 1, damage).getDisplayName();
+                    NBTBase nameNbt = McUtils.getNbt(item, "tag.display.Name");
+                    if (nameNbt != null)
+                    {
+                        map.merge(((NBTTagString) nameNbt).getString(), count, Integer::sum);
+                    }
+                }
+                
+                for (Map.Entry<String, Integer> entry : map.entrySet())
+                {
+                    tooltip.add(entry.getKey() + "§r: " + entry.getValue());
+                }
+            }
+            catch (Exception ignored) { }
         }
     }
     
@@ -2783,6 +2820,12 @@ public class GlobalTweaks extends Tweak
     {
         c.autoHarpReplayMode = !c.autoHarpReplayMode;
         sendChat("GT-AutoHarp: toggled replay mode " + c.autoHarpReplayMode);
+    }
+    
+    public void toggleBuildersWandItemsTooltip()
+    {
+        c.buildersWandItemsTooltip = !c.buildersWandItemsTooltip;
+        sendChat("GT-BuildersWandItemsTooltip: toggled " + c.buildersWandItemsTooltip);
     }
     
     // endregion Commands

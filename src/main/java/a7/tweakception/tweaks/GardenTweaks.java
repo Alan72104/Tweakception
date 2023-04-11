@@ -2,34 +2,37 @@ package a7.tweakception.tweaks;
 
 import a7.tweakception.Tweakception;
 import a7.tweakception.config.Configuration;
+import a7.tweakception.mixin.AccessorGuiContainer;
 import a7.tweakception.overlay.Anchor;
 import a7.tweakception.overlay.TextOverlay;
 import a7.tweakception.utils.McUtils;
 import a7.tweakception.utils.Utils;
-import com.google.gson.JsonObject;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.inventory.ContainerChest;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.play.server.S38PacketPlayerListItem;
+import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.IChatComponent;
+import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.awt.*;
+import java.io.File;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static a7.tweakception.tweaks.GlobalTweaks.getCurrentIsland;
 import static a7.tweakception.utils.McUtils.*;
 import static a7.tweakception.utils.Utils.f;
 
@@ -42,6 +45,7 @@ public class GardenTweaks extends Tweak
         public int snapYawRange = 5;
         public int snapPitchAngle = 15;
         public int snapPitchRange = 5;
+        public boolean contestDataDumper = false;
     }
     private final GardenTweaksConfig c;
     private static final Map<String, Integer> FUELS = new HashMap<>();
@@ -50,6 +54,8 @@ public class GardenTweaks extends Tweak
     private float snapYawPrevAngle = 0.0f;
     private boolean snapPitch = false;
     private float snapPitchPrevAngle = 0.0f;
+    private final Map<Instant, ContestInfo> contests = new TreeMap<>();
+    private boolean inContestsMenu = false;
     
     static
     {
@@ -80,6 +86,16 @@ public class GardenTweaks extends Tweak
                 float pitch = getPlayer().rotationPitch;
                 if (snapPitchPrevAngle != pitch)
                     snapPitchPrevAngle = getPlayer().rotationPitch = snapAngle(pitch, c.snapPitchAngle, c.snapPitchRange);
+            }
+            
+            inContestsMenu = false;
+            if (getMc().currentScreen instanceof GuiChest)
+            {
+                GuiChest chest = (GuiChest) getMc().currentScreen;
+                ContainerChest container = (ContainerChest) chest.inventorySlots;
+                IInventory inv = container.getLowerChestInventory();
+                if (inv.getName().equals("Your Contests") && inv.getSizeInventory() == 54)
+                    inContestsMenu = true;
             }
         }
     }
@@ -141,9 +157,166 @@ public class GardenTweaks extends Tweak
         }
     }
     
+    public void onGuiMouseInput(GuiScreenEvent.MouseInputEvent.Pre event, int x, int y)
+    {
+        if (!c.contestDataDumper || !inContestsMenu)
+            return;
+        
+        AccessorGuiContainer accessor = (AccessorGuiContainer) event.gui;
+        int xSize = accessor.getXSize();
+        int guiLeft = accessor.getGuiLeft();
+        int guiTop = accessor.getGuiTop();
+        
+        if (Mouse.getEventButtonState() && Mouse.getEventButton() == 0)
+        {
+            if (Utils.isMouseInsideRect(x, y, guiLeft + xSize + 20, guiTop, 100, 10))
+            {
+                getContests();
+                event.setCanceled(true);
+            }
+            else if (Utils.isMouseInsideRect(x, y, guiLeft + xSize + 20, guiTop + (9 + 5) * 2, 100, 10))
+            {
+                dumpContests();
+                event.setCanceled(true);
+            }
+        }
+    }
+    
+    public void onGuiDrawPost(GuiScreenEvent.DrawScreenEvent.Post event)
+    {
+        if (!c.contestDataDumper || !inContestsMenu)
+            return;
+        
+        AccessorGuiContainer accessor = (AccessorGuiContainer) event.gui;
+        int xSize = accessor.getXSize();
+        int guiLeft = accessor.getGuiLeft();
+        int guiTop = accessor.getGuiTop();
+        
+        Color color = new Color(50, 50, 50);
+        int x = guiLeft + xSize + 20;
+        int y = guiTop;
+        
+        FontRenderer fr = getMc().fontRendererObj;
+        GuiScreen.drawRect(x, y,
+            x + 100, y + 10,
+            color.getRGB());
+        fr.drawString("Click to add the contests in this page",
+            x + 1, y + 1, 0xFFFFFFFF);
+        y += fr.FONT_HEIGHT + 5;
+        fr.drawString("Contest count: " + contests.size(),
+            x, y, 0xFFFFFFFF);
+        y += fr.FONT_HEIGHT + 5;
+        GuiScreen.drawRect(x, y,
+            x + 100, y + 10,
+            color.getRGB());
+        fr.drawString("Click to dump csv",
+            x + 1, y + 1, 0xFFFFFFFF);
+    }
+    
     public boolean isSimulateCactusKnifeInstaBreakOn()
     {
         return c.simulateCactusKnifeInstaBreak;
+    }
+    
+    private void getContests()
+    {
+        GuiChest chest = (GuiChest) getMc().currentScreen;
+        ContainerChest container = (ContainerChest) chest.inventorySlots;
+        IInventory inv = container.getLowerChestInventory();
+        List<String> seasons = Arrays.asList("Spring", "Summer", "Autumn", "Winter");
+        
+        final Matcher contestDateMatcher = Pattern.compile(
+            "^§a([\\w ]+) (\\d+)(?:rd|st|nd|th), Year (\\d+)$").matcher("");
+        final Matcher contestTypeMatcher = Pattern.compile(
+            "^(.*) Contest$").matcher("");
+        final Matcher medalBracketMatcher = Pattern.compile(
+            "^(GOLD|SILVER|BRONZE) \\(Top \\d+%\\): ((?:\\d+,?)+)$").matcher("");
+        final Matcher yourScoreMatcher = Pattern.compile(
+            "^Your score: ((?:\\d+,?)+) collected!$").matcher("");
+        
+        for (int i = 0; i < 54; i++)
+        {
+            ItemStack stack = inv.getStackInSlot(i);
+            if (!contestDateMatcher.reset(stack.getDisplayName()).matches())
+                continue;
+            ContestInfo contestInfo = new ContestInfo();
+            {
+                String[] monthStrings = contestDateMatcher.group(1).split(" ", 2);
+                int month = seasons.indexOf(monthStrings[monthStrings.length - 1]) * 3 + 1;
+                if (monthStrings.length == 2 && monthStrings[0].equals("Early"))
+                    ;
+                else if (monthStrings.length == 1)
+                    month += 1;
+                else if (monthStrings.length == 2 && monthStrings[0].equals("Late"))
+                    month += 2;
+                int day = Utils.parseInt(contestDateMatcher.group(2));
+                int year = Utils.parseInt(contestDateMatcher.group(3));
+                long skyblockEpoch = 1_559_829_300L;
+                long secs = skyblockEpoch +
+                    year *        60L * 20 * 31 * 12 +
+                    (month - 1) * 60L * 20 * 31 +
+                    (day - 1) *   60L * 20;
+                contestInfo.date = Instant.ofEpochMilli(secs * 1000L);
+                contestInfo.sbDate = contestDateMatcher.group().substring(2);
+            }
+            {
+                String[] lore = McUtils.getDisplayLore(stack);
+                for (String line : lore)
+                {
+                    line = McUtils.cleanColor(line);
+                    if (contestTypeMatcher.reset(line).matches())
+                        contestInfo.type = contestTypeMatcher.group(1);
+                    else if (medalBracketMatcher.reset(line).matches())
+                        switch (medalBracketMatcher.group(1))
+                        {
+                            case "GOLD":
+                                contestInfo.gold = Utils.parseInt(medalBracketMatcher.group(2));
+                                break;
+                            case "SILVER":
+                                contestInfo.silver = Utils.parseInt(medalBracketMatcher.group(2));
+                                break;
+                            case "BRONZE":
+                                contestInfo.bronze = Utils.parseInt(medalBracketMatcher.group(2));
+                                break;
+                        }
+                    else if (yourScoreMatcher.reset(line).matches())
+                        contestInfo.score = Utils.parseInt(yourScoreMatcher.group(1));
+                }
+            }
+            contests.put(contestInfo.date, contestInfo);
+        }
+    }
+    
+    private void dumpContests()
+    {
+        List<String> list = new ArrayList<>();
+        list.add("datetime,millis,sb date,type,gold,silver,bronze");
+        for (ContestInfo contestInfo : contests.values())
+        {
+            list.add(f("%s,%d,\"%s\",%s,%d,%d,%d",
+                contestInfo.date,
+                contestInfo.date.toEpochMilli(),
+                contestInfo.sbDate, // Has comma
+                contestInfo.type,
+                contestInfo.gold,
+                contestInfo.silver,
+                contestInfo.bronze
+            ));
+        }
+        contests.clear();
+        
+        try
+        {
+            File file = Tweakception.configuration.createWriteFileWithCurrentDateTime("jacob_contests_$.csv", list);
+            sendChat("Dumped contests");
+            getPlayer().addChatMessage(new ChatComponentTranslation("Output written to file %s",
+                McUtils.makeFileLink(file)));
+        }
+        catch (Exception e)
+        {
+            sendChat("Error occurred");
+            e.printStackTrace();
+        }
     }
     
     private float snapAngle(float angle, int snapAngle, int snapRange)
@@ -155,6 +328,17 @@ public class GardenTweaks extends Tweak
             return Math.round(angle / snapAngle) * snapAngle;
         }
         return angle;
+    }
+    
+    private static class ContestInfo
+    {
+        public Instant date;
+        public String sbDate;
+        public String type;
+        public int score;
+        public int gold;
+        public int silver;
+        public int bronze;
     }
     
     private static class MilestoneOverlay extends TextOverlay
@@ -237,5 +421,11 @@ public class GardenTweaks extends Tweak
     {
         c.snapPitchRange = range < 0 ? 5 : Utils.clamp(range, 0, 90);
         sendChat("GardenTweaks-SnapPitch: set snap range to " + c.snapPitchRange);
+    }
+    
+    public void toggleContestDataDumper()
+    {
+        c.contestDataDumper = !c.contestDataDumper;
+        sendChat("GardenTweaks-ContestDataDumper: toggled " + c.contestDataDumper);
     }
 }

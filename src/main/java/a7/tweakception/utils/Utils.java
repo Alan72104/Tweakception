@@ -346,6 +346,12 @@ public class Utils
         return sb.toString();
     }
     
+    public static boolean isMouseInsideRect(int mouseX, int mouseY, int x, int y, int w, int h)
+    {
+        return mouseX >= x && mouseX <= x + w &&
+            mouseY >= y && mouseY <= y + h;
+    }
+    
     public static <T> T setAccessibleAndGetField(Object o, String... names) throws Exception
     {
         return setAccessibleAndGetField(o.getClass(), names);

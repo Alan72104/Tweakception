@@ -328,6 +328,7 @@ public class InGameEventDispatcher
         enchantingTweaks.onGuiDrawPost(event);
         autoRunes.onGuiDrawPost(event);
         globalTweaks.onGuiDrawPost(event);
+        gardenTweaks.onGuiDrawPost(event);
     }
     
     @SubscribeEvent(priority = EventPriority.HIGHEST)
@@ -363,12 +364,14 @@ public class InGameEventDispatcher
         if (!isInSkyblock()) return;
         
         final ScaledResolution scaledresolution = new ScaledResolution(getMc());
-        final int scaledWidth = scaledresolution.getScaledWidth();
         final int scaledHeight = scaledresolution.getScaledHeight();
         int mouseX = Mouse.getX() / scaledresolution.getScaleFactor();
         int mouseY = scaledHeight - Mouse.getY() / scaledresolution.getScaleFactor();
         
         autoRunes.onGuiMouseInput(event, mouseX, mouseY);
+        if (event.isCanceled())
+            return;
+        gardenTweaks.onGuiMouseInput(event, mouseX, mouseY);
         if (event.isCanceled())
             return;
     }

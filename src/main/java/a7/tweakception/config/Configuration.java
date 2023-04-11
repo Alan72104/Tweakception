@@ -89,10 +89,12 @@ public class Configuration
         
         BufferedWriter writer = createWriterFor(file);
         
-        for (String line : lines)
+        for (int i = 0; i < lines.size(); i++)
         {
+            String line = lines.get(i);
             writer.write(line);
-            writer.newLine();
+            if (i < lines.size() - 1)
+                writer.newLine();
         }
         
         writer.close();
@@ -105,12 +107,12 @@ public class Configuration
         // a_$_b.txt -> a_time_b.txt / a_time_b_1.txt
         int periodIndex = name.lastIndexOf(".");
         String base = name.substring(0, periodIndex);
-        String ext = ensureValidFileName(name.substring(periodIndex));
+        String ext = getValidFileName(name.substring(periodIndex));
         String[] baseSplit = base.split("\\$", 2);
         
-        String newBase = ensureValidFileName(baseSplit[0]) +
+        String newBase = getValidFileName(baseSplit[0]) +
             new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss").format(new Date(System.currentTimeMillis())) +
-            (baseSplit.length > 1 ? ensureValidFileName(baseSplit[1]) : "");
+            (baseSplit.length > 1 ? getValidFileName(baseSplit[1]) : "");
         
         name = newBase + ext;
         
@@ -142,7 +144,7 @@ public class Configuration
         return file;
     }
     
-    public static String ensureValidFileName(String s)
+    public static String getValidFileName(String s)
     {
         return s.replaceAll("[^A-Za-z\\d_\\-.]", "_");
     }

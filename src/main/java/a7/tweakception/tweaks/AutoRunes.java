@@ -1,6 +1,7 @@
 package a7.tweakception.tweaks;
 
 import a7.tweakception.config.Configuration;
+import a7.tweakception.mixin.AccessorGuiContainer;
 import a7.tweakception.utils.McUtils;
 import a7.tweakception.utils.Utils;
 import net.minecraft.client.gui.GuiScreen;
@@ -238,32 +239,26 @@ public class AutoRunes extends Tweak
         if (!inMenu)
             return;
         
-        try
-        {
-            int xSize = Utils.setAccessibleAndGetField(GuiContainer.class, event.gui, "xSize", "field_146999_f");
-            int ySize = Utils.setAccessibleAndGetField(GuiContainer.class, event.gui, "ySize", "field_147000_g");
-            int guiLeft = Utils.setAccessibleAndGetField(GuiContainer.class, event.gui, "guiLeft", "field_147003_i");
-            int guiTop = Utils.setAccessibleAndGetField(GuiContainer.class, event.gui, "guiTop", "field_147009_r");
-            
-            Color color;
-            if (enabled)
-                color = new Color(50, 50, 50);
-            else
-                color = new Color(127, 127, 127);
-            GuiScreen.drawRect(guiLeft + xSize + 20, guiTop,
-                guiLeft + xSize + 20 + 60, guiTop + 10,
-                color.getRGB());
-            int width = getMc().fontRendererObj.getStringWidth("AutoRunes");
-            getMc().fontRendererObj.drawString("AutoRunes",
-                guiLeft + xSize + 20 + 30 - width / 2, guiTop + 1, 0xFFFFFFFF);
-            getMc().fontRendererObj.drawString("State: " + state.toString(),
-                guiLeft + xSize + 20, guiTop + 30, 0xFFFFFFFF);
-            getMc().fontRendererObj.drawString("Total fused: " + c.totalFused,
-                guiLeft + xSize + 20, guiTop + 30 + 9, 0xFFFFFFFF);
-        }
-        catch (Exception ignored)
-        {
-        }
+        AccessorGuiContainer accessor = (AccessorGuiContainer) event.gui;
+        int xSize = accessor.getXSize();
+        int guiLeft = accessor.getGuiLeft();
+        int guiTop = accessor.getGuiTop();
+        
+        Color color;
+        if (enabled)
+            color = new Color(50, 50, 50);
+        else
+            color = new Color(127, 127, 127);
+        GuiScreen.drawRect(guiLeft + xSize + 20, guiTop,
+            guiLeft + xSize + 20 + 60, guiTop + 10,
+            color.getRGB());
+        int width = getMc().fontRendererObj.getStringWidth("AutoRunes");
+        getMc().fontRendererObj.drawString("AutoRunes",
+            guiLeft + xSize + 20 + 30 - width / 2, guiTop + 1, 0xFFFFFFFF);
+        getMc().fontRendererObj.drawString("State: " + state.toString(),
+            guiLeft + xSize + 20, guiTop + 30, 0xFFFFFFFF);
+        getMc().fontRendererObj.drawString("Total fused: " + c.totalFused,
+            guiLeft + xSize + 20, guiTop + 30 + 9, 0xFFFFFFFF);
     }
     
     public void onGuiMouseInput(GuiScreenEvent.MouseInputEvent.Pre event, int x, int y)
@@ -271,23 +266,17 @@ public class AutoRunes extends Tweak
         if (!inMenu)
             return;
         
-        try
+        AccessorGuiContainer accessor = (AccessorGuiContainer) event.gui;
+        int xSize = accessor.getXSize();
+        int guiLeft = accessor.getGuiLeft();
+        int guiTop = accessor.getGuiTop();
+        
+        if (Mouse.getEventButtonState() && Mouse.getEventButton() == 0 &&
+            x >= guiLeft + xSize + 20 && x <= guiLeft + xSize + 20 + 60 &&
+            y >= guiTop && y <= guiTop + 10)
         {
-            int xSize = Utils.setAccessibleAndGetField(GuiContainer.class, event.gui, "xSize", "field_146999_f");
-            int ySize = Utils.setAccessibleAndGetField(GuiContainer.class, event.gui, "ySize", "field_147000_g");
-            int guiLeft = Utils.setAccessibleAndGetField(GuiContainer.class, event.gui, "guiLeft", "field_147003_i");
-            int guiTop = Utils.setAccessibleAndGetField(GuiContainer.class, event.gui, "guiTop", "field_147009_r");
-            
-            if (Mouse.getEventButtonState() && Mouse.getEventButton() == 0 &&
-                x >= guiLeft + xSize + 20 && x <= guiLeft + xSize + 20 + 60 &&
-                y >= guiTop && y <= guiTop + 10)
-            {
-                enabled = !enabled;
-                event.setCanceled(true);
-            }
-        }
-        catch (Exception ignored)
-        {
+            enabled = !enabled;
+            event.setCanceled(true);
         }
     }
     

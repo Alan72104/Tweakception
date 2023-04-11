@@ -6,6 +6,7 @@ import a7.tweakception.config.Configuration;
 import a7.tweakception.events.IslandChangedEvent;
 import a7.tweakception.events.PacketReceiveEvent;
 import a7.tweakception.events.PacketSendEvent;
+import a7.tweakception.mixin.AccessorGuiContainer;
 import a7.tweakception.mixin.AccessorGuiPlayerTabOverlay;
 import a7.tweakception.mixin.AccessorMinecraft;
 import a7.tweakception.overlay.Anchor;
@@ -833,24 +834,18 @@ public class GlobalTweaks extends Tweak
         if (!abiphoneRelayInMenu)
             return;
         
-        try
+        AccessorGuiContainer accessor = (AccessorGuiContainer) event.gui;
+        int xSize = accessor.getXSize();
+        int guiLeft = accessor.getGuiLeft();
+        int guiTop = accessor.getGuiTop();
+        
+        FontRenderer fr = getMc().fontRendererObj;
+        int y = guiTop + fr.FONT_HEIGHT;
+        for (String soundString : abiphoneRelaySoundStrings)
         {
-            int xSize = Utils.setAccessibleAndGetField(GuiContainer.class, event.gui, "xSize", "field_146999_f");
-            int ySize = Utils.setAccessibleAndGetField(GuiContainer.class, event.gui, "ySize", "field_147000_g");
-            int guiLeft = Utils.setAccessibleAndGetField(GuiContainer.class, event.gui, "guiLeft", "field_147003_i");
-            int guiTop = Utils.setAccessibleAndGetField(GuiContainer.class, event.gui, "guiTop", "field_147009_r");
-            
-            FontRenderer fr = getMc().fontRendererObj;
-            int y = guiTop + fr.FONT_HEIGHT;
-            for (String soundString : abiphoneRelaySoundStrings)
-            {
-                getMc().fontRendererObj.drawString(soundString,
-                    guiLeft + xSize + 20, y, 0xFFFFFFFF);
-                y += fr.FONT_HEIGHT;
-            }
-        }
-        catch (Exception ignored)
-        {
+            fr.drawString(soundString,
+                guiLeft + xSize + 20, y, 0xFFFFFFFF);
+            y += fr.FONT_HEIGHT;
         }
     }
     
@@ -2889,10 +2884,11 @@ public class GlobalTweaks extends Tweak
         sendChat("GT-IgnoreServerChunkUnloadDistance: toggled " + c.ignoreServerChunkUnloadDistance);
         if (!c.ignoreServerChunkUnloadDistance)
         {
-            ChunkCoordIntPair current = new ChunkCoordIntPair(getPlayer().chunkCoordX, getPlayer().chunkCoordZ);
-            for (ChunkCoordIntPair pos : pendingUnloadChunks)
-                if (McUtils.getChessboardDistance(current, pos) > 8)
-                    getWorld().doPreChunk(pos.chunkXPos, pos.chunkZPos, false);
+            // No unloading for now
+//            ChunkCoordIntPair current = new ChunkCoordIntPair(getPlayer().chunkCoordX, getPlayer().chunkCoordZ);
+//            for (ChunkCoordIntPair pos : pendingUnloadChunks)
+//                if (McUtils.getChessboardDistance(current, pos) > 8)
+//                    getWorld().doPreChunk(pos.chunkXPos, pos.chunkZPos, false);
             lastChunkUnloadPosition = new ChunkCoordIntPair(0, 0);
             pendingUnloadChunks.clear();
         }

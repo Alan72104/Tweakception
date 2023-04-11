@@ -100,4 +100,12 @@ public class MixinNetHandlerPlayClient
     {
         Tweakception.gardenTweaks.onPlayerListItemUpdateDisplayName(addPlayerData, networkPlayerInfo);
     }
+    
+    @Inject(method = "handleChunkData", at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/client/multiplayer/WorldClient;doPreChunk(IIZ)V", ordinal = 0),
+        cancellable = true)
+    public void handleChunkData_UnloadChunk(S21PacketChunkData packet, CallbackInfo ci)
+    {
+        Tweakception.globalTweaks.onPacketChunkUnload(packet, ci);
+    }
 }

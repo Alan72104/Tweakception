@@ -335,6 +335,8 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.globalTweaks.setArmorStandToHighlight(args.length > 0 ? args[0] : "")),
                 new Command("highlightskulls",
                     args -> Tweakception.globalTweaks.toggleHighlightSkulls()),
+                new Command("ignoreServerRenderDistance",
+                    args -> Tweakception.globalTweaks.toggleIgnoreServerRenderDistance()),
                 new Command("island",
                     args -> Tweakception.globalTweaks.printIsland()),
                 new Command("minionautoclaim",

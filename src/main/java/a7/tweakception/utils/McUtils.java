@@ -19,6 +19,7 @@ import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.*;
+import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.util.Constants;
 
@@ -266,6 +267,13 @@ public class McUtils
             }
         }
         return nearest;
+    }
+    
+    public static int getChessboardDistance(ChunkCoordIntPair a, ChunkCoordIntPair b)
+    {
+        return Math.max(
+            Math.abs(a.chunkXPos - b.chunkXPos),
+            Math.abs(a.chunkZPos - b.chunkZPos));
     }
     
     public static String cleanColor(String s)

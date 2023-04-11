@@ -14,6 +14,7 @@ import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -285,6 +286,12 @@ public class InGameEventDispatcher
         slayerTweaks.onWorldUnload(event);
         miningTweaks.onWorldUnload(event);
         giftTweaks.onWorldUnload(event);
+    }
+    
+    @SubscribeEvent
+    public void onChunkLoad(ChunkEvent.Load event)
+    {
+        globalTweaks.onChunkLoad(event);
     }
     
     @SubscribeEvent

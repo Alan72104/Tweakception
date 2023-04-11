@@ -36,21 +36,26 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.*;
 import net.minecraft.network.play.client.C16PacketClientStatus;
+import net.minecraft.network.play.server.S21PacketChunkData;
 import net.minecraft.network.play.server.S29PacketSoundEffect;
 import net.minecraft.scoreboard.Score;
 import net.minecraft.scoreboard.ScoreObjective;
 import net.minecraft.scoreboard.ScorePlayerTeam;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.util.*;
+import net.minecraft.world.ChunkCoordIntPair;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
+import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.Display;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.awt.*;
 import java.io.ByteArrayInputStream;
@@ -123,6 +128,8 @@ public class GlobalTweaks extends Tweak
         public boolean autoHarpAutoClose = false;
         public boolean autoHarpReplayMode = false;
         public boolean buildersWandItemsTooltip = false;
+        public boolean ignoreServerChunkUnloadDistance = false;
+        public int clientChunkUnloadDistance = 8;
     }
     
     private final GlobalTweaksConfig c;
@@ -211,11 +218,13 @@ public class GlobalTweaks extends Tweak
         "\\\"exp\\\":(\\d+.?\\d*E?\\d*)").matcher("");
     private boolean dojoDisciplineHelper = false;
     private boolean autoHarp = false;
-    private Item[] autoHarpLastChestItems = new Item[28];
+    private final Item[] autoHarpLastChestItems = new Item[28];
     private int autoHarpReplayIndex = 0;
     private int autoHarpReplayLastClickTicks = 0;
     private String autoHarpReplayData = null;
     private long windowOpenMillis = 0;
+    private Set<ChunkCoordIntPair> pendingUnloadChunks = new HashSet<>();
+    private ChunkCoordIntPair lastChunkUnloadPosition = new ChunkCoordIntPair(0, 0);
     
     static
     {
@@ -1043,6 +1052,32 @@ public class GlobalTweaks extends Tweak
         trevorAnimalNametag = null;
         trevorQuestOngoing = false;
         snipeWarping = false;
+        lastChunkUnloadPosition = new ChunkCoordIntPair(0, 0);
+        pendingUnloadChunks.clear();
+    }
+    
+    public void onChunkLoad(ChunkEvent.Load event)
+    {
+        if (c.ignoreServerChunkUnloadDistance)
+        {
+            Chunk chunk = event.getChunk();
+            pendingUnloadChunks.remove(chunk.getChunkCoordIntPair());
+            ChunkCoordIntPair current = new ChunkCoordIntPair(getPlayer().chunkCoordX, getPlayer().chunkCoordZ);
+            if (McUtils.getChessboardDistance(current, lastChunkUnloadPosition) < 8 || getWorld() == null)
+                return;
+            lastChunkUnloadPosition = current;
+            
+            Iterator<ChunkCoordIntPair> iterator = pendingUnloadChunks.iterator();
+            while (iterator.hasNext())
+            {
+                ChunkCoordIntPair pos = iterator.next();
+                if (McUtils.getChessboardDistance(current, lastChunkUnloadPosition) > getMc().gameSettings.renderDistanceChunks)
+                {
+                    getWorld().doPreChunk(pos.chunkXPos, pos.chunkZPos, false);
+                    iterator.remove();
+                }
+            }
+        }
     }
     
     public void onPacketSoundEffect(S29PacketSoundEffect packet)
@@ -1060,6 +1095,15 @@ public class GlobalTweaks extends Tweak
                         abiphoneRelaySoundStrings.remove();
                 });
             }
+        }
+    }
+    
+    public void onPacketChunkUnload(S21PacketChunkData packet, CallbackInfo ci)
+    {
+        if (c.ignoreServerChunkUnloadDistance)
+        {
+            pendingUnloadChunks.add(new ChunkCoordIntPair(packet.getChunkX(), packet.getChunkZ()));
+            ci.cancel();
         }
     }
     
@@ -1741,6 +1785,16 @@ public class GlobalTweaks extends Tweak
     public boolean isDojoDisciplineHelperOn()
     {
         return dojoDisciplineHelper;
+    }
+    
+    public boolean isIgnoreServerChunkUnloadDistanceOn()
+    {
+        return c.ignoreServerChunkUnloadDistance;
+    }
+    
+    public int getClientChunkUnloadDistance()
+    {
+        return c.clientChunkUnloadDistance;
     }
     
     private void trevorStartFromAbiphone()
@@ -2826,6 +2880,21 @@ public class GlobalTweaks extends Tweak
     {
         c.buildersWandItemsTooltip = !c.buildersWandItemsTooltip;
         sendChat("GT-BuildersWandItemsTooltip: toggled " + c.buildersWandItemsTooltip);
+    }
+    
+    public void toggleIgnoreServerRenderDistance()
+    {
+        c.ignoreServerChunkUnloadDistance = !c.ignoreServerChunkUnloadDistance;
+        sendChat("GT-IgnoreServerChunkUnloadDistance: toggled " + c.ignoreServerChunkUnloadDistance);
+        if (!c.ignoreServerChunkUnloadDistance)
+        {
+            ChunkCoordIntPair current = new ChunkCoordIntPair(getPlayer().chunkCoordX, getPlayer().chunkCoordZ);
+            for (ChunkCoordIntPair pos : pendingUnloadChunks)
+                if (McUtils.getChessboardDistance(current, pos) > 8)
+                    getWorld().doPreChunk(pos.chunkXPos, pos.chunkZPos, false);
+            lastChunkUnloadPosition = new ChunkCoordIntPair(0, 0);
+            pendingUnloadChunks.clear();
+        }
     }
     
     // endregion Commands

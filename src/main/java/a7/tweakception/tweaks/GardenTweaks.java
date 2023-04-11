@@ -290,7 +290,7 @@ public class GardenTweaks extends Tweak
     private void dumpContests()
     {
         List<String> list = new ArrayList<>();
-        list.add("datetime,millis,sb date,type,gold,silver,bronze");
+//        list.add("datetime,millis,sb date,type,gold,silver,bronze");
         for (ContestInfo contestInfo : contests.values())
         {
             list.add(f("%s,%d,\"%s\",%s,%d,%d,%d",
@@ -311,6 +311,8 @@ public class GardenTweaks extends Tweak
             sendChat("Dumped contests");
             getPlayer().addChatMessage(new ChatComponentTranslation("Output written to file %s",
                 McUtils.makeFileLink(file)));
+            sendChat("Also copied to clipboard");
+            Utils.setClipboard(String.join(System.lineSeparator(), list));
         }
         catch (Exception e)
         {

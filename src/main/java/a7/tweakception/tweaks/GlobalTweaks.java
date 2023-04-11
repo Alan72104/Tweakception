@@ -1058,6 +1058,7 @@ public class GlobalTweaks extends Tweak
     
     public void onChunkLoad(ChunkEvent.Load event)
     {
+        // Inspired by https://github.com/dlee13/hold-that-chunk/
         if (c.ignoreServerChunkUnloadDistance)
         {
             Chunk chunk = event.getChunk();

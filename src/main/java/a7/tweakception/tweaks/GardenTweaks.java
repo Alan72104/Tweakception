@@ -298,9 +298,9 @@ public class GardenTweaks extends Tweak
                 contestInfo.date.toEpochMilli(),
                 contestInfo.sbDate, // Has comma
                 contestInfo.type,
-                contestInfo.gold,
+                contestInfo.bronze,
                 contestInfo.silver,
-                contestInfo.bronze
+                contestInfo.gold
             ));
         }
         contests.clear();

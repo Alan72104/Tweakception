@@ -5,16 +5,19 @@ import a7.tweakception.utils.Constants;
 import a7.tweakception.utils.McUtils;
 import a7.tweakception.utils.Utils;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -33,7 +36,6 @@ public class MixinRenderItem
         if (stack == null || stack.stackSize != 1)
             return;
 
-//        StringBuilder sb = new StringBuilder();
         String tip = "";
         String stackCount = "";
         NBTTagCompound extra = McUtils.getExtraAttributes(stack);
@@ -65,15 +67,16 @@ public class MixinRenderItem
             }
         }
         
-        if (!tip.isEmpty()) // || !(tip = sb.toString()).isEmpty())
+        FontRenderer fr = getMc().fontRendererObj;
+        
+        if (!tip.isEmpty())
         {
             GlStateManager.disableLighting();
             GlStateManager.disableDepth();
-            GlStateManager.disableBlend();
             GlStateManager.pushMatrix();
             GlStateManager.translate(x, y, 1.0f);
-            GlStateManager.scale(0.8f, 0.8f, 1.0f);
-            getMc().fontRendererObj.drawStringWithShadow(tip, 0.0f, 0.0f, 0xffffffff);
+            GlStateManager.scale(0.9f, 0.9f, 1.0f);
+            fr.drawStringWithShadow(tip, 0.0f, 0.0f, 0xffffffff);
             GlStateManager.popMatrix();
             GlStateManager.enableLighting();
             GlStateManager.enableDepth();
@@ -82,14 +85,15 @@ public class MixinRenderItem
         if (!stackCount.isEmpty())
         {
             GlStateManager.disableLighting();
-            GlStateManager.disableDepth();
             GlStateManager.disableBlend();
-            getMc().fontRendererObj.drawStringWithShadow(
-                stackCount,
-                (float) (x + 17 - getMc().fontRendererObj.getStringWidth(stackCount)),
-                (float) (y + 9),
-                0xffffffff);
+            GlStateManager.disableDepth();
+            GlStateManager.pushMatrix();
+            int width = fr.getStringWidth(stackCount);
+            GlStateManager.translate(x + 17.0f - width, y + 9.0f, 1.0f);
+            fr.drawStringWithShadow(stackCount, 0.0f, 0.0f, 0xffffffff);
+            GlStateManager.popMatrix();
             GlStateManager.enableLighting();
+            GlStateManager.enableBlend();
             GlStateManager.enableDepth();
         }
     }

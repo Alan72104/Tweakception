@@ -1,8 +1,6 @@
 package a7.tweakception;
 
 import a7.tweakception.events.IslandChangedEvent;
-import a7.tweakception.events.PacketReceiveEvent;
-import a7.tweakception.events.PacketSendEvent;
 import a7.tweakception.utils.Utils;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
@@ -12,7 +10,6 @@ import net.minecraftforge.client.event.sound.PlaySoundEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.WorldEvent;
@@ -111,18 +108,6 @@ public class InGameEventDispatcher
                     format.format(fullTickTimes[i] / 1000.0f) + " us)"));
         }
         lastFullTickTimes[i] = fullTickTimes[i];
-    }
-    
-    @SubscribeEvent
-    public void onPacketReceive(PacketReceiveEvent event)
-    {
-        globalTweaks.onPacketReceive(event);
-    }
-    
-    @SubscribeEvent
-    public void onPacketSend(PacketSendEvent event)
-    {
-        globalTweaks.onPacketSend(event);
     }
     
     @SubscribeEvent

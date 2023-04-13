@@ -4,8 +4,6 @@ import a7.tweakception.Scheduler;
 import a7.tweakception.Tweakception;
 import a7.tweakception.config.Configuration;
 import a7.tweakception.events.IslandChangedEvent;
-import a7.tweakception.events.PacketReceiveEvent;
-import a7.tweakception.events.PacketSendEvent;
 import a7.tweakception.mixin.AccessorGuiContainer;
 import a7.tweakception.mixin.AccessorGuiPlayerTabOverlay;
 import a7.tweakception.mixin.AccessorMinecraft;
@@ -36,6 +34,7 @@ import net.minecraft.inventory.Slot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.*;
+import net.minecraft.network.Packet;
 import net.minecraft.network.play.client.C16PacketClientStatus;
 import net.minecraft.network.play.server.S21PacketChunkData;
 import net.minecraft.network.play.server.S29PacketSoundEffect;
@@ -259,14 +258,14 @@ public class GlobalTweaks extends Tweak
     
     // region Events
     
-    public void onPacketReceive(PacketReceiveEvent event)
+    public void onPacketReceive(Packet<?> packet)
     {
-        packetLogger.logPacket("Receive", event.getPacket());
+        packetLogger.logPacket("Receive", packet);
     }
     
-    public void onPacketSend(PacketSendEvent event)
+    public void onPacketSend(Packet<?> packet)
     {
-        packetLogger.logPacket("Send", event.getPacket());
+        packetLogger.logPacket("Send", packet);
     }
     
     public void onTick(TickEvent.ClientTickEvent event)

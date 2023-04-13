@@ -27,12 +27,12 @@ import org.lwjgl.input.Mouse;
 import java.awt.*;
 import java.io.File;
 import java.time.Instant;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static a7.tweakception.tweaks.GlobalTweaks.getCurrentIsland;
 import static a7.tweakception.utils.McUtils.*;
 import static a7.tweakception.utils.Utils.f;
 
@@ -46,6 +46,7 @@ public class GardenTweaks extends Tweak
         public int snapPitchAngle = 15;
         public int snapPitchRange = 5;
         public boolean contestDataDumper = false;
+        public boolean contestDataDumperDumpTitle = false;
     }
     private final GardenTweaksConfig c;
     private static final Map<String, Integer> FUELS = new HashMap<>();
@@ -56,6 +57,7 @@ public class GardenTweaks extends Tweak
     private float snapPitchPrevAngle = 0.0f;
     private final Map<Instant, ContestInfo> contests = new TreeMap<>();
     private boolean inContestsMenu = false;
+    private final Matcher composterAmountMatcher = Pattern.compile("((?:\\d{1,3},?)+(?:\\.\\d)?)/(\\d*)k").matcher("");
     
     static
     {
@@ -138,6 +140,35 @@ public class GardenTweaks extends Tweak
                         tooltip.add(i + 1, "§6 " + str + " coins/10k fuel");
                         return;
                     }
+                }
+            }
+        }
+        
+        String name = itemStack.getDisplayName();
+        if (name == null)
+            return;
+        
+        boolean isCompost = name.equals("§eOrganic Matter");
+        boolean isFuel = name.equals("§2Fuel");
+        if (isCompost || isFuel)
+        {
+            for (int i = 0; i < tooltip.size(); i++)
+            {
+                if (composterAmountMatcher.reset(McUtils.cleanColor(tooltip.get(i))).find())
+                {
+                    float amount = Utils.parseFloat(composterAmountMatcher.group(1));
+                    int limit = Integer.parseInt(composterAmountMatcher.group(2)) * 1000;
+                    if (isCompost)
+                    {
+                        int count = (int) ((limit - amount) / 25600);
+                        tooltip.add(i + 1, "§6 " + count + "x §9Box of Seeds §6needed");
+                    }
+                    else
+                    {
+                        int count = (int) ((limit - amount) / 10000);
+                        tooltip.add(i + 1, "§6 " + count + "x §9Volta §6needed");
+                    }
+                    return;
                 }
             }
         }
@@ -237,6 +268,8 @@ public class GardenTweaks extends Tweak
         for (int i = 0; i < 54; i++)
         {
             ItemStack stack = inv.getStackInSlot(i);
+            if (stack == null)
+                continue;
             if (!contestDateMatcher.reset(stack.getDisplayName()).matches())
                 continue;
             ContestInfo contestInfo = new ContestInfo();
@@ -290,17 +323,19 @@ public class GardenTweaks extends Tweak
     private void dumpContests()
     {
         List<String> list = new ArrayList<>();
-//        list.add("datetime,millis,sb date,type,gold,silver,bronze");
+        if (c.contestDataDumperDumpTitle)
+            list.add("datetime,millis,sb date,type,bronze,silver,gold,score");
         for (ContestInfo contestInfo : contests.values())
         {
-            list.add(f("%s,%d,\"%s\",%s,%d,%d,%d",
+            list.add(f("%s,%d,\"%s\",%s,%d,%d,%d,%d",
                 contestInfo.date,
                 contestInfo.date.toEpochMilli(),
                 contestInfo.sbDate, // Has comma
                 contestInfo.type,
                 contestInfo.bronze,
                 contestInfo.silver,
-                contestInfo.gold
+                contestInfo.gold,
+                contestInfo.score
             ));
         }
         contests.clear();
@@ -337,10 +372,10 @@ public class GardenTweaks extends Tweak
         public Instant date;
         public String sbDate;
         public String type;
-        public int score;
-        public int gold;
-        public int silver;
         public int bronze;
+        public int silver;
+        public int gold;
+        public int score;
     }
     
     private static class MilestoneOverlay extends TextOverlay
@@ -363,7 +398,7 @@ public class GardenTweaks extends Tweak
         {
             super.update();
             List<String> list = new ArrayList<>();
-            if (milestoneText != null)
+            if (milestoneText != null && getCurrentIsland() == SkyblockIsland.THE_GARDEN)
                 list.add(milestoneText);
             setContent(list);
         }
@@ -429,5 +464,11 @@ public class GardenTweaks extends Tweak
     {
         c.contestDataDumper = !c.contestDataDumper;
         sendChat("GardenTweaks-ContestDataDumper: toggled " + c.contestDataDumper);
+    }
+    
+    public void toggleContestDataDumperDumpTitle()
+    {
+        c.contestDataDumperDumpTitle = !c.contestDataDumperDumpTitle;
+        sendChat("GardenTweaks-ContestDataDumper: toggled title " + c.contestDataDumperDumpTitle);
     }
 }

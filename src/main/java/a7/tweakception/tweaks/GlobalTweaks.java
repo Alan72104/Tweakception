@@ -549,8 +549,9 @@ public class GlobalTweaks extends Tweak
             
             if (hideFromStrangers && getTicks() - hideFromStrangersLastWarpTicks >= 20 * 5)
             {
-                if (getPlayerListFromTabList()
-                    .stream()
+                List<String> list = getPlayerListFromTabList();
+                if (list != null &&
+                    list.stream()
                     .map(String::toLowerCase)
                     .anyMatch(name ->
                         !(name.equalsIgnoreCase(getPlayer().getName()) || c.strangerWhitelist.contains(name)))

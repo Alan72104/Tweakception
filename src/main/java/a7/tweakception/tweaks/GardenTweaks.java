@@ -158,15 +158,18 @@ public class GardenTweaks extends Tweak
                 {
                     float amount = Utils.parseFloat(composterAmountMatcher.group(1));
                     int limit = Integer.parseInt(composterAmountMatcher.group(2)) * 1000;
+                    float needed = limit - amount;
                     if (isCompost)
                     {
-                        int count = (int) ((limit - amount) / 25600);
+                        float count = Utils.roundToDigits(needed / 25600, 1);
                         tooltip.add(i + 1, "§6 " + count + "x §9Box of Seeds §6needed");
                     }
                     else
                     {
-                        int count = (int) ((limit - amount) / 10000);
+                        float count = Utils.roundToDigits(needed / 10000, 1);
                         tooltip.add(i + 1, "§6 " + count + "x §9Volta §6needed");
+                        float countBiofuel = Utils.roundToDigits(needed / 3000, 1);
+                        tooltip.add(i + 1, "§6 " + countBiofuel + "x §9Biofuel §6needed");
                     }
                     return;
                 }

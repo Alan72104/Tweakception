@@ -225,6 +225,7 @@ public class GlobalTweaks extends Tweak
     private long windowOpenMillis = 0;
     private Set<ChunkCoordIntPair> pendingUnloadChunks = new HashSet<>();
     private ChunkCoordIntPair lastChunkUnloadPosition = new ChunkCoordIntPair(0, 0);
+    private List<String> tooltipOverride = null;
     
     static
     {
@@ -872,12 +873,19 @@ public class GlobalTweaks extends Tweak
     
     public void onItemTooltip(ItemTooltipEvent event)
     {
-        List<String> tooltip = event.toolTip;
+        final List<String> tooltip = event.toolTip;
         ItemStack itemStack = event.itemStack;
         
         if (c.disableTooltips)
         {
             tooltip.clear();
+            return;
+        }
+        
+        if (tooltipOverride != null)
+        {
+            tooltip.clear();
+            tooltip.addAll(tooltipOverride);
             return;
         }
         
@@ -2891,6 +2899,21 @@ public class GlobalTweaks extends Tweak
 //                    getWorld().doPreChunk(pos.chunkXPos, pos.chunkZPos, false);
             lastChunkUnloadPosition = new ChunkCoordIntPair(0, 0);
             pendingUnloadChunks.clear();
+        }
+    }
+    
+    public void setTooltipOverride(boolean off)
+    {
+        String clip = Utils.getClipboard();
+        if (clip == null || clip.isEmpty() || off)
+        {
+            tooltipOverride = null;
+            sendChat("GT-TooltipOverride: toggled off");
+        }
+        else
+        {
+            tooltipOverride = Arrays.asList(clip.split("\\R"));
+            sendChat("GT-TooltipOverride: overriding with " + tooltipOverride.size() + " lines");
         }
     }
     

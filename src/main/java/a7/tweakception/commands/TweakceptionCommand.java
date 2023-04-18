@@ -412,6 +412,11 @@ public class TweakceptionCommand extends CommandBase
                     new Command("id",
                         args -> Tweakception.globalTweaks.toggleTooltipDisplayId())
                 ),
+                new Command("tooltipOveride",
+                    args -> Tweakception.globalTweaks.setTooltipOverride(false),
+                    new Command("off",
+                        args -> Tweakception.globalTweaks.setTooltipOverride(true))
+                ),
                 new Command("trevor",
                     null,
                     new Command("autoaccept",

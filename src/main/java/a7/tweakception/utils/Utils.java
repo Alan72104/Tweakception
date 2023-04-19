@@ -206,6 +206,14 @@ public class Utils
             ms % 1_000);
     }
     
+    public static String msToMMSSm(long ms)
+    {
+        return String.format("%02d:%02d.%d",
+            ms / 60_000,
+            ms % 60_000 / 1_000,
+            ms % 1_000 / 100);
+    }
+    
     public static <T> void removeWhile(Iterable<T> queue, Predicate<T> predicate)
     {
         removeWhile(queue, predicate, null);

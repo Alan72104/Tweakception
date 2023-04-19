@@ -488,7 +488,7 @@ public class RenderUtils
     {
         Vector3d viewer = getInterpolatedViewingPos(partialTicks);
         double x = entity.posX - viewer.x - 0.5;
-        double y = entity.posY - viewer.y - 0.5;
+        double y = entity.posY - viewer.y;
         double z = entity.posZ - viewer.z - 0.5;
         RenderUtils.drawBeaconBeam(x, y, z, c, partialTicks, false);
     }

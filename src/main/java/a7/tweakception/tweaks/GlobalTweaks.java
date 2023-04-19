@@ -23,8 +23,9 @@ import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityArmorStand;
-import net.minecraft.entity.passive.EntityPig;
+import net.minecraft.entity.passive.*;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.init.Blocks;
@@ -71,6 +72,7 @@ import java.util.regex.Pattern;
 import static a7.tweakception.utils.McUtils.*;
 import static a7.tweakception.utils.Utils.f;
 
+@SuppressWarnings({"unused", "SpellCheckingInspection"})
 public class GlobalTweaks extends Tweak
 {
     public static class GlobalTweaksConfig
@@ -171,9 +173,11 @@ public class GlobalTweaks extends Tweak
     private boolean highlightPlayers = false;
     private final Set<String> playersToHighlight = new HashSet<>();
     private final Set<String> armorStandsToHighlight = new HashSet<>();
+    // [Lv3] Undetected Sheep 2000/2000❤
     private final Matcher trevorAnimalNametagMatcher = Pattern.compile(
         "\\[Lv[0-9]+] (?<rarity>[a-zA-Z]+) (?<animal>[a-zA-Z]+) .*❤").matcher("");
-    private Entity trevorAnimalNametag = null;
+    private final Set<Entity> trevorTempEntitySet = Collections.newSetFromMap(new WeakHashMap<>());
+    private Entity trevorAnimal = null;
     private boolean trevorQuestOngoing = false;
     private int trevorQuestStartTicks = 0;
     private boolean trevorQuestCooldownNoticed = false;
@@ -215,7 +219,7 @@ public class GlobalTweaks extends Tweak
     private boolean hideFromStrangers = false;
     private int hideFromStrangersLastWarpTicks = 0;
     private final Matcher petItemJsonExpMatcher = Pattern.compile(
-        "\\\"exp\\\":(\\d+.?\\d*E?\\d*)").matcher("");
+        "\"exp\":(\\d+.?\\d*E?\\d*)").matcher("");
     private boolean dojoDisciplineHelper = false;
     private boolean autoHarp = false;
     private final Item[] autoHarpLastChestItems = new Item[28];
@@ -223,7 +227,7 @@ public class GlobalTweaks extends Tweak
     private int autoHarpReplayLastClickTicks = 0;
     private String autoHarpReplayData = null;
     private long windowOpenMillis = 0;
-    private Set<ChunkCoordIntPair> pendingUnloadChunks = new HashSet<>();
+    private final Set<ChunkCoordIntPair> pendingUnloadChunks = new HashSet<>();
     private ChunkCoordIntPair lastChunkUnloadPosition = new ChunkCoordIntPair(0, 0);
     private List<String> tooltipOverride = null;
     
@@ -436,7 +440,6 @@ public class GlobalTweaks extends Tweak
                     {
                         sendChat("GT-Trevor: quest timed out");
                         trevorQuestStartTicks = 0;
-                        trevorAnimalNametag = null;
                         trevorQuestOngoing = false;
                     }
                     
@@ -460,6 +463,53 @@ public class GlobalTweaks extends Tweak
                 
                 if (getTicks() - trevorQuestPendingStartStartTicks >= 20 * 11)
                     trevorQuestPendingStart = false;
+                
+                if (trevorQuestOngoing)
+                {
+                    trevorAnimal = null;
+                    trevorTempEntitySet.clear();
+                    for (Entity e : getWorld().loadedEntityList)
+                    {
+                        if (!e.isDead &&
+                            (e instanceof EntityCow ||
+                            e instanceof EntityPig ||
+                            e instanceof EntitySheep ||
+                            e instanceof EntityChicken ||
+                            e instanceof EntityRabbit ||
+                            e instanceof EntityHorse))
+                        {
+                            float max = ((EntityLivingBase) e).getMaxHealth();
+                            if (max == 100 ||
+                                max == 500 ||
+                                max == 1000 ||
+                                max == 5000 ||
+                                max == 10000 ||
+                                max == 200 || // Derpy hps
+                                max == 2000 ||
+                                max == 20000)
+                            {
+                                trevorTempEntitySet.add(e);
+                                List<Entity> nearNametags = getWorld().getEntitiesWithinAABB(EntityArmorStand.class,
+                                    e.getEntityBoundingBox().expand(2, 3, 2),
+                                    en -> en.hasCustomName() &&
+                                        en.ticksExisted > 5 &&
+                                        trevorAnimalNametagMatcher.reset(McUtils.cleanColor(en.getName())).matches()
+                                );
+                                if (!nearNametags.isEmpty())
+                                {
+                                    trevorAnimal = e;
+                                    trevorTempEntitySet.clear();
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    trevorTempEntitySet.clear();
+                    trevorAnimal = null;
+                }
             }
             
             if (highlightSkulls && getTicks() % 5 == 0)
@@ -681,18 +731,6 @@ public class GlobalTweaks extends Tweak
     
     public void onEntityUpdate(LivingEvent.LivingUpdateEvent event)
     {
-        if (c.trevorHighlightAnimal &&
-            trevorQuestOngoing &&
-            event.entity instanceof EntityArmorStand &&
-            event.entity.hasCustomName() &&
-            event.entity.ticksExisted > 5)
-        {
-            String name = McUtils.cleanColor(event.entity.getName());
-            if (trevorAnimalNametagMatcher.reset(name).matches())
-            {
-                trevorAnimalNametag = event.entity;
-            }
-        }
     }
     
     public void onGuiKeyInputPre(GuiScreenEvent.KeyboardInputEvent.Pre event)
@@ -763,10 +801,16 @@ public class GlobalTweaks extends Tweak
         
         if (c.trevorHighlightAnimal)
         {
-            if (trevorAnimalNametag != null && !trevorAnimalNametag.isDead)
-                RenderUtils.drawBeaconBeamAtEntity(trevorAnimalNametag, new Color(0, 255, 0, 80), getPartialTicks());
-            else
-                trevorAnimalNametag = null;
+            if (trevorAnimal != null)
+                RenderUtils.drawBeaconBeamAtEntity(trevorAnimal, new Color(0, 255, 0, 80), getPartialTicks());
+            else if (!trevorTempEntitySet.isEmpty())
+                for (Entity e : trevorTempEntitySet)
+                {
+                    if (e.getDistanceSqToEntity(getPlayer()) <= 25 * 25)
+                        RenderUtils.drawBeaconBeamAtEntity(e, new Color(0, 255, 0, 80), getPartialTicks());
+                    else
+                        RenderUtils.drawBeaconBeamAtEntity(e, new Color(0, 255, 0, 40), getPartialTicks());
+                }
         }
         
         if (highlightSkulls)
@@ -1025,10 +1069,7 @@ public class GlobalTweaks extends Tweak
                 for (int i = 0; i < items.tagCount(); i++)
                 {
                     NBTTagCompound item = items.getCompoundTagAt(i);
-//                    int itemId = item.getInteger("id");
-//                    int damage = item.getInteger("Damage");
                     int count = item.getByte("Count");
-//                    String name = new ItemStack(Item.getItemById(itemId), 1, damage).getDisplayName();
                     NBTBase nameNbt = McUtils.getNbt(item, "tag.display.Name");
                     if (nameNbt != null)
                     {
@@ -1052,7 +1093,6 @@ public class GlobalTweaks extends Tweak
         trevorQuestStartTicks = 0;
         trevorQuestCooldownNoticed = false;
         trevorQuestPendingStart = false;
-        trevorAnimalNametag = null;
         trevorQuestOngoing = false;
         snipeWarping = false;
         lastChunkUnloadPosition = new ChunkCoordIntPair(0, 0);
@@ -1176,7 +1216,7 @@ public class GlobalTweaks extends Tweak
         if (event.type == 0 || event.type == 1)
         {
             if (c.trevorHighlightAnimal &&
-                McUtils.cleanColor(msg).startsWith("[NPC] Trevor The Trapper: You can find your "))
+                McUtils.cleanColor(msg).startsWith("[NPC] Trevor: You can find your "))
             {
                 trevorQuestStartTicks = getTicks();
                 trevorQuestCooldownNoticed = false;
@@ -1186,7 +1226,6 @@ public class GlobalTweaks extends Tweak
                 (msg.startsWith("Your mob died randomly, you are rewarded ") ||
                     msg.startsWith("Killing the animal rewarded you ")))
             {
-                trevorAnimalNametag = null;
                 trevorQuestOngoing = false;
             }
             else if (c.trevorQuestAutoAccept &&
@@ -1476,7 +1515,7 @@ public class GlobalTweaks extends Tweak
                     isInHypixel = true;
                     currentIsland = island;
                     islandUpdatedThisTick = true;
-                    sendChat("GT: overridden current island with " + island.name);
+                    sendChat("GT: overrode current island with " + island.name);
                     return;
                 }
             sendChat("GT: cannot find island in implemented island list");
@@ -1689,8 +1728,7 @@ public class GlobalTweaks extends Tweak
         int maxX = Math.max(areaPoints[0].getX(), areaPoints[1].getX()) + 1;
         int maxY = Math.max(areaPoints[0].getY(), areaPoints[1].getY()) + 1;
         int maxZ = Math.max(areaPoints[0].getZ(), areaPoints[1].getZ()) + 1;
-        AxisAlignedBB bb = new AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ);
-        return bb;
+        return new AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ);
     }
     
     public void switchAreaPoints()
@@ -2110,23 +2148,18 @@ public class GlobalTweaks extends Tweak
                 if (trevorQuestOngoing)
                 {
                     list.add("§aOngoing quest >>>");
-                    list.add("Trevor quest time: " + Utils.msToMMSSmmm(elapsed));
-                    
-                    if (trevorAnimalNametag != null)
+                    list.add("Trevor quest time: " + Utils.msToMMSSm(elapsed));
+                    if (trevorAnimal != null)
                     {
-                        list.add("§aANIMAL IN RANGE");
+                        list.add("§aANIMAL DETECTED");
                         list.add("Distance: §a" +
-                            Utils.roundToDigits(getPlayer().getDistanceToEntity(trevorAnimalNametag), 1) +
+                            Utils.roundToDigits(getPlayer().getDistanceToEntity(trevorAnimal), 1) +
                             " blocks");
-                        list.add(f("Coords: §a%d§r, §a%d§r, §a%d",
-                            (int) trevorAnimalNametag.posX,
-                            (int) trevorAnimalNametag.posY,
-                            (int) trevorAnimalNametag.posZ));
                     }
                 }
                 else
                 {
-                    list.add("Trevor quest cooldown: " + Utils.msToMMSSmmm(Math.max(60000 - elapsed, 0)));
+                    list.add("Trevor quest cooldown: " + Utils.msToMMSSm(Math.max(60000 - elapsed, 0)));
                 }
             }
             
@@ -2591,7 +2624,6 @@ public class GlobalTweaks extends Tweak
     {
         c.trevorHighlightAnimal = !c.trevorHighlightAnimal;
         sendChat("GT-Trevor: toggled highlight " + c.trevorHighlightAnimal);
-        trevorAnimalNametag = null;
         trevorQuestStartTicks = 0;
         Tweakception.overlayManager.setEnable(TrevorOverlay.NAME,
             c.trevorHighlightAnimal || c.trevorQuestAutoAccept || c.trevorQuestAutoStart);
@@ -2611,7 +2643,7 @@ public class GlobalTweaks extends Tweak
         sendChat("GT-Trevor: toggled auto start and auto accept " + c.trevorQuestAutoStart);
         c.trevorQuestAutoAccept = c.trevorQuestAutoStart;
         Tweakception.overlayManager.setEnable(TrevorOverlay.NAME,
-            c.trevorHighlightAnimal || c.trevorQuestAutoAccept || c.trevorQuestAutoStart);
+            c.trevorHighlightAnimal || c.trevorQuestAutoAccept);
     }
     
     public void toggleHighlightSkulls()
@@ -2892,11 +2924,6 @@ public class GlobalTweaks extends Tweak
         sendChat("GT-IgnoreServerChunkUnloadDistance: toggled " + c.ignoreServerChunkUnloadDistance);
         if (!c.ignoreServerChunkUnloadDistance)
         {
-            // No unloading for now
-//            ChunkCoordIntPair current = new ChunkCoordIntPair(getPlayer().chunkCoordX, getPlayer().chunkCoordZ);
-//            for (ChunkCoordIntPair pos : pendingUnloadChunks)
-//                if (McUtils.getChessboardDistance(current, pos) > 8)
-//                    getWorld().doPreChunk(pos.chunkXPos, pos.chunkZPos, false);
             lastChunkUnloadPosition = new ChunkCoordIntPair(0, 0);
             pendingUnloadChunks.clear();
         }

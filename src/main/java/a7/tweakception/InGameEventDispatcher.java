@@ -27,94 +27,9 @@ import static a7.tweakception.utils.McUtils.*;
 
 public class InGameEventDispatcher
 {
-    private static final String[] TICK_TYPES =
-        {
-            "Tick",
-            "World",
-            "Overlay",
-            "Living",
-            "LivingSpe"
-        };
-    private final DecimalFormat format = new DecimalFormat("#.##");
-    private final long[] tickStartTimes = new long[TICK_TYPES.length];
-    private final float[] startPhaseTickTimes = new float[TICK_TYPES.length];
-    private final float[] fullTickTimes = new float[TICK_TYPES.length];
-    private final float[] lastFullTickTimes = new float[TICK_TYPES.length];
-    private boolean notifyLagSpike = false;
-    private float notifyThreshold = 1000.0f;
-    private float avgAggregationValue = 0.4f;
-    
-    public void toggleNotifyLagSpike()
-    {
-        notifyLagSpike = !notifyLagSpike;
-    }
-    
-    public void setNotifyThreshold(float f)
-    {
-        if (f < 1.0f)
-            f = 1000.0f;
-        notifyThreshold = f;
-        sendChat("TC: set lag spike notify threshold to " + format.format(notifyThreshold));
-    }
-    
-    public void setAggregationValue(float f)
-    {
-        f = Utils.clamp(f, 0.0f, 1.0f);
-        if (f == 0.0f)
-            f = 0.4f;
-        avgAggregationValue = f;
-        sendChatf("TC: set tick time avg value aggregation to %.1f old, %.1f new",
-            1.0f - avgAggregationValue, avgAggregationValue);
-    }
-    
-    private void startFunc(int i)
-    {
-        tickStartTimes[i] = System.nanoTime();
-    }
-    
-    private void endFuncAndAddNum(TickEvent.Phase phase, int i)
-    {
-        long end = System.nanoTime();
-        
-        if (phase == TickEvent.Phase.START)
-        {
-            startPhaseTickTimes[i] = end - tickStartTimes[i];
-            return;
-        }
-        
-        fullTickTimes[i] = fullTickTimes[i] * (1.0f - avgAggregationValue) +
-            ((end - tickStartTimes[i]) + startPhaseTickTimes[i]) * avgAggregationValue;
-        
-        if (notifyLagSpike && fullTickTimes[i] > lastFullTickTimes[i] * notifyThreshold && getPlayer() != null)
-        {
-            getPlayer().addChatMessage(new ChatComponentText(
-                "TC: " + TICK_TYPES[i] + " is taking " + format.format(notifyThreshold) + "x longer than usual! (" +
-                    format.format(fullTickTimes[i] / 1000.0f) + " us)"));
-        }
-        lastFullTickTimes[i] = fullTickTimes[i];
-    }
-    
-    private void endFuncAndAddNum(int i)
-    {
-        long end = System.nanoTime();
-        
-        fullTickTimes[i] = fullTickTimes[i] * (1.0f - avgAggregationValue) +
-            (end - tickStartTimes[i]) * avgAggregationValue;
-        
-        if (notifyLagSpike && fullTickTimes[i] > lastFullTickTimes[i] * notifyThreshold && getPlayer() != null)
-        {
-            getPlayer().addChatMessage(new ChatComponentText(
-                "TC: " + TICK_TYPES[i] + " is taking " + format.format(notifyThreshold) + "x longer than usual! (" +
-                    format.format(fullTickTimes[i] / 1000.0f) + " us)"));
-        }
-        lastFullTickTimes[i] = fullTickTimes[i];
-    }
-    
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event)
     {
-        startFunc(0);
-        
         globalTweaks.onTick(event);
         
         if (!isInGame()) return;
@@ -135,8 +50,6 @@ public class InGameEventDispatcher
         giftTweaks.onTick(event);
         overlayManager.onTick(event);
         guildBridge.onTick(event);
-        
-        endFuncAndAddNum(event.phase, 0);
     }
     
     @SubscribeEvent
@@ -150,7 +63,6 @@ public class InGameEventDispatcher
     @SubscribeEvent
     public void onRenderLast(RenderWorldLastEvent event)
     {
-        startFunc(1);
         if (!isInGame()) return;
         if (!isInSkyblock()) return;
         
@@ -162,33 +74,26 @@ public class InGameEventDispatcher
         foragingTweaks.onRenderLast(event);
         globalTweaks.onRenderLast(event);
         giftTweaks.onRenderLast(event);
-        
-        endFuncAndAddNum(1);
+        gardenTweaks.onRenderLast(event);
     }
     
     @SubscribeEvent
     public void onRenderGameOverlayPost(RenderGameOverlayEvent.Post event)
     {
-        startFunc(2);
         if (!isInGame()) return;
         if (!isInSkyblock()) return;
         
         overlayManager.onRenderGameOverlayPost(event);
         crimsonTweaks.onRenderGameOverlayPost(event);
-        
-        endFuncAndAddNum(2);
     }
     
     @SubscribeEvent()
     public void onLivingRenderPre(RenderLivingEvent.Pre<?> event)
     {
-        startFunc(3);
         if (!isInSkyblock()) return;
         
         dungeonTweaks.onLivingRenderPre(event);
         globalTweaks.onLivingRenderPre(event);
-        
-        endFuncAndAddNum(3);
     }
     
     @SubscribeEvent()
@@ -203,13 +108,10 @@ public class InGameEventDispatcher
     @SubscribeEvent
     public void onLivingSpecialRenderPre(RenderLivingEvent.Specials.Pre<?> event)
     {
-        startFunc(4);
         if (!isInSkyblock()) return;
         
         dungeonTweaks.onLivingSpecialRenderPre(event);
         globalTweaks.onLivingSpecialRenderPre(event);
-        
-        endFuncAndAddNum(4);
     }
     
     @SubscribeEvent
@@ -271,6 +173,7 @@ public class InGameEventDispatcher
         slayerTweaks.onWorldUnload(event);
         miningTweaks.onWorldUnload(event);
         giftTweaks.onWorldUnload(event);
+        gardenTweaks.onWorldUnload(event);
     }
     
     @SubscribeEvent
@@ -368,7 +271,6 @@ public class InGameEventDispatcher
         if (!isInSkyblock()) return;
         
         fairyTracker.onKeyInput(event);
-        globalTweaks.onKeyInput(event);
         gardenTweaks.onKeyInput(event);
     }
     

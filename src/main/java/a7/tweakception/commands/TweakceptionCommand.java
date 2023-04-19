@@ -1,5 +1,6 @@
 package a7.tweakception.commands;
 
+import a7.tweakception.DevSettings;
 import a7.tweakception.LagSpikeWatcher;
 import a7.tweakception.Tweakception;
 import a7.tweakception.tweaks.GlobalTweaks;
@@ -510,6 +511,11 @@ public class TweakceptionCommand extends CommandBase
                         args -> Tweakception.gardenTweaks.setSnapPitchAngle(getInt(args, 0, -1))),
                     new Command("range",
                         args -> Tweakception.gardenTweaks.setSnapPitchRange(getInt(args, 0, -1)))
+                ),
+                new Command("verifyCrops",
+                    args -> Tweakception.gardenTweaks.verifyCrops(),
+                    new Command("clear",
+                        args -> Tweakception.gardenTweaks.verifyCropsClear())
                 )
             ));
         }
@@ -815,7 +821,11 @@ public class TweakceptionCommand extends CommandBase
         // dev
         {
             addSub(new Command("dev",
-                args -> Tweakception.globalTweaks.toggleDevMode()));
+                args -> Tweakception.globalTweaks.toggleDevMode(),
+                new Command("set",
+                    args -> DevSettings.toggle(getString(args, 0, ""))
+                ).setVisibility(false)
+            ));
         }
         
         // clientsetblock
@@ -850,18 +860,6 @@ public class TweakceptionCommand extends CommandBase
                         args.length >= 2 && args[1].equals("true"),
                         args.length >= 3 && args[2].equals("true"));
                 }).setVisibility(false));
-        }
-        // notifylagspike
-        {
-            addSub(new Command("notifylagspike",
-                args -> Tweakception.inGameEventDispatcher.toggleNotifyLagSpike(),
-                new Command("setthreshold",
-                    args -> Tweakception.inGameEventDispatcher.setNotifyThreshold(
-                        args.length > 0 ? toFloat(args[0]) : 0.0f)),
-                new Command("setaggregation",
-                    args -> Tweakception.inGameEventDispatcher.setAggregationValue(
-                        args.length > 0 ? toFloat(args[0]) : 0.0f))
-            ).setVisibility(false));
         }
         
         // t

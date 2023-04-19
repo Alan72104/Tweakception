@@ -1,5 +1,6 @@
 package a7.tweakception.mixin;
 
+import a7.tweakception.DevSettings;
 import a7.tweakception.LagSpikeWatcher;
 import a7.tweakception.Tweakception;
 import a7.tweakception.tweaks.GlobalTweaks;
@@ -32,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static a7.tweakception.utils.McUtils.getPlayer;
+import static a7.tweakception.utils.McUtils.sendChat;
 
 @Mixin(Minecraft.class)
 public abstract class MixinMinecraft
@@ -76,7 +78,8 @@ public abstract class MixinMinecraft
         cancellable = true)
     private void rightClickOnEntity(CallbackInfo ci)
     {
-//        sendChat("rclick entity");
+        if (DevSettings.printClicks)
+            sendChat("rclick entity");
         int slot = -1;
         Runnable afterInject = () ->
         {
@@ -146,7 +149,8 @@ public abstract class MixinMinecraft
         cancellable = true)
     private void rightClickOnABlock(CallbackInfo ci)
     {
-//        sendChat("rclick block");
+        if (DevSettings.printClicks)
+            sendChat("rclick block");
         if ((Tweakception.dungeonTweaks.isAutoSwapSpiritSceptreAoteOn() ||
             Tweakception.dungeonTweaks.isAutoSwapHyperionAoteOn()) &&
             GlobalTweaks.getCurrentIsland() == SkyblockIsland.DUNGEON && !inAutoSwap)
@@ -213,7 +217,12 @@ public abstract class MixinMinecraft
         cancellable = true)
     private void rightClickOnAir(CallbackInfo ci)
     {
-//        sendChat("rclick air");
+        if (DevSettings.printClicks)
+            sendChat("rclick air");
+        Tweakception.globalTweaks.onRightClick(ci);
+        if (ci.isCancelled())
+            return;
+        
         if ((Tweakception.dungeonTweaks.isAutoSwapSpiritSceptreAoteOn() ||
             Tweakception.dungeonTweaks.isAutoSwapHyperionAoteOn()) &&
             GlobalTweaks.getCurrentIsland() == SkyblockIsland.DUNGEON && !inAutoSwap)
@@ -247,7 +256,12 @@ public abstract class MixinMinecraft
         cancellable = true)
     private void clickMouse(CallbackInfo ci)
     {
-//        sendChat("click mouse");
+        if (DevSettings.printClicks)
+            sendChat("click mouse");
+        Tweakception.globalTweaks.onLeftClick(ci);
+        if (ci.isCancelled())
+            return;
+        
         if ((Tweakception.dungeonTweaks.isAutoSwapSpiritSceptreAoteOn() ||
             Tweakception.dungeonTweaks.isAutoSwapHyperionAoteOn()) &&
             GlobalTweaks.getCurrentIsland() == SkyblockIsland.DUNGEON && !inAutoSwap)

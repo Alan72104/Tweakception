@@ -29,6 +29,7 @@ import net.minecraft.entity.passive.*;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
 import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
@@ -894,24 +895,29 @@ public class GlobalTweaks extends Tweak
         }
     }
     
-    public void onKeyInput(InputEvent.KeyInputEvent event)
+    public void onLeftClick(CallbackInfo ci)
     {
-        if (editingAreas &&
-            !Keyboard.isRepeatEvent() && Keyboard.getEventKeyState())
+        if (editingAreas && getPlayer().inventory.getCurrentItem() != null &&
+            getPlayer().inventory.getCurrentItem().getItem() == Items.stick)
         {
-            switch (Keyboard.getEventKey())
-            {
-                case Keyboard.KEY_UP:
-                    Tweakception.globalTweaks.extendAreaPoint();
-                    break;
-                case Keyboard.KEY_DOWN:
-                    Tweakception.globalTweaks.retractAreaPoint();
-                    break;
-                case Keyboard.KEY_LEFT:
-                case Keyboard.KEY_RIGHT:
-                    Tweakception.globalTweaks.switchAreaPoints();
-                    break;
-            }
+            extendAreaPoint();
+            ci.cancel();
+        }
+    }
+    
+    public void onRightClick(CallbackInfo ci)
+    {
+        if (editingAreas && getPlayer().inventory.getCurrentItem() != null &&
+            getPlayer().inventory.getCurrentItem().getItem() == Items.stick)
+        {
+            if (getMc().objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK &&
+                getMc().objectMouseOver.getBlockPos() != null)
+                areaPoints[selectedAreaPointIndex] = getMc().objectMouseOver.getBlockPos();
+            else if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL))
+                switchAreaPoints();
+            else
+                retractAreaPoint();
+            ci.cancel();
         }
     }
     
@@ -1720,15 +1726,15 @@ public class GlobalTweaks extends Tweak
         return editingAreas;
     }
     
-    public AxisAlignedBB getAreaEditSelection()
+    public AxisAlignedBB getAreaEditBlockSelection()
     {
-        int minX = Math.min(areaPoints[0].getX(), areaPoints[1].getX());
-        int minY = Math.min(areaPoints[0].getY(), areaPoints[1].getY());
-        int minZ = Math.min(areaPoints[0].getZ(), areaPoints[1].getZ());
-        int maxX = Math.max(areaPoints[0].getX(), areaPoints[1].getX()) + 1;
-        int maxY = Math.max(areaPoints[0].getY(), areaPoints[1].getY()) + 1;
-        int maxZ = Math.max(areaPoints[0].getZ(), areaPoints[1].getZ()) + 1;
-        return new AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ);
+        return new AxisAlignedBB(
+            areaPoints[0].getX(),
+            areaPoints[0].getY(),
+            areaPoints[0].getZ(),
+            areaPoints[1].getX(),
+            areaPoints[1].getY(),
+            areaPoints[1].getZ());
     }
     
     public void switchAreaPoints()
@@ -2326,8 +2332,13 @@ public class GlobalTweaks extends Tweak
     public void toggleAreaEdit()
     {
         editingAreas = !editingAreas;
+        sendChat("GT-AreaEdit: toggled " + editingAreas);
         if (editingAreas)
         {
+            sendChat("GT-AreaEdit: left click to extend point");
+            sendChat("GT-AreaEdit: right click to retract point");
+            sendChat("GT-AreaEdit: right click block to set point");
+            sendChat("GT-AreaEdit: ctrl right click to switch points");
             areaPoints = new BlockPos[2];
             areaPoints[0] = getPlayer().getPosition();
             areaPoints[1] = getPlayer().getPosition().add(1, 1, 1);
@@ -2340,7 +2351,6 @@ public class GlobalTweaks extends Tweak
                 areaPoints[1].getX(), areaPoints[1].getY(), areaPoints[1].getZ());
             areaPoints = null;
         }
-        sendChat("GT-AreaEdit: toggled " + editingAreas);
     }
     
     public void resetArea()

@@ -6,23 +6,29 @@ import a7.tweakception.mixin.AccessorGuiContainer;
 import a7.tweakception.overlay.Anchor;
 import a7.tweakception.overlay.TextOverlay;
 import a7.tweakception.utils.McUtils;
+import a7.tweakception.utils.RenderUtils;
 import a7.tweakception.utils.Utils;
+import net.minecraft.block.Block;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiChest;
+import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.network.NetworkPlayerInfo;
+import net.minecraft.init.Blocks;
 import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.S38PacketPlayerListItem;
-import net.minecraft.util.ChatComponentTranslation;
-import net.minecraft.util.IChatComponent;
+import net.minecraft.util.*;
 import net.minecraftforge.client.event.GuiScreenEvent;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
+import scala.Mutable;
 
 import java.awt.*;
 import java.io.File;
@@ -48,16 +54,17 @@ public class GardenTweaks extends Tweak
         public boolean contestDataDumper = false;
         public boolean contestDataDumperDumpTitle = false;
     }
-    private final GardenTweaksConfig c;
     private static final Map<String, Integer> FUELS = new HashMap<>();
+    private final GardenTweaksConfig c;
     private final MilestoneOverlay milestoneOverlay;
+    private final Map<Instant, ContestInfo> contests = new TreeMap<>();
+    private final Matcher composterAmountMatcher = Pattern.compile("((?:\\d{1,3},?)+(?:\\.\\d)?)/(\\d*)k").matcher("");
     private boolean snapYaw = false;
     private float snapYawPrevAngle = 0.0f;
     private boolean snapPitch = false;
     private float snapPitchPrevAngle = 0.0f;
-    private final Map<Instant, ContestInfo> contests = new TreeMap<>();
     private boolean inContestsMenu = false;
-    private final Matcher composterAmountMatcher = Pattern.compile("((?:\\d{1,3},?)+(?:\\.\\d)?)/(\\d*)k").matcher("");
+    private final List<BlockPos> invalidCrops = new ArrayList<>();
     
     static
     {
@@ -101,6 +108,8 @@ public class GardenTweaks extends Tweak
             }
         }
     }
+    
+    // region Events
     
     public void onKeyInput(InputEvent.KeyInputEvent event)
     {
@@ -247,10 +256,26 @@ public class GardenTweaks extends Tweak
             x + 1, y + 1, 0xFFFFFFFF);
     }
     
-    public boolean isSimulateCactusKnifeInstaBreakOn()
+    public void onRenderLast(RenderWorldLastEvent event)
     {
-        return c.simulateCactusKnifeInstaBreak;
+        if (!invalidCrops.isEmpty())
+        {
+            Color color = new Color(255, 0, 0, 128);
+            for (BlockPos pos : invalidCrops)
+            {
+                RenderUtils.drawBeaconBeamOrBoundingBox(pos, color, getPartialTicks(), 0, 50);
+            }
+        }
     }
+    
+    public void onWorldUnload(WorldEvent.Unload event)
+    {
+        invalidCrops.clear();
+    }
+    
+    // endregion Events
+    
+    // region Misc
     
     private void getContests()
     {
@@ -289,9 +314,9 @@ public class GardenTweaks extends Tweak
                 int year = Utils.parseInt(contestDateMatcher.group(3));
                 long skyblockEpoch = 1_559_829_300L;
                 long secs = skyblockEpoch +
-                    year *        60L * 20 * 31 * 12 +
+                    year * 60L * 20 * 31 * 12 +
                     (month - 1) * 60L * 20 * 31 +
-                    (day - 1) *   60L * 20;
+                    (day - 1) * 60L * 20;
                 contestInfo.date = Instant.ofEpochMilli(secs * 1000L);
                 contestInfo.sbDate = contestDateMatcher.group().substring(2);
             }
@@ -370,6 +395,105 @@ public class GardenTweaks extends Tweak
         return angle;
     }
     
+    public void verifyCrops(AxisAlignedBB aabb)
+    {
+        boolean hasAxisX = aabb.minX != aabb.maxX;
+        boolean hasAxisZ = aabb.minZ != aabb.maxZ;
+        int dims2d = 0;
+        if (hasAxisX) dims2d++;
+        if (hasAxisZ) dims2d++;
+        if (dims2d == 2)
+        {
+            sendChat("GT-VerifyCrops: selection must be a point, line, or a vertical plane!");
+            return;
+        }
+        EnumFacing[] facings;
+        if (dims2d == 0)
+            facings = new EnumFacing[]
+                {
+                    getPlayer().getHorizontalFacing(),
+                    getPlayer().getHorizontalFacing().getOpposite(),
+                };
+        else
+            facings = new EnumFacing[]
+                {
+                    hasAxisX ? EnumFacing.NORTH : EnumFacing.EAST,
+                    hasAxisX ? EnumFacing.SOUTH : EnumFacing.WEST,
+                };
+        
+        List<Block> cropBlocks = new ArrayList<>(Arrays.asList(
+            Blocks.wheat,
+            Blocks.cocoa,
+            Blocks.cactus,
+            Blocks.carrots,
+            Blocks.potatoes,
+            Blocks.brown_mushroom,
+            Blocks.red_mushroom,
+            Blocks.reeds,
+            Blocks.melon_stem,
+            Blocks.pumpkin_stem,
+            Blocks.nether_wart));
+        // Invalid blocks in invalidCropsTemp are added to invalidCrops after a valid block is found in that line
+        List<BlockPos> invalidCropsTemp = new ArrayList<>();
+        WorldClient world = getWorld();
+        invalidCrops.clear();
+        for (EnumFacing facing : facings)
+        {
+            for (BlockPos.MutableBlockPos startPos : BlockPos.getAllInBoxMutable(
+                new BlockPos(aabb.minX, aabb.minY, aabb.minZ),
+                new BlockPos(aabb.maxX, aabb.maxY, aabb.maxZ)))
+            {
+                BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos(startPos.getX(), startPos.getY(), startPos.getZ());
+                invalidCropsTemp.clear();
+                int continuousInvalidCount = 0;
+                boolean started = false;
+                boolean isCactus = false;
+                Block targetCrop = Blocks.wheat;
+                while (continuousInvalidCount <= 5)
+                {
+                    Block block = world.getBlockState(pos).getBlock();
+                    if (!started)
+                    {
+                        if (cropBlocks.contains(block))
+                        {
+                            started = true;
+                            continuousInvalidCount = 0;
+                            targetCrop = block;
+                            if (block == Blocks.cactus)
+                                isCactus = true;
+                        }
+                        else
+                        {
+                            continuousInvalidCount++;
+                        }
+                    }
+                    else
+                    {
+                        if (block == targetCrop)
+                        {
+                            if (continuousInvalidCount > 0)
+                            {
+                                continuousInvalidCount = 0;
+                                invalidCrops.addAll(invalidCropsTemp);
+                                invalidCropsTemp.clear();
+                            }
+                        }
+                        else
+                        {
+                            continuousInvalidCount++;
+                            if (!(continuousInvalidCount == 1 && isCactus))
+                                invalidCropsTemp.add(pos.getImmutable());
+                        }
+                    }
+                    pos.set(pos.getX() + facing.getFrontOffsetX(),
+                        pos.getY(),
+                        pos.getZ() + facing.getFrontOffsetZ());
+                }
+            }
+        }
+        sendChat("GT-VerifyCrops: found " + invalidCrops.size() + " invalid crops");
+    }
+    
     private static class ContestInfo
     {
         public Instant date;
@@ -380,6 +504,19 @@ public class GardenTweaks extends Tweak
         public int gold;
         public int score;
     }
+    
+    // endregion Misc
+    
+    // region Feature access
+    
+    public boolean isSimulateCactusKnifeInstaBreakOn()
+    {
+        return c.simulateCactusKnifeInstaBreak;
+    }
+    
+    // endregion Feature access
+    
+    // region Overlays
     
     private static class MilestoneOverlay extends TextOverlay
     {
@@ -415,6 +552,10 @@ public class GardenTweaks extends Tweak
         }
     }
     
+    // endregion Overlays
+    
+    // region Commands
+    
     public void toggleSimulateCactusKnifeInstaBreak()
     {
         c.simulateCactusKnifeInstaBreak = !c.simulateCactusKnifeInstaBreak;
@@ -432,7 +573,6 @@ public class GardenTweaks extends Tweak
         snapYaw = !snapYaw;
         sendChat("GardenTweaks-SnapYaw: toggled " + snapYaw);
     }
-    
     public void setSnapYawAngle(int angle)
     {
         c.snapYawAngle = angle < 0 ? 45 : Utils.clamp(angle, 1, 180);
@@ -474,4 +614,19 @@ public class GardenTweaks extends Tweak
         c.contestDataDumperDumpTitle = !c.contestDataDumperDumpTitle;
         sendChat("GardenTweaks-ContestDataDumper: toggled title " + c.contestDataDumperDumpTitle);
     }
+    
+    public void verifyCrops()
+    {
+        if (Tweakception.globalTweaks.isInAreaEditMode())
+            verifyCrops(Tweakception.globalTweaks.getAreaEditBlockSelection());
+        else
+            sendChat("GT-VerifyCrops: global tweaks AreaEdit feature is off");
+    }
+    
+    public void verifyCropsClear()
+    {
+        invalidCrops.clear();
+    }
+    
+    // endregion Commands
 }

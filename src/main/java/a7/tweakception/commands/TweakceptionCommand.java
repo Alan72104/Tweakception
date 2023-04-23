@@ -493,8 +493,8 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.gardenTweaks.toggleMilestoneOverlay()),
                 new Command("contestDataDumper",
                     args -> Tweakception.gardenTweaks.toggleContestDataDumper(),
-                    new Command("dumpTitle",
-                        args -> Tweakception.gardenTweaks.toggleContestDataDumperDumpTitle())
+                    new Command("dumpHeader",
+                        args -> Tweakception.gardenTweaks.toggleContestDataDumperDumpHeader())
                 ),
                 new Command("simulateCactusKnifeInstaBreak",
                     args -> Tweakception.gardenTweaks.toggleSimulateCactusKnifeInstaBreak()),

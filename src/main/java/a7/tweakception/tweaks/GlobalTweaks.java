@@ -2335,6 +2335,7 @@ public class GlobalTweaks extends Tweak
         sendChat("GT-AreaEdit: toggled " + editingAreas);
         if (editingAreas)
         {
+            sendChat("GT-AreaEdit: tool = stick");
             sendChat("GT-AreaEdit: left click to extend point");
             sendChat("GT-AreaEdit: right click to retract point");
             sendChat("GT-AreaEdit: right click block to set point");

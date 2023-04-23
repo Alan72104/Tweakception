@@ -28,7 +28,6 @@ import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
-import scala.Mutable;
 
 import java.awt.*;
 import java.io.File;
@@ -52,7 +51,7 @@ public class GardenTweaks extends Tweak
         public int snapPitchAngle = 15;
         public int snapPitchRange = 5;
         public boolean contestDataDumper = false;
-        public boolean contestDataDumperDumpTitle = false;
+        public boolean contestDataDumperDumpHeader = false;
     }
     private static final Map<String, Integer> FUELS = new HashMap<>();
     private final GardenTweaksConfig c;
@@ -342,6 +341,8 @@ public class GardenTweaks extends Tweak
                         }
                     else if (yourScoreMatcher.reset(line).matches())
                         contestInfo.score = Utils.parseInt(yourScoreMatcher.group(1));
+                    else if (line.equals("Contest boosted by Finnegan!"))
+                        contestInfo.finneganBoosted = true;
                 }
             }
             contests.put(contestInfo.date, contestInfo);
@@ -351,11 +352,11 @@ public class GardenTweaks extends Tweak
     private void dumpContests()
     {
         List<String> list = new ArrayList<>();
-        if (c.contestDataDumperDumpTitle)
-            list.add("datetime,millis,sb date,type,bronze,silver,gold,score");
+        if (c.contestDataDumperDumpHeader)
+            list.add("datetime,millis,sb date,type,bronze,silver,gold,score,finnegan");
         for (ContestInfo contestInfo : contests.values())
         {
-            list.add(f("%s,%d,\"%s\",%s,%d,%d,%d,%d",
+            list.add(f("%s,%d,\"%s\",%s,%d,%d,%d,%d,%d",
                 contestInfo.date,
                 contestInfo.date.toEpochMilli(),
                 contestInfo.sbDate, // Has comma
@@ -363,7 +364,8 @@ public class GardenTweaks extends Tweak
                 contestInfo.bronze,
                 contestInfo.silver,
                 contestInfo.gold,
-                contestInfo.score
+                contestInfo.score,
+                contestInfo.finneganBoosted ? 1 : 0
             ));
         }
         contests.clear();
@@ -503,6 +505,7 @@ public class GardenTweaks extends Tweak
         public int silver;
         public int gold;
         public int score;
+        public boolean finneganBoosted;
     }
     
     // endregion Misc
@@ -609,10 +612,10 @@ public class GardenTweaks extends Tweak
         sendChat("GardenTweaks-ContestDataDumper: toggled " + c.contestDataDumper);
     }
     
-    public void toggleContestDataDumperDumpTitle()
+    public void toggleContestDataDumperDumpHeader()
     {
-        c.contestDataDumperDumpTitle = !c.contestDataDumperDumpTitle;
-        sendChat("GardenTweaks-ContestDataDumper: toggled title " + c.contestDataDumperDumpTitle);
+        c.contestDataDumperDumpHeader = !c.contestDataDumperDumpHeader;
+        sendChat("GardenTweaks-ContestDataDumper: toggled csv header " + c.contestDataDumperDumpHeader);
     }
     
     public void verifyCrops()

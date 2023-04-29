@@ -5,6 +5,7 @@ import a7.tweakception.utils.McUtils;
 import a7.tweakception.utils.RenderUtils;
 import a7.tweakception.utils.Utils;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockChest;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.init.Blocks;
@@ -13,10 +14,10 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.S22PacketMultiBlockChange;
 import net.minecraft.network.play.server.S23PacketBlockChange;
-import net.minecraft.network.play.server.S24PacketBlockAction;
+import net.minecraft.network.play.server.S2APacketParticles;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityChest;
-import net.minecraft.util.BlockPos;
+import net.minecraft.util.*;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
@@ -42,11 +43,12 @@ public class MiningTweaks extends Tweak
         public boolean highlightChests = false;
         public boolean simulateBlockHardness = false;
         public int miningSpeedBoostValue = 3;
+        public boolean treasureChestHelper = false;
     }
     
-    private static final Color CHEST_COLOR_OPENED = new Color(0x2a00ff00, true);
-    private static final Color CHEST_COLOR_CLOSED = new Color(255, 0, 0, 255 / 6);
-    private static final Color CHEST_COLOR_WARNING = new Color(255, 255, 0, 255 / 6);
+    private static final Color CHEST_COLOR_OPENED = new Color(0, 255, 0, 48);
+    private static final Color CHEST_COLOR_CLOSED = new Color(255, 0, 0, 48);
+    private static final Color CHEST_COLOR_WARNING = new Color(255, 255, 0, 48);
     private final MiningTweaksConfig c;
     private final Set<TreasureChest> treasureChests = new ConcurrentSkipListSet<>(Comparator.comparing(a -> a.pos));
     private float miningSpeedCache = 0.0f;
@@ -55,6 +57,10 @@ public class MiningTweaks extends Tweak
     private static final Matcher miningItemStatMatcher = Pattern.compile(
         "^§7Mining Speed: §a\\+(\\d+(?:,\\d+)*)").matcher("");
     private int miningSpeedBoostStartTicks = 0;
+    private BlockPos targetTreasureChest = null;
+    private Vec3 targetParticlePos = null;
+    private Vec3 targetRandomPoint = null;
+    
     
     public MiningTweaks(Configuration configuration)
     {
@@ -185,16 +191,55 @@ public class MiningTweaks extends Tweak
             treasureChests.remove(new TreasureChest(pos));
     }
     
-    public void onPacketBlockAction(S24PacketBlockAction packet)
+    public void onPacketParticles(S2APacketParticles packet)
     {
-//        if (getCurrentIsland() != SkyblockIsland.CRYSTAL_HOLLOWS) return;
-//
-//        if (packet.getBlockType() == Blocks.chest)
-//        {
-//            BlockPos pos = packet.getBlockPosition();
-//            if (packet.getData1() >= 1)
-//                treasureChests.remove(pos);
-//        }
+        if (getCurrentIsland() != SkyblockIsland.CRYSTAL_HOLLOWS) return;
+        if (!c.treasureChestHelper) return;
+        if (targetTreasureChest == null) return;
+        if (packet.getParticleType() != EnumParticleTypes.CRIT) return;
+        if (packet.getParticleCount() != 1) return;
+        if (packet.getParticleSpeed() != 0.0f) return;
+        if (packet.getXOffset() != 0.0f) return;
+        if (packet.getYOffset() != 0.0f) return;
+        if (packet.getZOffset() != 0.0f) return;
+        if (!packet.isLongDistance()) return;
+        
+        int facing = 0;
+        double x = packet.getXCoordinate(), xFrat = x - (int) x;
+        double z = packet.getZCoordinate(), zFrat = z - (int) z;
+        if (xFrat == 0.1)
+            facing += 5; // E
+        else if (xFrat == 0.9)
+            facing += 4; // W
+        if (zFrat == 0.1)
+            facing += 3; // S
+        else if (zFrat == 0.9)
+            facing += 2; // N
+        
+        if (facing == 0 || facing > 5) // Returns if both are valid, but rarely happens
+            return;
+        
+        BlockPos chestPos = new BlockPos(
+            x + (facing == 5 ? -1 : facing == 4 ? 1 : 0),
+            packet.getYCoordinate(),
+            z + (facing == 3 ? -1 : facing == 2 ? 1 : 0));
+        if (!chestPos.equals(targetTreasureChest))
+            return;
+        IBlockState state = getWorld().getBlockState(chestPos);
+        if (state.getValue(BlockChest.FACING).getIndex() != facing)
+            return;
+        
+        Vec3 pos = new Vec3(
+            packet.getXCoordinate(),
+            packet.getYCoordinate(),
+            packet.getZCoordinate());
+        if (targetParticlePos.equals(pos))
+            return;
+        targetParticlePos = pos;
+        targetRandomPoint = new Vec3(
+            packet.getXCoordinate() + getWorld().rand.nextGaussian() * 0.3 - 0.15,
+            packet.getYCoordinate() + getWorld().rand.nextGaussian() * 0.3 - 0.15,
+            packet.getZCoordinate() + getWorld().rand.nextGaussian() * 0.3 - 0.15);
     }
     
     public void onChatReceived(ClientChatReceivedEvent event)

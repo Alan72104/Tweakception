@@ -489,6 +489,8 @@ public class TweakceptionCommand extends CommandBase
         {
             addSub(new Command("garden",
                 null,
+                new Command("autoClaimContest",
+                    args -> Tweakception.gardenTweaks.toggleAutoClaimContests()),
                 new Command("milestoneOverlay",
                     args -> Tweakception.gardenTweaks.toggleMilestoneOverlay()),
                 new Command("contestDataDumper",

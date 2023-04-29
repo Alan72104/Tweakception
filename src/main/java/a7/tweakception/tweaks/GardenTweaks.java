@@ -18,6 +18,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.play.server.S2FPacketSetSlot;
 import net.minecraft.network.play.server.S38PacketPlayerListItem;
 import net.minecraft.util.*;
 import net.minecraftforge.client.event.GuiScreenEvent;
@@ -28,6 +29,7 @@ import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.awt.*;
 import java.io.File;
@@ -52,6 +54,7 @@ public class GardenTweaks extends Tweak
         public int snapPitchRange = 5;
         public boolean contestDataDumper = false;
         public boolean contestDataDumperDumpHeader = false;
+        public boolean autoClaimContest = false;
     }
     private static final Map<String, Integer> FUELS = new HashMap<>();
     private final GardenTweaksConfig c;
@@ -79,6 +82,8 @@ public class GardenTweaks extends Tweak
         Tweakception.overlayManager.addOverlay(milestoneOverlay = new MilestoneOverlay());
     }
     
+    // region Events
+    
     public void onTick(TickEvent.ClientTickEvent event)
     {
         if (event.phase == TickEvent.Phase.START)
@@ -104,11 +109,23 @@ public class GardenTweaks extends Tweak
                 IInventory inv = container.getLowerChestInventory();
                 if (inv.getName().equals("Your Contests") && inv.getSizeInventory() == 54)
                     inContestsMenu = true;
+                
+                for (int i = 0; i < inv.getSizeInventory(); i++)
+                {
+                    ItemStack stack = inv.getStackInSlot(i);
+                    String[] lore = McUtils.getDisplayLore(stack);
+                    if (lore != null && lore[lore.length - 1].equals("§eClick to claim reward!"))
+                    {
+                        sendChat("GardenTweaks-AutoClaimContest: claiming slot " + i);
+                        getMc().playerController.windowClick(getPlayer().openContainer.windowId,
+                            i, 2, 3, getPlayer());
+                        getPlayer().closeScreen();
+                        return;
+                    }
+                }
             }
         }
     }
-    
-    // region Events
     
     public void onKeyInput(InputEvent.KeyInputEvent event)
     {
@@ -623,12 +640,18 @@ public class GardenTweaks extends Tweak
         if (Tweakception.globalTweaks.isInAreaEditMode())
             verifyCrops(Tweakception.globalTweaks.getAreaEditBlockSelection());
         else
-            sendChat("GT-VerifyCrops: global tweaks AreaEdit feature is off");
+            sendChat("GardenTweaks-VerifyCrops: global tweaks AreaEdit feature is off");
     }
     
     public void verifyCropsClear()
     {
         invalidCrops.clear();
+    }
+    
+    public void toggleAutoClaimContests()
+    {
+        c.autoClaimContest = !c.autoClaimContest;
+        sendChat("GardenTweaks-AutoClaimContest: toggled " + c.autoClaimContest);
     }
     
     // endregion Commands

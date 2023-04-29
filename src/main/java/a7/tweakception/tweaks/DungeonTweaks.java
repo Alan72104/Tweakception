@@ -1529,23 +1529,15 @@ public class DungeonTweaks extends Tweak
             else
                 br = "§aBlood rush: §cnot yet";
             
-            String runs = "Session total runs: " + fragSessionRuns;
-            String sFastest = "Session fastest blood rush: " + Utils.msToMMSSmmm(fragSessionFastestBloodRush);
-            String avg = "Session avg run time: " + Utils.msToMMSSmmm(fragSessionTotalTime / Math.max(fragSessionRuns, 1));
-            String total = "Session total time: " + Utils.msToHHMMSSmmm(fragSessionTotalTime);
-            String total2 = "Total runs: " + c.totalFragruns;
-            String fastest = "Fastest run: " + Utils.msToMMSSmmm(c.fastestFragrun);
-            String fastestBr = "Fastest blood rush: " + Utils.msToMMSSmmm(c.fastestBloodRush);
-            
             list.add(status);
             list.add(br);
-            list.add(runs);
-            list.add(sFastest);
-            list.add(avg);
-            list.add(total);
-            list.add(total2);
-            list.add(fastest);
-            list.add(fastestBr);
+            list.add("Session total runs: " + fragSessionRuns);
+            list.add("Session fastest blood rush: " + Utils.msToMMSSmmm(fragSessionFastestBloodRush));
+            list.add("Session avg run time: " + Utils.msToMMSSmmm(fragSessionTotalTime / Math.max(fragSessionRuns, 1)));
+            list.add("Session total time: " + Utils.msToHHMMSSmmm(fragSessionTotalTime));
+            list.add("Total runs: " + c.totalFragruns);
+            list.add("Fastest run: " + Utils.msToMMSSmmm(c.fastestFragrun));
+            list.add("Fastest blood rush: " + Utils.msToMMSSmmm(c.fastestBloodRush));
             
             if (fragLastRunDisplayStartTime != 0 && getTicks() - fragLastRunDisplayStartTime <= 20 * 30)
             {

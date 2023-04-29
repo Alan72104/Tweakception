@@ -36,9 +36,6 @@ public class MixinNetHandlerPlayClient
     @Inject(method = "handleBlockAction", at = @At(value = "RETURN"))
     public void handleBlockAction(S24PacketBlockAction packet, CallbackInfo ci)
     {
-        if (!isInSkyblock()) return;
-        
-        Tweakception.miningTweaks.onPacketBlockAction(packet);
     }
     
     @Inject(method = "handleCollectItem", at = @At(value = "RETURN"))
@@ -85,6 +82,8 @@ public class MixinNetHandlerPlayClient
     @Inject(method = "handleSoundEffect", at = @At(value = "RETURN"))
     public void handleSoundEffect(S29PacketSoundEffect packet, CallbackInfo ci)
     {
+        if (!isInSkyblock()) return;
+        
         Tweakception.globalTweaks.onPacketSoundEffect(packet);
     }
     
@@ -98,6 +97,8 @@ public class MixinNetHandlerPlayClient
                                                        S38PacketPlayerListItem.AddPlayerData addPlayerData,
                                                        NetworkPlayerInfo networkPlayerInfo)
     {
+        if (!isInSkyblock()) return;
+        
         Tweakception.gardenTweaks.onPlayerListItemUpdateDisplayName(addPlayerData, networkPlayerInfo);
     }
     
@@ -106,6 +107,16 @@ public class MixinNetHandlerPlayClient
         cancellable = true)
     public void handleChunkData_UnloadChunk(S21PacketChunkData packet, CallbackInfo ci)
     {
+        if (!isInSkyblock()) return;
+        
         Tweakception.globalTweaks.onPacketChunkUnload(packet, ci);
+    }
+    
+    @Inject(method = "handleParticles", at = @At(value = "RETURN"))
+    public void handleParticles(S2APacketParticles packet, CallbackInfo ci)
+    {
+        if (!isInSkyblock()) return;
+        
+        Tweakception.miningTweaks.onPacketParticles(packet);
     }
 }

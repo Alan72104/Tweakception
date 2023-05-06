@@ -7,11 +7,13 @@ import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.audio.SoundCategory;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.init.Items;
+import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -26,7 +28,6 @@ import net.minecraftforge.common.util.Constants;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -36,6 +37,8 @@ public class McUtils
     private static Minecraft mc = Minecraft.getMinecraft();
     private static Timer mcTimer = ((AccessorMinecraft) mc).getTimer();
     private static final Matcher COLOR_MATCHER = Pattern.compile("§[0-9a-fk-orA-FK-OR]").matcher("");
+    private static IInventory chest = null;
+    public static boolean chestUpdatedThisTick = false;
     
     public static Minecraft getMc()
     {
@@ -60,6 +63,21 @@ public class McUtils
     public static boolean isInGame()
     {
         return getWorld() != null && getPlayer() != null;
+    }
+    
+    public static IInventory getOpenedChest()
+    {
+        if (!chestUpdatedThisTick)
+        {
+            chest = null;
+            if (getMc().currentScreen instanceof GuiChest)
+            {
+                GuiChest gui = (GuiChest) getMc().currentScreen;
+                ContainerChest container = (ContainerChest) gui.inventorySlots;
+                chest = container.getLowerChestInventory();
+            }
+        }
+        return chest;
     }
     
     public static void executeCommand(String cmd)

@@ -1,10 +1,9 @@
 package a7.tweakception;
 
 import a7.tweakception.events.IslandChangedEvent;
-import a7.tweakception.utils.Utils;
+import a7.tweakception.utils.McUtils;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.util.ChatComponentText;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
@@ -19,8 +18,6 @@ import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Mouse;
 
-import java.text.DecimalFormat;
-
 import static a7.tweakception.Tweakception.*;
 import static a7.tweakception.tweaks.GlobalTweaks.isInSkyblock;
 import static a7.tweakception.utils.McUtils.*;
@@ -30,6 +27,7 @@ public class InGameEventDispatcher
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event)
     {
+        McUtils.chestUpdatedThisTick = false;
         globalTweaks.onTick(event);
         
         if (!isInGame()) return;

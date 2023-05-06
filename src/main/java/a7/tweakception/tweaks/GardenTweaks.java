@@ -6,6 +6,7 @@ import a7.tweakception.mixin.AccessorGuiContainer;
 import a7.tweakception.overlay.Anchor;
 import a7.tweakception.overlay.TextOverlay;
 import a7.tweakception.utils.McUtils;
+import a7.tweakception.utils.Pair;
 import a7.tweakception.utils.RenderUtils;
 import a7.tweakception.utils.Utils;
 import net.minecraft.block.Block;
@@ -61,6 +62,7 @@ public class GardenTweaks extends Tweak
     private final MilestoneOverlay milestoneOverlay;
     private final Map<Instant, ContestInfo> contests = new TreeMap<>();
     private final Matcher composterAmountMatcher = Pattern.compile("((?:\\d{1,3},?)+(?:\\.\\d)?)/(\\d*)k").matcher("");
+    private final Matcher sackAmountMatcher = Pattern.compile("Stored: ((?:\\d+,?)+)/\\d+k").matcher("");
     private boolean snapYaw = false;
     private float snapYawPrevAngle = 0.0f;
     private boolean snapPitch = false;
@@ -102,17 +104,15 @@ public class GardenTweaks extends Tweak
             }
             
             inContestsMenu = false;
-            if (getMc().currentScreen instanceof GuiChest)
+            IInventory chest = McUtils.getOpenedChest();
+            if (chest != null)
             {
-                GuiChest chest = (GuiChest) getMc().currentScreen;
-                ContainerChest container = (ContainerChest) chest.inventorySlots;
-                IInventory inv = container.getLowerChestInventory();
-                if (inv.getName().equals("Your Contests") && inv.getSizeInventory() == 54)
+                if (chest.getName().equals("Your Contests") && chest.getSizeInventory() == 54)
                     inContestsMenu = true;
                 
-                for (int i = 0; i < inv.getSizeInventory(); i++)
+                for (int i = 0; i < chest.getSizeInventory(); i++)
                 {
-                    ItemStack stack = inv.getStackInSlot(i);
+                    ItemStack stack = chest.getStackInSlot(i);
                     String[] lore = McUtils.getDisplayLore(stack);
                     if (lore != null && lore[lore.length - 1].equals("§eClick to claim reward!"))
                     {
@@ -243,33 +243,77 @@ public class GardenTweaks extends Tweak
     
     public void onGuiDrawPost(GuiScreenEvent.DrawScreenEvent.Post event)
     {
-        if (!c.contestDataDumper || !inContestsMenu)
-            return;
-        
-        AccessorGuiContainer accessor = (AccessorGuiContainer) event.gui;
-        int xSize = accessor.getXSize();
-        int guiLeft = accessor.getGuiLeft();
-        int guiTop = accessor.getGuiTop();
-        
-        Color color = new Color(50, 50, 50);
-        int x = guiLeft + xSize + 20;
-        int y = guiTop;
-        
-        FontRenderer fr = getMc().fontRendererObj;
-        GuiScreen.drawRect(x, y,
-            x + 100, y + 10,
-            color.getRGB());
-        fr.drawString("Click to add the contests in this page",
-            x + 1, y + 1, 0xFFFFFFFF);
-        y += fr.FONT_HEIGHT + 5;
-        fr.drawString("Contest count: " + contests.size(),
-            x, y, 0xFFFFFFFF);
-        y += fr.FONT_HEIGHT + 5;
-        GuiScreen.drawRect(x, y,
-            x + 100, y + 10,
-            color.getRGB());
-        fr.drawString("Click to dump csv",
-            x + 1, y + 1, 0xFFFFFFFF);
+        IInventory chest;
+        if (c.contestDataDumper & inContestsMenu)
+        {
+            AccessorGuiContainer accessor = (AccessorGuiContainer) event.gui;
+            int xSize = accessor.getXSize();
+            int guiLeft = accessor.getGuiLeft();
+            int guiTop = accessor.getGuiTop();
+            
+            Color color = new Color(50, 50, 50);
+            int x = guiLeft + xSize + 20;
+            int y = guiTop;
+            
+            FontRenderer fr = getMc().fontRendererObj;
+            GuiScreen.drawRect(x, y,
+                x + 100, y + 10,
+                color.getRGB());
+            fr.drawString("Click to add the contests in this page",
+                x + 1, y + 1, 0xFFFFFFFF);
+            y += fr.FONT_HEIGHT + 5;
+            fr.drawString("Contest count: " + contests.size(),
+                x, y, 0xFFFFFFFF);
+            y += fr.FONT_HEIGHT + 5;
+            GuiScreen.drawRect(x, y,
+                x + 100, y + 10,
+                color.getRGB());
+            fr.drawString("Click to dump csv",
+                x + 1, y + 1, 0xFFFFFFFF);
+        }
+        else if ((chest = getOpenedChest()) != null &&
+            chest.getName().equals("Enchanted Agronomy Sack"))
+        {
+            AccessorGuiContainer accessor = (AccessorGuiContainer) event.gui;
+            int guiLeft = accessor.getGuiLeft();
+            int guiTop = accessor.getGuiTop();
+            FontRenderer fr = getMc().fontRendererObj;
+            
+            List<Pair<String, String>> list = new ArrayList<>();
+            
+            for (int i = 0; i < chest.getSizeInventory(); i++)
+            {
+                ItemStack stack = chest.getStackInSlot(i);
+                String[] lore = McUtils.getDisplayLore(stack);
+                if (lore != null)
+                {
+                    for (String line : lore)
+                    {
+                        if (sackAmountMatcher.reset(McUtils.cleanColor(line)).matches())
+                        {
+                            int count = Utils.parseInt(sackAmountMatcher.group(1));
+                            if (count > 0 && count < 2048)
+                                list.add(new Pair<>(stack.getDisplayName(), line));
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            if (!list.isEmpty())
+            {
+                int x = guiLeft - 5 - list.stream().mapToInt(p -> fr.getStringWidth(p.b)).max().getAsInt();
+                int y = guiTop;
+                for (Pair<String, String> p : list)
+                {
+                    fr.drawString(p.a,
+                        x - fr.getStringWidth(p.a) - 5, y, 0xFFFFFFFF);
+                    fr.drawString(p.b,
+                        x, y, 0xFFFFFFFF);
+                    y += fr.FONT_HEIGHT + 5;
+                }
+            }
+        }
     }
     
     public void onRenderLast(RenderWorldLastEvent event)

@@ -29,7 +29,7 @@ public class DiscordAnsiFormatter
     private static String transformToAnsi(String s)
     {
         s = normalizeNewline(s);
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = StringBuilderCache.get();
         Format cur = new Format();
         Format target = new Format();
         for (String line : s.split("\\R"))
@@ -113,7 +113,7 @@ public class DiscordAnsiFormatter
     {
         // Whether to reset format, color, or background
         boolean requireReformat = false;
-        StringBuilder params = new StringBuilder();
+        StringBuilder params = StringBuilderCache.get();
         if (cur.format != target.format)
         {
             if (cur.format == 0)

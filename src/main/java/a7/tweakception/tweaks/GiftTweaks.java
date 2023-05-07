@@ -340,9 +340,7 @@ public class GiftTweaks extends Tweak
     
     private void dumpItemsToChest()
     {
-        GuiChest chest = (GuiChest) McUtils.getMc().currentScreen;
-        ContainerChest container = (ContainerChest) chest.inventorySlots;
-        IInventory inv = container.getLowerChestInventory();
+        IInventory inv = McUtils.getOpenedChest();
         if (inv.getSizeInventory() != 54)
         {
             invFeature = InvFeature.None;
@@ -390,9 +388,9 @@ public class GiftTweaks extends Tweak
             if (stack != null && id != null && id.equals(targetId))
             {
                 if (invFeatureIndex < 9)
-                    getMc().playerController.windowClick(container.windowId, 54 + 27 + invFeatureIndex, 0, 1, getPlayer());
+                    getMc().playerController.windowClick(getPlayer().openContainer.windowId, 54 + 27 + invFeatureIndex, 0, 1, getPlayer());
                 else
-                    getMc().playerController.windowClick(container.windowId, 54 + invFeatureIndex - 9, 0, 1, getPlayer());
+                    getMc().playerController.windowClick(getPlayer().openContainer.windowId, 54 + invFeatureIndex - 9, 0, 1, getPlayer());
                 invFeatureLastTicks = getTicks();
                 invFeatureClickDelay = c.invFeaturesMinDelay + getWorld().rand.nextInt(3);
                 invFeatureIndex++;

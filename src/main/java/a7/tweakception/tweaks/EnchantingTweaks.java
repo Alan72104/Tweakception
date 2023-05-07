@@ -2,6 +2,7 @@ package a7.tweakception.tweaks;
 
 import a7.tweakception.config.Configuration;
 import a7.tweakception.mixin.AccessorGuiContainer;
+import a7.tweakception.utils.McUtils;
 import a7.tweakception.utils.Pair;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.inventory.GuiChest;
@@ -59,20 +60,9 @@ public class EnchantingTweaks extends Tweak
             return;
         
         
-        if (getMc().currentScreen instanceof GuiChest)
+        if (McUtils.getOpenedChest() != null)
         {
-            GuiChest chest = (GuiChest) getMc().currentScreen;
-            ContainerChest container = (ContainerChest) chest.inventorySlots;
-            IInventory inv = container.getLowerChestInventory();
-            switch (currentType)
-            {
-                case CHRONOMATRON:
-                {
-                    ItemStack stack = inv.getStackInSlot(9 * 5 + 5 - 1);
-//                    if (stack !- null)
-                    break;
-                }
-            }
+            IInventory inv = McUtils.getOpenedChest();
         }
         else
             currentType = SolverType.NONE;
@@ -85,18 +75,13 @@ public class EnchantingTweaks extends Tweak
         if (!c.autoSolve)
             return;
         
-        if (event.gui instanceof GuiChest)
+        if (McUtils.getOpenedChest() != null)
         {
-            GuiChest chest = (GuiChest) event.gui;
-            ContainerChest container = (ContainerChest) chest.inventorySlots;
-            String name = container.getLowerChestInventory().getDisplayName().getUnformattedText();
-            
-            if (container.getLowerChestInventory().getSizeInventory() == 54)
+            if (McUtils.getOpenedChest().getSizeInventory() == 54)
             {
+                String name = McUtils.getOpenedChest().getDisplayName().getUnformattedText();
                 if (name.startsWith("Chronomatron ("))
-                {
                     currentType = SolverType.CHRONOMATRON;
-                }
                 else if (name.startsWith("Ultrasequencer ("))
                     currentType = SolverType.ULTRASEQUENCER;
                 else if (name.startsWith("Superpairs("))

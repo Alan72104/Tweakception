@@ -87,11 +87,9 @@ public class AutoRunes extends Tweak
         if (event.phase != TickEvent.Phase.END)
             return;
         
-        if (getMc().currentScreen instanceof GuiChest)
+        if (McUtils.getOpenedChest() != null)
         {
-            GuiChest chest = (GuiChest) getMc().currentScreen;
-            ContainerChest container = (ContainerChest) chest.inventorySlots;
-            IInventory inv = container.getLowerChestInventory();
+            IInventory inv = McUtils.getOpenedChest();
             if (inv.getName().equals("Runic Pedestal") &&
                 inv.getSizeInventory() == 54 &&
                 McUtils.checkStackInInv(inv, 9 + 9 * 4 - 1, Items.cauldron, "§eRune Removal"))
@@ -116,7 +114,7 @@ public class AutoRunes extends Tweak
                                 if (stack != null && getTicks() >= nextClickTicks)
                                 {
                                     nextClickTicks = getTicks() + 15 + getWorld().rand.nextInt(5);
-                                    getMc().playerController.windowClick(container.windowId, slot,
+                                    getMc().playerController.windowClick(getPlayer().openContainer.windowId, slot,
                                         0, 1, getPlayer());
                                     break;
                                 }
@@ -155,7 +153,7 @@ public class AutoRunes extends Tweak
                                         {
                                             count++;
                                             nextClickTicks = getTicks() + 8 + getWorld().rand.nextInt(8);
-                                            getMc().playerController.windowClick(container.windowId,
+                                            getMc().playerController.windowClick(getPlayer().openContainer.windowId,
                                                 i < 9 ? i + 54 + 9 * 3 : i + 54 - 9,
                                                 0, 1, getPlayer());
                                             
@@ -183,7 +181,7 @@ public class AutoRunes extends Tweak
                                 getRuneType(inv.getStackInSlot(slots[0])) != null)
                             {
                                 nextClickTicks = getTicks() + 4 + getWorld().rand.nextInt(4);
-                                getMc().playerController.windowClick(container.windowId, 5 + 9 - 1,
+                                getMc().playerController.windowClick(getPlayer().openContainer.windowId, 5 + 9 - 1,
                                     0, 0, getPlayer());
                                 state = State.SAVING;
                             }
@@ -203,7 +201,7 @@ public class AutoRunes extends Tweak
                                 if (!lore[lore.length - 1].equals("§cABOVE§a to combine."))
                                 {
                                     nextClickTicks = getTicks() + 4 + getWorld().rand.nextInt(4);
-                                    getMc().playerController.windowClick(container.windowId, 5 + 9 * 3 - 1,
+                                    getMc().playerController.windowClick(getPlayer().openContainer.windowId, 5 + 9 * 3 - 1,
                                         0, 1, getPlayer());
                                     state = State.NONE;
                                     typeToPut = null;
@@ -213,7 +211,7 @@ public class AutoRunes extends Tweak
                             
                             if (getTicks() >= nextClickTicks + 20 * 4)
                             {
-                                getMc().playerController.windowClick(container.windowId, 5 + 9 * 3 - 1,
+                                getMc().playerController.windowClick(getPlayer().openContainer.windowId, 5 + 9 * 3 - 1,
                                     0, 1, getPlayer());
                                 state = State.NONE;
                                 typeToPut = null;

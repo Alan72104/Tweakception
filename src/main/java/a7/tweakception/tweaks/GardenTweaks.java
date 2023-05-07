@@ -147,9 +147,8 @@ public class GardenTweaks extends Tweak
         if (tooltip == null || itemStack == null)
             return;
         
-        if (getMc().currentScreen instanceof GuiChest &&
-            ((ContainerChest) ((GuiChest) getMc().currentScreen).inventorySlots)
-                .getLowerChestInventory().getName().startsWith("Auctions"))
+        if (McUtils.getOpenedChest() != null &&
+            McUtils.getOpenedChest().getName().startsWith("Auctions"))
         {
             String id = Utils.getSkyblockItemId(itemStack);
             if (FUELS.containsKey(id))
@@ -285,14 +284,18 @@ public class GardenTweaks extends Tweak
             {
                 ItemStack stack = chest.getStackInSlot(i);
                 String[] lore = McUtils.getDisplayLore(stack);
-                if (lore != null)
+                if (lore != null &&
+                    stack.hasDisplayName() &&
+                    !stack.getDisplayName().equals("§aEnchanted Bread") &&
+                    !stack.getDisplayName().equals("§aEnchanted Cactus") &&
+                    !stack.getDisplayName().equals("§aEnchanted Poisonous Potato"))
                 {
                     for (String line : lore)
                     {
                         if (sackAmountMatcher.reset(McUtils.cleanColor(line)).matches())
                         {
                             int count = Utils.parseInt(sackAmountMatcher.group(1));
-                            if (count > 0 && count < 2048)
+                            if (count < 2048)
                                 list.add(new Pair<>(stack.getDisplayName(), line));
                             break;
                         }
@@ -339,9 +342,7 @@ public class GardenTweaks extends Tweak
     
     private void getContests()
     {
-        GuiChest chest = (GuiChest) getMc().currentScreen;
-        ContainerChest container = (ContainerChest) chest.inventorySlots;
-        IInventory inv = container.getLowerChestInventory();
+        IInventory inv = McUtils.getOpenedChest();
         List<String> seasons = Arrays.asList("Spring", "Summer", "Autumn", "Winter");
         
         final Matcher contestDateMatcher = Pattern.compile(

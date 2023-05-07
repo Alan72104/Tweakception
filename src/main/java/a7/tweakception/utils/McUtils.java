@@ -301,7 +301,7 @@ public class McUtils
     
     public static String cleanDuplicateColorCodes(String line)
     {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = StringBuilderCache.get();
         char currentColourCode = 'r';
         boolean sectionSymbolLast = false;
         for (char c : line.toCharArray())

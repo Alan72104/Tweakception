@@ -329,11 +329,9 @@ public class GlobalTweaks extends Tweak
                 }
             }
             
-            if (minionAutoClaim && getMc().currentScreen instanceof GuiChest)
+            if (minionAutoClaim && McUtils.getOpenedChest() != null)
             {
-                GuiChest chest = (GuiChest) McUtils.getMc().currentScreen;
-                ContainerChest container = (ContainerChest) chest.inventorySlots;
-                IInventory inv = container.getLowerChestInventory();
+                IInventory inv = McUtils.getOpenedChest();
                 String[] words = inv.getName().split(" ");
                 int[] pos1 = {-1, -1}; // Both 0 based
                 int[] pos2 = {-1, -1};
@@ -383,7 +381,7 @@ public class GlobalTweaks extends Tweak
                                 if (stack != null && id != null &&
                                     c.minionAutoClaimWhitelist.contains(id))
                                 {
-                                    getMc().playerController.windowClick(container.windowId, index,
+                                    getMc().playerController.windowClick(getPlayer().openContainer.windowId, index,
                                         2, 3, getPlayer());
                                     minionAutoclaimPos[0]--;
                                     if (minionAutoclaimPos[0] < pos1[0])
@@ -413,9 +411,7 @@ public class GlobalTweaks extends Tweak
                 GuiScreen screen = getMc().currentScreen;
                 if (trevorQuestPendingStart && screen instanceof GuiChest)
                 {
-                    GuiChest chest = (GuiChest) screen;
-                    ContainerChest container = (ContainerChest) chest.inventorySlots;
-                    IInventory inv = container.getLowerChestInventory();
+                    IInventory inv = McUtils.getOpenedChest();
                     String containerName = inv.getName();
                     if (containerName.startsWith("Abiphone "))
                     {
@@ -425,7 +421,7 @@ public class GlobalTweaks extends Tweak
                             if (stack != null && stack.getDisplayName().equals("§fTrevor"))
                             {
                                 trevorQuestPendingStart = false;
-                                getMc().playerController.windowClick(container.windowId, i, 0, 0, getPlayer());
+                                getMc().playerController.windowClick(getPlayer().openContainer.windowId, i, 0, 0, getPlayer());
                                 sendChat("GT-Trevor: quest started");
                                 break;
                             }
@@ -586,11 +582,9 @@ public class GlobalTweaks extends Tweak
                 }
             }
             
-            if (abiphoneRelayHint && getMc().currentScreen instanceof GuiChest)
+            if (abiphoneRelayHint && McUtils.getOpenedChest() != null)
             {
-                GuiChest chest = (GuiChest) McUtils.getMc().currentScreen;
-                ContainerChest container = (ContainerChest) chest.inventorySlots;
-                IInventory inv = container.getLowerChestInventory();
+                IInventory inv = McUtils.getOpenedChest();
                 abiphoneRelayInMenu = inv.getName().equals("9f™ Network Relay") && inv.getSizeInventory() == 54;
             }
             else
@@ -616,11 +610,9 @@ public class GlobalTweaks extends Tweak
             }
             
             // Probably want to check after the whole container is updated
-            if (autoHarp && getMc().currentScreen instanceof GuiChest)
+            if (autoHarp && McUtils.getOpenedChest() != null)
             {
-                GuiChest chest = (GuiChest) McUtils.getMc().currentScreen;
-                ContainerChest container = (ContainerChest) chest.inventorySlots;
-                IInventory inv = container.getLowerChestInventory();
+                IInventory inv = McUtils.getOpenedChest();
                 if (inv.getSizeInventory() == 54 && inv.getName().startsWith("Harp - "))
                 {
                     boolean changed = false;
@@ -675,7 +667,7 @@ public class GlobalTweaks extends Tweak
                                 char note = autoHarpReplayData.charAt(autoHarpReplayIndex);
                                 if (note != '.')
                                 {
-                                    getMc().playerController.windowClick(container.windowId,
+                                    getMc().playerController.windowClick(getPlayer().openContainer.windowId,
                                         4 * 9 + 1 + (note - '1'),
                                         2, 3, getPlayer());
                                 }
@@ -692,11 +684,12 @@ public class GlobalTweaks extends Tweak
                                 if (autoHarpLastChestItems[2 * 7 + i] == Item.getItemFromBlock(Blocks.wool))
                                 {
                                     int index = i;
+                                    int windowId = getPlayer().openContainer.windowId;
                                     Tweakception.scheduler.addDelayed(() ->
                                     {
-                                        if (getPlayer().openContainer.windowId == container.windowId)
+                                        if (getPlayer().openContainer.windowId == windowId)
                                         {
-                                            getMc().playerController.windowClick(container.windowId,
+                                            getMc().playerController.windowClick(getPlayer().openContainer.windowId,
                                                 4 * 9 + index + 1,
                                                 2, 3, getPlayer());
                                         }
@@ -971,7 +964,7 @@ public class GlobalTweaks extends Tweak
                         stars[j] = "§d✪";
                     for (int j = 0; j < fakeStarsAqua; j++)
                         stars[j] = "§b✪";
-                    StringBuilder sb = new StringBuilder();
+                    StringBuilder sb = StringBuilderCache.get();
                     for (String s : stars)
                         if (s != null)
                             sb.append(s);
@@ -1006,9 +999,8 @@ public class GlobalTweaks extends Tweak
             }
         }
         
-        if (getMc().currentScreen instanceof GuiChest &&
-            ((ContainerChest) ((GuiChest) getMc().currentScreen).inventorySlots)
-            .getLowerChestInventory().getName().startsWith("Auctions"))
+        if (McUtils.getOpenedChest() != null &&
+            McUtils.getOpenedChest().getName().startsWith("Auctions"))
         {
             for (int i = 0; i < tooltip.size(); i++)
             {
@@ -2015,7 +2007,7 @@ public class GlobalTweaks extends Tweak
                         lastExp = 0L;
                     }
                     
-                    StringBuilder sb = new StringBuilder();
+                    StringBuilder sb = StringBuilderCache.get();
                     double xpDouble = extra.getDouble("champion_combat_xp");
                     int level = -1;
                     for (int i = 0; i < Constants.CHAMPION_EXPS.length; i++)

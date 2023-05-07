@@ -30,7 +30,6 @@ public abstract class MixinGuiContainer extends GuiScreen
     @Shadow
     public Container inventorySlots;
     private static final ResourceLocation ITEM_RED_X = new ResourceLocation("tweakception:item_red_x.png");
-//    public Slot getSlotUnderMouse() { return this.theSlot; }
     
     @Inject(method = "drawSlot", at = @At("TAIL"))
     public void slotDrawn(Slot slot, CallbackInfo ci)
@@ -60,8 +59,7 @@ public abstract class MixinGuiContainer extends GuiScreen
         if (!(slot != null && this.inventorySlots instanceof ContainerChest))
             return;
         
-        ContainerChest chest = (ContainerChest) this.inventorySlots;
-        IInventory inv = chest.getLowerChestInventory();
+        IInventory inv = ((ContainerChest) this.inventorySlots).getLowerChestInventory();
         String name = inv.getName();
         
         if (Tweakception.dungeonTweaks.isPartyFinderRefreshCooldownEnbaled() &&
@@ -137,15 +135,14 @@ public abstract class MixinGuiContainer extends GuiScreen
         if (Keyboard.isRepeatEvent())
             return;
         
-        ContainerChest chest = (ContainerChest) this.inventorySlots;
-        IInventory inv = chest.getLowerChestInventory();
+        IInventory inv = ((ContainerChest) this.inventorySlots).getLowerChestInventory();
         String name = inv.getName();
         
         if (Tweakception.globalTweaks.isBlockingQuickCraft() &&
             inv.getSizeInventory() == 54 &&
             name.equals("Craft Item"))
         {
-            Slot slot = ((GuiContainer) (GuiScreen) this).getSlotUnderMouse();
+            Slot slot = ((GuiContainer) (Object) this).getSlotUnderMouse();
             if (slot != null && slot.getHasStack() && slot.slotNumber % 9 == 7 &&
                 slot.slotNumber / 9 >= 1 && slot.slotNumber / 9 <= 3 &&
                 key == Keyboard.KEY_LMENU)

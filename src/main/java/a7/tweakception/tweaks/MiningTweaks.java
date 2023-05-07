@@ -94,11 +94,9 @@ public class MiningTweaks extends Tweak
             }
         }
         
-        if (getMc().currentScreen instanceof GuiChest)
+        if (McUtils.getOpenedChest() != null)
         {
-            GuiChest chest = (GuiChest) getMc().currentScreen;
-            ContainerChest container = (ContainerChest) chest.inventorySlots;
-            IInventory inv = container.getLowerChestInventory();
+            IInventory inv = McUtils.getOpenedChest();
             if (inv.getSizeInventory() == 54 &&
                 inv.getName().equals("SkyBlock Menu"))
             {

@@ -566,14 +566,12 @@ public class DungeonTweaks extends Tweak
             });
         }
         
-        if (getMc().currentScreen instanceof GuiChest)
+        if (McUtils.getOpenedChest() != null)
         {
-            GuiChest chest = (GuiChest) getMc().currentScreen;
-            ContainerChest container = (ContainerChest) chest.inventorySlots;
+            IInventory inv = McUtils.getOpenedChest();
             if (secretChestOpened)
             {
                 secretChestOpened = false;
-                IInventory inv = container.getLowerChestInventory();
                 for (int i = 9 + 5 - 1; i < inv.getSizeInventory(); i += 9 * 3)
                 {
                     ItemStack center = inv.getStackInSlot(i);
@@ -585,9 +583,8 @@ public class DungeonTweaks extends Tweak
                     }
                 }
             }
-            else if (blacksmithMenuOpened && container.getLowerChestInventory().getName().equals("Salvage Item"))
+            else if (blacksmithMenuOpened && inv.getName().equals("Salvage Item"))
             {
-                IInventory inv = container.getLowerChestInventory();
                 if (inv.getSizeInventory() == 54)
                 {
                     ItemStack item = inv.getStackInSlot(9 * 2 + 5 - 1);
@@ -600,7 +597,7 @@ public class DungeonTweaks extends Tweak
                             firstPane != null && Block.getBlockFromItem(firstPane) == Blocks.stained_glass_pane &&
                             salvageBtn != null && salvageBtn.getDisplayName().equals("§aSalvage Item"))
                         {
-                            getMc().playerController.windowClick(container.windowId, 9 * 3 + 5 - 1,
+                            getMc().playerController.windowClick(getPlayer().openContainer.windowId, 9 * 3 + 5 - 1,
                                 0, 0, McUtils.getPlayer());
                             salvageClickSent = true;
                             salvageLastClickTick = getTicks();
@@ -1074,11 +1071,9 @@ public class DungeonTweaks extends Tweak
                 }
             }
         }
-        else if (getMc().currentScreen instanceof GuiChest)
+        else if (McUtils.getOpenedChest() != null)
         {
-            GuiChest chest = (GuiChest) getMc().currentScreen;
-            ContainerChest container = (ContainerChest) chest.inventorySlots;
-            String containerName = container.getLowerChestInventory().getName();
+            String containerName = McUtils.getOpenedChest().getName();
             if (containerName.equals("Party Finder"))
             {
                 if (item == Items.skull)
@@ -1123,7 +1118,7 @@ public class DungeonTweaks extends Tweak
                             String line = event.toolTip.get(i);
                             String name = ele.b.group(1);
                             String padding = Utils.stringRepeat(" ", (maxWidth - ele.c) / spaceWidth);
-                            StringBuilder sb = new StringBuilder();
+                            StringBuilder sb = StringBuilderCache.get();
                             boolean blacklisted = c.partyFinderPlayerBlacklist.containsKey(name.toLowerCase());
                             
                             if (blacklisted)
@@ -1946,7 +1941,7 @@ public class DungeonTweaks extends Tweak
     public void listFragCounts()
     {
         String sep = System.lineSeparator();
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = StringBuilderCache.get();
         
         sendChat("Total runs: " + c.totalFragruns);
         for (Map.Entry<String, Integer> e : c.fragDrops.entrySet())

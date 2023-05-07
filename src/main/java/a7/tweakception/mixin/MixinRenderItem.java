@@ -3,6 +3,7 @@ package a7.tweakception.mixin;
 import a7.tweakception.Tweakception;
 import a7.tweakception.utils.Constants;
 import a7.tweakception.utils.McUtils;
+import a7.tweakception.utils.StringBuilderCache;
 import a7.tweakception.utils.Utils;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
@@ -104,7 +105,7 @@ public class MixinRenderItem
         if (displayName != null)
             return displayName;
         
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = StringBuilderCache.get();
         String enchantName = Constants.ENCHANTS.get(id);
         
         if (enchantName != null)
@@ -145,7 +146,7 @@ public class MixinRenderItem
         if (displayName != null)
             return displayName;
         
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = StringBuilderCache.get();
         String[] split = id.split("_");
         
         int start = 0;

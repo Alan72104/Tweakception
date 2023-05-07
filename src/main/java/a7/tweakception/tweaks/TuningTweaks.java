@@ -129,11 +129,9 @@ public class TuningTweaks extends Tweak
     {
         if (event.phase == TickEvent.Phase.END) return;
         
-        if (getMc().currentScreen instanceof GuiChest)
+        if (McUtils.getOpenedChest() != null)
         {
-            GuiChest chest = (GuiChest) getMc().currentScreen;
-            ContainerChest container = (ContainerChest) chest.inventorySlots;
-            String containerName = container.getLowerChestInventory().getName();
+            String containerName = McUtils.getOpenedChest().getName();
             if (containerName.equals("Stats Tuning") && remainingToSwitch != null)
             {
                 if (getTicks() - lastClickTicks >= c.tuningClickDelayTicks)
@@ -151,13 +149,13 @@ public class TuningTweaks extends Tweak
                             continue;
                         else if (remaining >= 10)
                         {
-                            getMc().playerController.windowClick(container.windowId, num,
+                            getMc().playerController.windowClick(getPlayer().openContainer.windowId, num,
                                 1, 1, getPlayer());
                             remainingToSwitch.setIndex(i, remaining - 10);
                         }
                         else
                         {
-                            getMc().playerController.windowClick(container.windowId, num,
+                            getMc().playerController.windowClick(getPlayer().openContainer.windowId, num,
                                 1, 0, getPlayer());
                             remainingToSwitch.setIndex(i, remaining - 1);
                         }
@@ -178,9 +176,7 @@ public class TuningTweaks extends Tweak
         if (!(getMc().currentScreen instanceof GuiChest))
             return;
         
-        GuiChest chest = (GuiChest) getMc().currentScreen;
-        ContainerChest container = (ContainerChest) chest.inventorySlots;
-        String containerName = container.getLowerChestInventory().getName();
+        String containerName = McUtils.getOpenedChest().getName();
         if (!containerName.equals("Stats Tuning"))
             return;
         
@@ -273,21 +269,17 @@ public class TuningTweaks extends Tweak
     {
         if (c.tuningTemplates[index] == null)
             return;
-        GuiChest chest = (GuiChest) getMc().currentScreen;
-        ContainerChest container = (ContainerChest) chest.inventorySlots;
-        IInventory inv = container.getLowerChestInventory();
+        IInventory inv = McUtils.getOpenedChest();
         ItemStack stack = inv.getStackInSlot(4 + 9 * 5 - 1);
         if (stack != null && stack.getDisplayName().equals("§cClear Points"))
-            getMc().playerController.windowClick(container.windowId, 4 + 9 * 5 - 1, 0, 0, getPlayer());
+            getMc().playerController.windowClick(getPlayer().openContainer.windowId, 4 + 9 * 5 - 1, 0, 0, getPlayer());
         remainingToSwitch = c.tuningTemplates[index].clone();
         lastClickTicks = getTicks() + 5;
     }
     
     public void setTemplate(int index)
     {
-        GuiChest chest = (GuiChest) getMc().currentScreen;
-        ContainerChest container = (ContainerChest) chest.inventorySlots;
-        IInventory inv = container.getLowerChestInventory();
+        IInventory inv = McUtils.getOpenedChest();
         Tuning tuning = new Tuning();
         for (int j = 0; j < 2; j++)
             for (int i = 0; i < 4; i++)

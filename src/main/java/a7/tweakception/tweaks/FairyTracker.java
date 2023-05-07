@@ -4,6 +4,7 @@ import a7.tweakception.Tweakception;
 import a7.tweakception.config.Configuration;
 import a7.tweakception.utils.McUtils;
 import a7.tweakception.utils.RenderUtils;
+import a7.tweakception.utils.StringBuilderCache;
 import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.util.BlockPos;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
@@ -174,7 +175,7 @@ public class FairyTracker extends Tweak
     {
         Tweakception.logger.info("Fairy: dumping");
         Object[] a = fairySet.toArray();
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = StringBuilderCache.get();
         for (int i = 0; i < a.length; i++)
         {
             PosMark p = (PosMark) a[i];

@@ -36,7 +36,9 @@ public class Utils
         return new HashSet<T>(Arrays.asList(array));
     }
     
-    // Supports comma
+    /**
+     * Supports comma
+     */
     public static int parseInt(String s)
     {
         try
@@ -49,7 +51,9 @@ public class Utils
         }
     }
     
-    // Supports comma
+    /**
+     * Supports comma
+     */
     public static long parseLong(String s)
     {
         try
@@ -62,7 +66,9 @@ public class Utils
         }
     }
     
-    // Supports comma
+    /**
+     * Supports comma
+     */
     public static float parseFloat(String s)
     {
         try
@@ -75,7 +81,9 @@ public class Utils
         }
     }
     
-    // Supports comma
+    /**
+     * Supports comma
+     */
     public static double parseDouble(String s)
     {
         try
@@ -117,16 +125,19 @@ public class Utils
     
     public static String stringRepeat(String s, int c)
     {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = StringBuilderCache.get();
         while (c-- > 0)
             sb.append(s);
         return sb.toString();
     }
     
+    /**
+     * Formats a number to a string with commas
+     */
     public static String formatCommas(long n)
     {
         String s = String.valueOf(n);
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = StringBuilderCache.get();
         int l = s.length();
         char[] a = s.toCharArray();
         if (l > 0)
@@ -140,23 +151,31 @@ public class Utils
         return sb.toString();
     }
     
+    /**
+     * Formats a number to a string with commas
+     */
     public static String formatCommas(float n)
     {
         String s = String.valueOf(n);
         return formatCommas(s);
     }
     
+    /**
+     * Formats a number to a string with commas
+     */
     public static String formatCommas(double n)
     {
         String s = String.valueOf(n);
         return formatCommas(s);
     }
     
-    // Input string could be "1234" or "1234.5"
+    /**
+     * Adds commas to a number string, allows "1234" or "1234.5"
+     */
     public static String formatCommas(String s)
     {
         String[] split = s.split("\\.", 2);
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = StringBuilderCache.get();
         int l = split[0].length();
         char[] a = split[0].toCharArray();
         if (l > 0)
@@ -172,21 +191,19 @@ public class Utils
         return sb.toString();
     }
     
+    /**
+     * Formats a number to a short string with b/m/k suffix
+     */
     public static String formatMetric(long n)
     {
         if (n >= 1_000_000_000)
-        {
             return (n / 1_000_000_000) + "b";
-        }
         else if (n >= 1_000_000)
-        {
             return (n / 1_000_000) + "m";
-        }
         else if (n >= 1_000)
-        {
             return (n / 1_000) + "k";
-        }
-        return String.valueOf(n);
+        else
+            return String.valueOf(n);
     }
     
     public static String msToHHMMSSmmm(long ms)
@@ -284,12 +301,7 @@ public class Utils
     
     public static int findInHotbarById(Collection<String> ids)
     {
-        return findInHotbarById(id ->
-        {
-            if (ids.contains(id))
-                return true;
-            return false;
-        });
+        return findInHotbarById(ids::contains);
     }
     
     public static int findInHotbarById(Predicate<String> predicate)
@@ -340,12 +352,15 @@ public class Utils
         return max;
     }
     
+    /**
+     * Sets the first letter to uppercase and else to lowercase
+     */
     public static String captilize(String s)
     {
         if (s.length() == 0)
             return s;
         
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = StringBuilderCache.get();
         sb.append(Character.toUpperCase(s.charAt(0)));
         char[] a = s.toCharArray();
         for (int i = 1; i < a.length; i++)

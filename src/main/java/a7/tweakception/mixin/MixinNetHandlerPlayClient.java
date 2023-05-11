@@ -91,7 +91,7 @@ public class MixinNetHandlerPlayClient
         target = "Lnet/minecraft/client/network/NetworkPlayerInfo;setDisplayName(Lnet/minecraft/util/IChatComponent;)V"),
         locals = LocalCapture.CAPTURE_FAILEXCEPTION
     )
-    public void handlePlayerListItem_UpdateDisplayName(S38PacketPlayerListItem packetIn,
+    public void handlePlayerListItem_UpdateDisplayName(S38PacketPlayerListItem packet,
                                                        CallbackInfo ci,
                                                        Iterator<S38PacketPlayerListItem.AddPlayerData> it,
                                                        S38PacketPlayerListItem.AddPlayerData addPlayerData,

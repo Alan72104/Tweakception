@@ -115,6 +115,7 @@ public class DungeonTweaks extends Tweak
         public long fastestBloodRush = 0L;
         public long fastestFragrun = 0L;
         public boolean pickaxeMiddleClickRemoveBlock = false;
+        public boolean pickaxeMiddleClickRemoveLine = false;
         public boolean blockFlowerPlacement = false;
     }
     
@@ -138,6 +139,7 @@ public class DungeonTweaks extends Tweak
     private final List<Entity> shadowAssassins = new LinkedList<>();
     private final LinkedList<Pair<Integer, String>> damageTags = new LinkedList<>();
     private final LinkedList<Pair<Integer, Entity>> armorStandsTemp = new LinkedList<>();
+    private final Map<String, Boolean> armorStandNameFilterCache = new WeakHashMap<>();
     private final Set<Entity> starredMobs = new HashSet<>();
     private final Matcher anyDamageTagMatcher = Pattern.compile(
         "^(?:§[\\da-f][✧✯]?)?((?:(?:(?:§[\\da-f])?\\d){1,3}(?:§[\\da-f])?,?)+)(?:§[\\da-f][✧✯]?)?").matcher("");
@@ -778,25 +780,27 @@ public class DungeonTweaks extends Tweak
     
     public void onLivingSpecialRenderPre(RenderLivingEvent.Specials.Pre<?> event)
     {
-        if (event.entity instanceof EntityArmorStand)
+        if ((c.hideDamageTags || c.hideNonStarredMobsName) && event.entity instanceof EntityArmorStand)
         {
             String name = event.entity.getName();
             
-            if (c.hideDamageTags && anyDamageTagMatcher.reset(name).matches())
+            Boolean bool = armorStandNameFilterCache.get(name);
+            if (bool == null)
             {
-                event.setCanceled(true);
-                return;
+                if (c.hideDamageTags && anyDamageTagMatcher.reset(name).matches())
+                    bool = true;
+                else if (getCurrentIsland() == SkyblockIsland.DUNGEON && c.hideNonStarredMobsName &&
+                    name.endsWith("§c❤") &&
+                    !name.substring(0, Math.min(name.length(), 5)).contains("✯"))
+                    bool = true;
+                else
+                    bool = false;
+                armorStandNameFilterCache.put(name, bool);
             }
             
-            if (getCurrentIsland() == SkyblockIsland.DUNGEON && c.hideNonStarredMobsName)
+            if (bool)
             {
-                if (name.endsWith("§c❤"))
-                {
-                    boolean isStarred = name.substring(0, Math.min(name.length(), 5)).contains("✯");
-                    
-                    if (!isStarred)
-                        event.setCanceled(true);
-                }
+                event.setCanceled(true);
             }
         }
     }
@@ -1255,6 +1259,7 @@ public class DungeonTweaks extends Tweak
             fragGotten = false;
         if (fragRunTracking)
             prevInventoryItemCounts.clear();
+        armorStandNameFilterCache.clear();
     }
     
     // endregion Events
@@ -1479,6 +1484,11 @@ public class DungeonTweaks extends Tweak
     public boolean isPickaxeMiddleClickRemoveBlockOn()
     {
         return c.pickaxeMiddleClickRemoveBlock;
+    }
+    
+    public boolean isPickaxeMiddleClickRemoveLineOn()
+    {
+        return c.pickaxeMiddleClickRemoveLine;
     }
     
     public boolean isBlockFlowerPlacementOn()
@@ -2324,6 +2334,12 @@ public class DungeonTweaks extends Tweak
     {
         c.pickaxeMiddleClickRemoveBlock = !c.pickaxeMiddleClickRemoveBlock;
         sendChat("DT-PickaxeMiddleClickRemoveBlock: toggled " + c.pickaxeMiddleClickRemoveBlock);
+    }
+    
+    public void togglePickaxeMiddleClickRemoveLine()
+    {
+        c.pickaxeMiddleClickRemoveLine = !c.pickaxeMiddleClickRemoveLine;
+        sendChat("DT-PickaxeMiddleClickRemoveLine: toggled " + c.pickaxeMiddleClickRemoveLine);
     }
     
     public void toggleBlockFlowerPlacement()

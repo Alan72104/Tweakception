@@ -12,14 +12,11 @@ import a7.tweakception.utils.Utils;
 import net.minecraft.block.Block;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.init.Blocks;
-import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.play.server.S2FPacketSetSlot;
 import net.minecraft.network.play.server.S38PacketPlayerListItem;
 import net.minecraft.util.*;
 import net.minecraftforge.client.event.GuiScreenEvent;
@@ -30,7 +27,6 @@ import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.awt.*;
 import java.io.File;
@@ -603,7 +599,7 @@ public class GardenTweaks extends Tweak
         {
             super.update();
             List<String> list = new ArrayList<>();
-            if (milestoneText != null && getCurrentIsland() == SkyblockIsland.THE_GARDEN)
+            if (milestoneText != null && getCurrentIsland() == SkyblockIsland.GARDEN)
                 list.add(milestoneText);
             setContent(list);
         }

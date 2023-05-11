@@ -1,6 +1,7 @@
 package a7.tweakception.utils;
 
 import a7.tweakception.Tweakception;
+import a7.tweakception.mixin.AccessorGuiPlayerTabOverlay;
 import com.google.common.base.Optional;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.PropertyMap;
@@ -8,6 +9,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.entity.AbstractClientPlayer;
+import net.minecraft.client.gui.GuiPlayerTabOverlay;
 import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
@@ -24,6 +26,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.property.IExtendedBlockState;
 import net.minecraftforge.common.property.IUnlistedProperty;
 import net.minecraftforge.fml.common.registry.GameData;
+import sun.nio.ch.Net;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 
 import static a7.tweakception.utils.McUtils.*;
+import static a7.tweakception.utils.Utils.f;
 
 public class DumpUtils
 {
@@ -56,6 +60,74 @@ public class DumpUtils
         {
             sendChat("Not currently looking at anything within range");
         }
+    }
+    
+    public static void dumpPlayerInfoMap()
+    {
+        try
+        {
+            NetworkPlayerInfo[] infoMap =
+                AccessorGuiPlayerTabOverlay.getTabListOrdering()
+                .sortedCopy(getMc().getNetHandler().getPlayerInfoMap())
+                .toArray(new NetworkPlayerInfo[0]);
+            
+            String[][] data = new String[infoMap.length + 1][7];
+            
+            GuiPlayerTabOverlay tabList = getMc().ingameGUI.getTabList();
+            
+            data[0][0] = "display name";
+            data[0][1] = "tab list name";
+            data[0][2] = "profile name";
+            data[0][3] = "profile id";
+            data[0][4] = "response time";
+            data[0][5] = "location skin";
+            data[0][6] = "location cape";
+            for (int i = 0; i < infoMap.length; i++)
+            {
+                NetworkPlayerInfo info = infoMap[i];
+                data[i+1][0] = info.getDisplayName() == null ? "null" : info.getDisplayName().getFormattedText();
+                data[i+1][1] = tabList.getPlayerName(info);
+                data[i+1][2] = info.getGameProfile() == null ? "null" : info.getGameProfile().getName();
+                data[i+1][3] = info.getGameProfile() == null ? "null" : info.getGameProfile().getId() == null ? "null" : info.getGameProfile().getId().toString();
+                data[i+1][4] = String.valueOf(info.getResponseTime());
+                data[i+1][5] = info.getLocationSkin() == null ? "null" : info.getLocationSkin().toString();
+                data[i+1][6] = info.getLocationCape() == null ? "null" : info.getLocationCape().toString();
+            }
+            
+            List<String> lines = get2dArrayMatrixString(data);
+            
+            File file = Tweakception.configuration.createWriteFileWithCurrentDateTime("playerinfomap_$.txt", lines);
+            
+            sendChat("Dumped player info map");
+            getPlayer().addChatMessage(new ChatComponentTranslation("Output written to file %s",
+                McUtils.makeFileLink(file)));
+        }
+        catch (Exception e)
+        {
+            sendChat("Exception occurred while dumping");
+            sendChat(e.toString());
+            e.printStackTrace();
+        }
+    }
+    
+    public static List<String> get2dArrayMatrixString(String[][] data)
+    {
+        List<String> lines = new ArrayList<>();
+        
+        int[] widths = new int[data[0].length];
+        for (String[] ele : data)
+            for (int i = 0; i < widths.length; i++)
+                widths[i] = Math.max(widths[i], ele[i].length());
+        
+        List<String> formats = new ArrayList<>();
+        for (int i : widths)
+            formats.add("%-" + i + "s");
+        String format = String.join("|", formats);
+        
+        for (String[] ele : data)
+            lines.add(String.format(format, (Object[]) ele));
+        
+        return lines;
     }
     
     public static void dumpEntitiesInRange(World world, EntityPlayer entity, double range)

@@ -3,6 +3,7 @@ package a7.tweakception.mixin;
 import a7.tweakception.Tweakception;
 import a7.tweakception.tweaks.GlobalTweaks;
 import a7.tweakception.tweaks.SkyblockIsland;
+import a7.tweakception.utils.McUtils;
 import a7.tweakception.utils.Utils;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -14,8 +15,10 @@ import net.minecraft.item.ItemPickaxe;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeHooks;
+import org.lwjgl.util.vector.Vector3f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -110,17 +113,53 @@ public class MixinForgeHooks
     @Inject(method = "onPickBlock", at = @At("HEAD"), remap = false, cancellable = true)
     private static void onPickBlock(MovingObjectPosition target, EntityPlayer player, World world, CallbackInfoReturnable<Boolean> cir)
     {
-        if (Tweakception.dungeonTweaks.isPickaxeMiddleClickRemoveBlockOn() &&
+        if ((Tweakception.dungeonTweaks.isPickaxeMiddleClickRemoveBlockOn() ||
+            Tweakception.dungeonTweaks.isPickaxeMiddleClickRemoveLineOn()) &&
             GlobalTweaks.getCurrentIsland() == SkyblockIsland.DUNGEON &&
             player.getCurrentEquippedItem() != null &&
             player.getCurrentEquippedItem().getItem() instanceof ItemPickaxe)
         {
             if (target.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK)
             {
-                BlockPos pos = target.getBlockPos();
-                if (world.getBlockState(pos).getBlock() == Blocks.chest)
-                    return;
-                world.setBlockToAir(pos);
+                if (Tweakception.dungeonTweaks.isPickaxeMiddleClickRemoveLineOn())
+                {
+                    final float step = 0.1f;
+                    final float dist = 5.0f;
+                    final int count = (int) (dist / step);
+                    Vector3f pos = new Vector3f((float) player.posX, (float) player.posY + player.getEyeHeight(), (float) player.posZ);
+                    Vec3 lookVec3 = player.getLook(McUtils.getPartialTicks());
+                    Vector3f look = new Vector3f((float) lookVec3.xCoord, (float) lookVec3.yCoord, (float) lookVec3.zCoord);
+                    look.scale(step / look.length());
+                    for (int i = 0; i <= count; i++)
+                    {
+                        Vector3f.add(pos, look, pos);
+                        BlockPos blockPos = new BlockPos(pos.x, pos.y, pos.z);
+                        IBlockState state = world.getBlockState(blockPos);
+                        Block block = state.getBlock();
+                        if (block == Blocks.chest ||
+                            block == Blocks.skull ||
+                            block == Blocks.lever)
+                        {
+                            break;
+                        }
+                        else if (block != Blocks.air)
+                        {
+                            world.setBlockToAir(blockPos);
+                        }
+                    }
+                }
+                else if (Tweakception.dungeonTweaks.isPickaxeMiddleClickRemoveBlockOn())
+                {
+                    BlockPos pos = target.getBlockPos();
+                    Block block = world.getBlockState(pos).getBlock();
+                    if (block == Blocks.chest ||
+                        block == Blocks.skull ||
+                        block == Blocks.lever)
+                    {
+                        return;
+                    }
+                    world.setBlockToAir(pos);
+                }
             }
             cir.setReturnValue(false);
             cir.cancel();

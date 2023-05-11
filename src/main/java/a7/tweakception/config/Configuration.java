@@ -65,7 +65,9 @@ public class Configuration
         writer.close();
     }
     
-    // Use this for default of utf-8
+    /**
+     * Creates an utf-8 writer
+     */
     public BufferedReader createReaderFor(File file) throws IOException
     {
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(
@@ -74,7 +76,9 @@ public class Configuration
         return bufferedReader;
     }
     
-    // Use this for default of utf-8
+    /**
+     * Creates an utf-8 writer
+     */
     public BufferedWriter createWriterFor(File file) throws IOException
     {
         BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(
@@ -83,6 +87,9 @@ public class Configuration
         return bufferedWriter;
     }
     
+    /**
+     * a_$_b.txt -> a_time_b.txt / a_time_b_1.txt
+     */
     public File createWriteFileWithCurrentDateTime(String name, List<String> lines) throws IOException
     {
         File file = createFileWithCurrentDateTime(name);
@@ -102,6 +109,9 @@ public class Configuration
         return file;
     }
     
+    /**
+     * a_$_b.txt -> a_time_b.txt / a_time_b_1.txt
+     */
     public File createFileWithCurrentDateTime(String name) throws IOException
     {
         // a_$_b.txt -> a_time_b.txt / a_time_b_1.txt

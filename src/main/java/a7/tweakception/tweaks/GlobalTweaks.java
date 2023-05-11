@@ -1,5 +1,6 @@
 package a7.tweakception.tweaks;
 
+import a7.tweakception.DevSettings;
 import a7.tweakception.Scheduler;
 import a7.tweakception.Tweakception;
 import a7.tweakception.config.Configuration;
@@ -30,7 +31,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
-import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.Item;
@@ -53,12 +53,13 @@ import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.Display;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.awt.*;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -136,7 +137,7 @@ public class GlobalTweaks extends Tweak
     }
     
     private final GlobalTweaksConfig c;
-    //private static final HashMap<String, SkyblockIsland> SUBPLACE_TO_ISLAND_MAP = new HashMap<>();
+    private static final HashMap<String, SkyblockIsland> ISLAND_NAME_TO_ISLAND_MAP = new HashMap<>();
     private static final List<SkyblockIsland> ISLANDS_THAT_HAS_SUBAREAS = new ArrayList<>();
     // Below class loaded in tweakception
     private static final Ordering<NetworkPlayerInfo> TAB_LIST_ORDERING = AccessorGuiPlayerTabOverlay.getTabListOrdering();
@@ -146,12 +147,13 @@ public class GlobalTweaks extends Tweak
     private static boolean playerListUpdatedThisTick = false;
     private static boolean isInSkyblock = false;
     private static boolean isInHypixel = false;
-    private static boolean overrideIslandDetection = false;
-    private static SkyblockIsland prevIsland = null;
-    private static SkyblockIsland currentIsland = null;
-    private static String currentLocationRaw = "";
-    private static String currentLocationRawCleaned = "";
-    private static boolean useFallbackDetection = false;
+    private static boolean overridenIslandDetection = false;
+    @Nullable private static SkyblockIsland prevIsland = null;
+    @Nullable private static SkyblockIsland currentIsland = null;
+    @Nonnull private static String currentLocationRaw = "";
+    @Nonnull private static String currentLocationRawCleaned = "";
+    @Nonnull private static String currentServerType = "";
+    private static final Matcher invalidLocationLetterMatcher = Pattern.compile("[^A-Za-z0-9() \\-']").matcher("");
     private static final Map<String, Runnable> chatActionMap = new HashMap<>();
     private static final HashSet<String> npcSkins = new HashSet<>();
     private static final PacketLogger packetLogger = new PacketLogger();
@@ -236,7 +238,8 @@ public class GlobalTweaks extends Tweak
     {
         for (SkyblockIsland island : SkyblockIsland.values())
         {
-            if (island.subAreas != null)
+            ISLAND_NAME_TO_ISLAND_MAP.put(island.name, island);
+            if (island.areas != null)
                 ISLANDS_THAT_HAS_SUBAREAS.add(island);
         }
         HARP_DATA.put("Pachelbel",
@@ -312,8 +315,8 @@ public class GlobalTweaks extends Tweak
                 if (c.displayPlayersInArea)
                 {
                     playersInAreas.clear();
-                    if (ISLANDS_THAT_HAS_SUBAREAS.contains(island))
-                        for (SkyblockIsland.SubArea area : island.subAreas)
+                    if (island != null && ISLANDS_THAT_HAS_SUBAREAS.contains(island))
+                        for (SkyblockIsland.SubArea area : island.areas)
                         {
                             List<Entity> players = getWorld().getEntitiesWithinAABB(EntityOtherPlayerMP.class,
                                 area.box,
@@ -765,7 +768,7 @@ public class GlobalTweaks extends Tweak
             for (EntityPlayer p : getWorld().playerEntities)
             {
                 if (p.isEntityAlive() &&
-                    ((highlightPlayers && getMc().getNetHandler().getPlayerInfo(p.getUniqueID()) != null) ||
+                    ((highlightPlayers && getMc().getNetHandler().getPlayerInfo(p.getUniqueID()) != null && !p.getName().equals(getPlayer().getName())) ||
                     playersToHighlight.contains(p.getName().toLowerCase())))
                 {
                     RenderUtils.drawBeaconBeamOrBoundingBox(p, new Color(0, 255, 0, 64), event.partialTicks, 0, 15);
@@ -1130,12 +1133,9 @@ public class GlobalTweaks extends Tweak
                 packet.getPitch() == 0.0f &&
                 packet.getVolume() == 0.0f))
             {
-                Tweakception.scheduler.add(() ->
-                {
-                    abiphoneRelaySoundStrings.offer(f("%s   %.3f   %.3f", packet.getSoundName(), packet.getPitch(), packet.getVolume()));
-                    if (abiphoneRelaySoundStrings.size() > 15)
-                        abiphoneRelaySoundStrings.remove();
-                });
+                abiphoneRelaySoundStrings.offer(f("%s   %.3f   %.3f", packet.getSoundName(), packet.getPitch(), packet.getVolume()));
+                if (abiphoneRelaySoundStrings.size() > 15)
+                    abiphoneRelaySoundStrings.remove();
             }
         }
     }
@@ -1269,7 +1269,10 @@ public class GlobalTweaks extends Tweak
     
     public void printIsland()
     {
-        sendChat("GT: " + (currentIsland != null ? currentIsland.name : "none"));
+        sendChatf("GT: Server: \"%s\", Location: \"%s\", §rArea: \"%s\"",
+            currentServerType,
+            currentLocationRaw,
+            currentIsland == null ? "" : currentIsland.name);
     }
     
     public void updateTooltipToCopy(List<String> list)
@@ -1283,14 +1286,18 @@ public class GlobalTweaks extends Tweak
     
     private void detectSkyblock()
     {
-        if (overrideIslandDetection)
+        if (overridenIslandDetection)
             return;
+        
+        String prevServerType = currentServerType;
+        String prevLocationRaw = currentLocationRaw;
         
         Minecraft mc = getMc();
         isInSkyblock = false;
         isInHypixel = false;
         currentIsland = null;
         currentLocationRaw = "";
+        currentServerType = "";
         
         islandUpdatedThisTick = true;
         
@@ -1306,11 +1313,35 @@ public class GlobalTweaks extends Tweak
         ScoreObjective sidebarObjective = scoreboard.getObjectiveInDisplaySlot(1);
         if (sidebarObjective == null)
             return;
-        String objectiveName = sidebarObjective.getDisplayName().replaceAll("§.", "");
+        String objectiveName = cleanColor(sidebarObjective.getDisplayName());
         if (!objectiveName.startsWith("SKYBLOCK"))
             return;
         
         isInSkyblock = true;
+        
+        // The server name in tab list
+        for (NetworkPlayerInfo info : getMc().getNetHandler().getPlayerInfoMap())
+        {
+            if (info.getDisplayName() != null)
+            {
+                IChatComponent displayName = info.getDisplayName();
+                if (displayName.getSiblings().size() >= 1)
+                {
+                    String name = displayName.getFormattedText();
+                    if (name.startsWith("§r§b§lArea: ") || name.startsWith("§r§b§lDungeon: "))
+                    {
+                        String cleaned = cleanColor(name);
+                        currentServerType = cleaned.substring(cleaned.indexOf(' ') + 1);
+                        currentIsland = ISLAND_NAME_TO_ISLAND_MAP.get(currentServerType);
+                        if (DevSettings.printLocationChange && !prevServerType.equals(currentServerType))
+                            sendChatf("GT: Server type changed from \"%s\" to \"%s\"", prevServerType, currentServerType);
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // The location in scoreboard
         for (Score score : scoreboard.getSortedScores(sidebarObjective))
         {
             ScorePlayerTeam scoreplayerteam = scoreboard.getPlayersTeam(score.getPlayerName());
@@ -1324,37 +1355,24 @@ public class GlobalTweaks extends Tweak
             //  §7⏣ §6Bank🌠
             //  §7⏣ §cJerry's W🌠§corkshop
             //  §7⏣ §cThe Catac👾§combs §7(F7)
-//            if (!useFallbackDetection)
-//            if (false)
-//            {
-//                if (line.startsWith(" §7⏣"))
-//                {
-//                    currentLocationRaw = line;
-//                    line = cleanColor(cleanDuplicateColorCodes(line)).replaceAll("[^A-Za-z0-9() \\-']", "").trim();
-//                    currentLocationRawCleaned = line;
-//                    currentIsland = SUBPLACE_TO_ISLAND_MAP.get(line);
-//                    break;
-//                }
-//            }
-//            else
-//            {
             if (line.contains("⏣"))
             {
                 currentLocationRaw = line;
-                line = cleanColor(cleanDuplicateColorCodes(line)).replaceAll("[^A-Za-z0-9() \\-']", "").trim();
+                line = invalidLocationLetterMatcher.reset(cleanColor(line)).replaceAll("").trim();
                 currentLocationRawCleaned = line;
                 
-                islandLoop:
-                for (SkyblockIsland island : SkyblockIsland.values())
-                    for (String subPlace : island.areas)
-                        if (line.contains(subPlace))
-                        {
-                            currentIsland = island;
-                            break islandLoop;
-                        }
+                if (DevSettings.printLocationChange && !prevLocationRaw.equals(currentLocationRaw))
+                    sendChatf("GT: Location changed from \"%s§r\" to \"%s§r\"", prevLocationRaw, currentLocationRaw);
+                
+//                islandLoop:
+//                for (SkyblockIsland island : SkyblockIsland.values())
+//                    for (String location : island.locations)
+//                        if (line.contains(location))
+//                        {
+//                            break islandLoop;
+//                        }
                 break;
             }
-//            }
         }
     }
     
@@ -1484,6 +1502,7 @@ public class GlobalTweaks extends Tweak
         return ticks;
     }
     
+    @Nullable
     public static SkyblockIsland getCurrentIsland()
     {
         return currentIsland;
@@ -1495,23 +1514,26 @@ public class GlobalTweaks extends Tweak
             detectSkyblock();
     }
     
-    public void forceSetIsland(String name)
+    public void overrideIsland(String name)
     {
         if (name == null || name.equals("") || name.equals("disable") || name.equals("off"))
         {
-            overrideIslandDetection = false;
-            sendChat("GT: toggle island override off");
+            overridenIslandDetection = false;
             islandUpdatedThisTick = false;
+            sendChat("GT: toggle island override off");
         }
         else
         {
             for (SkyblockIsland island : SkyblockIsland.values())
                 if (island.name.toLowerCase().contains(name.toLowerCase()))
                 {
-                    overrideIslandDetection = true;
+                    overridenIslandDetection = true;
                     isInSkyblock = true;
                     isInHypixel = true;
                     currentIsland = island;
+                    currentServerType = island.name;
+                    currentLocationRaw = " §7⏣ §cThe Waste⚽§cland";
+                    currentLocationRawCleaned = " ⏣ The Wasteland";
                     islandUpdatedThisTick = true;
                     sendChat("GT: overrode current island with " + island.name);
                     return;
@@ -2181,12 +2203,6 @@ public class GlobalTweaks extends Tweak
     {
         Utils.setClipboard(currentLocationRaw);
         sendChat("GT: copied raw location line to clipboard (" + currentLocationRaw + "§r)");
-    }
-    
-    public void toggleFallbackDetection()
-    {
-        useFallbackDetection = !useFallbackDetection;
-        sendChat("GT: toggled location fallback detection " + useFallbackDetection);
     }
     
     public void toggleDevMode()

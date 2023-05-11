@@ -7,8 +7,10 @@ import static a7.tweakception.utils.McUtils.sendChat;
 public class DevSettings
 {
     public static boolean printClicks = false;
+    public static boolean printLocationChange = false;
+    public static boolean printFishingState = false;
     
-    // Toggles a boolean field by their name, case insensitive
+    // Toggles a boolean field by their name, case-insensitive
     public static void toggle(String name)
     {
         for (Field field : DevSettings.class.getDeclaredFields())

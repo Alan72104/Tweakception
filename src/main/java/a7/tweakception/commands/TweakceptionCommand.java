@@ -8,6 +8,7 @@ import a7.tweakception.utils.DumpUtils;
 import a7.tweakception.utils.McUtils;
 import a7.tweakception.utils.Utils;
 import net.minecraft.block.Block;
+import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.BlockPos;
@@ -20,8 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static a7.tweakception.utils.McUtils.getWorld;
-import static a7.tweakception.utils.McUtils.sendChat;
+import static a7.tweakception.utils.McUtils.*;
 
 public class TweakceptionCommand extends CommandBase
 {
@@ -126,6 +126,8 @@ public class TweakceptionCommand extends CommandBase
                 ),
                 new Command("pickaxeMiddleClickRemoveBlock",
                     args -> Tweakception.dungeonTweaks.togglePickaxeMiddleClickRemoveBlock()),
+                new Command("pickaxeMiddleClickRemoveLine",
+                    args -> Tweakception.dungeonTweaks.togglePickaxeMiddleClickRemoveLine()),
                 new Command("trackdamage",
                     args -> Tweakception.dungeonTweaks.toggleTrackDamageTags(),
                     new Command("noncrit",
@@ -382,7 +384,7 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.globalTweaks.setInvisibleEntityAlphaPercentage(
                         args.length > 0 ? toInt(args[0]) : 0)),
                 new Command("setisland",
-                    args -> Tweakception.globalTweaks.forceSetIsland(args.length > 0 ? String.join(" ", args) : "")),
+                    args -> Tweakception.globalTweaks.overrideIsland(args.length > 0 ? String.join(" ", args) : "")),
                 new Command("snipe",
                     args -> Tweakception.globalTweaks.startSnipe(
                         args.length > 0 ? args[0] : "",
@@ -427,8 +429,6 @@ public class TweakceptionCommand extends CommandBase
                     new Command("highlightanimal",
                         args -> Tweakception.globalTweaks.toggleTrevorAnimalHighlight())
                 ),
-                new Command("usefallbackdetection",
-                    args -> Tweakception.globalTweaks.toggleFallbackDetection()),
                 new Command("onlinestatusoverlay",
                     args -> Tweakception.globalTweaks.toggleOnlineStatusOverlay(),
                     new Command("showalreadyon",
@@ -826,6 +826,9 @@ public class TweakceptionCommand extends CommandBase
                 args -> Tweakception.globalTweaks.toggleDevMode(),
                 new Command("set",
                     args -> DevSettings.toggle(getString(args, 0, ""))
+                ).setVisibility(false),
+                new Command("dumpPlayerInfoMap",
+                    args -> DumpUtils.dumpPlayerInfoMap()
                 ).setVisibility(false)
             ));
         }

@@ -36,7 +36,7 @@ public class McUtils
 {
     private static Minecraft mc = Minecraft.getMinecraft();
     private static Timer mcTimer = ((AccessorMinecraft) mc).getTimer();
-    private static final Matcher COLOR_MATCHER = Pattern.compile("§[0-9a-fk-orA-FK-OR]").matcher("");
+    private static final Matcher colorMatcher = Pattern.compile("§[0-9a-fk-orA-FK-OR]").matcher("");
     private static IInventory chest = null;
     public static boolean chestUpdatedThisTick = false;
     
@@ -88,18 +88,21 @@ public class McUtils
     
     public static <T> T sendDebug(T v)
     {
-        getPlayer().addChatMessage(new ChatComponentText(String.valueOf(v)));
+        if (isInGame())
+            getPlayer().addChatMessage(new ChatComponentText(String.valueOf(v)));
         return v;
     }
     
     public static void sendChat(String s)
     {
-        getPlayer().addChatMessage(new ChatComponentText(s));
+        if (isInGame())
+            getPlayer().addChatMessage(new ChatComponentText(s));
     }
     
     public static void sendChatf(String s, Object... args)
     {
-        getPlayer().addChatMessage(new ChatComponentText(String.format(s, args)));
+        if (isInGame())
+            getPlayer().addChatMessage(new ChatComponentText(String.format(s, args)));
     }
     
     public static boolean checkStackInInv(IInventory inv, int slot, Block block, String name)
@@ -296,7 +299,7 @@ public class McUtils
     
     public static String cleanColor(String s)
     {
-        return COLOR_MATCHER.reset(s).replaceAll("");
+        return colorMatcher.reset(s).replaceAll("");
     }
     
     public static String cleanDuplicateColorCodes(String line)

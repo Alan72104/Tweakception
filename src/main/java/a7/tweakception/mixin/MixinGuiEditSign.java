@@ -23,7 +23,7 @@ public class MixinGuiEditSign extends GuiScreen
     private TileEntitySign tileSign;
     @Shadow
     private GuiButton doneBtn;
-    private static final Matcher ONLY_CARET_MATCHER = Pattern.compile("^\\^+$").matcher("");
+    private static final Matcher onlyCaretMatcher = Pattern.compile("^\\^+$").matcher("");
     
     @Inject(method = "keyTyped", at = @At("HEAD"), cancellable = true)
     protected void keyTyped(char chr, int key, CallbackInfo ci) throws IOException
@@ -34,8 +34,8 @@ public class MixinGuiEditSign extends GuiScreen
             if (Keyboard.isKeyDown(Keyboard.KEY_LMENU))
                 return;
             
-            if (ONLY_CARET_MATCHER.reset(this.tileSign.signText[1].getUnformattedText()).matches() ||
-                ONLY_CARET_MATCHER.reset(this.tileSign.signText[2].getUnformattedText()).matches())
+            if (onlyCaretMatcher.reset(this.tileSign.signText[1].getUnformattedText()).matches() ||
+                onlyCaretMatcher.reset(this.tileSign.signText[2].getUnformattedText()).matches())
             {
                 this.actionPerformed(this.doneBtn);
                 ci.cancel();

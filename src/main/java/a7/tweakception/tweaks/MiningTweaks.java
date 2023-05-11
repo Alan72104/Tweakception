@@ -7,9 +7,7 @@ import a7.tweakception.utils.Utils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockChest;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.init.Blocks;
-import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.S22PacketMultiBlockChange;
@@ -54,7 +52,7 @@ public class MiningTweaks extends Tweak
     private float miningSpeedCache = 0.0f;
     private final Matcher miningStatMatcher = Pattern.compile(
         "^ §6⸕ Mining Speed §f(\\d+(?:,\\d+)*)").matcher("");
-    private static final Matcher miningItemStatMatcher = Pattern.compile(
+    private final Matcher miningItemStatMatcher = Pattern.compile(
         "^§7Mining Speed: §a\\+(\\d+(?:,\\d+)*)").matcher("");
     private int miningSpeedBoostStartTicks = 0;
     private BlockPos targetTreasureChest = null;

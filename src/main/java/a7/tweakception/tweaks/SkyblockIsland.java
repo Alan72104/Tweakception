@@ -4,12 +4,13 @@ import net.minecraft.util.AxisAlignedBB;
 
 public enum SkyblockIsland
 {
-    PRIVATE_ISLAND("Your Island", new String[]
+    PRIVATE_ISLAND("Private Island", new String[]
     {
         "Your Island"
     }),
     HUB("Hub", new String[]
     {
+        "Hub",
         "Archery Range",
         "Auction House",
         "Bank",
@@ -39,7 +40,7 @@ public enum SkyblockIsland
         "Wilderness",
         "Wizard Tower"
     }),
-    DUNGEON("Dungeon", new String[]
+    DUNGEON("Catacombs", new String[]
     {
         "The Catacombs"
     }),
@@ -47,7 +48,7 @@ public enum SkyblockIsland
     {
         "Dungeon Hub"
     }),
-    THE_GARDEN("The Garden", new String[]
+    GARDEN("Garden", new String[]
     {
         "The Garden",
         "Plot 1",
@@ -156,7 +157,7 @@ public enum SkyblockIsland
         "Upper Mines",
         "Royal Mines"
     }),
-    PARK("Park", new String[]
+    THE_PARK("The Park", new String[]
     {
         "The Park",
         "Birch Park",
@@ -176,23 +177,34 @@ public enum SkyblockIsland
             new AxisAlignedBB(-351, 78, -102, -399, 49, 36))
     });
     
+    /**
+     * The server name in tab list "Area: ..."
+     */
     public final String name;
-    public final String[] areas;
-    public final SubArea[] subAreas;
     
-    SkyblockIsland(String name, String[] areas)
+    /**
+     * The location names in the scoreboard
+     */
+    public final String[] locations;
+    
+    /**
+     * The areas for internal use
+     */
+    public final SubArea[] areas;
+    
+    SkyblockIsland(String name, String[] locations)
     {
         this.name = name;
-        this.areas = areas;
-        this.subAreas = null;
+        this.locations = locations;
+        this.areas = null;
     }
     
-    SkyblockIsland(String name, String[] areas, SubArea[] subAreas)
+    SkyblockIsland(String name, String[] locations, SubArea[] areas)
     {
         this.name = name;
+        this.locations = locations;
         this.areas = areas;
-        this.subAreas = subAreas;
-        for (SubArea area : subAreas)
+        for (SubArea area : areas)
             area.setIsland(this);
     }
     

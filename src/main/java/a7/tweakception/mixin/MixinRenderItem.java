@@ -6,19 +6,16 @@ import a7.tweakception.utils.McUtils;
 import a7.tweakception.utils.StringBuilderCache;
 import a7.tweakception.utils.Utils;
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -129,7 +126,7 @@ public class MixinRenderItem
                 for (int i = start; i < parts.length && i < 3 + start; i++)
                     sb.append(Character.toUpperCase(parts[i].charAt(0)));
             else
-                sb.append(Utils.captilize(parts[start]), 0, Math.min(parts[start].length(), 3));
+                sb.append(Utils.capitalize(parts[start]), 0, Math.min(parts[start].length(), 3));
         }
         
         if (id.startsWith("ultimate"))
@@ -157,7 +154,7 @@ public class MixinRenderItem
             for (int i = start; i < split.length - 1 && i < 3 + start; i++)
                 sb.append(split[i].charAt(0));
         else
-            sb.append(Utils.captilize(split[start]), 0, Math.min(split[start].length(), 3));
+            sb.append(Utils.capitalize(split[start]), 0, Math.min(split[start].length(), 3));
         
         displayName = sb.toString();
         SACK_DISPLAY_NAMES.put(id, displayName);

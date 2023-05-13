@@ -33,7 +33,7 @@ public class Utils
     @SafeVarargs
     public static <T> HashSet<T> hashSet(T... array)
     {
-        return new HashSet<T>(Arrays.asList(array));
+        return new HashSet<>(Arrays.asList(array));
     }
     
     /**
@@ -94,6 +94,34 @@ public class Utils
         {
             return 0.0;
         }
+    }
+    
+    public static int mapClamp(int n, int fromMin, int fromMax, int toMin, int toMax)
+    {
+        if (n <= fromMin)
+            return toMin;
+        if (n >= fromMax)
+            return toMax;
+        return (int) map(n, fromMin, fromMax, toMin, toMax);
+    }
+    
+    public static double mapClamp(double n, double fromMin, double fromMax, double toMin, double toMax)
+    {
+        if (n <= fromMin)
+            return toMin;
+        if (n >= fromMax)
+            return toMax;
+        return map(n, fromMin, fromMax, toMin, toMax);
+    }
+    
+    public static float map(float n, float fromMin, float fromMax, float toMin, float toMax)
+    {
+        return (n - fromMin) / (fromMax - fromMin) * (toMax - toMin) + toMin;
+    }
+    
+    public static double map(double n, double fromMin, double fromMax, double toMin, double toMax)
+    {
+        return (n - fromMin) / (fromMax - fromMin) * (toMax - toMin) + toMin;
     }
     
     public static int clamp(int n, int min, int max)
@@ -355,7 +383,7 @@ public class Utils
     /**
      * Sets the first letter to uppercase and else to lowercase
      */
-    public static String captilize(String s)
+    public static String capitalize(String s)
     {
         if (s.length() == 0)
             return s;
@@ -377,7 +405,7 @@ public class Utils
     
     public static <T> T setAccessibleAndGetField(Object o, String... names) throws Exception
     {
-        return setAccessibleAndGetField(o.getClass(), names);
+        return setAccessibleAndGetField(o.getClass(), o, names);
     }
     
     public static <T> T setAccessibleAndGetField(Class<?> clazz, Object o, String... names) throws Exception
@@ -397,6 +425,7 @@ public class Utils
                 lastException = e;
             }
         }
+        //noinspection DataFlowIssue
         throw lastException;
     }
     

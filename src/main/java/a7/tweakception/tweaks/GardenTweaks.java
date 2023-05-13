@@ -12,6 +12,7 @@ import a7.tweakception.utils.Utils;
 import net.minecraft.block.Block;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.init.Blocks;
@@ -54,6 +55,7 @@ public class GardenTweaks extends Tweak
         public boolean autoClaimContest = false;
     }
     private static final Map<String, Integer> FUELS = new HashMap<>();
+    private static final Map<String, Integer> AGRO_SACK_ITEMS = new HashMap<>();
     private final GardenTweaksConfig c;
     private final MilestoneOverlay milestoneOverlay;
     private final Map<Instant, ContestInfo> contests = new TreeMap<>();
@@ -71,6 +73,30 @@ public class GardenTweaks extends Tweak
         FUELS.put("BIOFUEL", 3000);
         FUELS.put("OIL_BARREL", 10000);
         FUELS.put("VOLTA", 10000);
+        int compressed = 2048;
+        int compressedDouble = 16;
+        AGRO_SACK_ITEMS.put("§aEnchanted Baked Potato", compressedDouble);
+        AGRO_SACK_ITEMS.put("§aEnchanted Brown Mushroom", compressed);
+        AGRO_SACK_ITEMS.put("§aEnchanted Brown Mushroom Block", compressedDouble);
+        AGRO_SACK_ITEMS.put("§aEnchanted Cactus", compressedDouble);
+        AGRO_SACK_ITEMS.put("§aEnchanted Cactus Green", compressed);
+        AGRO_SACK_ITEMS.put("§aEnchanted Carrot", compressed);
+        AGRO_SACK_ITEMS.put("§aEnchanted Cocoa Bean", compressed);
+        AGRO_SACK_ITEMS.put("§aEnchanted Cookie", compressedDouble);
+        AGRO_SACK_ITEMS.put("§aEnchanted Golden Carrot", compressedDouble);
+        AGRO_SACK_ITEMS.put("§aEnchanted Hay Bale", compressed);
+        AGRO_SACK_ITEMS.put("§aEnchanted Melon", compressed);
+        AGRO_SACK_ITEMS.put("§aEnchanted Melon Block", compressedDouble);
+        AGRO_SACK_ITEMS.put("§aEnchanted Nether Wart", compressed);
+        AGRO_SACK_ITEMS.put("§aEnchanted Potato", compressed);
+        AGRO_SACK_ITEMS.put("§aEnchanted Pumpkin", compressed);
+        AGRO_SACK_ITEMS.put("§aEnchanted Red Mushroom", compressed);
+        AGRO_SACK_ITEMS.put("§aEnchanted Red Mushroom Block", compressedDouble);
+        AGRO_SACK_ITEMS.put("§aEnchanted Sugar", compressed);
+        AGRO_SACK_ITEMS.put("§aEnchanted Sugar Cane", compressedDouble);
+        AGRO_SACK_ITEMS.put("§aMutant Nether Wart", compressedDouble);
+        AGRO_SACK_ITEMS.put("§aPolished Pumpkin", compressedDouble);
+        AGRO_SACK_ITEMS.put("§aTightly-Tied Hay Bale", compressedDouble);
     }
     
     public GardenTweaks(Configuration configuration)
@@ -238,19 +264,20 @@ public class GardenTweaks extends Tweak
     
     public void onGuiDrawPost(GuiScreenEvent.DrawScreenEvent.Post event)
     {
+        if (!(event.gui instanceof GuiContainer))
+            return;
+        FontRenderer fr = getMc().fontRendererObj;
+        AccessorGuiContainer accessor = (AccessorGuiContainer) event.gui;
+        int xSize = accessor.getXSize();
+        int guiLeft = accessor.getGuiLeft();
+        int guiTop = accessor.getGuiTop();
         IInventory chest;
         if (c.contestDataDumper & inContestsMenu)
         {
-            AccessorGuiContainer accessor = (AccessorGuiContainer) event.gui;
-            int xSize = accessor.getXSize();
-            int guiLeft = accessor.getGuiLeft();
-            int guiTop = accessor.getGuiTop();
-            
             Color color = new Color(50, 50, 50);
             int x = guiLeft + xSize + 20;
             int y = guiTop;
             
-            FontRenderer fr = getMc().fontRendererObj;
             GuiScreen.drawRect(x, y,
                 x + 100, y + 10,
                 color.getRGB());
@@ -269,29 +296,21 @@ public class GardenTweaks extends Tweak
         else if ((chest = getOpenedChest()) != null &&
             chest.getName().equals("Enchanted Agronomy Sack"))
         {
-            AccessorGuiContainer accessor = (AccessorGuiContainer) event.gui;
-            int guiLeft = accessor.getGuiLeft();
-            int guiTop = accessor.getGuiTop();
-            FontRenderer fr = getMc().fontRendererObj;
-            
             List<Pair<String, String>> list = new ArrayList<>();
-            
             for (int i = 0; i < chest.getSizeInventory(); i++)
             {
                 ItemStack stack = chest.getStackInSlot(i);
                 String[] lore = McUtils.getDisplayLore(stack);
                 if (lore != null &&
-                    stack.hasDisplayName() &&
-                    !stack.getDisplayName().equals("§aEnchanted Bread") &&
-                    !stack.getDisplayName().equals("§aEnchanted Cactus") &&
-                    !stack.getDisplayName().equals("§aEnchanted Poisonous Potato"))
+                    stack.hasDisplayName() && AGRO_SACK_ITEMS.containsKey(stack.getDisplayName()))
                 {
+                    int minimumCount = AGRO_SACK_ITEMS.get(stack.getDisplayName());
                     for (String line : lore)
                     {
                         if (sackAmountMatcher.reset(McUtils.cleanColor(line)).matches())
                         {
                             int count = Utils.parseInt(sackAmountMatcher.group(1));
-                            if (count < 2048)
+                            if (count < minimumCount)
                                 list.add(new Pair<>(stack.getDisplayName(), line));
                             break;
                         }

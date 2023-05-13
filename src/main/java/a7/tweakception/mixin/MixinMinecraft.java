@@ -62,7 +62,7 @@ public abstract class MixinMinecraft
         .put("IRON_HELMET", "IRON_SWORD")
         .put("GOLD_HELMET", "GOLD_SWORD")
         .put("DIAMOND_HELMET", "DIAMOND_SWORD")
-        .getMap();
+        .map();
     
     @Shadow
     protected abstract void rightClickMouse();

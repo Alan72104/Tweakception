@@ -14,10 +14,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 
 import static a7.tweakception.utils.McUtils.getPlayer;
@@ -63,7 +60,7 @@ public class APIManager extends Tweak
     // onRequestComplete only fires if the data isn't in cache and needs to request
     public String getPlayerUUID(String name, Consumer<String> onRequestComplete)
     {
-        String nameLower = name.toLowerCase();
+        String nameLower = name.toLowerCase(Locale.ROOT);
         
         String uuid = NAME_TO_UUID.get(nameLower);
         
@@ -94,7 +91,7 @@ public class APIManager extends Tweak
     // onRequestComplete only fires if the data isn't in cache and needs to request
     public JsonObject getHypixelPlayerInfo(String name, Consumer<JsonObject> onRequestComplete)
     {
-        name = name.toLowerCase();
+        name = name.toLowerCase(Locale.ROOT);
         String uuid = NAME_TO_UUID.get(name);
         
         if (uuid == null)
@@ -162,7 +159,7 @@ public class APIManager extends Tweak
     // onRequestComplete only fires if the data isn't in cache and needs to request
     public JsonObject getSkyblockPlayerInfo(String name, Consumer<JsonObject> onRequestComplete)
     {
-        name = name.toLowerCase();
+        name = name.toLowerCase(Locale.ROOT);
         String uuid = NAME_TO_UUID.get(name);
         
         if (uuid == null)
@@ -499,7 +496,7 @@ public class APIManager extends Tweak
     
     public void removeCache(String name)
     {
-        name = name.toLowerCase();
+        name = name.toLowerCase(Locale.ROOT);
         String key = NAME_TO_UUID.get(name);
         if (key != null && !key.equals(UUID_NOT_AVAILABLE))
         {

@@ -4,6 +4,7 @@ import a7.tweakception.DevSettings;
 import a7.tweakception.LagSpikeWatcher;
 import a7.tweakception.Tweakception;
 import a7.tweakception.tweaks.GlobalTweaks;
+import a7.tweakception.utils.Constants;
 import a7.tweakception.utils.DumpUtils;
 import a7.tweakception.utils.McUtils;
 import a7.tweakception.utils.Utils;
@@ -19,6 +20,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 import static a7.tweakception.utils.McUtils.*;
@@ -39,11 +41,11 @@ public class TweakceptionCommand extends CommandBase
                 new Command("autojoinparty",
                     args -> Tweakception.dungeonTweaks.toggleAutoJoinParty(),
                     new Command("add",
-                        args -> Tweakception.dungeonTweaks.autoJoinPartyAdd(args.length > 0 ? args[0] : "")),
+                        args -> Tweakception.dungeonTweaks.autoJoinPartyAdd(getString(args, 0, ""))),
                     new Command("list",
                         args -> Tweakception.dungeonTweaks.autoJoinPartyList()),
                     new Command("remove",
-                        args -> Tweakception.dungeonTweaks.autoJoinPartyRemove(args.length > 0 ? args[0] : ""),
+                        args -> Tweakception.dungeonTweaks.autoJoinPartyRemove(getString(args, 0, "")),
                         new Command("togglewhitelist",
                             args -> Tweakception.dungeonTweaks.autoJoinPartyToggleWhitelist()))
                 ),
@@ -68,7 +70,7 @@ public class TweakceptionCommand extends CommandBase
                             args.length >= 1 ? toInt(args[0]) : 0))
                 ),
                 new Command("dailyruns",
-                    args -> Tweakception.dungeonTweaks.getDailyRuns(args.length > 0 ? args[0] : "")),
+                    args -> Tweakception.dungeonTweaks.getDailyRuns(getString(args, 0, ""))),
                 new Command("displaymobnametag",
                     args -> Tweakception.dungeonTweaks.toggleDisplayMobNameTag()),
                 new Command("displaysoulname",
@@ -82,7 +84,7 @@ public class TweakceptionCommand extends CommandBase
                     new Command("next",
                         args -> Tweakception.dungeonTweaks.fragNext()),
                     new Command("setfragbot",
-                        args -> Tweakception.dungeonTweaks.setFragBot(args.length > 0 ? args[0] : "")),
+                        args -> Tweakception.dungeonTweaks.setFragBot(getString(args, 0, ""))),
                     new Command("startsession",
                         args -> Tweakception.dungeonTweaks.fragStartSession()),
                     new Command("stats", null)
@@ -112,7 +114,7 @@ public class TweakceptionCommand extends CommandBase
                     null,
                     new Command("blacklist",
                         args -> Tweakception.dungeonTweaks.partyFinderPlayerBlacklistSet(
-                            args.length > 0 ? args[0] : "",
+                            getString(args, 0, ""),
                             args.length > 1 ? String.join(" ", Arrays.copyOfRange(args, 1, args.length)) : "")),
                     new Command("clearcaches",
                         args -> Tweakception.dungeonTweaks.freeCaches()),
@@ -321,27 +323,57 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.globalTweaks.toggleHideFromStrangers(),
                     new Command("whitelist",
                         args -> Tweakception.globalTweaks.setHideFromStrangersWhitelist(
-                            args.length > 0 ? args[0] : ""))
+                            getString(args, 0, "")))
                 ),
                 new Command("hideplayers",
                     args -> Tweakception.globalTweaks.toggleHidePlayers()),
-                new Command("highlightshinypigs",
+                new Command("hlBlock",
+                    args ->
+                    {
+                        if (args.length >= 3)
+                            Tweakception.globalTweaks.highlightBlock(toInt(args[0]), toInt(args[1]), toInt(args[2]));
+                        else
+                            sendChat("Give me 3 args");
+                    },
+                    new Command("addArachnesKeeper",
+                        args -> Tweakception.globalTweaks.highlightBlocks(Constants.ARACHNES_KEEPER_LOCATIONS)),
+                    new Command("clear",
+                        args -> Tweakception.globalTweaks.highlightBlockClear()),
+                    new Command("list",
+                        args -> Tweakception.globalTweaks.highlightBlockList())
+                ),
+                new Command("hlshinypigs",
                     args -> Tweakception.globalTweaks.toggleHighlightShinyPigs(),
                     new Command("setname",
                         args -> Tweakception.globalTweaks.setHighlightShinyPigsName(args.length > 0 ? String.join(" ", args) : ""))
                 ),
-                new Command("highlightplayer",
-                    args -> Tweakception.globalTweaks.setPlayerToHighlight(args.length > 0 ? args[0] : "")),
-                new Command("highlightPlayers",
+                new Command("hlEntityType",
+                    args -> Tweakception.globalTweaks.highlightEntityType(getString(args, 0, "")),
+                    new Command("clear",
+                        args -> Tweakception.globalTweaks.highlightEntityTypeClear()),
+                    new Command("list",
+                        args -> Tweakception.globalTweaks.highlightEntityTypeList())
+                ),
+                new Command("hlPlayer",
+                    args -> Tweakception.globalTweaks.setPlayerToHighlight(getString(args, 0, "")),
+                    Command.getPlayerNameProvider()),
+                new Command("hlPlayers",
                     args -> Tweakception.globalTweaks.toggleHighlightPlayers()),
-                new Command("highlightarmorstand",
-                    args -> Tweakception.globalTweaks.setArmorStandToHighlight(args.length > 0 ? args[0] : "")),
-                new Command("highlightskulls",
+                new Command("hlArmorStand",
+                    args -> Tweakception.globalTweaks.setArmorStandToHighlight(getString(args, 0, ""))),
+                new Command("hlSkulls",
                     args -> Tweakception.globalTweaks.toggleHighlightSkulls()),
                 new Command("ignoreServerRenderDistance",
                     args -> Tweakception.globalTweaks.toggleIgnoreServerRenderDistance()),
                 new Command("island",
                     args -> Tweakception.globalTweaks.printIsland()),
+                new Command("limbo",
+                    args ->
+                    {
+                        for (int i = 0; i < 12; i++)
+                            McUtils.getPlayer().sendChatMessage("/");
+                    }
+                ),
                 new Command("minionautoclaim",
                     args -> Tweakception.globalTweaks.toggleMinionAutoClaim(),
                     new Command("whitelist",
@@ -387,7 +419,7 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.globalTweaks.overrideIsland(args.length > 0 ? String.join(" ", args) : "")),
                 new Command("snipe",
                     args -> Tweakception.globalTweaks.startSnipe(
-                        args.length > 0 ? args[0] : "",
+                        getString(args, 0, ""),
                         args.length > 1 ? String.join(" ", Arrays.copyOfRange(args, 1, args.length)) : ""),
                     new Command("stop",
                         args -> Tweakception.globalTweaks.stopSnipe()),
@@ -630,11 +662,11 @@ public class TweakceptionCommand extends CommandBase
             addSub(new Command("api",
                 null,
                 new Command("set",
-                    args -> Tweakception.apiManager.setApiKey(args.length > 0 ? args[0] : "")),
+                    args -> Tweakception.apiManager.setApiKey(getString(args, 0, ""))),
                 new Command("clearcaches",
                     args -> Tweakception.apiManager.freeCaches()),
                 new Command("copyprofile",
-                    args -> Tweakception.apiManager.copySkyblockProfile(args.length > 0 ? args[0] : "")
+                    args -> Tweakception.apiManager.copySkyblockProfile(getString(args, 0, ""))
                 ).setVisibility(false),
                 new Command("debug",
                     args -> Tweakception.apiManager.toggleDebug()).setVisibility(false),
@@ -650,7 +682,7 @@ public class TweakceptionCommand extends CommandBase
         // dailies
         {
             addSub(new Command("dailies",
-                args -> Tweakception.dungeonTweaks.getDailyRuns(args.length > 0 ? args[0] : "")));
+                args -> Tweakception.dungeonTweaks.getDailyRuns(getString(args, 0, ""))));
         }
         // stop
         {
@@ -936,7 +968,7 @@ public class TweakceptionCommand extends CommandBase
         if (args.length == 0)
             return null;
         else if (args.length == 1)
-            return getPossibleCompletions(args[0], getVisibleSubCommandNames());
+            return Command.getPossibleCompletions(args[0], getVisibleSubCommandNames());
         else
             for (Command sub : subCommands)
                 if (sub.isVisible() && args[0].equalsIgnoreCase(sub.getName()))
@@ -955,17 +987,6 @@ public class TweakceptionCommand extends CommandBase
     private void addSub(Command cmd)
     {
         subCommands.add(cmd);
-    }
-    
-    private static List<String> getPossibleCompletions(String arg, List<String> opts)
-    {
-        List<String> list = new ArrayList<>();
-        
-        for (String opt : opts)
-            if (opt.toLowerCase().startsWith(arg.toLowerCase()))
-                list.add(opt);
-        
-        return list;
     }
     
     private static void sendCommandNotFound()

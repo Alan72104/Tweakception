@@ -1,6 +1,7 @@
 package a7.tweakception.utils;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 public class MapBuilder<K, V>
@@ -18,18 +19,23 @@ public class MapBuilder<K, V>
         return this;
     }
     
-    public Map<K, V> getMap()
+    public Map<K, V> map()
     {
         return map;
     }
     
-    public static MapBuilder<String, String> stringHashMap()
+    public static <K, V> MapBuilder<K, V> hashMap()
     {
         return new MapBuilder<>(new HashMap<>());
     }
     
+    public static MapBuilder<String, String> stringHashMap()
+    {
+        return hashMap();
+    }
+    
     public static MapBuilder<String, Integer> stringIntHashMap()
     {
-        return new MapBuilder<>(new HashMap<>());
+        return hashMap();
     }
 }

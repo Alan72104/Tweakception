@@ -217,8 +217,6 @@ public class GlobalTweaks extends Tweak
     // §r         §r§a§lPlayers §r§f(21)§r
     private final Matcher tabListPlayerSectionNameMatcher = Pattern.compile(
         "§r *§r§a§lPlayers §r§f\\(([0-9]{1,2})\\)§r").matcher("");
-    private final Matcher minecraftUsernameMatcher = Pattern.compile(
-        "[A-Za-z0-9_]{1,16}").matcher("");
     private boolean hideFromStrangers = false;
     private int hideFromStrangersLastWarpTicks = 0;
     private final Matcher petItemJsonExpMatcher = Pattern.compile(
@@ -233,6 +231,8 @@ public class GlobalTweaks extends Tweak
     private final Set<ChunkCoordIntPair> pendingUnloadChunks = new HashSet<>();
     private ChunkCoordIntPair lastChunkUnloadPosition = new ChunkCoordIntPair(0, 0);
     private List<String> tooltipOverride = null;
+    private final Set<BlockPos> blocksToHighlight = new HashSet<>();
+    private final Set<String> entityTypesToHighlight = new HashSet<>();
     
     static
     {
@@ -769,7 +769,7 @@ public class GlobalTweaks extends Tweak
             {
                 if (p.isEntityAlive() &&
                     ((highlightPlayers && getMc().getNetHandler().getPlayerInfo(p.getUniqueID()) != null && !p.getName().equals(getPlayer().getName())) ||
-                    playersToHighlight.contains(p.getName().toLowerCase())))
+                    playersToHighlight.contains(p.getName().toLowerCase(Locale.ROOT))))
                 {
                     RenderUtils.drawBeaconBeamOrBoundingBox(p, new Color(0, 255, 0, 64), event.partialTicks, 0, 15);
                 }
@@ -782,7 +782,7 @@ public class GlobalTweaks extends Tweak
             {
                 for (String name : armorStandsToHighlight)
                 {
-                    if (armorStand.isEntityAlive() && armorStand.getName().toLowerCase().contains(name))
+                    if (armorStand.isEntityAlive() && armorStand.getName().toLowerCase(Locale.ROOT).contains(name))
                     {
                         if (armorStand.hasMarker())
                             RenderUtils.drawBeaconBeamOrBoundingBoxWithBoxSize(
@@ -813,7 +813,33 @@ public class GlobalTweaks extends Tweak
         if (highlightSkulls)
         {
             for (BlockPos pos : skulls)
-                RenderUtils.drawBeaconBeamOrBoundingBox(pos, new Color(168, 157, 50, 127), event.partialTicks, 0);
+                RenderUtils.drawBeaconBeamOrBoundingBox(pos, new Color(168, 157, 50, 128), event.partialTicks, 0);
+        }
+        
+        if (!blocksToHighlight.isEmpty())
+        {
+            for (BlockPos pos : blocksToHighlight)
+            {
+                double dist = Math.sqrt(getPlayer().getDistanceSqToCenter(pos));
+                int alpha = (int) Utils.mapClamp(dist, 5, 30, 32, 128);
+                RenderUtils.drawBeaconBeamOrBoundingBox(pos, new Color(0, 255, 0, alpha), event.partialTicks, 1);
+            }
+        }
+        
+        if (!entityTypesToHighlight.isEmpty())
+        {
+            for (Entity e : getWorld().loadedEntityList)
+            {
+                String name = e.getClass().getSimpleName().toLowerCase(Locale.ROOT);
+                for (String type : entityTypesToHighlight)
+                {
+                    if (name.contains(type))
+                    {
+                        RenderUtils.drawBeaconBeamOrBoundingBox(e, new Color(0, 255, 0, 64), event.partialTicks, 15);
+                        break;
+                    }
+                }
+            }
         }
     }
     
@@ -1306,7 +1332,7 @@ public class GlobalTweaks extends Tweak
         
         String serverBrand = mc.thePlayer.getClientBrand(); // It's actually getServerBrand()
         if (mc.theWorld == null || mc.thePlayer == null || serverBrand == null ||
-            !serverBrand.toLowerCase().contains("hypixel"))
+            !serverBrand.toLowerCase(Locale.ROOT).contains("hypixel"))
             return;
         isInHypixel = true;
         Scoreboard scoreboard = mc.theWorld.getScoreboard();
@@ -1363,14 +1389,6 @@ public class GlobalTweaks extends Tweak
                 
                 if (DevSettings.printLocationChange && !prevLocationRaw.equals(currentLocationRaw))
                     sendChatf("GT: Location changed from \"%s§r\" to \"%s§r\"", prevLocationRaw, currentLocationRaw);
-                
-//                islandLoop:
-//                for (SkyblockIsland island : SkyblockIsland.values())
-//                    for (String location : island.locations)
-//                        if (line.contains(location))
-//                        {
-//                            break islandLoop;
-//                        }
                 break;
             }
         }
@@ -1525,7 +1543,7 @@ public class GlobalTweaks extends Tweak
         else
         {
             for (SkyblockIsland island : SkyblockIsland.values())
-                if (island.name.toLowerCase().contains(name.toLowerCase()))
+                if (island.name.toLowerCase(Locale.ROOT).contains(name.toLowerCase(Locale.ROOT)))
                 {
                     overridenIslandDetection = true;
                     isInSkyblock = true;
@@ -1599,11 +1617,11 @@ public class GlobalTweaks extends Tweak
                             for (int k = playerEleParts.size() - 1; k >= 0; k--)
                             {
                                 IChatComponent playerElePart = playerEleParts.get(k);
-                                if (minecraftUsernameMatcher
+                                if (Matchers.minecraftUsername
                                     .reset(playerElePart.getUnformattedText().trim())
                                     .matches())
                                 {
-                                    playerList.add(minecraftUsernameMatcher.group());
+                                    playerList.add(Matchers.minecraftUsername.group());
                                     break;
                                 }
                             }
@@ -2589,7 +2607,7 @@ public class GlobalTweaks extends Tweak
         }
         else
         {
-            name = name.toLowerCase();
+            name = name.toLowerCase(Locale.ROOT);
             if (playersToHighlight.contains(name))
             {
                 playersToHighlight.remove(name);
@@ -2612,7 +2630,7 @@ public class GlobalTweaks extends Tweak
         }
         else
         {
-            name = name.toLowerCase();
+            name = name.toLowerCase(Locale.ROOT);
             if (armorStandsToHighlight.contains(name))
             {
                 armorStandsToHighlight.remove(name);
@@ -2787,8 +2805,8 @@ public class GlobalTweaks extends Tweak
             return;
         }
         
-        name = name.toLowerCase().trim();
-        warpCmd = warpCmd.toLowerCase().trim();
+        name = name.toLowerCase(Locale.ROOT).trim();
+        warpCmd = warpCmd.toLowerCase(Locale.ROOT).trim();
         if (name.isEmpty() || warpCmd.isEmpty())
         {
             sendChat("GT-Snipe: snipe params empty");
@@ -2840,7 +2858,7 @@ public class GlobalTweaks extends Tweak
             return;
         }
         
-        name = name.toLowerCase();
+        name = name.toLowerCase(Locale.ROOT);
         if (c.strangerWhitelist.contains(name))
         {
             c.strangerWhitelist.remove(name);
@@ -2961,6 +2979,75 @@ public class GlobalTweaks extends Tweak
             tooltipOverride = Arrays.asList(clip.split("\\R"));
             sendChat("GT-TooltipOverride: overriding with " + tooltipOverride.size() + " lines");
         }
+    }
+    
+    public void highlightBlocks(BlockPos[] poses)
+    {
+        int count = 0;
+        for (BlockPos pos : poses)
+            if (blocksToHighlight.add(pos))
+                count++;
+        sendChatf("GT-HighlightBlock: added %d new blocks", count);
+    }
+    
+    public void highlightBlock(int x, int y, int z)
+    {
+        BlockPos pos = new BlockPos(x, y, z);
+        if (blocksToHighlight.contains(pos))
+        {
+            blocksToHighlight.remove(pos);
+            sendChatf("GT-HighlightBlock: removed block %d, %d, %d", x, y, z);
+        }
+        else
+        {
+            blocksToHighlight.add(pos);
+            sendChatf("GT-HighlightBlock: added block %d, %d, %d", x, y, z);
+        }
+    }
+    
+    public void highlightBlockClear()
+    {
+        blocksToHighlight.clear();
+        sendChat("GT-HighlightBlock: cleared list");
+    }
+    
+    public void highlightBlockList()
+    {
+        int i = 0;
+        for (BlockPos pos : blocksToHighlight)
+            sendChatf("GT-HighlightBlock: %d: %d, %d, %d", ++i, pos.getX(), pos.getY(), pos.getZ());
+    }
+    
+    public void highlightEntityType(String type)
+    {
+        type = type.toLowerCase(Locale.ROOT);
+        if (type.isEmpty())
+        {
+            highlightEntityTypeClear();
+        }
+        else if (entityTypesToHighlight.contains(type))
+        {
+            entityTypesToHighlight.remove(type);
+            sendChat("GT-HighlightEntityType: removed " + type);
+        }
+        else
+        {
+            entityTypesToHighlight.add(type);
+            sendChat("GT-HighlightEntityType: added " + type);
+        }
+    }
+    
+    public void highlightEntityTypeClear()
+    {
+        entityTypesToHighlight.clear();
+        sendChat("GT-HighlightEntityType: cleared list");
+    }
+    
+    public void highlightEntityTypeList()
+    {
+        int i = 0;
+        for (String s : entityTypesToHighlight)
+            sendChatf("GT-HighlightEntityType: %d: %s", ++i, s);
     }
     
     // endregion Commands

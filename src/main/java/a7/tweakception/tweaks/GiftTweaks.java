@@ -76,7 +76,7 @@ public class GiftTweaks extends Tweak
         Map<String, Integer> crap = MapBuilder.stringIntHashMap()
             .put("scavenger", 4)
             .put("looting", 4)
-            .put("luck", 6).getMap();
+            .put("luck", 6).map();
         GIFT_SHITS.put("ENCHANTED_BOOK", s ->
         {
             NBTTagCompound enchs = McUtils.getExtraAttributes(s).getCompoundTag("enchantments");
@@ -168,7 +168,7 @@ public class GiftTweaks extends Tweak
                     if (p instanceof EntityOtherPlayerMP &&
                         getMc().getNetHandler().getPlayerInfo(p.getUniqueID()) != null &&
                         p.getDistanceSqToEntity(getPlayer()) <= c.autoReleaseRightClickDistance * c.autoReleaseRightClickDistance &&
-                        !c.autoReleaseRightClickWhitelist.contains(p.getName().toLowerCase()) &&
+                        !c.autoReleaseRightClickWhitelist.contains(p.getName().toLowerCase(Locale.ROOT)) &&
                         p.getDisplayName().getFormattedText().length() >= 4 &&
                         p.getDisplayName().getFormattedText().charAt(2) == '§')
                     {
@@ -581,7 +581,7 @@ public class GiftTweaks extends Tweak
             return;
         }
         
-        name = name.toLowerCase();
+        name = name.toLowerCase(Locale.ROOT);
         if (c.autoReleaseRightClickWhitelist.contains(name))
         {
             c.autoReleaseRightClickWhitelist.remove(name);

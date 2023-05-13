@@ -8,6 +8,7 @@ import org.apache.commons.text.similarity.LevenshteinDistance;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
@@ -92,7 +93,7 @@ public class DiscordGuildBridge
     {
         if (isInHypixel() && !recentMsgs.containsKey(msg))
         {
-            recentMsgs.put(msg.toLowerCase(), getTicks());
+            recentMsgs.put(msg.toLowerCase(Locale.ROOT), getTicks());
             McUtils.executeCommand("/gc " + header + msg);
         }
     }
@@ -176,7 +177,7 @@ public class DiscordGuildBridge
                 String sanitizedContent = sanitize(content);
                 String displayContent = sanitizedContent.substring(0,
                     Math.min(100 - 2 - displayName.length() - 2, sanitizedContent.length()));
-                String normalized = displayContent.toLowerCase();
+                String normalized = displayContent.toLowerCase(Locale.ROOT);
                 boolean spam = false;
                 if (recentMsgs.containsKey(normalized))
                     spam = true;

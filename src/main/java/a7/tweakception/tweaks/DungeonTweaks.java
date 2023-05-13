@@ -609,7 +609,7 @@ public class DungeonTweaks extends Tweak
                                 {
                                     if (essenceMatcher.reset(line).matches())
                                     {
-                                        String ess = essenceMatcher.group(1).toLowerCase();
+                                        String ess = essenceMatcher.group(1).toLowerCase(Locale.ROOT);
                                         if (ESSENCES.contains(ess))
                                         {
                                             salvagingEssenceType = ess;
@@ -692,7 +692,7 @@ public class DungeonTweaks extends Tweak
                 if (getTicks() - usage.useTicks > usage.cooldownTicks + 20)
                 {
                     sendChatf("DT-TrackMaskUsage: §ayour §e%s §ais now available!",
-                        String.join(" ", ele.getKey().toLowerCase().split("_")));
+                        String.join(" ", ele.getKey().toLowerCase(Locale.ROOT).split("_")));
                     maskUsages.remove(ele.getKey());
                 }
             }
@@ -961,7 +961,7 @@ public class DungeonTweaks extends Tweak
         {
             if (partyRequestMatcher.reset(msg).find())
             {
-                String name = partyRequestMatcher.group(1)/*.replaceAll("[.*]", "").trim()*/.toLowerCase();
+                String name = partyRequestMatcher.group(1)/*.replaceAll("[.*]", "").trim()*/.toLowerCase(Locale.ROOT);
                 if (!c.autoJoinPartyWhitelistEnable || c.autoJoinPartyOwners.contains(name))
                 {
                     sendChat("DT-AutoJoinParty: joining " + name + "'s party" +
@@ -1088,9 +1088,9 @@ public class DungeonTweaks extends Tweak
                         event.toolTip.size() > 0 && partyFinderTitleMatcher.reset(event.toolTip.get(0)).find())
                     {
                         String name = partyFinderTitleMatcher.group(1);
-                        if (c.partyFinderPlayerBlacklist.containsKey(name.toLowerCase()))
+                        if (c.partyFinderPlayerBlacklist.containsKey(name.toLowerCase(Locale.ROOT)))
                         {
-                            String reason = c.partyFinderPlayerBlacklist.get(name.toLowerCase());
+                            String reason = c.partyFinderPlayerBlacklist.get(name.toLowerCase(Locale.ROOT));
                             event.toolTip.set(0, "§o§6§4§m" + name + "§a's Party" + partyFinderTitleMatcher.group(2) +
                                 (ctrlDown && !reason.equals("") ? " §8(" + reason + ")" : ""));
                         }
@@ -1123,7 +1123,7 @@ public class DungeonTweaks extends Tweak
                             String name = ele.b.group(1);
                             String padding = Utils.stringRepeat(" ", (maxWidth - ele.c) / spaceWidth);
                             StringBuilder sb = StringBuilderCache.get();
-                            boolean blacklisted = c.partyFinderPlayerBlacklist.containsKey(name.toLowerCase());
+                            boolean blacklisted = c.partyFinderPlayerBlacklist.containsKey(name.toLowerCase(Locale.ROOT));
                             
                             if (blacklisted)
                                 sb.append("§5§o §4§m").append(name).append(ele.b.group(2));
@@ -1185,7 +1185,7 @@ public class DungeonTweaks extends Tweak
                             
                             if (blacklisted)
                             {
-                                String reason = c.partyFinderPlayerBlacklist.get(name.toLowerCase());
+                                String reason = c.partyFinderPlayerBlacklist.get(name.toLowerCase(Locale.ROOT));
                                 if (ctrlDown && !reason.equals(""))
                                     sb.append(" §8(").append(reason).append(")");
                             }
@@ -1911,7 +1911,7 @@ public class DungeonTweaks extends Tweak
             sendChat("DT-AutoJoinParty: give me a player name");
             return;
         }
-        name = name.toLowerCase();
+        name = name.toLowerCase(Locale.ROOT);
         if (c.autoJoinPartyOwners.contains(name))
         {
             sendChat("DT-AutoJoinParty: player " + name + " is already in the list");
@@ -1930,7 +1930,7 @@ public class DungeonTweaks extends Tweak
             sendChat("DT-AutoJoinParty: give me a player name");
             return;
         }
-        name = name.toLowerCase();
+        name = name.toLowerCase(Locale.ROOT);
         if (c.autoJoinPartyOwners.contains(name))
         {
             c.autoJoinPartyOwners.remove(name);
@@ -2201,7 +2201,7 @@ public class DungeonTweaks extends Tweak
             return;
         }
         
-        name = name.toLowerCase();
+        name = name.toLowerCase(Locale.ROOT);
         if (c.partyFinderPlayerBlacklist.containsKey(name))
         {
             c.partyFinderPlayerBlacklist.remove(name);

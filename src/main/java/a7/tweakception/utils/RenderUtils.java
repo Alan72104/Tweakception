@@ -300,6 +300,7 @@ public class RenderUtils
     {
         GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
+        GlStateManager.disableLighting();
         GlStateManager.disableCull();
         GlStateManager.disableTexture2D();
         if (!depth)
@@ -367,6 +368,7 @@ public class RenderUtils
         
         GlStateManager.enableTexture2D();
         GlStateManager.enableCull();
+        GlStateManager.enableLighting();
         if (!depth)
             GlStateManager.enableDepth();
     }
@@ -397,9 +399,9 @@ public class RenderUtils
         return new Vector3d(x, y, z);
     }
     
-    // Type -1 is beacon beam
-    // Type 0 is auto
-    // Type 1 is bounding box
+    /**
+     * @param type -1 beacon beam, 0 auto, 1 bounding box
+     */
     public static void drawBeaconBeamOrBoundingBox(BlockPos block, Color c, float partialTicks, int type)
     {
         drawBeaconBeamOrBoundingBox(block, c, partialTicks, type, 10);

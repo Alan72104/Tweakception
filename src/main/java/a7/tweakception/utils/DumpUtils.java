@@ -26,7 +26,6 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.property.IExtendedBlockState;
 import net.minecraftforge.common.property.IUnlistedProperty;
 import net.minecraftforge.fml.common.registry.GameData;
-import sun.nio.ch.Net;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,7 +37,6 @@ import java.util.List;
 import java.util.Map;
 
 import static a7.tweakception.utils.McUtils.*;
-import static a7.tweakception.utils.Utils.f;
 
 public class DumpUtils
 {

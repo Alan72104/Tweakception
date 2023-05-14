@@ -3,8 +3,6 @@ package a7.tweakception.tweaks;
 import a7.tweakception.config.Configuration;
 import a7.tweakception.utils.McUtils;
 import a7.tweakception.utils.Utils;
-import net.minecraft.client.gui.inventory.GuiChest;
-import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
@@ -19,7 +17,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static a7.tweakception.tweaks.GlobalTweaks.getTicks;
-import static a7.tweakception.utils.McUtils.*;
+import static a7.tweakception.utils.McUtils.sendChat;
+import static a7.tweakception.utils.McUtils.sendChatf;
 
 public class BazaarTweaks extends Tweak
 {

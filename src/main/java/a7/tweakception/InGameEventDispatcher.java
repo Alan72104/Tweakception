@@ -20,7 +20,8 @@ import org.lwjgl.input.Mouse;
 
 import static a7.tweakception.Tweakception.*;
 import static a7.tweakception.tweaks.GlobalTweaks.isInSkyblock;
-import static a7.tweakception.utils.McUtils.*;
+import static a7.tweakception.utils.McUtils.getMc;
+import static a7.tweakception.utils.McUtils.isInGame;
 
 public class InGameEventDispatcher
 {

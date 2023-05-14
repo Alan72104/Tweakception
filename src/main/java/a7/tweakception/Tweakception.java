@@ -2,15 +2,12 @@ package a7.tweakception;
 
 import a7.tweakception.commands.TweakceptionCommand;
 import a7.tweakception.config.Configuration;
-import a7.tweakception.mixin.AccessorMinecraft;
 import a7.tweakception.overlay.OverlayManager;
 import a7.tweakception.tweaks.*;
 import a7.tweakception.utils.DiscordGuildBridge;
 import net.minecraft.block.Block;
-import net.minecraft.client.gui.GuiPlayerTabOverlay;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.BlockPos;
-import net.minecraft.util.Timer;
 import net.minecraft.world.World;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.MinecraftForge;
@@ -25,8 +22,6 @@ import org.lwjgl.input.Keyboard;
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import static a7.tweakception.utils.McUtils.getMc;
 
 @Mod(modid = Tweakception.MOD_ID, version = Tweakception.MOD_VERSION, name = Tweakception.MOD_NAME,
     acceptedMinecraftVersions = "1.8.9", clientSideOnly = true)

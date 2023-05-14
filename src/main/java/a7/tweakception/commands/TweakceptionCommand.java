@@ -22,7 +22,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static a7.tweakception.utils.McUtils.*;
+import static a7.tweakception.utils.McUtils.getWorld;
+import static a7.tweakception.utils.McUtils.sendChat;
 
 public class TweakceptionCommand extends CommandBase
 {

@@ -4,7 +4,6 @@ import a7.tweakception.Tweakception;
 import a7.tweakception.mixin.AccessorGuiPlayerTabOverlay;
 import a7.tweakception.utils.Matchers;
 import net.minecraft.client.network.NetHandlerPlayClient;
-import net.minecraft.client.network.NetworkPlayerInfo;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

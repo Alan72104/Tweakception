@@ -3,6 +3,7 @@ package a7.tweakception.commands;
 import a7.tweakception.Tweakception;
 import a7.tweakception.mixin.AccessorGuiPlayerTabOverlay;
 import a7.tweakception.utils.Matchers;
+import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.client.network.NetworkPlayerInfo;
 
 import javax.annotation.Nonnull;
@@ -138,6 +139,9 @@ public class Command implements Comparable<Command>
         sendChat("Tweakception: command not found or wrong syntax");
     }
     
+    /**
+     * Returns an option provider providing the real player names detected from {@link NetHandlerPlayClient#getPlayerInfoMap()}
+     */
     public static Function<String[], List<String>> getPlayerNameProvider()
     {
         return args ->

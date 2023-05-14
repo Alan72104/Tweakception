@@ -34,8 +34,8 @@ import java.util.regex.Pattern;
 
 public class McUtils
 {
-    private static Minecraft mc = Minecraft.getMinecraft();
-    private static Timer mcTimer = ((AccessorMinecraft) mc).getTimer();
+    private static final Minecraft mc = Minecraft.getMinecraft();
+    private static final Timer mcTimer = ((AccessorMinecraft) mc).getTimer();
     private static final Matcher colorMatcher = Pattern.compile("§[0-9a-fk-orA-FK-OR]").matcher("");
     private static IInventory chest = null;
     public static boolean chestUpdatedThisTick = false;
@@ -43,6 +43,11 @@ public class McUtils
     public static Minecraft getMc()
     {
         return mc;
+    }
+    
+    public static float getPartialTicks()
+    {
+        return mcTimer.renderPartialTicks;
     }
     
     public static EntityPlayerSP getPlayer()
@@ -55,14 +60,21 @@ public class McUtils
         return mc.theWorld;
     }
     
-    public static float getPartialTicks()
-    {
-        return mcTimer.renderPartialTicks;
-    }
-    
     public static boolean isInGame()
     {
         return getWorld() != null && getPlayer() != null;
+    }
+    
+    public static void sendChat(String s)
+    {
+        if (isInGame())
+            getPlayer().addChatMessage(new ChatComponentText(s));
+    }
+    
+    public static void sendChatf(String s, Object... args)
+    {
+        if (isInGame())
+            getPlayer().addChatMessage(new ChatComponentText(String.format(s, args)));
     }
     
     public static IInventory getOpenedChest()
@@ -91,18 +103,6 @@ public class McUtils
         if (isInGame())
             getPlayer().addChatMessage(new ChatComponentText(String.valueOf(v)));
         return v;
-    }
-    
-    public static void sendChat(String s)
-    {
-        if (isInGame())
-            getPlayer().addChatMessage(new ChatComponentText(s));
-    }
-    
-    public static void sendChatf(String s, Object... args)
-    {
-        if (isInGame())
-            getPlayer().addChatMessage(new ChatComponentText(String.format(s, args)));
     }
     
     public static boolean checkStackInInv(IInventory inv, int slot, Block block, String name)
@@ -270,8 +270,7 @@ public class McUtils
     
     public static Entity getNearestEntityInAABBFromCollection(Collection<Entity> collection,
                                                               Entity entity,
-                                                              AxisAlignedBB bb,
-                                                              Predicate<? super Entity> predicate)
+                                                              AxisAlignedBB bb)
     {
         Entity nearest = null;
         double nearestDis = Double.MAX_VALUE;
@@ -321,7 +320,7 @@ public class McUtils
                 {
                     if (currentColourCode != c)
                     {
-                        sb.append('\u00a7');
+                        sb.append('§');
                         sb.append(c);
                         currentColourCode = c;
                     }
@@ -343,7 +342,7 @@ public class McUtils
     
     public static void playCoolDing(float pitch)
     {
-        EntityPlayerSP p = McUtils.getPlayer();
+        EntityPlayerSP p = getPlayer();
         ISound sound = new PositionedSoundRecord(new ResourceLocation("random.orb"),
             1.0f, pitch, (float) p.posX, (float) p.posY, (float) p.posZ);
         

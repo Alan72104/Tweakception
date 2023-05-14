@@ -4,12 +4,12 @@ import a7.tweakception.DevSettings;
 import a7.tweakception.LagSpikeWatcher;
 import a7.tweakception.Tweakception;
 import a7.tweakception.tweaks.GlobalTweaks;
+import a7.tweakception.tweaks.SkyblockIsland;
 import a7.tweakception.utils.Constants;
 import a7.tweakception.utils.DumpUtils;
 import a7.tweakception.utils.McUtils;
 import a7.tweakception.utils.Utils;
 import net.minecraft.block.Block;
-import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.BlockPos;
@@ -20,7 +20,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.stream.Collectors;
 
 import static a7.tweakception.utils.McUtils.*;
@@ -332,13 +331,22 @@ public class TweakceptionCommand extends CommandBase
                     {
                         if (args.length >= 3)
                             Tweakception.globalTweaks.highlightBlock(toInt(args[0]), toInt(args[1]), toInt(args[2]));
+                        else if (args.length == 1)
+                            Tweakception.globalTweaks.highlightBlocks(new BlockPos[]
+                            {
+                                McUtils.getPlayer().getPosition()
+                            });
                         else
                             sendChat("Give me 3 args");
                     },
                     new Command("addArachnesKeeper",
                         args -> Tweakception.globalTweaks.highlightBlocks(Constants.ARACHNES_KEEPER_LOCATIONS)),
+                    new Command("addSpidersDenRelics",
+                        args -> Tweakception.globalTweaks.highlightBlocks(Constants.SPIDERS_DEN_RELIC_LOCATIONS)),
                     new Command("clear",
                         args -> Tweakception.globalTweaks.highlightBlockClear()),
+                    new Command("removeNearest",
+                        args -> Tweakception.globalTweaks.highlightBlockRemoveNearest()),
                     new Command("list",
                         args -> Tweakception.globalTweaks.highlightBlockList())
                 ),
@@ -416,7 +424,9 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.globalTweaks.setInvisibleEntityAlphaPercentage(
                         args.length > 0 ? toInt(args[0]) : 0)),
                 new Command("setisland",
-                    args -> Tweakception.globalTweaks.overrideIsland(args.length > 0 ? String.join(" ", args) : "")),
+                    args -> Tweakception.globalTweaks.overrideIsland(args.length > 0 ? String.join(" ", args) : ""),
+                    args -> Arrays.stream(SkyblockIsland.values()).map(island -> island.name).collect(Collectors.toList())
+                ),
                 new Command("snipe",
                     args -> Tweakception.globalTweaks.startSnipe(
                         getString(args, 0, ""),

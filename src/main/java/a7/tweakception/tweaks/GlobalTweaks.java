@@ -1051,7 +1051,7 @@ public class GlobalTweaks extends Tweak
     
         Consumer<String> addTheItems = keyStart ->
         {
-            NBTTagCompound extra = getExtraAttributes(itemStack);
+            NBTTagCompound extra = McUtils.getExtraAttributes(itemStack);
             if (extra == null)
                 return;
             TreeMap<Integer, String> map = new TreeMap<>();
@@ -1339,7 +1339,7 @@ public class GlobalTweaks extends Tweak
         ScoreObjective sidebarObjective = scoreboard.getObjectiveInDisplaySlot(1);
         if (sidebarObjective == null)
             return;
-        String objectiveName = cleanColor(sidebarObjective.getDisplayName());
+        String objectiveName = McUtils.cleanColor(sidebarObjective.getDisplayName());
         if (!objectiveName.startsWith("SKYBLOCK"))
             return;
         
@@ -1356,7 +1356,7 @@ public class GlobalTweaks extends Tweak
                     String name = displayName.getFormattedText();
                     if (name.startsWith("§r§b§lArea: ") || name.startsWith("§r§b§lDungeon: "))
                     {
-                        String cleaned = cleanColor(name);
+                        String cleaned = McUtils.cleanColor(name);
                         currentServerType = cleaned.substring(cleaned.indexOf(' ') + 1);
                         currentIsland = ISLAND_NAME_TO_ISLAND_MAP.get(currentServerType);
                         if (DevSettings.printLocationChange && !prevServerType.equals(currentServerType))
@@ -1384,7 +1384,7 @@ public class GlobalTweaks extends Tweak
             if (line.contains("⏣"))
             {
                 currentLocationRaw = line;
-                line = invalidLocationLetterMatcher.reset(cleanColor(line)).replaceAll("").trim();
+                line = invalidLocationLetterMatcher.reset(McUtils.cleanColor(line)).replaceAll("").trim();
                 currentLocationRawCleaned = line;
                 
                 if (DevSettings.printLocationChange && !prevLocationRaw.equals(currentLocationRaw))
@@ -3002,6 +3002,30 @@ public class GlobalTweaks extends Tweak
         {
             blocksToHighlight.add(pos);
             sendChatf("GT-HighlightBlock: added block %d, %d, %d", x, y, z);
+        }
+    }
+    
+    public void highlightBlockRemoveNearest()
+    {
+        double nearestDist = Double.MAX_VALUE;
+        BlockPos nearest = null;
+        for (BlockPos pos : blocksToHighlight)
+        {
+            double dist = getPlayer().getDistanceSqToCenter(pos);
+            if (dist < nearestDist)
+            {
+                nearestDist = dist;
+                nearest = pos;
+            }
+        }
+        if (nearest != null && nearestDist <= 25.0)
+        {
+            blocksToHighlight.remove(nearest);
+            sendChatf("GT-HighlightBlock: removed nearest %d, %d, %d", nearest.getX(), nearest.getY(), nearest.getZ());
+        }
+        else
+        {
+            sendChat("GT-HighlightBlock: nearest not found");
         }
     }
     

@@ -2,9 +2,7 @@ package a7.tweakception.utils;
 
 import net.minecraft.util.BlockPos;
 
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 public class Constants
 {
@@ -65,6 +63,38 @@ public class Constants
         new BlockPos(-312, 43, -233),
         new BlockPos(-209, 44, -260),
         new BlockPos(-231, 57, -308)
+    };
+    
+    public static final BlockPos[] SPIDERS_DEN_RELIC_LOCATIONS =
+    {
+        new BlockPos(-342, 122, -253),
+        new BlockPos(-384, 89, -225),
+        new BlockPos(-274, 100, -178),
+        new BlockPos(-178, 136, -297),
+        new BlockPos(-147, 83, -335),
+        new BlockPos(-188, 80, -346),
+        new BlockPos(-206, 63, -301),
+        new BlockPos(-342, 89, -221),
+        new BlockPos(-355, 86, -213),
+        new BlockPos(-372, 89, -242),
+        new BlockPos(-354, 73, -285),
+        new BlockPos(-317, 69, -273),
+        new BlockPos(-296, 37, -270),
+        new BlockPos(-275, 64, -272),
+        new BlockPos(-303, 71, -318),
+        new BlockPos(-311, 69, -251),
+        new BlockPos(-348, 65, -202),
+        new BlockPos(-328, 50, -238),
+        new BlockPos(-313, 58, -250),
+        new BlockPos(-300, 51, -254),
+        new BlockPos(-284, 49, -234),
+        new BlockPos(-300, 50, -218),
+        new BlockPos(-236, 51, -239),
+        new BlockPos(-183, 51, -252),
+        new BlockPos(-217, 58, -304),
+        new BlockPos(-272, 48, -291),
+        new BlockPos(-225, 70, -316),
+        new BlockPos(-254, 57, -279)
     };
     
     public static final Map<String, String> ENCHANTS = MapBuilder.stringHashMap()

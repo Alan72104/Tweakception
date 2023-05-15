@@ -120,7 +120,7 @@ public class TuningTweaks extends Tweak
     
     public TuningTweaks(Configuration configuration)
     {
-        super(configuration);
+        super(configuration, "TT");
         c = configuration.config.tuningTweaks;
     }
     
@@ -307,13 +307,13 @@ public class TuningTweaks extends Tweak
     public void toggleTemplate()
     {
         c.enableTemplates = !c.enableTemplates;
-        sendChat("TT: toggled templates " + c.enableTemplates);
+        sendChat("Toggled templates " + c.enableTemplates);
     }
     
     public void setTuningClickDelay(int ticks)
     {
         c.tuningClickDelayTicks = ticks > 0 ? Utils.clamp(ticks, 3, 10) :
             new TuningTweaksConfig().tuningClickDelayTicks;
-        sendChat("TT: set tuning click delay to " + c.tuningClickDelayTicks + " ticks");
+        sendChat("Set tuning click delay to " + c.tuningClickDelayTicks + " ticks");
     }
 }

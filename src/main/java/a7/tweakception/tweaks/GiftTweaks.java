@@ -92,7 +92,7 @@ public class GiftTweaks extends Tweak
     
     public GiftTweaks(Configuration configuration)
     {
-        super(configuration);
+        super(configuration, "Gift");
         c = configuration.config.giftTweaks;
     }
     
@@ -181,7 +181,7 @@ public class GiftTweaks extends Tweak
                 {
                     KeyBinding.setKeyBindState(getMc().gameSettings.keyBindUseItem.getKeyCode(),
                         false);
-                    sendChat("Gift: released use keybind because " + closePlayer.getName() + " came");
+                    sendChat("Released use keybind because " + closePlayer.getName() + " came");
                 }
             }
         }
@@ -482,20 +482,20 @@ public class GiftTweaks extends Tweak
     public void toggleGiftFeatures()
     {
         c.giftFeatures = !c.giftFeatures;
-        sendChat("Gift: toggled all gift features " + c.giftFeatures);
+        sendChat("Toggled all gift features " + c.giftFeatures);
         if (c.autoSetTargeting)
         {
             if (c.isRecipient)
             {
                 c.targetingDisableArmorStand = false;
                 c.targetingOnlyOpenableGift = c.giftFeatures;
-                sendChat("Gift: only targeting gift is " + c.giftFeatures);
+                sendChat("Only targeting gift is " + c.giftFeatures);
             }
             else
             {
                 c.targetingDisableArmorStand = c.giftFeatures;
                 c.targetingOnlyOpenableGift = false;
-                sendChat("Gift: disable armor stand targeting is " + c.giftFeatures);
+                sendChat("Disable armor stand targeting is " + c.giftFeatures);
             }
         }
     }
@@ -503,69 +503,69 @@ public class GiftTweaks extends Tweak
     public void toggleInvFeatures()
     {
         c.invFeatures = !c.invFeatures;
-        sendChat("Gift: toggled inv features " + c.invFeatures);
+        sendChat("Toggled inv features " + c.invFeatures);
     }
     
     public void setInvFeaturesMinDelay(int ticks)
     {
         c.invFeaturesMinDelay =
             ticks == -1 ? new GiftTweaksConfig().invFeaturesMinDelay : Utils.clamp(ticks, 0, 20);
-        sendChat("Gift: set inv features min delay ticks to " + c.invFeaturesMinDelay);
+        sendChat("Set inv features min delay ticks to " + c.invFeaturesMinDelay);
     }
     
     public void toggleAutoSwitchGiftSlot()
     {
         c.autoSwitchGiftSlot = !c.autoSwitchGiftSlot;
-        sendChat("Gift: toggled auto switch gift slot " + c.autoSwitchGiftSlot);
+        sendChat("Toggled auto switch gift slot " + c.autoSwitchGiftSlot);
     }
     
     public void toggleAutoReleaseRightClick()
     {
         c.autoReleaseRightClick = !c.autoReleaseRightClick;
-        sendChat("Gift: toggled auto release right click " + c.autoReleaseRightClick);
+        sendChat("Toggled auto release right click " + c.autoReleaseRightClick);
     }
     
     public void setAutoReleaseRightClickDistance(int blocks)
     {
         c.autoReleaseRightClickDistance = Utils.clamp(blocks, 5, 500);
-        sendChat("Gift: set the distance of a player needed to release right click to " + c.autoReleaseRightClickDistance);
+        sendChat("Set the distance of a player needed to release right click to " + c.autoReleaseRightClickDistance);
     }
     
     public void toggleDisableArmorStandTargeting()
     {
         c.targetingDisableArmorStand = !c.targetingDisableArmorStand;
-        sendChat("Gift: toggled disable armor stand targeting " + c.targetingDisableArmorStand);
+        sendChat("Toggled disable armor stand targeting " + c.targetingDisableArmorStand);
     }
     
     public void toggleTargetOnlyOpenableGift()
     {
         c.targetingOnlyOpenableGift = !c.targetingOnlyOpenableGift;
-        sendChat("Gift: toggled target only openable gifts " + c.targetingOnlyOpenableGift);
+        sendChat("Toggled target only openable gifts " + c.targetingOnlyOpenableGift);
     }
     
     public void toggleRecipient()
     {
         c.isRecipient = !c.isRecipient;
-        sendChat("Gift: toggled recipient " + c.isRecipient);
+        sendChat("Toggled recipient " + c.isRecipient);
     }
     
     public void toggleAutoSetTargeting()
     {
         c.autoSetTargeting = !c.autoSetTargeting;
-        sendChat("Gift: toggled auto set targeting " + c.autoSetTargeting);
+        sendChat("Toggled auto set targeting " + c.autoSetTargeting);
         if (c.giftFeatures && c.autoSetTargeting)
         {
             if (c.isRecipient)
             {
                 c.targetingDisableArmorStand = false;
                 c.targetingOnlyOpenableGift = true;
-                sendChat("Gift: gift features are on, enabled only targeting gift");
+                sendChat("Gift features are on, enabled only targeting gift");
             }
             else
             {
                 c.targetingDisableArmorStand = true;
                 c.targetingOnlyOpenableGift = false;
-                sendChat("Gift: gift features are on, disabled armor stand targeting");
+                sendChat("Gift features are on, disabled armor stand targeting");
             }
         }
     }
@@ -574,7 +574,7 @@ public class GiftTweaks extends Tweak
     {
         if (name == null || name.isEmpty())
         {
-            sendChat("Gift: printing list");
+            sendChat("Printing list");
             int i = 0;
             for (String n : c.autoReleaseRightClickWhitelist)
                 sendChat(++i + ": " + n);
@@ -585,19 +585,19 @@ public class GiftTweaks extends Tweak
         if (c.autoReleaseRightClickWhitelist.contains(name))
         {
             c.autoReleaseRightClickWhitelist.remove(name);
-            sendChat("Gift: removed " + name + " from whitelist");
+            sendChat("Removed " + name + " from whitelist");
         }
         else
         {
             c.autoReleaseRightClickWhitelist.add(name);
-            sendChat("Gift: added " + name + " to whitelist");
+            sendChat("Added " + name + " to whitelist");
         }
     }
     
     public void toggleWhiteGiftTracking()
     {
         trackWhiteGifts = !trackWhiteGifts;
-        sendChat("Gift: toggled white gift tracking " + trackWhiteGifts);
+        sendChat("Toggled white gift tracking " + trackWhiteGifts);
         whiteGifts.clear();
         whiteGiftsTemp.clear();
     }

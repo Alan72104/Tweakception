@@ -59,7 +59,7 @@ public class CrimsonTweaks extends Tweak
     
     public CrimsonTweaks(Configuration configuration)
     {
-        super(configuration);
+        super(configuration, "CT");
         c = configuration.config.crimsonTweaks;
     }
     
@@ -139,32 +139,32 @@ public class CrimsonTweaks extends Tweak
     public void toggleMap()
     {
         c.enableMap = !c.enableMap;
-        sendChat("CT-Map: toggled " + c.enableMap);
+        sendChat("Map: Toggled " + c.enableMap);
     }
     
     public void setMapPos(int x, int y)
     {
         c.mapPosX = x >= 0 ? x : new CrimsonTweaksConfig().mapPosX;
         c.mapPosY = y >= 0 ? y : new CrimsonTweaksConfig().mapPosY;
-        sendChat("CT-Map: set pos to " + c.mapPosX + ", " + c.mapPosY);
+        sendChat("Map: Set pos to " + c.mapPosX + ", " + c.mapPosY);
     }
     
     public void setMapScale(float scale)
     {
         c.mapScale = scale > 0.0f ? scale : new CrimsonTweaksConfig().mapScale;
-        sendChat("CT-Map: set scale to " + c.mapScale);
+        sendChat("Map: Set scale to " + c.mapScale);
     }
     
     public void setMapMarkerScale(float scale)
     {
         c.mapMarkerScale = scale > 0.0f ? scale : new CrimsonTweaksConfig().mapMarkerScale;
-        sendChat("CT-Map: set marker scale to " + c.mapMarkerScale);
+        sendChat("Map: Set marker scale to " + c.mapMarkerScale);
     }
     
     public void toggleSulfurHighlight()
     {
         c.highlightSulfur = !c.highlightSulfur;
-        sendChat("CT-SulfurHighlight: toggled " + c.highlightSulfur);
+        sendChat("SulfurHighlight: Toggled " + c.highlightSulfur);
         if (!c.highlightSulfur)
         {
             if (searchThread != null && !searchThread.done)

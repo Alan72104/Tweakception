@@ -36,7 +36,7 @@ public class FairyTracker extends Tweak
     
     public FairyTracker(Configuration configuration)
     {
-        super(configuration);
+        super(configuration, "Fairy");
         c = configuration.config.fairyTracker;
     }
     
@@ -67,8 +67,7 @@ public class FairyTracker extends Tweak
             PosMark pos = tryAdd((EntityArmorStand) event.entity, fairyTexture, fairySet);
             if (pos != null)
             {
-                sendChatf("Fairy: found new %d, %d, %d (count: %d)", pos.x, pos.y, pos.z, fairySet.size());
-                return;
+                sendChatf("Found new %d, %d, %d (count: %d)", pos.x, pos.y, pos.z, fairySet.size());
             }
         }
     }
@@ -135,13 +134,13 @@ public class FairyTracker extends Tweak
     public void toggle()
     {
         c.enabled = !c.enabled;
-        sendChat("Fairy: toggled " + c.enabled + ", count: " + fairySet.size());
+        sendChat("Toggled " + c.enabled + ", count: " + fairySet.size());
     }
     
     public void toggleTracking()
     {
         fairyTrackingEnabled = !fairyTrackingEnabled;
-        sendChat("Fairy: toggled tracking " + fairyTrackingEnabled);
+        sendChat("Toggled tracking " + fairyTrackingEnabled);
     }
     
     public void setNotFound()
@@ -158,12 +157,12 @@ public class FairyTracker extends Tweak
     
     public void count()
     {
-        sendChat("Fairy: count: " + fairySet.size());
+        sendChat("Count: " + fairySet.size());
     }
     
     public void list()
     {
-        sendChat("Fairy: printing list to console, count: " + fairySet.size());
+        sendChat("Printing list to console, count: " + fairySet.size());
         Tweakception.logger.info("Fairy: list start, count: " + fairySet.size());
         for (FairyTracker.PosI pos : fairySet)
             Tweakception.logger.info("Fairy: " + pos);
@@ -186,7 +185,7 @@ public class FairyTracker extends Tweak
         }
         Tweakception.logger.info(sb.toString());
         setClipboard(sb.toString());
-        sendChat("Fairy: copied dump to clipboard");
+        sendChat("Copied dump to clipboard");
         Tweakception.logger.info("Fairy: dumping finished");
     }
     
@@ -195,13 +194,13 @@ public class FairyTracker extends Tweak
         String data = getClipboard();
         if (data == null)
         {
-            sendChat("Fairy: clipboard is wrong or empty");
+            sendChat("Clipboard is wrong or empty");
             return;
         }
         String[] items = data.split(";");
         if (items.length == 0)
         {
-            sendChat("Fairy: clipboard is wrong or empty");
+            sendChat("Clipboard is wrong or empty");
             return;
         }
         ArrayList<PosMark> positions = new ArrayList<PosMark>();
@@ -210,7 +209,7 @@ public class FairyTracker extends Tweak
             String[] split = s.split("[@,]");
             if (split.length != 4)
             {
-                sendChat("Fairy: clipboard content is wrong");
+                sendChat("Clipboard content is wrong");
                 return;
             }
             PosMark pos = new PosMark(Integer.parseInt(split[1]), Integer.parseInt(split[2]), Integer.parseInt(split[3]));
@@ -219,7 +218,7 @@ public class FairyTracker extends Tweak
         }
         fairySet.clear();
         fairySet.addAll(positions);
-        sendChat("Fairy: imported " + fairySet.size() + " locations from clipboard");
+        sendChat("Imported " + fairySet.size() + " locations from clipboard");
     }
     
     private static class PosMark extends PosI

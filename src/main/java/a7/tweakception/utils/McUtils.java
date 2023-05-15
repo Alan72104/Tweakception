@@ -65,6 +65,12 @@ public class McUtils
         return getWorld() != null && getPlayer() != null;
     }
     
+    public static void sendChat(IChatComponent comp)
+    {
+        if (isInGame())
+            getPlayer().addChatMessage(comp);
+    }
+    
     public static void sendChat(String s)
     {
         if (isInGame())

@@ -17,10 +17,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 import static a7.tweakception.tweaks.GlobalTweaks.getTicks;
 import static a7.tweakception.utils.McUtils.*;
@@ -91,6 +88,7 @@ public class FishingTweaks extends Tweak
     
     public FishingTweaks(Configuration configuration)
     {
+        // TODO: chat prefix
         super(configuration);
         c = configuration.config.autoFish;
         Tweakception.overlayManager.addOverlay(new AutoFishOverlay());

@@ -75,7 +75,7 @@ public class AutoRunes extends Tweak
     
     public AutoRunes(Configuration configuration)
     {
-        super(configuration);
+        super(configuration, "AutoRunes");
         c = configuration.config.autoRunes;
     }
     

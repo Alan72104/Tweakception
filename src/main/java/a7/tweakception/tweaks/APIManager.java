@@ -46,6 +46,7 @@ public class APIManager extends Tweak
     
     public APIManager(Configuration configuration)
     {
+        // TODO: chat prefix
         super(configuration);
         c = configuration.config.apiManager;
     }

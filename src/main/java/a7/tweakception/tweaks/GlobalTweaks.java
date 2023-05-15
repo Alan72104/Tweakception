@@ -254,7 +254,7 @@ public class GlobalTweaks extends Tweak
     
     public GlobalTweaks(Configuration configuration)
     {
-        super(configuration);
+        super(configuration, "GT");
         c = configuration.config.globalTweaks;
         Tweakception.overlayManager.addOverlay(new PlayersInAreasDisplayOverlay());
         Tweakception.overlayManager.addOverlay(new PingOverlay());
@@ -283,7 +283,7 @@ public class GlobalTweaks extends Tweak
         {
             pingNanos = 0L;
             if (pingingFromCommand && isInGame())
-                sendChat("GT: ping exceeded 10 secs");
+                sendChat("Ping exceeded 10 secs");
         }
         
         if (!isInGame())
@@ -425,7 +425,7 @@ public class GlobalTweaks extends Tweak
                             {
                                 trevorQuestPendingStart = false;
                                 getMc().playerController.windowClick(getPlayer().openContainer.windowId, i, 0, 0, getPlayer());
-                                sendChat("GT-Trevor: quest started");
+                                sendChat("Trevor: Quest started");
                                 break;
                             }
                         }
@@ -438,7 +438,7 @@ public class GlobalTweaks extends Tweak
                     
                     if (elapsed >= 20 * 60 * 10 && trevorQuestOngoing)
                     {
-                        sendChat("GT-Trevor: quest timed out");
+                        sendChat("Trevor: Quest timed out");
                         trevorQuestStartTicks = 0;
                         trevorQuestOngoing = false;
                     }
@@ -448,7 +448,7 @@ public class GlobalTweaks extends Tweak
                         if (!trevorQuestCooldownNoticed)
                         {
                             trevorQuestCooldownNoticed = true;
-                            sendChat("GT-Trevor: quest cooldown elapsed");
+                            sendChat("Trevor: Quest cooldown elapsed");
                         }
                         
                         if (c.trevorQuestAutoStart && !trevorQuestOngoing)
@@ -529,12 +529,12 @@ public class GlobalTweaks extends Tweak
             {
                 if (getTicks() - snipeLastTpTicks >= 20 * 10)
                 {
-                    sendChat("GT-Snipe: timeout");
+                    sendChat("Snipe: Timeout");
                     snipeStop();
                 }
                 else if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) && Keyboard.isKeyDown(Keyboard.KEY_X))
                 {
-                    sendChat("GT-Snipe: cancelled with Lctrl+X");
+                    sendChat("Snipe: Cancelled with Lctrl+X");
                     snipeStop();
                 }
                 else if (!snipeWarping)
@@ -550,10 +550,10 @@ public class GlobalTweaks extends Tweak
                             {
                                 if (name.equalsIgnoreCase(snipePlayerName))
                                 {
-                                    sendChat("GT-Snipe: sniped player: " + snipePlayerName + ", times warped: " + snipeTimesWarped);
+                                    sendChat("Snipe: Sniped player: " + snipePlayerName + ", times warped: " + snipeTimesWarped);
                                     if (!playersToHighlight.contains(snipePlayerName))
                                     {
-                                        sendChat("GT-Snipe: also highlighting them");
+                                        sendChat("Snipe: Also highlighting them");
                                         setPlayerToHighlight(snipePlayerName);
                                     }
                                     found = true;
@@ -565,7 +565,7 @@ public class GlobalTweaks extends Tweak
                             if (!found && getTicks() - getWorldJoinTicks() >= c.snipeWarpDelayTicks)
                             {
                                 String transferIsland = snipeWarpCmd.equals("hub") ? "dhub" : "hub";
-                                sendChat("GT-Snipe: full player list detected and player not found, warping to " + transferIsland);
+                                sendChat("Snipe: Full player list detected and player not found, warping to " + transferIsland);
                                 McUtils.executeCommand("/warp " + transferIsland);
                                 snipeWarping = true;
                                 snipeWaitingAtHub = true;
@@ -576,7 +576,7 @@ public class GlobalTweaks extends Tweak
                     else if (getTicks() - getWorldJoinTicks() >= c.snipeWarpDelayTicks) // Going to hub
                     {
                         snipeTimesWarped++;
-                        sendChat("GT-Snipe: warping using: /" + snipeWarpCmd + ", times warped: " + snipeTimesWarped);
+                        sendChat("Snipe: Warping using: /" + snipeWarpCmd + ", times warped: " + snipeTimesWarped);
                         McUtils.executeCommand("/" + snipeWarpCmd);
                         snipeWarping = true;
                         snipeWaitingAtHub = false;
@@ -606,7 +606,7 @@ public class GlobalTweaks extends Tweak
                         !(name.equalsIgnoreCase(getPlayer().getName()) || c.strangerWhitelist.contains(name)))
                 )
                 {
-                    sendChat("GT-HideFromStrangers: evacuating to private island...");
+                    sendChat("HideFromStrangers: Evacuating to private island...");
                     getPlayer().sendChatMessage("/is");
                     hideFromStrangersLastWarpTicks = getTicks();
                 }
@@ -710,7 +710,7 @@ public class GlobalTweaks extends Tweak
                             if (stack != null && stack.getItem() == Item.getItemFromBlock(Blocks.wool))
                             {
                                 getMc().displayGuiScreen(null);
-                                sendChat("GT-AutoHarp: Closed harp (non perfect)");
+                                sendChat("AutoHarp: Closed harp (non perfect)");
                                 break;
                             }
                         }
@@ -1207,6 +1207,10 @@ public class GlobalTweaks extends Tweak
             {
                 c.lastOnlineStatus = "offline";
             }
+            else if (msg.startsWith("Your new API key is "))
+            {
+                Tweakception.apiManager.setApiKey(msg.split("Your new API key is ")[1]);
+            }
             else if (c.autoGuildWelcome && ((msg = McUtils.cleanColor(msg)) != null) &&
                 msg.startsWith("Guild > ") && msg.endsWith(" joined."))
             {
@@ -1275,7 +1279,7 @@ public class GlobalTweaks extends Tweak
             if (msg.endsWith(" Bits from Cookie Buff!") && getTicks() - lastBitsMsgTicks >= 20 * 3)
             {
                 lastBitsMsgTicks = getTicks();
-                sendChat(msg);
+                McUtils.sendChat(msg);
             }
             else if (c.sendSkyblockLevelExpGainMessage &&
                 skyblockLevelExpGainMatcher.reset(msg).find() &&
@@ -1284,7 +1288,7 @@ public class GlobalTweaks extends Tweak
             {
                 lastSkyblockLevelExpGainMsg = skyblockLevelExpGainMatcher.group(0);
                 lastSkyblockLevelExpGainTicks = getTicks();
-                sendChat(lastSkyblockLevelExpGainMsg);
+                McUtils.sendChat(lastSkyblockLevelExpGainMsg);
             }
         }
     }
@@ -1295,7 +1299,7 @@ public class GlobalTweaks extends Tweak
     
     public void printIsland()
     {
-        sendChatf("GT: Server: \"%s\", Location: \"%s\", §rArea: \"%s\"",
+        sendChatf("Server: \"%s\", Location: \"%s\", §rArea: \"%s\"",
             currentServerType,
             currentLocationRaw,
             currentIsland == null ? "" : currentIsland.name);
@@ -1360,7 +1364,7 @@ public class GlobalTweaks extends Tweak
                         currentServerType = cleaned.substring(cleaned.indexOf(' ') + 1);
                         currentIsland = ISLAND_NAME_TO_ISLAND_MAP.get(currentServerType);
                         if (DevSettings.printLocationChange && !prevServerType.equals(currentServerType))
-                            sendChatf("GT: Server type changed from \"%s\" to \"%s\"", prevServerType, currentServerType);
+                            sendChatf("Server type changed from \"%s\" to \"%s\"", prevServerType, currentServerType);
                         break;
                     }
                 }
@@ -1388,7 +1392,7 @@ public class GlobalTweaks extends Tweak
                 currentLocationRawCleaned = line;
                 
                 if (DevSettings.printLocationChange && !prevLocationRaw.equals(currentLocationRaw))
-                    sendChatf("GT: Location changed from \"%s§r\" to \"%s§r\"", prevLocationRaw, currentLocationRaw);
+                    sendChatf("Location changed from \"%s§r\" to \"%s§r\"", prevLocationRaw, currentLocationRaw);
                 break;
             }
         }
@@ -1477,7 +1481,7 @@ public class GlobalTweaks extends Tweak
             catch (IOException e)
             {
                 e.printStackTrace();
-                sendChat("GT: exception occurred when creating file");
+                sendChat("Exception occurred when creating file");
             }
             
             if (file != null)
@@ -1489,14 +1493,14 @@ public class GlobalTweaks extends Tweak
                 catch (Exception e)
                 {
                     e.printStackTrace();
-                    sendChat("GT: exception occurred when opening file");
+                    sendChat("Exception occurred when opening file");
                 }
             }
         }
         else
         {
             Utils.setClipboard(string);
-            sendChat("GT: copied item " + type + " to clipboard");
+            sendChat("Copied item " + type + " to clipboard");
         }
     }
     
@@ -1538,7 +1542,7 @@ public class GlobalTweaks extends Tweak
         {
             overridenIslandDetection = false;
             islandUpdatedThisTick = false;
-            sendChat("GT: toggle island override off");
+            sendChat("Toggle island override off");
         }
         else
         {
@@ -1553,10 +1557,10 @@ public class GlobalTweaks extends Tweak
                     currentLocationRaw = " §7⏣ §cThe Waste⚽§cland";
                     currentLocationRawCleaned = " ⏣ The Wasteland";
                     islandUpdatedThisTick = true;
-                    sendChat("GT: overrode current island with " + island.name);
+                    sendChat("Overrode current island with " + island.name);
                     return;
                 }
-            sendChat("GT: cannot find island in implemented island list");
+            sendChat("Cannot find island in implemented island list");
         }
     }
     
@@ -1826,7 +1830,7 @@ public class GlobalTweaks extends Tweak
             if (isInGame() && pingingFromCommand)
             {
                 pingingFromCommand = false;
-                sendChat("GT: ping = " + ping + " ms");
+                sendChat("Ping = " + ping + " ms");
             }
         }
     }
@@ -1882,7 +1886,7 @@ public class GlobalTweaks extends Tweak
         int slot = Utils.findInHotbarById(id -> id.startsWith("ABIPHONE_"));
         if (slot != -1)
         {
-            sendChat("GT-Trevor: starting from abiphone");
+            sendChat("Trevor: Starting from abiphone");
             getPlayer().inventory.currentItem = slot;
             ((AccessorMinecraft) getMc()).rightClickMouse();
             trevorQuestPendingStart = true;
@@ -1890,7 +1894,7 @@ public class GlobalTweaks extends Tweak
         }
         else
         {
-            sendChat("GT-Trevor: can't find abiphone in hotbar");
+            sendChat("Trevor: Can't find abiphone in hotbar");
         }
     }
     
@@ -2220,58 +2224,58 @@ public class GlobalTweaks extends Tweak
     public void copyLocation()
     {
         Utils.setClipboard(currentLocationRaw);
-        sendChat("GT: copied raw location line to clipboard (" + currentLocationRaw + "§r)");
+        sendChat("Copied raw location line to clipboard (" + currentLocationRaw + "§r)");
     }
     
     public void toggleDevMode()
     {
         c.devMode = !c.devMode;
-        sendChat("GT: toggled dev mode " + c.devMode);
+        sendChat("Toggled dev mode " + c.devMode);
     }
     
     public void rightCtrlCopySet(String type)
     {
         c.rightCtrlCopyType = type;
-        sendChat("GT-RightCtrlCopy: set to " + c.rightCtrlCopyType);
+        sendChat("RightCtrlCopy: Set to " + c.rightCtrlCopyType);
     }
     
     public void toggleHighlightShinyPigs()
     {
         c.highlightShinyPigs = !c.highlightShinyPigs;
-        sendChat("GT-HighlightShinyPigs: toggled " + c.highlightShinyPigs);
+        sendChat("HighlightShinyPigs: Toggled " + c.highlightShinyPigs);
     }
     
     public void setHighlightShinyPigsName(String name)
     {
         c.shinyPigName = name;
         if (name.equals(""))
-            sendChat("GT-HighlightShinyPigs: removed name");
+            sendChat("HighlightShinyPigs: Removed name");
         else
-            sendChat("GT-HighlightShinyPigs: set name to " + name);
+            sendChat("HighlightShinyPigs: Ret name to " + name);
     }
     
     public void toggleHidePlayers()
     {
         c.hidePlayers = !c.hidePlayers;
-        sendChat("GT-HidePlayers: toggled " + c.hidePlayers);
+        sendChat("HidePlayers: Toggled " + c.hidePlayers);
     }
     
     public void toggleEnterToCloseNumberTypingSign()
     {
         c.enterToCloseNumberTypingSign = !c.enterToCloseNumberTypingSign;
-        sendChat("GT-EnterToCloseNumberTypingSign: toggled " + c.enterToCloseNumberTypingSign);
+        sendChat("EnterToCloseNumberTypingSign: Toggled " + c.enterToCloseNumberTypingSign);
     }
     
     public void toggleRenderInvisibleEntities()
     {
         c.renderInvisibleEntities = !c.renderInvisibleEntities;
-        sendChat("GT-RenderInvisibleEntities: toggled " + c.renderInvisibleEntities);
+        sendChat("RenderInvisibleEntities: Toggled " + c.renderInvisibleEntities);
     }
     
     public void toggleRenderInvisibleArmorStands()
     {
         c.renderInvisibleArmorStands = !c.renderInvisibleArmorStands;
-        sendChat("GT-RenderInvisibleArmorStands: toggled " + c.renderInvisibleArmorStands);
+        sendChat("RenderInvisibleArmorStands: Toggled " + c.renderInvisibleArmorStands);
     }
     
     public void setInvisibleEntityAlphaPercentage(int p)
@@ -2280,26 +2284,26 @@ public class GlobalTweaks extends Tweak
             c.invisibleEntityAlphaPercentage = 15;
         else
             c.invisibleEntityAlphaPercentage = p;
-        sendChat("GT-RenderInvisibleEntities: set alpha percentage to " + c.invisibleEntityAlphaPercentage);
+        sendChat("RenderInvisibleEntities: Set alpha percentage to " + c.invisibleEntityAlphaPercentage);
     }
     
     public void toggleSkipWorldRendering()
     {
         c.skipWorldRendering = !c.skipWorldRendering;
-        sendChat("GT-SkipWorldRendering: toggled " + c.skipWorldRendering);
+        sendChat("SkipWorldRendering: Toggled " + c.skipWorldRendering);
     }
     
     public void toggleBlockQuickCraft()
     {
         c.blockQuickCraft = !c.blockQuickCraft;
-        sendChat("GT-BlockQuickCraft: toggled " + c.blockQuickCraft);
+        sendChat("BlockQuickCraft: Toggled " + c.blockQuickCraft);
     }
     
     public void removeBlockQuickCraftWhitelist(int i)
     {
         if (i < 1)
         {
-            sendChat("GT-BlockQuickCraft: there are " + c.quickCraftWhitelist.size() + " whitelisted IDs");
+            sendChat("BlockQuickCraft: There are " + c.quickCraftWhitelist.size() + " whitelisted IDs");
             int ii = 1;
             for (String id : c.quickCraftWhitelist)
                 sendChat(ii++ + ": " + id);
@@ -2307,12 +2311,12 @@ public class GlobalTweaks extends Tweak
         else
         {
             if (i > c.quickCraftWhitelist.size())
-                sendChat("GT-BlockQuickCraft: index is out of bounds!");
+                sendChat("BlockQuickCraft: Index is out of bounds!");
             else
             {
                 String id = c.quickCraftWhitelist.toArray(new String[0])[i - 1];
                 c.quickCraftWhitelist.remove(id);
-                sendChat("GT-BlockQuickCraft: removed " + id);
+                sendChat("BlockQuickCraft: Removed " + id);
             }
         }
     }
@@ -2350,7 +2354,7 @@ public class GlobalTweaks extends Tweak
                 break;
         }
         
-        sendChat("ST: there are " + entities.size() + " players in the " + areaName + " area");
+        sendChat("There are " + entities.size() + " players in the " + areaName + " area");
         for (int i = 0; i < entities.size(); i++)
             sendChat((i + 1) + ": " + entities.get(i).getDisplayName());
     }
@@ -2358,14 +2362,14 @@ public class GlobalTweaks extends Tweak
     public void toggleAreaEdit()
     {
         editingAreas = !editingAreas;
-        sendChat("GT-AreaEdit: toggled " + editingAreas);
+        sendChat("AreaEdit: Toggled " + editingAreas);
         if (editingAreas)
         {
-            sendChat("GT-AreaEdit: tool = stick");
-            sendChat("GT-AreaEdit: left click to extend point");
-            sendChat("GT-AreaEdit: right click to retract point");
-            sendChat("GT-AreaEdit: right click block to set point");
-            sendChat("GT-AreaEdit: ctrl right click to switch points");
+            sendChat("AreaEdit: Tool = stick");
+            sendChat("AreaEdit: Left click to extend point");
+            sendChat("AreaEdit: Right click to retract point");
+            sendChat("AreaEdit: Right click block to set point");
+            sendChat("AreaEdit: Ctrl right click to switch points");
             areaPoints = new BlockPos[2];
             areaPoints[0] = getPlayer().getPosition();
             areaPoints[1] = getPlayer().getPosition().add(1, 1, 1);
@@ -2373,7 +2377,7 @@ public class GlobalTweaks extends Tweak
         }
         else
         {
-            sendChatf("GT-AreaEdit: last area: (%d,%d,%d),(%d,%d,%d)",
+            sendChatf("AreaEdit: Last area: (%d,%d,%d),(%d,%d,%d)",
                 areaPoints[0].getX(), areaPoints[0].getY(), areaPoints[0].getZ(),
                 areaPoints[1].getX(), areaPoints[1].getY(), areaPoints[1].getZ());
             areaPoints = null;
@@ -2384,7 +2388,7 @@ public class GlobalTweaks extends Tweak
     {
         if (editingAreas)
         {
-            sendChatf("GT-AreaEdit: reset area, last: (%d,%d,%d),(%d,%d,%d)",
+            sendChatf("AreaEdit: Reset area, last: (%d,%d,%d),(%d,%d,%d)",
                 areaPoints[0].getX(), areaPoints[0].getY(), areaPoints[0].getZ(),
                 areaPoints[1].getX(), areaPoints[1].getY(), areaPoints[1].getZ());
             areaPoints = new BlockPos[2];
@@ -2392,7 +2396,7 @@ public class GlobalTweaks extends Tweak
             areaPoints[1] = getPlayer().getPosition().add(1, 1, 1);
         }
         else
-            sendChat("GT-AreaEdit: feature is off");
+            sendChat("AreaEdit: Feature is off");
     }
     
     public void setAreaPoint(int i, int x, int y, int z)
@@ -2402,57 +2406,57 @@ public class GlobalTweaks extends Tweak
             if (i == 0)
             {
                 areaPoints[0] = new BlockPos(x, y, z);
-                sendChatf("GT-AreaEdit: set point 1 to %d, %d, %d", x, y, z);
+                sendChatf("AreaEdit: Set point 1 to %d, %d, %d", x, y, z);
             }
             else
             {
                 areaPoints[1] = new BlockPos(x, y, z);
-                sendChatf("GT-AreaEdit: set point 2 to %d, %d, %d", x, y, z);
+                sendChatf("AreaEdit: Set point 2 to %d, %d, %d", x, y, z);
             }
         }
         else
-            sendChat("GT-AreaEdit: feature is off");
+            sendChat("AreaEdit: Feature is off");
     }
     
     public void printArea()
     {
         if (editingAreas)
         {
-            sendChatf("GT-AreaEdit: current area: (%d,%d,%d),(%d,%d,%d)",
+            sendChatf("AreaEdit: Current area: (%d,%d,%d),(%d,%d,%d)",
                 areaPoints[0].getX(), areaPoints[0].getY(), areaPoints[0].getZ(),
                 areaPoints[1].getX(), areaPoints[1].getY(), areaPoints[1].getZ());
-            sendChat("GT-AreaEdit: copied to clipboard");
+            sendChat("AreaEdit: Copied to clipboard");
             Utils.setClipboard(f("%d, %d, %d, %d, %d, %d",
                 areaPoints[0].getX(), areaPoints[0].getY(), areaPoints[0].getZ(),
                 areaPoints[1].getX(), areaPoints[1].getY(), areaPoints[1].getZ()));
         }
         else
-            sendChat("GT-AreaEdit: feature is off");
+            sendChat("AreaEdit: Feature is off");
     }
     
     public void toggleDrawSelectedEntityOutline()
     {
         c.drawSelectedEntityOutline = !c.drawSelectedEntityOutline;
-        sendChat("GT-DrawSelectedEntityOutline: toggled " + c.drawSelectedEntityOutline);
+        sendChat("DrawSelectedEntityOutline: Toggled " + c.drawSelectedEntityOutline);
     }
     
     public void setSelectedEntityOutlineWidth(float w)
     {
         c.selectedEntityOutlineWidth = w > 0.0f ? w : new GlobalTweaksConfig().selectedEntityOutlineWidth;
-        sendChat("GT-DrawSelectedEntityOutline: set width to " + c.selectedEntityOutlineWidth);
+        sendChat("DrawSelectedEntityOutline: Set width to " + c.selectedEntityOutlineWidth);
     }
     
     public void setSelectedEntityOutlineColor(int r, int g, int b, int a)
     {
         c.selectedEntityOutlineColor = r < 0 ? new GlobalTweaksConfig().selectedEntityOutlineColor
             : Utils.makeColorArray(r, g, b, a);
-        sendChat("GT-DrawSelectedEntityOutline: set color to " + Arrays.toString(c.selectedEntityOutlineColor));
+        sendChat("DrawSelectedEntityOutline: Set color to " + Arrays.toString(c.selectedEntityOutlineColor));
     }
     
     public void togglePlayersInAreasDisplay()
     {
         c.displayPlayersInArea = !c.displayPlayersInArea;
-        sendChat("GT-PlayersInAreasDisplay: toggled " + c.displayPlayersInArea);
+        sendChat("PlayersInAreasDisplay: Toggled " + c.displayPlayersInArea);
         if (c.displayPlayersInArea)
             Tweakception.overlayManager.enable(PlayersInAreasDisplayOverlay.NAME);
         else
@@ -2465,16 +2469,16 @@ public class GlobalTweaks extends Tweak
     public void pingServer()
     {
         if (c.enablePingOverlay)
-            sendChat("GT: you have overlay on!");
+            sendChat("You have overlay on!");
         else
         {
             if (pingNanos != 0L)
-                sendChat("GT: still pinging");
+                sendChat("Still pinging");
             else
             {
                 pingingFromCommand = true;
                 pingSend();
-                sendChat("GT: pinging");
+                sendChat("Pinging");
             }
         }
     }
@@ -2483,7 +2487,7 @@ public class GlobalTweaks extends Tweak
     {
         c.enablePingOverlay = !c.enablePingOverlay;
         Tweakception.overlayManager.setEnable(PingOverlay.NAME, c.enablePingOverlay);
-        sendChat("GT: toggled ping overlay " + c.enablePingOverlay);
+        sendChat("Toggled ping overlay " + c.enablePingOverlay);
     }
     
     public void toggleLogPacket()
@@ -2505,55 +2509,55 @@ public class GlobalTweaks extends Tweak
     {
         c.enableChampionOverlay = !c.enableChampionOverlay;
         Tweakception.overlayManager.setEnable(ChampionOverlay.NAME, c.enableChampionOverlay);
-        sendChat("GT-ChampionOverlay: toggled " + c.enableChampionOverlay);
+        sendChat("ChampionOverlay: Toggled " + c.enableChampionOverlay);
     }
     
     public void setChampionOverlayIncrementResetDuration(int d)
     {
         c.championExpIncrementResetDuration =
             d > 0 ? d : new GlobalTweaksConfig().championExpIncrementResetDuration;
-        sendChat("FT-ChampionOverlay: set increment reset time to " + c.championExpIncrementResetDuration);
+        sendChat("ChampionOverlay: Set increment reset time to " + c.championExpIncrementResetDuration);
     }
     
     public void toggleDisableTooltips()
     {
         c.disableTooltips = !c.disableTooltips;
-        sendChat("GT-DisableTooltips: toggled " + c.disableTooltips);
+        sendChat("DisableTooltips: Toggled " + c.disableTooltips);
     }
     
     public void toggleRenderEnchantedBooksType()
     {
         c.renderEnchantedBooksType = !c.renderEnchantedBooksType;
-        sendChat("GT-RenderEnchantedBooksType: toggled " + c.renderEnchantedBooksType);
+        sendChat("RenderEnchantedBooksType: Toggled " + c.renderEnchantedBooksType);
     }
     
     public void toggleRenderSacksType()
     {
         c.renderSacksType = !c.renderSacksType;
-        sendChat("GT-RenderSacksType: toggled " + c.renderSacksType);
+        sendChat("RenderSacksType: Toggled " + c.renderSacksType);
     }
     
     public void toggleRenderPotionTier()
     {
         c.renderPotionTier = !c.renderPotionTier;
-        sendChat("GT-RenderPotionTier: toggled " + c.renderPotionTier);
+        sendChat("RenderPotionTier: Toggled " + c.renderPotionTier);
     }
     
     public void toggleMinionAutoClaim()
     {
         minionAutoClaim = !minionAutoClaim;
-        sendChat("GT-MinionAutoClaim: toggled " + minionAutoClaim);
+        sendChat("MinionAutoClaim: Toggled " + minionAutoClaim);
     }
     
     public void addMinionAutoClaimWhitelist(String id)
     {
         if (id.isEmpty())
-            sendChat("GT-MinionAutoClaim: give id ");
+            sendChat("MinionAutoClaim: Give id ");
         else
         {
             id = id.toUpperCase();
             c.minionAutoClaimWhitelist.add(id);
-            sendChat("GT-MinionAutoClaim: added " + id);
+            sendChat("MinionAutoClaim: Added " + id);
         }
     }
     
@@ -2561,7 +2565,7 @@ public class GlobalTweaks extends Tweak
     {
         if (i < 1)
         {
-            sendChat("GT-MinionAutoClaim: there are " + c.minionAutoClaimWhitelist.size() + " whitelisted IDs");
+            sendChat("MinionAutoClaim: There are " + c.minionAutoClaimWhitelist.size() + " whitelisted IDs");
             int ii = 1;
             for (String id : c.minionAutoClaimWhitelist)
                 sendChat(ii++ + ": " + id);
@@ -2569,12 +2573,12 @@ public class GlobalTweaks extends Tweak
         else
         {
             if (i > c.minionAutoClaimWhitelist.size())
-                sendChat("GT-MinionAutoClaim: index is out of bounds!");
+                sendChat("MinionAutoClaim: Index is out of bounds!");
             else
             {
                 String id = c.minionAutoClaimWhitelist.toArray(new String[0])[i - 1];
                 c.minionAutoClaimWhitelist.remove(id);
-                sendChat("GT-MinionAutoClaim: removed " + id);
+                sendChat("MinionAutoClaim: Removed " + id);
             }
         }
     }
@@ -2583,19 +2587,19 @@ public class GlobalTweaks extends Tweak
     {
         i = Utils.clamp(i, 1, 20);
         c.minionAutoclaimDelayTicksMin = i;
-        sendChat("GT-MinionAutoClaim: set min delay ticks to " + i);
+        sendChat("MinionAutoClaim: Set min delay ticks to " + i);
     }
     
     public void toggleTooltipDisplayId()
     {
         c.tooltipDisplaySkyblockItemId = !c.tooltipDisplaySkyblockItemId;
-        sendChat("GT-TooltipDisplayItemId: toggled " + c.tooltipDisplaySkyblockItemId);
+        sendChat("TooltipDisplayItemId: Toggled " + c.tooltipDisplaySkyblockItemId);
     }
     
     public void toggleHighlightPlayers()
     {
         highlightPlayers = !highlightPlayers;
-        sendChat("GT-HighlightPlayers: toggled " + highlightPlayers);
+        sendChat("HighlightPlayers: Toggled " + highlightPlayers);
     }
     
     public void setPlayerToHighlight(String name)
@@ -2603,7 +2607,7 @@ public class GlobalTweaks extends Tweak
         if (name.equals(""))
         {
             playersToHighlight.clear();
-            sendChat("GT-HighlightPlayer: cleared list");
+            sendChat("HighlightPlayer: Cleared list");
         }
         else
         {
@@ -2611,12 +2615,12 @@ public class GlobalTweaks extends Tweak
             if (playersToHighlight.contains(name))
             {
                 playersToHighlight.remove(name);
-                sendChat("GT-HighlightPlayer: removed " + name);
+                sendChat("HighlightPlayer: Removed " + name);
             }
             else
             {
                 playersToHighlight.add(name);
-                sendChat("GT-HighlightPlayer: added " + name);
+                sendChat("HighlightPlayer: Added " + name);
             }
         }
     }
@@ -2626,7 +2630,7 @@ public class GlobalTweaks extends Tweak
         if (name.equals(""))
         {
             armorStandsToHighlight.clear();
-            sendChat("GT-HighlightArmorStand: cleared list");
+            sendChat("HighlightArmorStand: Cleared list");
         }
         else
         {
@@ -2634,12 +2638,12 @@ public class GlobalTweaks extends Tweak
             if (armorStandsToHighlight.contains(name))
             {
                 armorStandsToHighlight.remove(name);
-                sendChat("GT-HighlightArmorStand: removed " + name);
+                sendChat("HighlightArmorStand: Removed " + name);
             }
             else
             {
                 armorStandsToHighlight.add(name);
-                sendChat("GT-HighlightArmorStand: added " + name);
+                sendChat("HighlightArmorStand: Added " + name);
             }
         }
     }
@@ -2648,19 +2652,19 @@ public class GlobalTweaks extends Tweak
     {
         c.enableOnlineStatusOverlay = !c.enableOnlineStatusOverlay;
         Tweakception.overlayManager.setEnable(OnlineStatusOverlay.NAME, c.enableOnlineStatusOverlay);
-        sendChat("GT-OnlineStatusOverlay: toggled " + c.enableOnlineStatusOverlay);
+        sendChat("OnlineStatusOverlay: Toggled " + c.enableOnlineStatusOverlay);
     }
     
     public void toggleOnlineStatusOverlayShowAlreadyOn()
     {
         c.showOnlineStatusAlreadyOn = !c.showOnlineStatusAlreadyOn;
-        sendChat("GT-OnlineStatusOverlay: toggled show already on " + c.showOnlineStatusAlreadyOn);
+        sendChat("OnlineStatusOverlay: Toggled show already on " + c.showOnlineStatusAlreadyOn);
     }
     
     public void toggleTrevorAnimalHighlight()
     {
         c.trevorHighlightAnimal = !c.trevorHighlightAnimal;
-        sendChat("GT-Trevor: toggled highlight " + c.trevorHighlightAnimal);
+        sendChat("Trevor: Toggled highlight " + c.trevorHighlightAnimal);
         trevorQuestStartTicks = 0;
         Tweakception.overlayManager.setEnable(TrevorOverlay.NAME,
             c.trevorHighlightAnimal || c.trevorQuestAutoAccept || c.trevorQuestAutoStart);
@@ -2669,7 +2673,7 @@ public class GlobalTweaks extends Tweak
     public void toggleTrevorQuestAutoAccept()
     {
         c.trevorQuestAutoAccept = !c.trevorQuestAutoAccept;
-        sendChat("GT-Trevor: toggled auto accept " + c.trevorQuestAutoAccept);
+        sendChat("Trevor: Toggled auto accept " + c.trevorQuestAutoAccept);
         Tweakception.overlayManager.setEnable(TrevorOverlay.NAME,
             c.trevorHighlightAnimal || c.trevorQuestAutoAccept || c.trevorQuestAutoStart);
     }
@@ -2677,7 +2681,7 @@ public class GlobalTweaks extends Tweak
     public void toggleTrevorQuestAutoStart()
     {
         c.trevorQuestAutoStart = !c.trevorQuestAutoStart;
-        sendChat("GT-Trevor: toggled auto start and auto accept " + c.trevorQuestAutoStart);
+        sendChat("Trevor: Toggled auto start and auto accept " + c.trevorQuestAutoStart);
         c.trevorQuestAutoAccept = c.trevorQuestAutoStart;
         Tweakception.overlayManager.setEnable(TrevorOverlay.NAME,
             c.trevorHighlightAnimal || c.trevorQuestAutoAccept);
@@ -2686,7 +2690,7 @@ public class GlobalTweaks extends Tweak
     public void toggleHighlightSkulls()
     {
         highlightSkulls = !highlightSkulls;
-        sendChat("GT-HighlightSkulls: toggled " + highlightSkulls);
+        sendChat("HighlightSkulls: Toggled " + highlightSkulls);
         if (!highlightSkulls)
         {
             if (skullsSearchThread != null && !skullsSearchThread.done)
@@ -2698,31 +2702,31 @@ public class GlobalTweaks extends Tweak
     public void toggleSendBitsMessage()
     {
         c.sendBitsMessage = !c.sendBitsMessage;
-        sendChat("GT-SendBitsMessage: toggled " + c.sendBitsMessage);
+        sendChat("SendBitsMessage: Toggled " + c.sendBitsMessage);
     }
     
     public void toggleDisableArmorStandTargeting()
     {
         c.targetingDisableArmorStand = !c.targetingDisableArmorStand;
-        sendChat("GT-DisableArmorStandTargeting: toggled " + c.targetingDisableArmorStand);
+        sendChat("DisableArmorStandTargeting: Toggled " + c.targetingDisableArmorStand);
     }
     
     public void toggleDisableBatTargeting()
     {
         c.targetingDisableBat = !c.targetingDisableBat;
-        sendChat("GT-DisableBatTargeting: toggled " + c.targetingDisableBat);
+        sendChat("DisableBatTargeting: Toggled " + c.targetingDisableBat);
     }
     
     public void toggleDisableDeadMobTargeting()
     {
         c.targetingDisableDeadMob = !c.targetingDisableDeadMob;
-        sendChat("GT-DisableDeadMobTargeting: toggled " + c.targetingDisableDeadMob);
+        sendChat("DisableDeadMobTargeting: Toggled " + c.targetingDisableDeadMob);
     }
     
     public void toggleDisablePlayerTargeting()
     {
         c.targetingDisablePlayer = !c.targetingDisablePlayer;
-        sendChat("GT-DisablePlayerTargeting: toggled " + c.targetingDisablePlayer);
+        sendChat("DisablePlayerTargeting: Toggled " + c.targetingDisablePlayer);
     }
     
     public void resetTargeting()
@@ -2732,13 +2736,13 @@ public class GlobalTweaks extends Tweak
         c.targetingDisableBat = newConfig.targetingDisableBat;
         c.targetingDisableDeadMob = newConfig.targetingDisableDeadMob;
         c.targetingDisablePlayer = newConfig.targetingDisablePlayer;
-        sendChat("GT: reset all targeting options");
+        sendChat("Reset all targeting options");
     }
     
     public void toggleAfkMode()
     {
         c.afkMode = !c.afkMode;
-        sendChat("GT-AfkMode: toggled " + c.afkMode);
+        sendChat("AfkMode: Toggled " + c.afkMode);
     }
     
     public void setAfkFpsLimit(int i)
@@ -2746,62 +2750,62 @@ public class GlobalTweaks extends Tweak
         if (i == 0)
             i = new GlobalTweaksConfig().afkFpsLimit;
         c.afkFpsLimit = Utils.clamp(i, 5, 120);
-        sendChat("GT-AfkMode: set fps limit to " + c.afkFpsLimit);
+        sendChat("AfkMode: Set fps limit to " + c.afkFpsLimit);
     }
     
     public void toggleAfkOnlyUnfocused()
     {
         c.afkOnlyUnfocused = !c.afkOnlyUnfocused;
-        sendChat("GT-AfkMode: toggled only when unfocused " + c.afkOnlyUnfocused);
+        sendChat("AfkMode: Toggled only when unfocused " + c.afkOnlyUnfocused);
     }
     
     public void toggleAfkSkipWorldRendering()
     {
         c.afkSkipWorldRendering = !c.afkSkipWorldRendering;
-        sendChat("GT-AfkMode: toggled skip world rendering " + c.afkSkipWorldRendering);
+        sendChat("AfkMode: Toggled skip world rendering " + c.afkSkipWorldRendering);
     }
     
     public void toggleFakePowerScrolls()
     {
         fakePowerScrolls = !fakePowerScrolls;
-        sendChat("GT-FakePowerScrolls: toggled " + fakePowerScrolls);
+        sendChat("FakePowerScrolls: Toggled " + fakePowerScrolls);
     }
     
     public void toggleFakeStars()
     {
         fakeStars = !fakeStars;
-        sendChat("GT-FakeStars: toggled " + fakeStars);
+        sendChat("FakeStars: Toggled " + fakeStars);
     }
     
     public void setFakeStarsRed(int i)
     {
         fakeStarsRed = Utils.clamp(i, 0, 5);
-        sendChat("GT-FakeStars: set red count to " + fakeStarsRed);
+        sendChat("FakeStars: Set red count to " + fakeStarsRed);
     }
     
     public void setFakeStarsPurple(int i)
     {
         fakeStarsPurple = Utils.clamp(i, 0, 5);
-        sendChat("GT-FakeStars: set purple count to " + fakeStarsPurple);
+        sendChat("FakeStars: Set purple count to " + fakeStarsPurple);
     }
     
     public void setFakeStarsAqua(int i)
     {
         fakeStarsAqua = Utils.clamp(i, 0, 5);
-        sendChat("GT-FakeStars: set aqua count to " + fakeStarsAqua);
+        sendChat("FakeStars: Set aqua count to " + fakeStarsAqua);
     }
     
     public void toggleSendSkyblockLevelExpGainMessage()
     {
         c.sendSkyblockLevelExpGainMessage = !c.sendSkyblockLevelExpGainMessage;
-        sendChat("GT-SendSkyblockLevelExpGainMessage: toggled " + c.sendSkyblockLevelExpGainMessage);
+        sendChat("SendSkyblockLevelExpGainMessage: Toggled " + c.sendSkyblockLevelExpGainMessage);
     }
     
     public void startSnipe(String name, String warpCmd)
     {
         if (!snipePlayerName.isEmpty())
         {
-            sendChat("GT-Snipe: snipe already running");
+            sendChat("Snipe: Snipe already running");
             return;
         }
         
@@ -2809,47 +2813,47 @@ public class GlobalTweaks extends Tweak
         warpCmd = warpCmd.toLowerCase(Locale.ROOT).trim();
         if (name.isEmpty() || warpCmd.isEmpty())
         {
-            sendChat("GT-Snipe: snipe params empty");
+            sendChat("Snipe: Snipe params empty");
             return;
         }
         snipeStart(name, warpCmd);
-        sendChat("GT-Snipe: starting sniping of player: " + snipePlayerName + ", warp cmd: " + snipeWarpCmd);
+        sendChat("Snipe: Starting sniping of player: " + snipePlayerName + ", warp cmd: " + snipeWarpCmd);
     }
     
     public void stopSnipe()
     {
         if (snipePlayerName.isEmpty())
         {
-            sendChat("GT-Snipe: snipe not active");
+            sendChat("Snipe: Snipe not active");
             return;
         }
         snipeStop();
-        sendChat("GT-Snipe: stopping sniping");
+        sendChat("Snipe: Stopping sniping");
     }
     
     public void setSnipeWarpDelay(int delay)
     {
         c.snipeWarpDelayTicks = Utils.clamp(delay, 0, 20 * 10);
-        sendChat("GT-Snipe: set minimum warp delay to " + c.snipeWarpDelayTicks);
+        sendChat("Snipe: Set minimum warp delay to " + c.snipeWarpDelayTicks);
     }
     
     public void toggleAbiphoneRelayHint()
     {
         abiphoneRelayHint = !abiphoneRelayHint;
-        sendChat("GT-AbiphoneRelayHint: toggled " + abiphoneRelayHint);
+        sendChat("AbiphoneRelayHint: Toggled " + abiphoneRelayHint);
     }
     
     public void toggleHideFromStrangers()
     {
         hideFromStrangers = !hideFromStrangers;
-        sendChat("GT-HideFromStrangers: toggled " + hideFromStrangers);
+        sendChat("HideFromStrangers: Toggled " + hideFromStrangers);
     }
     
     public void setHideFromStrangersWhitelist(String name)
     {
         if (name == null || name.isEmpty())
         {
-            sendChat("GT-HideFromStrangers: printing list");
+            sendChat("HideFromStrangers: Printing list");
             int i = 0;
             for (String n : c.strangerWhitelist)
             {
@@ -2862,49 +2866,49 @@ public class GlobalTweaks extends Tweak
         if (c.strangerWhitelist.contains(name))
         {
             c.strangerWhitelist.remove(name);
-            sendChat("GT-HideFromStrangers: removed " + name + " from whitelist");
+            sendChat("HideFromStrangers: Removed " + name + " from whitelist");
         }
         else
         {
             c.strangerWhitelist.add(name);
-            sendChat("GT-HideFromStrangers: added " + name + " to whitelist");
+            sendChat("HideFromStrangers: Added " + name + " to whitelist");
         }
     }
     
     public void toggleRanchersBootsTooltipSpeedNote()
     {
         c.ranchersBootsTooltipSpeedNote = !c.ranchersBootsTooltipSpeedNote;
-        sendChat("GT-RanchersBootsTooltipSpeedNote: toggled " + c.ranchersBootsTooltipSpeedNote);
+        sendChat("RanchersBootsTooltipSpeedNote: Toggled " + c.ranchersBootsTooltipSpeedNote);
     }
     
     public void toggleDisplayPersonalCompactorItems()
     {
         c.displayPersonalCompactorItems = !c.displayPersonalCompactorItems;
-        sendChat("GT-DisplayPersonalCompactorItems: toggled " + c.displayPersonalCompactorItems);
+        sendChat("DisplayPersonalCompactorItems: Toggled " + c.displayPersonalCompactorItems);
     }
     
     public void toggleDisplayPersonalDeletorItems()
     {
         c.displayPersonalDeletorItems = !c.displayPersonalDeletorItems;
-        sendChat("GT-DisplayPersonalDeletorItems: toggled " + c.displayPersonalDeletorItems);
+        sendChat("DisplayPersonalDeletorItems: Toggled " + c.displayPersonalDeletorItems);
     }
     
     public void toggleChatLogForceFormatted()
     {
         c.chatLogForceFormatted = !c.chatLogForceFormatted;
-        sendChat("GT-ChatLogForceFormatted: toggled " + c.chatLogForceFormatted);
+        sendChat("ChatLogForceFormatted: Toggled " + c.chatLogForceFormatted);
     }
     
     public void toggleDojoDisciplineHelper()
     {
         dojoDisciplineHelper = !dojoDisciplineHelper;
-        sendChat("GT-DojoDisciplineHelper: toggled " + dojoDisciplineHelper);
+        sendChat("DojoDisciplineHelper: Toggled " + dojoDisciplineHelper);
     }
     
     public void toggleAutoGuildWelcome()
     {
         c.autoGuildWelcome = !c.autoGuildWelcome;
-        sendChat("GT-AutoGuildWelcome: toggled " + c.autoGuildWelcome);
+        sendChat("AutoGuildWelcome: Toggled " + c.autoGuildWelcome);
     }
     
     public void setGlassesToStones()
@@ -2922,43 +2926,43 @@ public class GlobalTweaks extends Tweak
                 getWorld().setBlockState(pos, Blocks.stone.getDefaultState());
             }
         }
-        sendChat("GT: set " + count + " blocks to stone");
+        sendChat("Set " + count + " blocks to stone");
     }
     
     public void toggleAutoHarp()
     {
         autoHarp = !autoHarp;
-        sendChat("GT-AutoHarp: toggled " + autoHarp);
+        sendChat("AutoHarp: Toggled " + autoHarp);
     }
     
     public void setAutoHarpClickDelayTicks(int ticks)
     {
         c.autoHarpClickDelayTicks = ticks < 0 ? new GlobalTweaksConfig().autoHarpClickDelayTicks : Utils.clamp(ticks, 0, 30);
-        sendChat("GT-AutoHarp: set click delay (time to wait after the the note appears on the 3rd row) to " + c.autoHarpClickDelayTicks + " ticks");
+        sendChat("AutoHarp: Set click delay (time to wait after the the note appears on the 3rd row) to " + c.autoHarpClickDelayTicks + " ticks");
     }
     
     public void toggleAutoHarpAutoClose()
     {
         c.autoHarpAutoClose = !c.autoHarpAutoClose;
-        sendChat("GT-AutoHarp: toggled auto close on non perfect " + c.autoHarpAutoClose);
+        sendChat("AutoHarp: Toggled auto close on non perfect " + c.autoHarpAutoClose);
     }
     
     public void toggleAutoHarpReplayMode()
     {
         c.autoHarpReplayMode = !c.autoHarpReplayMode;
-        sendChat("GT-AutoHarp: toggled replay mode " + c.autoHarpReplayMode);
+        sendChat("AutoHarp: Toggled replay mode " + c.autoHarpReplayMode);
     }
     
     public void toggleBuildersWandItemsTooltip()
     {
         c.buildersWandItemsTooltip = !c.buildersWandItemsTooltip;
-        sendChat("GT-BuildersWandItemsTooltip: toggled " + c.buildersWandItemsTooltip);
+        sendChat("BuildersWandItemsTooltip: Toggled " + c.buildersWandItemsTooltip);
     }
     
     public void toggleIgnoreServerRenderDistance()
     {
         c.ignoreServerChunkUnloadDistance = !c.ignoreServerChunkUnloadDistance;
-        sendChat("GT-IgnoreServerChunkUnloadDistance: toggled " + c.ignoreServerChunkUnloadDistance);
+        sendChat("IgnoreServerChunkUnloadDistance: Toggled " + c.ignoreServerChunkUnloadDistance);
         if (!c.ignoreServerChunkUnloadDistance)
         {
             lastChunkUnloadPosition = new ChunkCoordIntPair(0, 0);
@@ -2972,12 +2976,12 @@ public class GlobalTweaks extends Tweak
         if (clip == null || clip.isEmpty() || off)
         {
             tooltipOverride = null;
-            sendChat("GT-TooltipOverride: toggled off");
+            sendChat("TooltipOverride: Toggled off");
         }
         else
         {
             tooltipOverride = Arrays.asList(clip.split("\\R"));
-            sendChat("GT-TooltipOverride: overriding with " + tooltipOverride.size() + " lines");
+            sendChat("TooltipOverride: Overriding with " + tooltipOverride.size() + " lines");
         }
     }
     
@@ -2987,7 +2991,7 @@ public class GlobalTweaks extends Tweak
         for (BlockPos pos : poses)
             if (blocksToHighlight.add(pos))
                 count++;
-        sendChatf("GT-HighlightBlock: added %d new blocks", count);
+        sendChatf("HighlightBlock: Added %d new blocks", count);
     }
     
     public void highlightBlock(int x, int y, int z)
@@ -2996,12 +3000,12 @@ public class GlobalTweaks extends Tweak
         if (blocksToHighlight.contains(pos))
         {
             blocksToHighlight.remove(pos);
-            sendChatf("GT-HighlightBlock: removed block %d, %d, %d", x, y, z);
+            sendChatf("HighlightBlock: Removed block %d, %d, %d", x, y, z);
         }
         else
         {
             blocksToHighlight.add(pos);
-            sendChatf("GT-HighlightBlock: added block %d, %d, %d", x, y, z);
+            sendChatf("HighlightBlock: Added block %d, %d, %d", x, y, z);
         }
     }
     
@@ -3021,25 +3025,25 @@ public class GlobalTweaks extends Tweak
         if (nearest != null && nearestDist <= 25.0)
         {
             blocksToHighlight.remove(nearest);
-            sendChatf("GT-HighlightBlock: removed nearest %d, %d, %d", nearest.getX(), nearest.getY(), nearest.getZ());
+            sendChatf("HighlightBlock: Removed nearest %d, %d, %d", nearest.getX(), nearest.getY(), nearest.getZ());
         }
         else
         {
-            sendChat("GT-HighlightBlock: nearest not found");
+            sendChat("HighlightBlock: Nearest not found");
         }
     }
     
     public void highlightBlockClear()
     {
         blocksToHighlight.clear();
-        sendChat("GT-HighlightBlock: cleared list");
+        sendChat("HighlightBlock: Cleared list");
     }
     
     public void highlightBlockList()
     {
         int i = 0;
         for (BlockPos pos : blocksToHighlight)
-            sendChatf("GT-HighlightBlock: %d: %d, %d, %d", ++i, pos.getX(), pos.getY(), pos.getZ());
+            sendChatf("HighlightBlock: %d: %d, %d, %d", ++i, pos.getX(), pos.getY(), pos.getZ());
     }
     
     public void highlightEntityType(String type)
@@ -3052,26 +3056,26 @@ public class GlobalTweaks extends Tweak
         else if (entityTypesToHighlight.contains(type))
         {
             entityTypesToHighlight.remove(type);
-            sendChat("GT-HighlightEntityType: removed " + type);
+            sendChat("HighlightEntityType: Removed " + type);
         }
         else
         {
             entityTypesToHighlight.add(type);
-            sendChat("GT-HighlightEntityType: added " + type);
+            sendChat("HighlightEntityType: Added " + type);
         }
     }
     
     public void highlightEntityTypeClear()
     {
         entityTypesToHighlight.clear();
-        sendChat("GT-HighlightEntityType: cleared list");
+        sendChat("HighlightEntityType: Cleared list");
     }
     
     public void highlightEntityTypeList()
     {
         int i = 0;
         for (String s : entityTypesToHighlight)
-            sendChatf("GT-HighlightEntityType: %d: %s", ++i, s);
+            sendChatf("HighlightEntityType: %d: %s", ++i, s);
     }
     
     // endregion Commands

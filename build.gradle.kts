@@ -12,6 +12,10 @@ plugins {
 group = "a7"
 val baseVersion = "1.0"
 
+val includeOneConfig = project.findProperty("tweakception.buildflags.oneconfig") == "true"
+val tweakClass = if (includeOneConfig)
+    "cc.polyfrost.oneconfig.loader.stage0.LaunchWrapperTweaker" else "org.spongepowered.asm.launch.MixinTweaker"
+
 val versionPropsFile = file("build-version.properties")
 var patchVersion = 0
 
@@ -40,10 +44,9 @@ loom {
     log4jConfigs.from(file("log4j2.xml"))
     launchConfigs {
         "client" {
-            // If you don't want mixins, remove these lines
             property("mixin.debug", "true")
             property("asmhelper.verbose", "true")
-            arg("--tweakClass", "org.spongepowered.asm.launch.MixinTweaker")
+            arg("--tweakClass", tweakClass)
             arg("--mixin", "mixins.tweakception.json")
         }
     }
@@ -70,6 +73,7 @@ repositories {
     maven("https://repo.spongepowered.org/maven/")
     // If you don't want to log in with your real minecraft account, remove this line
     maven("https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1")
+    maven("https://repo.polyfrost.cc/releases")
 }
 
 val shadowImplementation: Configuration by configurations.creating {
@@ -81,7 +85,6 @@ dependencies {
     mappings("de.oceanlabs.mcp:mcp_stable:22-1.8.9")
     forge("net.minecraftforge:forge:1.8.9-11.15.1.2318-1.8.9")
 
-    // If you don't want mixins, remove these lines
     shadowImplementation("org.spongepowered:mixin:0.7.11-SNAPSHOT") {
         isTransitive = false
     }
@@ -94,6 +97,11 @@ dependencies {
     shadowImplementation("org.apache.commons:commons-text:1.10.0")
     shadowImplementation("org.slf4j:slf4j-api:1.7.25")
     testImplementation("org.slf4j:slf4j-simple:1.7.25")
+
+    if (includeOneConfig) {
+        compileOnly("cc.polyfrost:oneconfig-1.8.9-forge:0.2.0-alpha+")
+        shadowImplementation("cc.polyfrost:oneconfig-wrapper-launchwrapper:1.0.0-beta+")
+    }
 }
 
 // Tasks:
@@ -107,9 +115,7 @@ tasks.withType(Jar::class) {
     manifest.attributes.run {
         this["FMLCorePluginContainsFMLMod"] = "true"
         this["ForceLoadAsMod"] = "true"
-
-        // If you don't want mixins, remove these lines
-        this["TweakClass"] = "org.spongepowered.asm.launch.MixinTweaker"
+        this["TweakClass"] = tweakClass
         this["MixinConfigs"] = "mixins.tweakception.json"
     }
 }

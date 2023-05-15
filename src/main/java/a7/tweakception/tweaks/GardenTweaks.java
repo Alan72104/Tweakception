@@ -101,7 +101,7 @@ public class GardenTweaks extends Tweak
     
     public GardenTweaks(Configuration configuration)
     {
-        super(configuration);
+        super(configuration, "GardenTweaks");
         c = configuration.config.gardenTweaks;
         Tweakception.overlayManager.addOverlay(milestoneOverlay = new MilestoneOverlay());
     }
@@ -138,7 +138,7 @@ public class GardenTweaks extends Tweak
                     String[] lore = McUtils.getDisplayLore(stack);
                     if (lore != null && lore[lore.length - 1].equals("§eClick to claim reward!"))
                     {
-                        sendChat("GardenTweaks-AutoClaimContest: claiming slot " + i);
+                        sendChat("AutoClaimContest: Claiming slot " + i);
                         getMc().playerController.windowClick(getPlayer().openContainer.windowId,
                             i, 2, 3, getPlayer());
                         getPlayer().closeScreen();
@@ -483,7 +483,7 @@ public class GardenTweaks extends Tweak
         if (hasAxisZ) dims2d++;
         if (dims2d == 2)
         {
-            sendChat("GT-VerifyCrops: selection must be a point, line, or a vertical plane!");
+            sendChat("VerifyCrops: Selection must be a point, line, or a vertical plane!");
             return;
         }
         EnumFacing[] facings;
@@ -570,7 +570,7 @@ public class GardenTweaks extends Tweak
                 }
             }
         }
-        sendChat("GT-VerifyCrops: found " + invalidCrops.size() + " invalid crops");
+        sendChat("VerifyCrops: Found " + invalidCrops.size() + " invalid crops");
     }
     
     private static class ContestInfo
@@ -639,60 +639,60 @@ public class GardenTweaks extends Tweak
     public void toggleSimulateCactusKnifeInstaBreak()
     {
         c.simulateCactusKnifeInstaBreak = !c.simulateCactusKnifeInstaBreak;
-        sendChat("GardenTweaks-SimulateCactusKnifeInstaBreak: toggled " + c.simulateCactusKnifeInstaBreak);
+        sendChat("SimulateCactusKnifeInstaBreak: Toggled " + c.simulateCactusKnifeInstaBreak);
     }
     
     public void toggleMilestoneOverlay()
     {
         boolean state = Tweakception.overlayManager.toggle(MilestoneOverlay.NAME);
-        sendChat("GardenTweaks: toggled milestone overlay " + state);
+        sendChat("Toggled milestone overlay " + state);
     }
     
     public void toggleSnapYaw()
     {
         snapYaw = !snapYaw;
-        sendChat("GardenTweaks-SnapYaw: toggled " + snapYaw);
+        sendChat("SnapYaw: Toggled " + snapYaw);
     }
     public void setSnapYawAngle(int angle)
     {
         c.snapYawAngle = angle < 0 ? 45 : Utils.clamp(angle, 1, 180);
-        sendChat("GardenTweaks-SnapYaw: set snap angle to " + c.snapYawAngle);
+        sendChat("SnapYaw: Set snap angle to " + c.snapYawAngle);
     }
     
     public void setSnapYawRange(int range)
     {
         c.snapYawRange = range < 0 ? 5 : Utils.clamp(range, 0, 90);
-        sendChat("GardenTweaks-SnapYaw: set snap range to " + c.snapYawRange);
+        sendChat("SnapYaw: Set snap range to " + c.snapYawRange);
     }
     
     public void toggleSnapPitch()
     {
         snapPitch = !snapPitch;
-        sendChat("GardenTweaks-SnapPitch: toggled " + snapPitch);
+        sendChat("SnapPitch: Toggled " + snapPitch);
     }
     
     public void setSnapPitchAngle(int angle)
     {
         c.snapPitchAngle = angle < 0 ? 45 : Utils.clamp(angle, 1, 180);
-        sendChat("GardenTweaks-SnapPitch: set snap angle to " + c.snapPitchAngle);
+        sendChat("SnapPitch: Set snap angle to " + c.snapPitchAngle);
     }
     
     public void setSnapPitchRange(int range)
     {
         c.snapPitchRange = range < 0 ? 5 : Utils.clamp(range, 0, 90);
-        sendChat("GardenTweaks-SnapPitch: set snap range to " + c.snapPitchRange);
+        sendChat("SnapPitch: Set snap range to " + c.snapPitchRange);
     }
     
     public void toggleContestDataDumper()
     {
         c.contestDataDumper = !c.contestDataDumper;
-        sendChat("GardenTweaks-ContestDataDumper: toggled " + c.contestDataDumper);
+        sendChat("ContestDataDumper: Toggled " + c.contestDataDumper);
     }
     
     public void toggleContestDataDumperDumpHeader()
     {
         c.contestDataDumperDumpHeader = !c.contestDataDumperDumpHeader;
-        sendChat("GardenTweaks-ContestDataDumper: toggled csv header " + c.contestDataDumperDumpHeader);
+        sendChat("ContestDataDumper: Toggled csv header " + c.contestDataDumperDumpHeader);
     }
     
     public void verifyCrops()
@@ -700,7 +700,7 @@ public class GardenTweaks extends Tweak
         if (Tweakception.globalTweaks.isInAreaEditMode())
             verifyCrops(Tweakception.globalTweaks.getAreaEditBlockSelection());
         else
-            sendChat("GardenTweaks-VerifyCrops: global tweaks AreaEdit feature is off");
+            sendChat("VerifyCrops: Global tweaks AreaEdit feature is off");
     }
     
     public void verifyCropsClear()
@@ -711,7 +711,7 @@ public class GardenTweaks extends Tweak
     public void toggleAutoClaimContests()
     {
         c.autoClaimContest = !c.autoClaimContest;
-        sendChat("GardenTweaks-AutoClaimContest: toggled " + c.autoClaimContest);
+        sendChat("AutoClaimContest: Toggled " + c.autoClaimContest);
     }
     
     // endregion Commands

@@ -132,7 +132,7 @@ public class SlayerTweaks extends Tweak
     
     public SlayerTweaks(Configuration configuration)
     {
-        super(configuration);
+        super(configuration, "ST");
         c = configuration.config.slayerTweaks;
         Tweakception.overlayManager.addOverlay(new SlayerOverlay());
     }
@@ -210,7 +210,7 @@ public class SlayerTweaks extends Tweak
                                 !Utils.getSkyblockItemId(stack).equals("GRAPPLING_HOOK"));
                         
                         if (slot == -1)
-                            sendChat("ST-AutoThrowFishingRod: cannot find any fishing rod in your hotbar!");
+                            sendChat("AutoThrowFishingRod: Cannot find any fishing rod in your hotbar!");
                         else
                         {
                             switchingSlot = true;
@@ -243,7 +243,7 @@ public class SlayerTweaks extends Tweak
                 int wandSlot = Utils.findInHotbarById("WAND_OF_HEALING", "WAND_OF_MENDING", "WAND_OF_RESTORATION",
                     "WAND_OF_ATONEMENT");
                 if (wandSlot == -1)
-                    sendChat("ST-AutoHealWand: cannot find any healing wands in your hotbar!");
+                    sendChat("AutoHealWand: Cannot find any healing wands in your hotbar!");
                 else
                 {
                     switchingSlot = true;
@@ -338,7 +338,6 @@ public class SlayerTweaks extends Tweak
                 {
                     currentHealth = Utils.parseInt(healthMatcher.group("health"));
                     maxHealth = Utils.parseInt(healthMatcher.group("maxHealth"));
-//                    sendChatf("hp: %d max: %d", currentHealth, maxHealth);
                     break;
                 }
             }
@@ -433,7 +432,7 @@ public class SlayerTweaks extends Tweak
     public void toggleHighlightGlyph()
     {
         c.highlightGlyph = !c.highlightGlyph;
-        sendChat("ST-Eman: toggled glyph highlighting " + c.highlightGlyph);
+        sendChat("Eman: Toggled glyph highlighting " + c.highlightGlyph);
         if (!c.highlightGlyph)
         {
             if (searchThread != null && !searchThread.done)
@@ -445,38 +444,38 @@ public class SlayerTweaks extends Tweak
     public void toggleAutoThrowFishingRod()
     {
         autoThrowFishingRod = !autoThrowFishingRod;
-        sendChat("ST-AutoThrowFishingRod: toggled " + autoThrowFishingRod);
+        sendChat("AutoThrowFishingRod: Toggled " + autoThrowFishingRod);
     }
     
     public void setAutoThrowFishingRodThreshold(int percent)
     {
         c.autoThrowFishingRodThreshold = percent > 0 ? Utils.clamp(percent, 1, 100) :
             new SlayerTweaksConfig().autoThrowFishingRodThreshold;
-        sendChat("ST-AutoThrowFishingRod: set threshold to " + c.autoThrowFishingRodThreshold);
+        sendChat("AutoThrowFishingRod: Set threshold to " + c.autoThrowFishingRodThreshold);
     }
     
     public void toggleHighlightSlayers()
     {
         c.highlightSlayers = !c.highlightSlayers;
-        sendChat("ST-HighlightSlayers: toggled " + c.highlightSlayers);
+        sendChat("HighlightSlayers: Toggled " + c.highlightSlayers);
     }
     
     public void toggleHighlightSlayerMiniboss()
     {
         c.highlightSlayerMiniboss = !c.highlightSlayerMiniboss;
-        sendChat("ST-HighlightSlayerMiniboss: toggled " + c.highlightSlayerMiniboss);
+        sendChat("HighlightSlayerMiniboss: Toggled " + c.highlightSlayerMiniboss);
     }
     
     public void toggleAutoHealWand()
     {
         autoHealWand = !autoHealWand;
-        sendChat("ST-AutoHealWand: toggled " + autoHealWand);
+        sendChat("AutoHealWand: Toggled " + autoHealWand);
     }
     
     public void setAutoHealWandHealthThreshold(int percent)
     {
         c.autoHealWandHealthThreshold = percent > 0 ? Utils.clamp(percent, 1, 99) :
             new SlayerTweaksConfig().autoHealWandHealthThreshold;
-        sendChat("ST-AutoHealWand: set health threshold to " + c.autoHealWandHealthThreshold);
+        sendChat("AutoHealWand: Set health threshold to " + c.autoHealWandHealthThreshold);
     }
 }

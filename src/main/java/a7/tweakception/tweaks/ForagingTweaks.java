@@ -36,7 +36,7 @@ public class ForagingTweaks extends Tweak
     
     public ForagingTweaks(Configuration configuration)
     {
-        super(configuration);
+        super(configuration, "FT");
         c = configuration.config.foragingTweaks;
     }
     
@@ -114,7 +114,7 @@ public class ForagingTweaks extends Tweak
     public void toggleTreeIndicator()
     {
         enableTreeIndicator = !enableTreeIndicator;
-        sendChat("FT-TreeIndicator: toggled " + enableTreeIndicator);
+        sendChat("TreeIndicator: Toggled " + enableTreeIndicator);
     }
     
     public void debugTreeIndicator(int connectedCount)
@@ -127,10 +127,10 @@ public class ForagingTweaks extends Tweak
             if (pos.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK)
             {
                 boolean grown = doTreeGrowthSearch(pos.getBlockPos(), connectedCount);
-                sendChat("FT-TreeIndicator: result = " + grown);
+                sendChat("TreeIndicator: Result = " + grown);
                 return;
             }
         }
-        sendChat("FT-TreeIndicator: no block is looked at");
+        sendChat("TreeIndicator: No block is looked at");
     }
 }

@@ -340,7 +340,7 @@ public class DungeonTweaks extends Tweak
     
     public DungeonTweaks(Configuration configuration)
     {
-        super(configuration);
+        super(configuration, "DT");
         c = configuration.config.dungeonTweaks;
         Tweakception.overlayManager.addOverlay(new FragRunOverlay());
         Tweakception.overlayManager.addOverlay(new DamageTagTrackingOverlay());
@@ -367,7 +367,7 @@ public class DungeonTweaks extends Tweak
                     {
                         c.enableNoFog = true;
                         wasNoFogAutoToggled = true;
-                        sendChat("DT-NoFog: dungeon floor 5/7 detected, auto toggled on");
+                        sendChat("NoFog: Dungeon floor 5/7 detected, auto toggled on");
                     }
                 }
                 else
@@ -377,7 +377,7 @@ public class DungeonTweaks extends Tweak
                         c.enableNoFog = false;
                         wasNoFogAutoToggled = false;
                         
-                        sendChat("DT-NoFog: auto toggled off");
+                        sendChat("NoFog: Auto toggled off");
                     }
                 }
             }
@@ -420,7 +420,7 @@ public class DungeonTweaks extends Tweak
                         {
                             fragGotten = true;
                             c.fragDrops.merge(id, 1, Integer::sum);
-                            sendChatf("DT-Frag: obtained %s, count: %d", FRAGS_AND_NAMES.get(id), c.fragDrops.get(id));
+                            sendChatf("Frag: Obtained %s, count: %d", FRAGS_AND_NAMES.get(id), c.fragDrops.get(id));
                             break;
                         }
                     }
@@ -547,7 +547,7 @@ public class DungeonTweaks extends Tweak
                         if (!isDamageFormattingExceptionNotified)
                         {
                             isDamageFormattingExceptionNotified = true;
-                            sendChat("DT-TrackDamageTags: formatting failed");
+                            sendChat("TrackDamageTags: Formatting failed");
                             sendChat(e.toString());
                             e.printStackTrace();
                         }
@@ -627,7 +627,7 @@ public class DungeonTweaks extends Tweak
                         if (salvageClickSent && !salvagingEssenceType.equals(""))
                         {
                             c.salvagedEssences.merge(salvagingEssenceType, salvagingEssencegAmount, Integer::sum);
-                            sendChatf("DT-AutoSalvage: salvaged %d %s essences, total: %d", salvagingEssencegAmount,
+                            sendChatf("AutoSalvage: Salvaged %d %s essences, total: %d", salvagingEssencegAmount,
                                 salvagingEssenceType, c.salvagedEssences.get(salvagingEssenceType));
                         }
                         salvageClickSent = false;
@@ -657,13 +657,13 @@ public class DungeonTweaks extends Tweak
                     {
                         if (!c.fragBot.equals(""))
                         {
-                            sendChat("DT-Frag: repartying " + c.fragBot);
+                            sendChat("Frag: Repartying " + c.fragBot);
                             Tweakception.scheduler
                                 .addDelayed(() -> McUtils.getPlayer().sendChatMessage("/p disband"), 20)
                                 .thenDelayed(() -> McUtils.getPlayer().sendChatMessage("/p " + c.fragBot), 20);
                         }
                         else
-                            sendChat("DT-Frag: cannot reparty, please set a frag bot using `setfragbot <name>`");
+                            sendChat("Frag: Cannot reparty, please set a frag bot using `setfragbot <name>`");
                     }
                 }
                 else
@@ -671,7 +671,7 @@ public class DungeonTweaks extends Tweak
                     if (fragrunStartTime != 0L && !isInF7())
                     {
                         fragrunStartTime = 0L;
-                        sendChat("DT-Frag: not in f7, run is cancelled!");
+                        sendChat("Frag: Not in f7, run is cancelled!");
                     }
                 }
             }
@@ -691,7 +691,7 @@ public class DungeonTweaks extends Tweak
                 
                 if (getTicks() - usage.useTicks > usage.cooldownTicks + 20)
                 {
-                    sendChatf("DT-TrackMaskUsage: §ayour §e%s §ais now available!",
+                    sendChatf("TrackMaskUsage: §aYour §e%s §ais now available!",
                         String.join(" ", ele.getKey().toLowerCase(Locale.ROOT).split("_")));
                     maskUsages.remove(ele.getKey());
                 }
@@ -886,11 +886,11 @@ public class DungeonTweaks extends Tweak
                     {
                         if (Keyboard.isKeyDown(Keyboard.KEY_LMENU))
                         {
-                            sendChat("DT-BlockRightClick: overrode block click for item (" + name + "§r)");
+                            sendChat("BlockRightClick: Overrode block click for item (" + name + "§r)");
                         }
                         else
                         {
-                            sendChat("DT-BlockRightClick: blocked click for item (" + name + "§r), hold alt to override it");
+                            sendChat("BlockRightClick: Blocked click for item (" + name + "§r), hold alt to override it");
                             event.setCanceled(true);
                             return;
                         }
@@ -964,9 +964,9 @@ public class DungeonTweaks extends Tweak
                 String name = partyRequestMatcher.group(1)/*.replaceAll("[.*]", "").trim()*/.toLowerCase(Locale.ROOT);
                 if (!c.autoJoinPartyWhitelistEnable || c.autoJoinPartyOwners.contains(name))
                 {
-                    sendChat("DT-AutoJoinParty: joining " + name + "'s party" +
+                    sendChat("AutoJoinParty: Joining " + name + "'s party" +
                         (!c.autoJoinPartyWhitelistEnable ? " (whitelist disabled)" : ""));
-                    McUtils.getPlayer().sendChatMessage("/p " + name);
+                    getPlayer().sendChatMessage("/p " + name);
                 }
             }
         }
@@ -1017,7 +1017,6 @@ public class DungeonTweaks extends Tweak
             if (head != null)
             {
                 String id = Utils.getSkyblockItemId(head);
-//                String uuid = getSkyblockItemUuid(head);
                 if (id != null && MASKS.contains(id))
                 {
                     String[] lore = McUtils.getDisplayLore(head);
@@ -1037,12 +1036,12 @@ public class DungeonTweaks extends Tweak
                     }
                     else
                     {
-                        sendChat("DT-TrackMaskUsage: cannot retrieve the lore of your mask, this will not be tracked!");
+                        sendChat("TrackMaskUsage: Cannot retrieve the lore of your mask, this will not be tracked!");
                     }
                 }
                 else
                 {
-                    sendChat("DT-TrackMaskUsage: cannot retrieve the id of your mask (or not registered), this will not be tracked!");
+                    sendChat("TrackMaskUsage: Cannot retrieve the id of your mask (or not registered), this will not be tracked!");
                 }
             }
         }
@@ -1715,49 +1714,49 @@ public class DungeonTweaks extends Tweak
     public void toggleNoFog()
     {
         c.enableNoFog = !c.enableNoFog;
-        sendChat("DT-NoFog: toggled " + c.enableNoFog);
+        sendChat("NoFog: Toggled " + c.enableNoFog);
     }
     
     public void toggleNoFogAutoToggle()
     {
         c.enableNoFogAutoToggle = !c.enableNoFogAutoToggle;
-        sendChat("DT-NoFog: toggled auto toggle " + c.enableNoFogAutoToggle);
+        sendChat("NoFog: Toggled auto toggle " + c.enableNoFogAutoToggle);
     }
     
     public void toggleHideName()
     {
         c.hideNonStarredMobsName = !c.hideNonStarredMobsName;
-        sendChat("DT-HideName: toggled hide name " + c.hideNonStarredMobsName);
+        sendChat("HideName: Toggled hide name " + c.hideNonStarredMobsName);
     }
     
     public void toggleHideDamageTags()
     {
         c.hideDamageTags = !c.hideDamageTags;
-        sendChatf("DT-HideDamageTags: toggled " + c.hideDamageTags);
+        sendChatf("HideDamageTags: Toggled " + c.hideDamageTags);
     }
     
     public void toggleHighlightStarredMobs()
     {
         c.highlightStarredMobs = !c.highlightStarredMobs;
-        sendChat("DT-HighlightStarredMobs: toggled " + c.highlightStarredMobs);
+        sendChat("HighlightStarredMobs: Toggled " + c.highlightStarredMobs);
     }
     
     public void toggleHighlightSpiritBear()
     {
         c.highlightSpiritBear = !c.highlightSpiritBear;
-        sendChat("DT-HighlightSpiritBear: toggled " + c.highlightSpiritBear);
+        sendChat("HighlightSpiritBear: Toggled " + c.highlightSpiritBear);
     }
     
     public void toggleHighlightShadowAssassin()
     {
         c.highlightShadowAssassins = !c.highlightShadowAssassins;
-        sendChat("DT-HighlightShadowAssassin: toggled " + c.highlightShadowAssassins);
+        sendChat("HighlightShadowAssassin: Toggled " + c.highlightShadowAssassins);
     }
     
     public void toggleHighlightBats()
     {
         c.highlightBats = !c.highlightBats;
-        sendChat("DT-HighlightBats: toggled " + c.highlightBats);
+        sendChat("HighlightBats: Toggled " + c.highlightBats);
         
         if (c.highlightBats)
         {
@@ -1768,7 +1767,7 @@ public class DungeonTweaks extends Tweak
     public void toggleHighlightDoorKeys()
     {
         c.highlightDoorKeys = !c.highlightDoorKeys;
-        sendChat("DT-HighlightDoorKeys: toggled " + c.highlightDoorKeys);
+        sendChat("HighlightDoorKeys: Toggled " + c.highlightDoorKeys);
     }
     
     public void blockRightClickSet()
@@ -1776,19 +1775,19 @@ public class DungeonTweaks extends Tweak
         ItemStack item = McUtils.getPlayer().inventory.getCurrentItem();
         if (item == null)
         {
-            sendChat("DT-BlockRightClick: current selected item is empty");
+            sendChat("BlockRightClick: Current selected item is empty");
             return;
         }
         String name = McUtils.cleanColor(item.getDisplayName());
         if (c.blockRightClickItemNames.contains(name))
         {
             c.blockRightClickItemNames.remove(name);
-            sendChat("DT-BlockRightClick: removed item \"" + name + "§r\" from block list");
+            sendChat("BlockRightClick: Removed item \"" + name + "§r\" from block list");
         }
         else
         {
             c.blockRightClickItemNames.add(name);
-            sendChat("DT-BlockRightClick: added item \"" + name + "§r\" to block list");
+            sendChat("BlockRightClick: Added item \"" + name + "§r\" to block list");
         }
     }
     
@@ -1796,7 +1795,7 @@ public class DungeonTweaks extends Tweak
     {
         if (i < 1 || i > c.blockRightClickItemNames.size())
         {
-            sendChat("DT-BlockRightClick: index out of bounds");
+            sendChat("BlockRightClick: Index out of bounds");
             return;
         }
         String ele = c.blockRightClickItemNames.toArray(new String[0])[i - 1];
@@ -1805,25 +1804,25 @@ public class DungeonTweaks extends Tweak
             if (c.blockRightClickItemNames.contains(ele))
             {
                 c.blockRightClickItemNames.remove(ele);
-                sendChat("DT-BlockRightClick: removed \"" + ele + "§r\" from the list");
+                sendChat("BlockRightClick: Removed \"" + ele + "§r\" from the list");
             }
         }, 20 * 5, null);
         
         IChatComponent nice = new ChatComponentText(
-            "DT-BlockRightClick: you really wanna remove \"" + ele + "§r\" from the list? Click here in 5 seconds to continue");
+            "DT-BlockRightClick: You really wanna remove \"" + ele + "§r\" from the list? Click here in 5 seconds to continue");
         nice.getChatStyle().setChatClickEvent(
             new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tc action " + chatActionUuid));
-        McUtils.getPlayer().addChatMessage(nice);
+        sendChat(nice);
     }
     
     public void blockRightClickList()
     {
         if (c.blockRightClickItemNames.isEmpty())
         {
-            sendChat("DT-BlockRightClick: list is empty");
+            sendChat("BlockRightClick: List is empty");
             return;
         }
-        sendChat("DT-BlockRightClick: there are " + c.blockRightClickItemNames.size() + " items in the list");
+        sendChat("BlockRightClick: There are " + c.blockRightClickItemNames.size() + " items in the list");
         int i = 1;
         for (String s : c.blockRightClickItemNames)
             sendChat(i++ + ": " + s);
@@ -1833,7 +1832,7 @@ public class DungeonTweaks extends Tweak
     {
         c.trackDamageTags = !c.trackDamageTags;
         Tweakception.overlayManager.setEnable(DamageTagTrackingOverlay.NAME, c.trackDamageTags);
-        sendChatf("DT-TrackDamageTags: toggled %b, track non crit %b", c.trackDamageTags, c.trackNonCritDamageTags);
+        sendChatf("TrackDamageTags: Toggled %b, track non crit %b", c.trackDamageTags, c.trackNonCritDamageTags);
         if (c.trackDamageTags)
         {
             damageTags.clear();
@@ -1844,25 +1843,25 @@ public class DungeonTweaks extends Tweak
     public void toggleTrackNonCritDamageTags()
     {
         c.trackNonCritDamageTags = !c.trackNonCritDamageTags;
-        sendChat("DT-TrackDamageTags: toggled track non crit " + c.trackNonCritDamageTags);
+        sendChat("TrackDamageTags: Toggled track non crit " + c.trackNonCritDamageTags);
         if (c.trackNonCritDamageTags)
-            sendChat("DT-TrackDamageTags: (notice: this also tracks damages to you)");
+            sendChat("TrackDamageTags: (notice: this also tracks damages to you)");
         if (!c.trackDamageTags)
-            sendChat("DT-TrackDamageTags: (notice: overall tracking isn't on!)");
+            sendChat("TrackDamageTags: (notice: overall tracking isn't on!)");
     }
     
     public void toggleTrackWitherDamageTags()
     {
         c.trackWitherDamageTags = !c.trackWitherDamageTags;
-        sendChat("DT-TrackDamageTags: toggled track wither damage " + c.trackWitherDamageTags);
+        sendChat("TrackDamageTags: Toggled track wither damage " + c.trackWitherDamageTags);
         if (!c.trackDamageTags)
-            sendChat("DT-TrackDamageTags: (notice: overall tracking isn't on!)");
+            sendChat("TrackDamageTags: (notice: overall tracking isn't on!)");
     }
     
     public void setDamageTagTrackingCount(int count)
     {
         c.damageTagTrackingCount = count > 0 ? count : new DungeonTweaksConfig().damageTagTrackingCount;
-        sendChat("DT-TrackDamageTags: set count to " + c.damageTagTrackingCount);
+        sendChat("TrackDamageTags: Set count to " + c.damageTagTrackingCount);
         damageTags.clear();
         armorStandsTemp.clear();
     }
@@ -1870,35 +1869,35 @@ public class DungeonTweaks extends Tweak
     public void setDamageTagHistoryTimeoutTicks(int ticks)
     {
         c.damageTagHistoryTimeoutTicks = ticks > 0 ? ticks : new DungeonTweaksConfig().damageTagHistoryTimeoutTicks;
-        sendChat("DT-TrackDamageTags: set history timeout to " + c.damageTagHistoryTimeoutTicks + " ticks");
+        sendChat("TrackDamageTags: Set history timeout to " + c.damageTagHistoryTimeoutTicks + " ticks");
     }
     
     public void toggleAutoCloseSecretChest()
     {
         c.autoCloseSecretChest = !c.autoCloseSecretChest;
-        sendChat("DT-AutoCloseSecretChest: toggled " + c.autoCloseSecretChest);
+        sendChat("AutoCloseSecretChest: Toggled " + c.autoCloseSecretChest);
     }
     
     public void toggleAutoSalvage()
     {
         c.autoSalvage = !c.autoSalvage;
-        sendChat("DT-AutoSalvage: toggled " + c.autoSalvage);
+        sendChat("AutoSalvage: Toggled " + c.autoSalvage);
     }
     
     public void toggleAutoJoinParty()
     {
         c.autoJoinParty = !c.autoJoinParty;
-        sendChat("DT-AutoJoinParty: toggled " + c.autoJoinParty);
+        sendChat("AutoJoinParty: Toggled " + c.autoJoinParty);
     }
     
     public void autoJoinPartyList()
     {
         if (c.autoJoinPartyOwners.isEmpty())
         {
-            sendChat("DT-AutoJoinParty: trusted player list is empty");
+            sendChat("AutoJoinParty: Trusted player list is empty");
             return;
         }
-        sendChat("DT-AutoJoinParty: there are " + c.autoJoinPartyOwners.size() + " players in the list");
+        sendChat("AutoJoinParty: There are " + c.autoJoinPartyOwners.size() + " players in the list");
         int i = 1;
         for (String name : c.autoJoinPartyOwners)
             sendChat(i++ + ": " + name);
@@ -1908,18 +1907,18 @@ public class DungeonTweaks extends Tweak
     {
         if (name == null || name.equals(""))
         {
-            sendChat("DT-AutoJoinParty: give me a player name");
+            sendChat("AutoJoinParty: Give me a player name");
             return;
         }
         name = name.toLowerCase(Locale.ROOT);
         if (c.autoJoinPartyOwners.contains(name))
         {
-            sendChat("DT-AutoJoinParty: player " + name + " is already in the list");
+            sendChat("AutoJoinParty: Player " + name + " is already in the list");
         }
         else
         {
             c.autoJoinPartyOwners.add(name);
-            sendChat("DT-AutoJoinParty: added " + name);
+            sendChat("AutoJoinParty: Added " + name);
         }
     }
     
@@ -1927,25 +1926,25 @@ public class DungeonTweaks extends Tweak
     {
         if (name == null || name.equals(""))
         {
-            sendChat("DT-AutoJoinParty: give me a player name");
+            sendChat("AutoJoinParty: Give me a player name");
             return;
         }
         name = name.toLowerCase(Locale.ROOT);
         if (c.autoJoinPartyOwners.contains(name))
         {
             c.autoJoinPartyOwners.remove(name);
-            sendChat("DT-AutoJoinParty: removed " + name);
+            sendChat("AutoJoinParty: Removed " + name);
         }
         else
         {
-            sendChat("DT-AutoJoinParty: player " + name + " is not in the list");
+            sendChat("AutoJoinParty: Player " + name + " is not in the list");
         }
     }
     
     public void autoJoinPartyToggleWhitelist()
     {
         c.autoJoinPartyWhitelistEnable = !c.autoJoinPartyWhitelistEnable;
-        sendChat("DT-AutoJoinParty: whitelist " + (c.autoJoinPartyWhitelistEnable ? "enabled" : "disabled"));
+        sendChat("AutoJoinParty: Whitelist " + (c.autoJoinPartyWhitelistEnable ? "enabled" : "disabled"));
     }
     
     public void listFragCounts()
@@ -1974,16 +1973,16 @@ public class DungeonTweaks extends Tweak
     {
         if (fragRunTracking)
         {
-            sendChat("DT-Frag: you're already in a session, use `endsession` to end");
+            sendChat("Frag: You're already in a session, use `endsession` to end");
             return;
         }
         if (c.fragBot.equals(""))
         {
-            sendChat("DT-Frag: please set a frag bot first using `setfragbot <name>`");
+            sendChat("Frag: Please set a frag bot first using `setfragbot <name>`");
             return;
         }
         
-        sendChat("DT-Frag: starting session, timer will start when you start f7");
+        sendChat("Frag: Starting session, timer will start when you start f7");
         
         fragRunTracking = true;
         Tweakception.overlayManager.enable(FragRunOverlay.NAME);
@@ -2005,7 +2004,7 @@ public class DungeonTweaks extends Tweak
     {
         if (!fragRunTracking)
         {
-            sendChat("DT-Frag: you've not started a session");
+            sendChat("Frag: You've not started a session");
             return;
         }
         
@@ -2017,15 +2016,15 @@ public class DungeonTweaks extends Tweak
         fragRunTracking = false;
         Tweakception.overlayManager.disable(FragRunOverlay.NAME);
         
-        sendChat("DT-Frag: ending session, life total runs: " + c.totalFragruns);
+        sendChat("Frag: Ending session, life total runs: " + c.totalFragruns);
         
         if (fragSessionRuns == 0)
             return;
         
-        sendChat("DT-Frag: session runs: " + fragSessionRuns);
-        sendChat("DT-Frag: session fastest blood rush: " + Utils.msToMMSSmmm(fragSessionFastestBloodRush));
-        sendChat("DT-Frag: session total time: " + Utils.msToHHMMSSmmm(fragSessionTotalTime));
-        sendChat("DT-Frag: session average run time: " + Utils.msToMMSSmmm(fragSessionTotalTime / fragSessionRuns));
+        sendChat("Frag: Session runs: " + fragSessionRuns);
+        sendChat("Frag: Session fastest blood rush: " + Utils.msToMMSSmmm(fragSessionFastestBloodRush));
+        sendChat("Frag: Session total time: " + Utils.msToHHMMSSmmm(fragSessionTotalTime));
+        sendChat("Frag: Session average run time: " + Utils.msToMMSSmmm(fragSessionTotalTime / fragSessionRuns));
     }
     
     public void fragNext()
@@ -2033,16 +2032,16 @@ public class DungeonTweaks extends Tweak
         if (getCurrentIsland() != SkyblockIsland.DUNGEON &&
             !(getCurrentLocationRaw().contains("(F7)") || getCurrentLocationRaw().contains("(M7)")))
         {
-            sendChat("DT-Frag: floor 7 not detected");
+            sendChat("Frag: Floor 7 not detected");
             return;
         }
         if (!fragRunTracking)
         {
-            sendChat("DT-Frag: please start a session first using `startsession`, and the timer will start");
+            sendChat("Frag: Please start a session first using `startsession`, and the timer will start");
             return;
         }
         
-        sendChat("DT-Frag: warping back to dhub for next run");
+        sendChat("Frag: Warping back to dhub for next run");
         
         fragPendingEndRunWarp = true;
         McUtils.getPlayer().sendChatMessage("/warp dhub");
@@ -2052,7 +2051,7 @@ public class DungeonTweaks extends Tweak
     private void fragStart()
     {
         fragrunStartTime = System.currentTimeMillis();
-        sendChat("DT-Frag: started the next run");
+        sendChat("Frag: started the next run");
         
         // To prevent active run being cancelled when starting before the island is updated
         Tweakception.globalTweaks.updateIslandNow();
@@ -2085,7 +2084,7 @@ public class DungeonTweaks extends Tweak
         else
             fragLastRecord = "";
         
-        sendChatf("DT-Frag: run took %s§r%s", fragLastRunTime, fragLastRecord);
+        sendChatf("Frag: Run took %s§r%s", fragLastRunTime, fragLastRecord);
     }
     
     private void fragSetBloodRush()
@@ -2115,85 +2114,85 @@ public class DungeonTweaks extends Tweak
         if (name == null || name.equals(""))
         {
             if (!c.fragBot.equals(""))
-                sendChat("DT-Frag: removed frag bot");
+                sendChat("Frag: Removed frag bot");
             else
-                sendChat("DT-Frag: set a frag bot using `setfragbot <name>`, or remove the existing frag bot using `setfragbot`");
+                sendChat("Frag: Set a frag bot using `setfragbot <name>`, or remove the existing frag bot using `setfragbot`");
         }
         else
         {
             c.fragBot = name;
-            sendChat("DT-Frag: set frag bot to " + name);
+            sendChat("Frag: Set frag bot to " + name);
         }
     }
     
     public void toggleFragAutoReparty()
     {
         c.fragAutoReparty = !c.fragAutoReparty;
-        sendChat("DT-Frag: toggled auto reparty " + c.fragAutoReparty);
+        sendChat("Frag: Toggled auto reparty " + c.fragAutoReparty);
     }
     
     public void toggleTrackShootingSpeed()
     {
         c.trackShootingSpeed = !c.trackShootingSpeed;
         Tweakception.overlayManager.setEnable(ShootingSpeedOverlay.NAME, c.trackShootingSpeed);
-        sendChat("DT-TrackShootingSpeed: toggled " + c.trackShootingSpeed);
+        sendChat("TrackShootingSpeed: Toggled " + c.trackShootingSpeed);
     }
     
     public void setShootingSpeedTrackingSampleSecs(int secs)
     {
         c.shootingSpeedTrackingSampleSecs = secs > 0 ? secs : new DungeonTweaksConfig().shootingSpeedTrackingSampleSecs;
-        sendChat("DT-TrackShootingSpeed: set sample secs to " + c.shootingSpeedTrackingSampleSecs);
+        sendChat("TrackShootingSpeed: Set sample secs to " + c.shootingSpeedTrackingSampleSecs);
     }
     
     public void setShootingSpeedTrackingRange(int blocks)
     {
         c.shootingSpeedTrackingRange = blocks > 0 ? blocks : new DungeonTweaksConfig().shootingSpeedTrackingRange;
-        sendChat("DT-TrackShootingSpeed: set spawn range to " + c.shootingSpeedTrackingRange);
+        sendChat("TrackShootingSpeed: Set spawn range to " + c.shootingSpeedTrackingRange);
     }
     
     public void toggleDisplayMobNameTag()
     {
         c.displayTargetMobNameTag = !c.displayTargetMobNameTag;
         Tweakception.overlayManager.setEnable(TargetMobNametagOverlay.NAME, c.displayTargetMobNameTag);
-        sendChat("DT-DisplayMobNameTag: toggled " + c.displayTargetMobNameTag);
+        sendChat("DisplayMobNameTag: Toggled " + c.displayTargetMobNameTag);
     }
     
     public void toggleTrackMaskUsage()
     {
         c.trackMaskUsage = !c.trackMaskUsage;
-        sendChat("DT-TrackMaskUsage: toggled " + c.trackMaskUsage);
+        sendChat("TrackMaskUsage: Toggled " + c.trackMaskUsage);
     }
     
     public void toggleBlockOpheliaShopClicks()
     {
         c.blockOpheliaShopClicks = !c.blockOpheliaShopClicks;
-        sendChat("DT-BlockOpheliaShopClicks: toggled " + c.blockOpheliaShopClicks);
+        sendChat("BlockOpheliaShopClicks: Toggled " + c.blockOpheliaShopClicks);
     }
     
     public void partyFinderQuickPlayerInfoToggle()
     {
         c.partyFinderDisplayQuickPlayerInfo = !c.partyFinderDisplayQuickPlayerInfo;
-        sendChat("DT-PartyFinderDisplayQuickPlayerInfo: toggled " + c.partyFinderDisplayQuickPlayerInfo);
+        sendChat("PartyFinderDisplayQuickPlayerInfo: Toggled " + c.partyFinderDisplayQuickPlayerInfo);
     }
     
     public void partyFinderQuickPlayerInfoToggleShowSecretPerExp()
     {
         c.partyFinderQuickPlayerInfoShowSecretPerExp = !c.partyFinderQuickPlayerInfoShowSecretPerExp;
-        sendChat("DT-PartyFinderDisplayQuickPlayerInfo: toggled secrets per 50k exp " +
+        sendChat("PartyFinderDisplayQuickPlayerInfo: Toggled secrets per 50k exp " +
             c.partyFinderQuickPlayerInfoShowSecretPerExp);
     }
     
     public void partyFinderRefreshCooldownToggle()
     {
         c.partyFinderRefreshCooldown = !c.partyFinderRefreshCooldown;
-        sendChat("DT-PartyFinderRefreshCooldown: toggled " + c.partyFinderRefreshCooldown);
+        sendChat("PartyFinderRefreshCooldown: Toggled " + c.partyFinderRefreshCooldown);
     }
     
     public void partyFinderPlayerBlacklistSet(String name, String reason)
     {
         if (name.equals(""))
         {
-            sendChatf("DT-PartyFinderPlayerBlacklist: there are %d players in the list",
+            sendChatf("PartyFinderPlayerBlacklist: There are %d players in the list",
                 c.partyFinderPlayerBlacklist.size());
             int i = 1;
             for (Map.Entry<String, String> s : c.partyFinderPlayerBlacklist.entrySet())
@@ -2205,25 +2204,25 @@ public class DungeonTweaks extends Tweak
         if (c.partyFinderPlayerBlacklist.containsKey(name))
         {
             c.partyFinderPlayerBlacklist.remove(name);
-            sendChat("DT-PartyFinderPlayerBlacklist: removed " + name);
+            sendChat("PartyFinderPlayerBlacklist: Removed " + name);
         }
         else
         {
             c.partyFinderPlayerBlacklist.put(name, reason);
-            sendChat("DT-PartyFinderPlayerBlacklist: added " + name + (reason.equals("") ? "" : ", reason: " + reason));
+            sendChat("PartyFinderPlayerBlacklist: Added " + name + (reason.equals("") ? "" : ", reason: " + reason));
         }
     }
     
     public void freeCaches()
     {
         uuidToDungeonStatsMap.clear();
-        sendChat("DT: cleared caches");
+        sendChat("Cleared caches");
     }
     
     public void toggleGyroWandOverlay()
     {
         c.gyroWandOverlay = !c.gyroWandOverlay;
-        sendChat("DT-GyroWandOverlay: toggled " + c.gyroWandOverlay);
+        sendChat("GyroWandOverlay: Toggled " + c.gyroWandOverlay);
     }
     
     public void getDailyRuns(String name)
@@ -2237,9 +2236,9 @@ public class DungeonTweaks extends Tweak
             res -> getDailyRunsInternal(finalName, res));
         
         if (sbInfo == APIManager.INFO_NOT_AVAILABLE)
-            sendChat("DT: info is not available");
+            sendChat("Info is not available");
         else if (sbInfo == null)
-            sendChat("DT: getting data");
+            sendChat("Getting data");
         else
             getDailyRunsInternal(name, sbInfo); // Should never run
     }
@@ -2251,12 +2250,13 @@ public class DungeonTweaks extends Tweak
         {
             JsonObject daily = dungeons.get("daily_runs").getAsJsonObject();
             int count = daily.get("completed_runs_count").getAsInt();
-            sendChat("DT: daily runs count of " + name + " is " + count);
+            sendChat("Daily runs count of " + name + " is " + count);
         }
     }
     
     public void toggleDisplaySoulName()
     {
+        // TODO
         sendChat("no");
     }
     
@@ -2269,7 +2269,7 @@ public class DungeonTweaks extends Tweak
             damageHistoriesSorted.clear();
         }
         Tweakception.overlayManager.setEnable(DamageHistoryOverlay.NAME, c.trackDamageHistory);
-        sendChat("DT-TrackDamageHistory: toggled " + c.trackDamageHistory);
+        sendChat("TrackDamageHistory: Toggled " + c.trackDamageHistory);
     }
     
     public void resetDamageHistories()
@@ -2281,14 +2281,14 @@ public class DungeonTweaks extends Tweak
     public void setDamageHistoryOverlayMaxLines(int l)
     {
         c.damageHistoryOverlayMaxLines = l > 0 ? l : new DungeonTweaksConfig().damageHistoryOverlayMaxLines;
-        sendChat("DT-TrackDamageHistory: set overlay max lines to " + c.damageHistoryOverlayMaxLines);
+        sendChat("TrackDamageHistory: Set overlay max lines to " + c.damageHistoryOverlayMaxLines);
     }
     
     public void dumpDamageHistories()
     {
         if (!c.trackDamageHistory)
         {
-            sendChat("DT-TrackDamageHistory: feature is off");
+            sendChat("TrackDamageHistory: Feature is off");
             return;
         }
         
@@ -2314,38 +2314,38 @@ public class DungeonTweaks extends Tweak
         catch (Exception e)
         {
             e.printStackTrace();
-            sendChat("GT: exception occurred when making and opening file");
+            sendChat("Exception occurred while making and opening file");
         }
     }
     
     public void toggleAutoSwapSpiritSceptreAote()
     {
         c.autoSwapSpiritSceptreAote = !c.autoSwapSpiritSceptreAote;
-        sendChat("DT-AutoSwapSpiritSceptreAote: toggled " + c.autoSwapSpiritSceptreAote);
+        sendChat("AutoSwapSpiritSceptreAote: Toggled " + c.autoSwapSpiritSceptreAote);
     }
     
     public void toggleAutoSwapHyperionAote()
     {
         c.autoSwapHyperionAote = !c.autoSwapHyperionAote;
-        sendChat("DT-AutoSwapHyperionAote: toggled " + c.autoSwapHyperionAote);
+        sendChat("AutoSwapHyperionAote: Toggled " + c.autoSwapHyperionAote);
     }
     
     public void togglePickaxeMiddleClickRemoveBlock()
     {
         c.pickaxeMiddleClickRemoveBlock = !c.pickaxeMiddleClickRemoveBlock;
-        sendChat("DT-PickaxeMiddleClickRemoveBlock: toggled " + c.pickaxeMiddleClickRemoveBlock);
+        sendChat("PickaxeMiddleClickRemoveBlock: Toggled " + c.pickaxeMiddleClickRemoveBlock);
     }
     
     public void togglePickaxeMiddleClickRemoveLine()
     {
         c.pickaxeMiddleClickRemoveLine = !c.pickaxeMiddleClickRemoveLine;
-        sendChat("DT-PickaxeMiddleClickRemoveLine: toggled " + c.pickaxeMiddleClickRemoveLine);
+        sendChat("PickaxeMiddleClickRemoveLine: Toggled " + c.pickaxeMiddleClickRemoveLine);
     }
     
     public void toggleBlockFlowerPlacement()
     {
         c.blockFlowerPlacement = !c.blockFlowerPlacement;
-        sendChat("DT-BlockFlowerPlacement: toggled " + c.blockFlowerPlacement);
+        sendChat("BlockFlowerPlacement: Toggled " + c.blockFlowerPlacement);
     }
     
     // endregion Commands

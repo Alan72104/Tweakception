@@ -69,7 +69,7 @@ public class BazaarTweaks extends Tweak
     
     public BazaarTweaks(Configuration configuration)
     {
-        super(configuration);
+        super(configuration, "BazaarTweaks");
         c = configuration.config.bazaarTweaks;
     }
     
@@ -150,8 +150,6 @@ public class BazaarTweaks extends Tweak
         for (int i = 0; i < event.toolTip.size(); i++)
         {
             String s = event.toolTip.get(i);
-            if (GlobalTweaks.t)
-                sendChat(s);
             if (s.startsWith("§5§o§8"))
             {
                 if (name == null)
@@ -166,8 +164,6 @@ public class BazaarTweaks extends Tweak
                 {
                     double price = Utils.parseDouble(orderListMatcher.group(1));
                     
-                    if (GlobalTweaks.t)
-                        sendChat("" + price);
                     if (price == 0.0)
                         continue;
                     
@@ -310,11 +306,6 @@ public class BazaarTweaks extends Tweak
                 priceString = orderPriceMatcher.group(1);
                 price = Utils.parseDouble(priceString);
             }
-        }
-        
-        if (GlobalTweaks.t)
-        {
-            sendChatf("%d-%s %f$ %d/%d (%s)", type, name, price, curAmount, totalAmount, amountString);
         }
         
         // Total amount will always exist (§7Offer amount: §a5§7x),

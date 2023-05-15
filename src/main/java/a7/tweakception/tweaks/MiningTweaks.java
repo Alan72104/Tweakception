@@ -64,7 +64,7 @@ public class MiningTweaks extends Tweak
     
     public MiningTweaks(Configuration configuration)
     {
-        super(configuration);
+        super(configuration, "MT");
         c = configuration.config.miningTweaks;
     }
     
@@ -360,27 +360,27 @@ public class MiningTweaks extends Tweak
     public void toggleHighlightChests()
     {
         c.highlightChests = !c.highlightChests;
-        sendChat("MT-HighlightChests: toggled " + c.highlightChests);
+        sendChat("HighlightChests: Toggled " + c.highlightChests);
     }
     
     public void toggleSimulateBlockHardness()
     {
         c.simulateBlockHardness = !c.simulateBlockHardness;
-        sendChat("MT-SimulateBlockHardness: toggled " + c.simulateBlockHardness);
+        sendChat("SimulateBlockHardness: Toggled " + c.simulateBlockHardness);
     }
     
     public void setMiningSpeedBoostValue(int v)
     {
         v = Utils.clamp(v, 2, 4);
         c.miningSpeedBoostValue = v;
-        sendChat("MT: set mining speed boost value to " + c.highlightChests);
+        sendChat("Set mining speed boost value to " + c.highlightChests);
     }
     
     public void printMiningSpeedCache()
     {
-        sendChat("MT: current tool mining speed is " + getHeldToolMiningSpeed());
-        sendChat("MT: cached mining speed is " + getCachedMiningSpeed());
-        sendChat("MT: total mining speed is " +
+        sendChat("Current tool mining speed is " + getHeldToolMiningSpeed());
+        sendChat("Cached mining speed is " + getCachedMiningSpeed());
+        sendChat("Total mining speed is " +
             ((getHeldToolMiningSpeed() + getCachedMiningSpeed()) * getMiningSpeedBoostScale()));
     }
 }

@@ -1,5 +1,6 @@
 package a7.tweakception;
 
+import a7.tweakception.utils.McUtils;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
@@ -15,18 +16,36 @@ public class Scheduler
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event)
     {
+        if (event.phase != TickEvent.Phase.START)
+            return;
+        
         ticks++;
         if (!tasks.isEmpty())
         {
             Iterator<ScheduledTask> it = tasks.iterator();
             while (it.hasNext())
             {
-                ScheduledTask task = it.next();
-                if (ticks - task.startTicks >= task.delay)
+                ScheduledTask scheduledTask = it.next();
+                if (ticks - scheduledTask.startTicks >= scheduledTask.delay)
                 {
-                    task.task.run();
-                    if (task.andThen != null)
-                        task.andThen.run();
+                    scheduledTask.task.run();
+                    
+                    if (DevSettings.printSchedulerUpdate)
+                    {
+                        McUtils.sendChatf("ScheduledTask %s completed",
+                            Integer.toHexString(scheduledTask.hashCode()));
+                    }
+                    
+                    if (scheduledTask.andThen != null)
+                    {
+                        scheduledTask.andThen.run();
+                        
+                        if (DevSettings.printSchedulerUpdate)
+                        {
+                            McUtils.sendChatf("ScheduledTask %s andThen completed",
+                                Integer.toHexString(scheduledTask.hashCode()));
+                        }
+                    }
                     it.remove();
                 }
             }
@@ -37,6 +56,18 @@ public class Scheduler
     {
         ScheduledTask scheduledTask = new ScheduledTask(this, task, ticks, 0);
         tasks.add(scheduledTask);
+        if (DevSettings.printSchedulerUpdate)
+        {
+            StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+            if (stackTrace.length >= 3)
+            {
+                StackTraceElement caller = stackTrace[2];
+                McUtils.sendChatf("ScheduledTask %s added by %s.%s()",
+                    Integer.toHexString(scheduledTask.hashCode()),
+                    caller.getClassName(),
+                    caller.getMethodName());
+            }
+        }
         return scheduledTask;
     }
     
@@ -44,12 +75,44 @@ public class Scheduler
     {
         ScheduledTask scheduledTask = new ScheduledTask(this, task, ticks, delayTicks);
         tasks.add(scheduledTask);
+        if (DevSettings.printSchedulerUpdate)
+        {
+            StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+            if (stackTrace.length >= 3)
+            {
+                StackTraceElement caller = stackTrace[2];
+                McUtils.sendChatf("ScheduledTask %s with delay %d added by %s.%s()",
+                    Integer.toHexString(scheduledTask.hashCode()),
+                    delayTicks,
+                    caller.getClassName(),
+                    caller.getMethodName());
+            }
+        }
         return scheduledTask;
     }
     
-    public void remove(ScheduledTask task)
+    public void remove(ScheduledTask scheduledTask)
     {
-        tasks.remove(task);
+        tasks.remove(scheduledTask);
+        if (DevSettings.printSchedulerUpdate)
+        {
+            StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+            if (stackTrace.length >= 3)
+            {
+                StackTraceElement caller = stackTrace[2];
+                if (scheduledTask.delay > 0)
+                    McUtils.sendChatf("ScheduledTask %s with delay %d removed by %s.%s()",
+                        Integer.toHexString(scheduledTask.hashCode()),
+                        scheduledTask.delay,
+                        caller.getClassName(),
+                        caller.getMethodName());
+                else
+                    McUtils.sendChatf("ScheduledTask %s removed by %s.%s()",
+                        Integer.toHexString(scheduledTask.hashCode()),
+                        caller.getClassName(),
+                        caller.getMethodName());
+            }
+        }
     }
     
     public static class ScheduledTask
@@ -60,7 +123,7 @@ public class Scheduler
         public int startTicks;
         public int delay;
         
-        public ScheduledTask(Scheduler scheduler, Runnable task, int startTicks, int delay)
+        private ScheduledTask(Scheduler scheduler, Runnable task, int startTicks, int delay)
         {
             this.scheduler = scheduler;
             this.task = task;

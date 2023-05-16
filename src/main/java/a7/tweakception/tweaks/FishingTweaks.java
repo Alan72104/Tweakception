@@ -88,8 +88,7 @@ public class FishingTweaks extends Tweak
     
     public FishingTweaks(Configuration configuration)
     {
-        // TODO: chat prefix
-        super(configuration);
+        super(configuration, "FT");
         c = configuration.config.autoFish;
         Tweakception.overlayManager.addOverlay(new AutoFishOverlay());
         Tweakception.overlayManager.addOverlay(new ThunderBottleOverlay());
@@ -251,11 +250,11 @@ public class FishingTweaks extends Tweak
                 };
                 
                 playSound.run();
-                Tweakception.scheduler.addDelayed(playSound, 10)
-                    .thenDelayed(playSound, 10)
-                    .thenDelayed(playSound, 10)
-                    .thenDelayed(playSound, 10)
-                    .thenDelayed(playSound, 10);
+                Tweakception.scheduler.addDelayed(playSound, 5)
+                    .thenDelayed(playSound, 5)
+                    .thenDelayed(playSound, 5)
+                    .thenDelayed(playSound, 5)
+                    .thenDelayed(playSound, 5);
                 
                 if (getPlayer().fishEntity != null)
                     ((AccessorMinecraft) getMc()).rightClickMouse();
@@ -277,7 +276,7 @@ public class FishingTweaks extends Tweak
             // Should not throw here
             if (!exceptionThrown)
             {
-                sendChat("FishingTweaks: " + e + ", stopping");
+                sendChat(e + ", stopping");
                 exceptionThrown = true;
             }
         }
@@ -301,7 +300,7 @@ public class FishingTweaks extends Tweak
         {
             if (!exceptionThrown)
             {
-                sendChat("FishingTweaks: " + e + ", stopping");
+                sendChat(e + ", stopping");
                 exceptionThrown = true;
             }
         }
@@ -443,34 +442,34 @@ public class FishingTweaks extends Tweak
     {
         c.enableAutoFish = !c.enableAutoFish;
         Tweakception.overlayManager.setEnable(AutoFishOverlay.NAME, c.enableAutoFish);
-        sendChat("FT-AutoFish: toggled " + c.enableAutoFish);
+        sendChat("AutoFish: Toggled " + c.enableAutoFish);
     }
     
     public void toggleDebugInfo()
     {
         c.enableDebugInfo = !c.enableDebugInfo;
-        sendChat("FT-AutoFish: toggled debug info " + c.enableDebugInfo);
+        sendChat("AutoFish: Toggled debug info " + c.enableDebugInfo);
     }
     
     public void setRetrieveDelay(int min, int max)
     {
         c.minRetrieveDelay = min >= 0 ? min : new AutoFishConfig().minRetrieveDelay;
         c.maxRetrieveDelay = max >= 0 ? Math.min(max, 20) : new AutoFishConfig().maxRetrieveDelay;
-        sendChatf("FT-AutoFish: set retrieve delay to min %d, max %d", c.minRetrieveDelay, c.maxRetrieveDelay);
+        sendChatf("AutoFish: Set retrieve delay to min %d, max %d", c.minRetrieveDelay, c.maxRetrieveDelay);
     }
     
     public void setRecastDelay(int min, int max)
     {
         c.minRecastDelay = min >= 0 ? Math.max(min, 5) : new AutoFishConfig().minRecastDelay;
         c.maxRecastDelay = max >= 0 ? Math.min(max, 50) : new AutoFishConfig().maxRecastDelay;
-        sendChatf("FT-AutoFish: set recast delay to min %d, max %d", c.minRecastDelay, c.maxRecastDelay);
+        sendChatf("AutoFish: Set recast delay to min %d, max %d", c.minRecastDelay, c.maxRecastDelay);
     }
     
     public void setCatchesToMove(int min, int max)
     {
         c.minCatchesToMove = min >= 0 ? min : new AutoFishConfig().minCatchesToMove;
         c.maxCatchesToMove = max >= 0 ? Math.min(max, 30) : new AutoFishConfig().maxCatchesToMove;
-        sendChatf("FT-AutoFish: set catches to move to min %d, max %d", c.minCatchesToMove, c.maxCatchesToMove);
+        sendChatf("AutoFish: Set catches to move to min %d, max %d", c.minCatchesToMove, c.maxCatchesToMove);
     }
     
     public void setHeadMovingTicks(int ticks)
@@ -479,7 +478,7 @@ public class FishingTweaks extends Tweak
             c.headMovingTicks = Math.max(ticks, 3);
         else
             c.headMovingTicks = new AutoFishConfig().headMovingTicks;
-        sendChat("FT-AutoFish: set head moving ticks to " + c.headMovingTicks);
+        sendChat("AutoFish: Set head moving ticks to " + c.headMovingTicks);
     }
     
     public void setHeadMovingYawRange(float r)
@@ -488,7 +487,7 @@ public class FishingTweaks extends Tweak
             c.headMovingYawRange = Math.min(r, 8.0f);
         else
             c.headMovingYawRange = new AutoFishConfig().headMovingYawRange;
-        sendChat("FT-AutoFish: set head moving yaw range to +-" + c.headMovingYawRange);
+        sendChat("AutoFish: Set head moving yaw range to +-" + c.headMovingYawRange);
     }
     
     public void setHeadMovingPitchRange(float r)
@@ -497,13 +496,13 @@ public class FishingTweaks extends Tweak
             c.headMovingPitchRange = Math.min(r, 8.0f);
         else
             c.headMovingPitchRange = new AutoFishConfig().headMovingPitchRange;
-        sendChat("FT-AutoFish: set head moving pitch range to +-" + c.headMovingPitchRange);
+        sendChat("AutoFish: Set head moving pitch range to +-" + c.headMovingPitchRange);
     }
     
     public void toggleSlugfish()
     {
         waitForSlugfish = !waitForSlugfish;
-        sendChat("FT-AutoFish: toggled slugfish waiting " + waitForSlugfish);
+        sendChat("AutoFish: Toggled slugfish waiting " + waitForSlugfish);
     }
     
     public void toggleThunderBottleOverlay()
@@ -515,13 +514,13 @@ public class FishingTweaks extends Tweak
             thunderBottleChargeMap.clear();
             thunderBottleChargeIncrement = 0;
         }
-        sendChat("FT-ThunderBottleOverlay: toggled " + c.displayThunderBottleCharge);
+        sendChat("ThunderBottleOverlay: Toggled " + c.displayThunderBottleCharge);
     }
     
     public void setThunderBottleChargeIncrementResetDuration(int d)
     {
         c.thunderBottleChargeIncrementResetDuration =
             d > 0 ? d : new AutoFishConfig().thunderBottleChargeIncrementResetDuration;
-        sendChat("FT-ThunderBottleOverlay: set increment reset time to " + c.thunderBottleChargeIncrementResetDuration);
+        sendChat("ThunderBottleOverlay: Set increment reset time to " + c.thunderBottleChargeIncrementResetDuration);
     }
 }

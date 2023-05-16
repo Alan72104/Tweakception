@@ -23,6 +23,10 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.network.NetworkPlayerInfo;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityArmorStand;
@@ -31,9 +35,12 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
+import net.minecraft.inventory.Container;
+import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.*;
 import net.minecraft.network.Packet;
@@ -56,6 +63,7 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.Display;
+import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.annotation.Nonnull;
@@ -70,6 +78,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static a7.tweakception.utils.McUtils.*;
 import static a7.tweakception.utils.Utils.f;
@@ -134,6 +143,7 @@ public class GlobalTweaks extends Tweak
         public boolean buildersWandItemsTooltip = false;
         public boolean ignoreServerChunkUnloadDistance = false;
         public int clientChunkUnloadDistance = 8;
+        public boolean armorColorSortingHelper = false;
     }
     
     private final GlobalTweaksConfig c;
@@ -174,6 +184,7 @@ public class GlobalTweaks extends Tweak
     private int minionAutoClaimLastClickTicks = 0;
     private int minionAutoClaimClickDelay = 0;
     private boolean highlightPlayers = false;
+    private final Set<String> hidePlayersWhitelist = new HashSet<>();
     private final Set<String> playersToHighlight = new HashSet<>();
     private final Set<String> armorStandsToHighlight = new HashSet<>();
     // [Lv3] Undetected Sheep 2000/2000❤
@@ -454,7 +465,7 @@ public class GlobalTweaks extends Tweak
                         if (c.trevorQuestAutoStart && !trevorQuestOngoing)
                         {
                             // To prevent failing right after killing the animal
-                            Tweakception.scheduler.addDelayed(this::trevorStartFromAbiphone, 40);
+                            Tweakception.scheduler.addDelayed(this::trevorStartFromAbiphone, 20);
                             trevorQuestStartTicks = 0;
                         }
                     }
@@ -857,7 +868,8 @@ public class GlobalTweaks extends Tweak
     {
         if (c.hidePlayers)
         {
-            if (event.entity instanceof EntityOtherPlayerMP)
+            if (event.entity instanceof EntityOtherPlayerMP &&
+                !hidePlayersWhitelist.contains(event.entity.getName().toLowerCase(Locale.ROOT)))
             {
                 // Check if it's a real online player
                 NetworkPlayerInfo info = getMc().getNetHandler().getPlayerInfo(event.entity.getUniqueID());
@@ -899,21 +911,75 @@ public class GlobalTweaks extends Tweak
     
     public void onGuiDrawPost(GuiScreenEvent.DrawScreenEvent.Post event)
     {
-        if (!abiphoneRelayInMenu)
+        if (McUtils.getOpenedChest() == null)
             return;
         
-        AccessorGuiContainer accessor = (AccessorGuiContainer) event.gui;
-        int xSize = accessor.getXSize();
-        int guiLeft = accessor.getGuiLeft();
-        int guiTop = accessor.getGuiTop();
-        
-        FontRenderer fr = getMc().fontRendererObj;
-        int y = guiTop + fr.FONT_HEIGHT;
-        for (String soundString : abiphoneRelaySoundStrings)
+        IInventory inv = McUtils.getOpenedChest();
+        ContainerChest container = getOpenedChestContainer();
+        if (abiphoneRelayInMenu)
         {
-            fr.drawString(soundString,
-                guiLeft + xSize + 20, y, 0xFFFFFFFF);
-            y += fr.FONT_HEIGHT;
+            AccessorGuiContainer accessor = (AccessorGuiContainer) event.gui;
+            int xSize = accessor.getXSize();
+            int guiLeft = accessor.getGuiLeft();
+            int guiTop = accessor.getGuiTop();
+            
+            FontRenderer fr = getMc().fontRendererObj;
+            int y = guiTop + fr.FONT_HEIGHT;
+            for (String soundString : abiphoneRelaySoundStrings)
+            {
+                fr.drawString(soundString,
+                    guiLeft + xSize + 20, y, 0xFFFFFFFF);
+                y += fr.FONT_HEIGHT;
+            }
+        }
+        else if (c.armorColorSortingHelper &&
+            Keyboard.isKeyDown(Keyboard.KEY_LCONTROL))
+        {
+            List<Slot> slots = container.inventorySlots.subList(0, inv.getSizeInventory());
+            List<Slot> sorted = slots.stream()
+                .filter(slot -> slot.getHasStack() && slot.getStack().getItem() instanceof ItemArmor)
+                .sorted(
+                    Comparator
+                        .comparingInt((Slot slot) -> ((ItemArmor) slot.getStack().getItem()).armorType)
+                        .thenComparingDouble(slot ->
+                        {
+                            ItemArmor item = (ItemArmor) slot.getStack().getItem();
+                            if (item.hasColor(slot.getStack()))
+                                return Utils.getHueFromRgb(item.getColor(slot.getStack()));
+                            else
+                                return 256.0;
+                        })
+                ).collect(Collectors.toList());
+            
+            AccessorGuiContainer accessor = (AccessorGuiContainer) event.gui;
+            int guiLeft = accessor.getGuiLeft();
+            int guiTop = accessor.getGuiTop();
+            Tessellator tessellator = Tessellator.getInstance();
+            WorldRenderer worldRenderer = tessellator.getWorldRenderer();
+            GlStateManager.disableTexture2D();
+            GlStateManager.enableBlend();
+            GlStateManager.pushMatrix();
+            GlStateManager.translate(guiLeft, guiTop, 100);
+            GL11.glLineWidth(3);
+            for (int i = 0; i < sorted.size(); i++)
+            {
+                Slot slot = sorted.get(i);
+                int oldIndex = slot.getSlotIndex();
+                if (i == oldIndex || !slot.getHasStack())
+                    continue;
+                Slot slotAtNewPos = slots.get(i);
+                
+                GlStateManager.color(119 / 255.0f, 0, 200 / 255.0f, 255);
+                worldRenderer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION);
+                worldRenderer.pos(slotAtNewPos.xDisplayPosition + 8, slotAtNewPos.yDisplayPosition + 8, 0.0).endVertex();
+                worldRenderer.pos(slot.xDisplayPosition + 8, slot.yDisplayPosition + 8, 0.0).endVertex();
+                tessellator.draw();
+                break;
+            }
+            GL11.glLineWidth(1);
+            GlStateManager.popMatrix();
+            GlStateManager.enableTexture2D();
+            GlStateManager.disableBlend();
         }
     }
     
@@ -946,7 +1012,7 @@ public class GlobalTweaks extends Tweak
     public void onItemTooltip(ItemTooltipEvent event)
     {
         final List<String> tooltip = event.toolTip;
-        ItemStack itemStack = event.itemStack;
+        ItemStack stack = event.itemStack;
         
         if (c.disableTooltips)
         {
@@ -961,14 +1027,22 @@ public class GlobalTweaks extends Tweak
             return;
         }
         
-        if (itemStack == null)
+        if (stack == null)
             return;
         
-        String id = Utils.getSkyblockItemId(itemStack);
+        String id = Utils.getSkyblockItemId(stack);
         
         if (c.tooltipDisplaySkyblockItemId)
             if (id != null && !id.isEmpty())
                 tooltip.add("ID: " + id);
+        
+        if (c.armorColorSortingHelper &&
+            stack.getItem() instanceof ItemArmor &&
+            ((ItemArmor) stack.getItem()).getArmorMaterial() == ItemArmor.ArmorMaterial.LEATHER)
+        {
+            float hue = Utils.getHueFromRgb(((ItemArmor) stack.getItem()).getColor(stack));
+            tooltip.add("Hue: " + hue * 255.0f);
+        }
         
         if (fakePowerScrolls)
         {
@@ -1035,7 +1109,7 @@ public class GlobalTweaks extends Tweak
             {
                 if (Utils.auctionPriceMatcher.reset(tooltip.get(i)).find())
                 {
-                    NBTTagCompound extra = McUtils.getExtraAttributes(itemStack);
+                    NBTTagCompound extra = McUtils.getExtraAttributes(stack);
                     if (extra != null && petItemJsonExpMatcher.reset(extra.getString("petInfo")).find())
                     {
                         double price = Utils.parseDouble(Utils.auctionPriceMatcher.group("price"));
@@ -1051,7 +1125,7 @@ public class GlobalTweaks extends Tweak
     
         Consumer<String> addTheItems = keyStart ->
         {
-            NBTTagCompound extra = McUtils.getExtraAttributes(itemStack);
+            NBTTagCompound extra = McUtils.getExtraAttributes(stack);
             if (extra == null)
                 return;
             TreeMap<Integer, String> map = new TreeMap<>();
@@ -1084,7 +1158,7 @@ public class GlobalTweaks extends Tweak
             id != null &&
             (id.equals("BUILDERS_WAND") || id.equals("BUILDERS_RULER")))
         {
-            NBTTagCompound extra = McUtils.getExtraAttributes(itemStack);
+            NBTTagCompound extra = McUtils.getExtraAttributes(stack);
             byte[] byteArray = extra.getByteArray("builder's_wand_data");
             if (byteArray.length == 0)
                 byteArray = extra.getByteArray("builder's_ruler_data");
@@ -2260,6 +2334,29 @@ public class GlobalTweaks extends Tweak
         sendChat("HidePlayers: Toggled " + c.hidePlayers);
     }
     
+    public void setHidePlayersWhitelist(String name)
+    {
+        name = name.toLowerCase(Locale.ROOT);
+        if (name.isEmpty())
+        {
+            hidePlayersWhitelist.clear();
+            sendChat("HidePlayers: Cleared whitelist");
+        }
+        else
+        {
+            if (hidePlayersWhitelist.contains(name))
+            {
+                hidePlayersWhitelist.remove(name);
+                sendChat("HidePlayers: Removed " + name + " from whitelist");
+            }
+            else
+            {
+                hidePlayersWhitelist.add(name);
+                sendChat("HidePlayers: Added " + name + " to whitelist");
+            }
+        }
+    }
+    
     public void toggleEnterToCloseNumberTypingSign()
     {
         c.enterToCloseNumberTypingSign = !c.enterToCloseNumberTypingSign;
@@ -3076,6 +3173,12 @@ public class GlobalTweaks extends Tweak
         int i = 0;
         for (String s : entityTypesToHighlight)
             sendChatf("HighlightEntityType: %d: %s", ++i, s);
+    }
+    
+    public void toggleArmorColorSortingHelper()
+    {
+        c.armorColorSortingHelper = !c.armorColorSortingHelper;
+        sendChat("ArmorColorSortingHelper: Toggled " + c.armorColorSortingHelper);
     }
     
     // endregion Commands

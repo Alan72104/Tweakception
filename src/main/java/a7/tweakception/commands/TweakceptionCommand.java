@@ -17,6 +17,7 @@ import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.ResourceLocation;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -252,6 +253,8 @@ public class TweakceptionCommand extends CommandBase
                                 sendChat("Give me 6 args");
                         })
                 ),
+                new Command("armorColorSortingHelper",
+                    args -> Tweakception.globalTweaks.toggleArmorColorSortingHelper()),
                 new Command("autoHarp",
                     args -> Tweakception.globalTweaks.toggleAutoHarp(),
                     new Command("autoCloseOnNonPerfect",
@@ -326,7 +329,11 @@ public class TweakceptionCommand extends CommandBase
                             getString(args, 0, "")))
                 ),
                 new Command("hideplayers",
-                    args -> Tweakception.globalTweaks.toggleHidePlayers()),
+                    args -> Tweakception.globalTweaks.toggleHidePlayers(),
+                    new Command("whitelist",
+                        args -> Tweakception.globalTweaks.setHidePlayersWhitelist(getString(args, 0, "")),
+                        Command.playerNameProvider())
+                ),
                 new Command("hlBlock",
                     args ->
                     {
@@ -365,7 +372,7 @@ public class TweakceptionCommand extends CommandBase
                 ),
                 new Command("hlPlayer",
                     args -> Tweakception.globalTweaks.setPlayerToHighlight(getString(args, 0, "")),
-                    Command.getPlayerNameProvider()),
+                    Command.playerNameProvider()),
                 new Command("hlPlayers",
                     args -> Tweakception.globalTweaks.toggleHighlightPlayers()),
                 new Command("hlArmorStand",
@@ -376,13 +383,6 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.globalTweaks.toggleIgnoreServerRenderDistance()),
                 new Command("island",
                     args -> Tweakception.globalTweaks.printIsland()),
-                new Command("limbo",
-                    args ->
-                    {
-                        for (int i = 0; i < 12; i++)
-                            McUtils.getPlayer().sendChatMessage("/");
-                    }
-                ),
                 new Command("minionautoclaim",
                     args -> Tweakception.globalTweaks.toggleMinionAutoClaim(),
                     new Command("whitelist",
@@ -700,6 +700,20 @@ public class TweakceptionCommand extends CommandBase
             addSub(new Command("stop",
                 args -> Tweakception.globalTweaks.stopSnipe()));
         }
+        // limbo
+        {
+            addSub(new Command("limbo",
+                args ->
+                {
+                    Tweakception.inGameEventDispatcher.limboCommandSilence = true;
+                    Tweakception.scheduler.addDelayed(
+                        () -> Tweakception.inGameEventDispatcher.limboCommandSilence = false,
+                        40);
+                    for (int i = 0; i < 12; i++)
+                        McUtils.getPlayer().sendChatMessage("/");
+                }
+            ));
+        }
         // fish
         {
             addSub(new Command("fish",
@@ -868,7 +882,11 @@ public class TweakceptionCommand extends CommandBase
             addSub(new Command("dev",
                 args -> Tweakception.globalTweaks.toggleDevMode(),
                 new Command("set",
-                    args -> DevSettings.toggle(getString(args, 0, ""))
+                    args -> DevSettings.toggle(getString(args, 0, "")),
+                    args -> Arrays.stream(DevSettings.class.getDeclaredFields())
+                        .filter(field -> field.getType() == boolean.class)
+                        .map(Field::getName)
+                        .collect(Collectors.toList())
                 ).setVisibility(false),
                 new Command("dumpPlayerInfoMap",
                     args -> DumpUtils.dumpPlayerInfoMap()

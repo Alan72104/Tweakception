@@ -94,7 +94,7 @@ public class Command implements Comparable<Command>
             return commandOptions.stream()
                 .distinct()
                 .sorted()
-                .filter(getPossibleCompletionPredicate(args[0]))
+                .filter(possibleCompletionPredicate(args[0]))
                 .collect(Collectors.toList());
         }
         else if (commandOptions != null)
@@ -103,7 +103,7 @@ public class Command implements Comparable<Command>
             return customOptions.stream()
                 .distinct()
                 .sorted()
-                .filter(getPossibleCompletionPredicate(args[0]))
+                .filter(possibleCompletionPredicate(args[0]))
                 .collect(Collectors.toList());
         else
             return null;
@@ -141,7 +141,7 @@ public class Command implements Comparable<Command>
     /**
      * Returns an option provider providing the real player names detected from {@link NetHandlerPlayClient#getPlayerInfoMap()}
      */
-    public static Function<String[], List<String>> getPlayerNameProvider()
+    public static Function<String[], List<String>> playerNameProvider()
     {
         return args ->
             AccessorGuiPlayerTabOverlay.getTabListOrdering()
@@ -158,13 +158,13 @@ public class Command implements Comparable<Command>
     
     public static List<String> getPossibleCompletions(String arg, List<String> opts)
     {
-        return opts.stream().filter(getPossibleCompletionPredicate(arg)).collect(Collectors.toList());
+        return opts.stream().filter(possibleCompletionPredicate(arg)).collect(Collectors.toList());
     }
     
     /**
      * Returns a predicate filtering string starting with {@code arg}, case-insensitive
      */
-    public static Predicate<String> getPossibleCompletionPredicate(String arg)
+    public static Predicate<String> possibleCompletionPredicate(String arg)
     {
         return s -> s.toLowerCase(Locale.ROOT).startsWith(arg.toLowerCase(Locale.ROOT));
     }

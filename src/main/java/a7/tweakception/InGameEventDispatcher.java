@@ -25,6 +25,8 @@ import static a7.tweakception.utils.McUtils.isInGame;
 
 public class InGameEventDispatcher
 {
+    public boolean limboCommandSilence = false;
+    
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event)
     {
@@ -133,6 +135,14 @@ public class InGameEventDispatcher
     @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
     public void onClientChatReceived(ClientChatReceivedEvent event)
     {
+        if (limboCommandSilence &&
+            (event.message.getUnformattedText().equals("Unknown command. Type \"help\" for help.") ||
+            event.message.getUnformattedText().equals("Unknown command. Type \"/help\" for help.")))
+        {
+            event.setCanceled(true);
+            return;
+        }
+        
         globalTweaks.onChatReceivedGlobal(event);
         dungeonTweaks.onChatReceivedGlobal(event);
         guildBridge.onChatReceivedGlobal(event);

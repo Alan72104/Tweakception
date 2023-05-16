@@ -659,8 +659,8 @@ public class DungeonTweaks extends Tweak
                         {
                             sendChat("Frag: Repartying " + c.fragBot);
                             Tweakception.scheduler
-                                .addDelayed(() -> McUtils.getPlayer().sendChatMessage("/p disband"), 20)
-                                .thenDelayed(() -> McUtils.getPlayer().sendChatMessage("/p " + c.fragBot), 20);
+                                .addDelayed(() -> McUtils.getPlayer().sendChatMessage("/p disband"), 10)
+                                .thenDelayed(() -> McUtils.getPlayer().sendChatMessage("/p " + c.fragBot), 10);
                         }
                         else
                             sendChat("Frag: Cannot reparty, please set a frag bot using `setfragbot <name>`");

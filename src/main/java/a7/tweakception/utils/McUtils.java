@@ -38,6 +38,7 @@ public class McUtils
     private static final Timer mcTimer = ((AccessorMinecraft) mc).getTimer();
     private static final Matcher colorMatcher = Pattern.compile("§[0-9a-fk-orA-FK-OR]").matcher("");
     private static IInventory chest = null;
+    private static ContainerChest container = null;
     public static boolean chestUpdatedThisTick = false;
     
     public static Minecraft getMc()
@@ -88,14 +89,31 @@ public class McUtils
         if (!chestUpdatedThisTick)
         {
             chest = null;
+            container = null;
             if (getMc().currentScreen instanceof GuiChest)
             {
                 GuiChest gui = (GuiChest) getMc().currentScreen;
-                ContainerChest container = (ContainerChest) gui.inventorySlots;
+                container = (ContainerChest) gui.inventorySlots;
                 chest = container.getLowerChestInventory();
             }
         }
         return chest;
+    }
+    
+    public static ContainerChest getOpenedChestContainer()
+    {
+        if (!chestUpdatedThisTick)
+        {
+            chest = null;
+            container = null;
+            if (getMc().currentScreen instanceof GuiChest)
+            {
+                GuiChest gui = (GuiChest) getMc().currentScreen;
+                container = (ContainerChest) gui.inventorySlots;
+                chest = container.getLowerChestInventory();
+            }
+        }
+        return container;
     }
     
     public static void executeCommand(String cmd)
@@ -162,19 +180,25 @@ public class McUtils
         return null;
     }
     
-    // Gets the nbt from a path defined like "tag1.tag2[5].tag"
+    /**
+     * Gets the nbt from a path defined like {@code "tag1.tag2[5].tag"}
+      */
     public static NBTBase getNbt(ItemStack stack, String path)
     {
         return getNbt(stack.getTagCompound(), path);
     }
     
-    // Gets the nbt from ExtraAttributes from a path defined like "tag1.tag2[5].tag"
+    /**
+     * Gets the nbt from ExtraAttributes from a path defined like {@code "tag1.tag2[5].tag"}
+     */
     public static NBTBase getExtraAttributes(ItemStack stack, String path)
     {
         return getNbt(getExtraAttributes(stack), path);
     }
     
-    // Gets the nbt from a path defined like "tag1.tag2[5].tag"
+    /**
+     * Gets the nbt from a path defined like {@code "tag1.tag2[5].tag"}
+     */
     public static NBTBase getNbt(NBTBase nbt, String path)
     {
         if (nbt == null)

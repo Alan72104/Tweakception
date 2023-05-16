@@ -216,12 +216,12 @@ public class SlayerTweaks extends Tweak
                             switchingSlot = true;
                             int lastSlot = getPlayer().inventory.currentItem;
                             getPlayer().inventory.currentItem = slot;
-                            Tweakception.scheduler.addDelayed(() -> ((AccessorMinecraft) getMc()).rightClickMouse(), 4)
+                            Tweakception.scheduler.addDelayed(() -> ((AccessorMinecraft) getMc()).rightClickMouse(), 2)
                                 .thenDelayed(() ->
                                 {
                                     getPlayer().inventory.currentItem = lastSlot;
                                     switchingSlot = false;
-                                }, 6);
+                                }, 3);
                         }
                     }
                 }

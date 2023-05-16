@@ -403,6 +403,16 @@ public class Utils
             mouseY >= y && mouseY <= y + h;
     }
     
+    public static float getHueFromRgb(int i)
+    {
+        float[] hsv = Color.RGBtoHSB(
+            (i >> 16) & 0xFF,
+            (i >> 8) & 0xFF,
+            i & 0xFF,
+            null);
+        return hsv[0];
+    }
+    
     public static <T> T setAccessibleAndGetField(Object o, String... names) throws Exception
     {
         return setAccessibleAndGetField(o.getClass(), o, names);

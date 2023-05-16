@@ -8,6 +8,7 @@ public class DevSettings
 {
     public static boolean printClicks = false;
     public static boolean printLocationChange = false;
+    public static boolean printSchedulerUpdate = false;
     
     // Toggles a boolean field by their name, case-insensitive
     public static void toggle(String name)
@@ -21,7 +22,7 @@ public class DevSettings
                 {
                     boolean val = (boolean) field.get(null);
                     field.set(null, !val);
-                    sendChat("TC-DevSettings: set " + field.getName() + " to " + !val);
+                    sendChat("§3[DevSettings] §rSet " + field.getName() + " to " + !val);
                 }
                 catch (IllegalAccessException ignored)
                 {
@@ -29,6 +30,6 @@ public class DevSettings
                 return;
             }
         }
-        sendChat("TC-DevSettings: no boolean field of name \"" + name + "\"");
+        sendChat("§3[DevSettings] §rNo boolean field of name \"" + name + "\"");
     }
 }

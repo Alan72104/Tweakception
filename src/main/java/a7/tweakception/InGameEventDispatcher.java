@@ -218,6 +218,7 @@ public class InGameEventDispatcher
     @SubscribeEvent
     public void onGuiDrawPost(GuiScreenEvent.DrawScreenEvent.Post event)
     {
+        McUtils.chestUpdatedThisTick = false;
         if (!isInSkyblock()) return;
         
         GlStateManager.disableLighting();

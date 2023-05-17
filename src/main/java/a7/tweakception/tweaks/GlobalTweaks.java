@@ -1265,27 +1265,29 @@ public class GlobalTweaks extends Tweak
                 {
                     case "Your online status has been set to Online":
                         c.lastOnlineStatus = "online";
-                        break;
+                        return;
                     case "Your online status has been set to Away":
                         c.lastOnlineStatus = "away";
-                        break;
+                        return;
                     case "Your online status has been set to Busy":
                         c.lastOnlineStatus = "busy";
-                        break;
+                        return;
                     case "Your online status has been set to Appear Offline":
                         c.lastOnlineStatus = "offline";
-                        break;
+                        return;
                 }
             }
-            else if (msg.equals("REMINDER: Your Online Status is currently set to Appear Offline"))
+            if (msg.equals("REMINDER: Your Online Status is currently set to Appear Offline"))
             {
                 c.lastOnlineStatus = "offline";
+                return;
             }
-            else if (msg.startsWith("Your new API key is "))
+            if (msg.startsWith("Your new API key is "))
             {
                 Tweakception.apiManager.setApiKey(msg.split("Your new API key is ")[1]);
+                return;
             }
-            else if (c.autoGuildWelcome && ((msg = McUtils.cleanColor(msg)) != null) &&
+            if (c.autoGuildWelcome && ((msg = McUtils.cleanColor(msg)) != null) &&
                 msg.startsWith("Guild > ") && msg.endsWith(" joined."))
             {
                 String name = msg.substring(8, msg.length() - 8);
@@ -2925,7 +2927,7 @@ public class GlobalTweaks extends Tweak
             return;
         }
         snipeStop();
-        sendChat("Snipe: Stopping sniping");
+        sendChat("Snipe: Stopping");
     }
     
     public void setSnipeWarpDelay(int delay)

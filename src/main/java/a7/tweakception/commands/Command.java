@@ -21,7 +21,7 @@ public class Command implements Comparable<Command>
     protected final String name;
     @Nullable protected Consumer<String[]> func;
     @Nullable protected Function<String[], List<String>> optionProvider;
-    protected final Set<Command> subCommands = new TreeSet<>();
+    protected final List<Command> subCommands;
     protected boolean visible = true; // Whether this command can be used or not, override by global tracker devMode
     
     public Command(String name,
@@ -30,8 +30,9 @@ public class Command implements Comparable<Command>
     {
         this.name = name;
         this.func = func;
-        for (Command sub : subs)
-            addSub(sub);
+        List<Command> list = Arrays.asList(subs);
+        Collections.sort(list);
+        subCommands = Collections.unmodifiableList(list);
     }
     
     public Command(String name,
@@ -42,8 +43,9 @@ public class Command implements Comparable<Command>
         this.name = name;
         this.func = func;
         this.optionProvider = optionProvider;
-        for (Command sub : subs)
-            addSub(sub);
+        List<Command> list = Arrays.asList(subs);
+        Collections.sort(list);
+        subCommands = Collections.unmodifiableList(list);
     }
     
     public String getName()
@@ -113,11 +115,6 @@ public class Command implements Comparable<Command>
     {
         this.visible = visible;
         return this;
-    }
-    
-    protected void addSub(Command cmd)
-    {
-        subCommands.add(cmd);
     }
     
     private List<String> getVisibleSubCommandNames()

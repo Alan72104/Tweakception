@@ -17,6 +17,7 @@ import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.S38PacketPlayerListItem;
 import net.minecraft.util.*;
@@ -53,6 +54,7 @@ public class GardenTweaks extends Tweak
         public boolean contestDataDumper = false;
         public boolean contestDataDumperDumpHeader = false;
         public boolean autoClaimContest = false;
+        public boolean composterAmountNeededOverlay = false;
     }
     private static final Map<String, Integer> FUELS = new HashMap<>();
     private static final Map<String, Integer> AGRO_SACK_ITEMS = new HashMap<>();
@@ -189,38 +191,6 @@ public class GardenTweaks extends Tweak
                 }
             }
         }
-        
-        String name = itemStack.getDisplayName();
-        if (name == null)
-            return;
-        
-        boolean isCompost = name.equals("§eOrganic Matter");
-        boolean isFuel = name.equals("§2Fuel");
-        if (isCompost || isFuel)
-        {
-            for (int i = 0; i < tooltip.size(); i++)
-            {
-                if (composterAmountMatcher.reset(McUtils.cleanColor(tooltip.get(i))).find())
-                {
-                    float amount = Utils.parseFloat(composterAmountMatcher.group(1));
-                    int limit = Integer.parseInt(composterAmountMatcher.group(2)) * 1000;
-                    float needed = limit - amount;
-                    if (isCompost)
-                    {
-                        float count = Utils.roundToDigits(needed / 25600, 1);
-                        tooltip.add(i + 1, "§6 " + count + "x §9Box of Seeds §6needed");
-                    }
-                    else
-                    {
-                        float count = Utils.roundToDigits(needed / 10000, 1);
-                        tooltip.add(i + 1, "§6 " + count + "x §9Volta §6needed");
-                        float countBiofuel = Utils.roundToDigits(needed / 3000, 1);
-                        tooltip.add(i + 1, "§6 " + countBiofuel + "x §9Biofuel §6needed");
-                    }
-                    return;
-                }
-            }
-        }
     }
     
     public void onPlayerListItemUpdateDisplayName(S38PacketPlayerListItem.AddPlayerData addPlayerData,
@@ -271,7 +241,7 @@ public class GardenTweaks extends Tweak
         int xSize = accessor.getXSize();
         int guiLeft = accessor.getGuiLeft();
         int guiTop = accessor.getGuiTop();
-        IInventory chest;
+        
         if (c.contestDataDumper & inContestsMenu)
         {
             Color color = new Color(50, 50, 50);
@@ -292,9 +262,14 @@ public class GardenTweaks extends Tweak
                 color.getRGB());
             fr.drawString("Click to dump csv",
                 x + 1, y + 1, 0xFFFFFFFF);
+            return;
         }
-        else if ((chest = getOpenedChest()) != null &&
-            chest.getName().equals("Enchanted Agronomy Sack"))
+        
+        IInventory chest = getOpenedChest();
+        if (chest == null)
+            return;
+        
+        if (chest.getName().equals("Enchanted Agronomy Sack"))
         {
             List<Pair<String, String>> list = new ArrayList<>();
             for (int i = 0; i < chest.getSizeInventory(); i++)
@@ -331,6 +306,62 @@ public class GardenTweaks extends Tweak
                     y += fr.FONT_HEIGHT + 5;
                 }
             }
+        }
+        else if (c.composterAmountNeededOverlay &&
+            chest.getName().equals("Composter"))
+        {
+            ItemStack crop = chest.getStackInSlot(2 - 1);
+            ItemStack fuel = chest.getStackInSlot(8 - 1);
+            if (crop == null || fuel == null)
+                return;
+            if (crop.getItem() != Item.getItemFromBlock(Blocks.stained_glass_pane) ||
+                fuel.getItem() != Item.getItemFromBlock(Blocks.stained_glass_pane))
+                return;
+            
+            String cropNeeded = "";
+            String fuelNeeded = "";
+            
+            String[] lore = McUtils.getDisplayLore(crop);
+            if (lore == null)
+                return;
+            for (String line : lore)
+            {
+                if (composterAmountMatcher.reset(McUtils.cleanColor(line)).find())
+                {
+                    float amount = Utils.parseFloat(composterAmountMatcher.group(1));
+                    int limit = Integer.parseInt(composterAmountMatcher.group(2)) * 1000;
+                    float needed = limit - amount;
+                    float count = Utils.roundToDigits(needed / 25600, 1);
+                    cropNeeded = "§6 " + count + "x §9Box of Seeds §6needed";
+                    break;
+                }
+            }
+            lore = McUtils.getDisplayLore(fuel);
+            if (lore == null)
+                return;
+            for (String line : lore)
+            {
+                if (composterAmountMatcher.reset(McUtils.cleanColor(line)).find())
+                {
+                    float amount = Utils.parseFloat(composterAmountMatcher.group(1));
+                    int limit = Integer.parseInt(composterAmountMatcher.group(2)) * 1000;
+                    float needed = limit - amount;
+                    float count = Utils.roundToDigits(needed / 10000, 1);
+                    float countBiofuel = Utils.roundToDigits(needed / 3000, 1);
+                    fuelNeeded = "§6 "+count+"x §9Volta§6/"+countBiofuel+"x §9Biofuel §6needed";
+                    break;
+                }
+            }
+            
+            int x = guiLeft + xSize / 2;
+            int y = guiTop - fr.FONT_HEIGHT - 5;
+            int w = fr.getStringWidth("§8|") / 2;
+            fr.drawString(cropNeeded,
+                x - fr.getStringWidth(cropNeeded) - w - 5, y, 0xFFFFFFFF);
+            fr.drawString("§8|",
+                x - w, y, 0xFFFFFFFF);
+            fr.drawString(fuelNeeded,
+                x + w + 3, y, 0xFFFFFFFF);
         }
     }
     
@@ -712,6 +743,12 @@ public class GardenTweaks extends Tweak
     {
         c.autoClaimContest = !c.autoClaimContest;
         sendChat("AutoClaimContest: Toggled " + c.autoClaimContest);
+    }
+    
+    public void toggleComposterAmountNeededOverlay()
+    {
+        c.composterAmountNeededOverlay = !c.composterAmountNeededOverlay;
+        sendChat("ComposterAmountNeededOverlay: Toggled " + c.composterAmountNeededOverlay);
     }
     
     // endregion Commands

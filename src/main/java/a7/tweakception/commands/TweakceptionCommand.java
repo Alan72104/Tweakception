@@ -296,6 +296,8 @@ public class TweakceptionCommand extends CommandBase
             ),
             new Command("entertoclosesign",
                 args -> Tweakception.globalTweaks.toggleEnterToCloseNumberTypingSign()),
+            new Command("fastCommand",
+                args -> Tweakception.globalTweaks.setFastCommand(getString(args, 0, ""))),
             new Command("fakepowerscrolls",
                 args -> Tweakception.globalTweaks.toggleFakePowerScrolls()),
             new Command("fakestars",
@@ -321,6 +323,8 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.globalTweaks.setHidePlayersWhitelist(getString(args, 0, "")),
                     Command.playerNameProvider())
             ),
+            new Command("hideMinionStorageFull",
+                args -> Tweakception.globalTweaks.toggleHideMinionStorageFull()),
             new Command("hlBlock",
                 args ->
                 {
@@ -809,6 +813,8 @@ public class TweakceptionCommand extends CommandBase
     {
         addSub(new Command("foraging",
             null,
+            new Command("axeMidClickSwapRodBreak",
+                args -> Tweakception.foragingTweaks.toggleAxeMidClickSwapRodBreak()),
             new Command("tree",
                 args -> Tweakception.foragingTweaks.toggleTreeIndicator()),
             new Command("debug",

@@ -1,5 +1,6 @@
 package a7.tweakception.utils;
 
+import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
@@ -357,6 +358,21 @@ public class Utils
         return -1;
     }
     
+    
+    public static int findFishingRodInHotbar()
+    {
+        for (int i = 0; i < 9; i++)
+        {
+            ItemStack stack = getPlayer().inventory.getStackInSlot(i);
+            if (stack != null &&
+                stack.getItem() == Items.fishing_rod &&
+                Utils.getSkyblockItemId(stack) != null &&
+                !Utils.getSkyblockItemId(stack).equals("GRAPPLING_HOOK"))
+                return i;
+        }
+        return -1;
+    }
+    
     public static int[] makeColorArray(int r, int g, int b, int a)
     {
         int[] arr = new int[4];
@@ -403,14 +419,13 @@ public class Utils
             mouseY >= y && mouseY <= y + h;
     }
     
-    public static float getHueFromRgb(int i)
+    public static float[] rgbToHsv(int i)
     {
-        float[] hsv = Color.RGBtoHSB(
+        return Color.RGBtoHSB(
             (i >> 16) & 0xFF,
             (i >> 8) & 0xFF,
             i & 0xFF,
             null);
-        return hsv[0];
     }
     
     public static <T> T setAccessibleAndGetField(Object o, String... names) throws Exception

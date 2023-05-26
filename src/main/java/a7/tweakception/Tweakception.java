@@ -37,6 +37,8 @@ public class Tweakception
         new KeyBinding("Toggle snap yaw", Keyboard.KEY_SUBTRACT, "Tweakception");
     public static final KeyBinding keybindToggleSnapPitch =
         new KeyBinding("Toggle snap pitch", Keyboard.KEY_ADD, "Tweakception");
+    public static final KeyBinding keybindFastCommand =
+        new KeyBinding("Fast command", Keyboard.KEY_BACKSLASH, "Tweakception");
     
     public static Logger logger;
     public static Configuration configuration;
@@ -99,6 +101,7 @@ public class Tweakception
         
         ClientRegistry.registerKeyBinding(keybindToggleSnapYaw);
         ClientRegistry.registerKeyBinding(keybindToggleSnapPitch);
+        ClientRegistry.registerKeyBinding(keybindFastCommand);
         
         Runtime.getRuntime().addShutdownHook(new Thread(() ->
         {

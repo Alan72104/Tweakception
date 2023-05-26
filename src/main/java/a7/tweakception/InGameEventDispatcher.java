@@ -177,6 +177,7 @@ public class InGameEventDispatcher
     @SubscribeEvent
     public void onWorldUnload(WorldEvent.Unload event)
     {
+        globalTweaks.onWorldUnload(event);
         dungeonTweaks.onWorldUnload(event);
         crimsonTweaks.onWorldUnload(event);
         slayerTweaks.onWorldUnload(event);
@@ -280,6 +281,7 @@ public class InGameEventDispatcher
         if (!isInGame()) return;
         if (!isInSkyblock()) return;
         
+        globalTweaks.onKeyInput(event);
         fairyTracker.onKeyInput(event);
         gardenTweaks.onKeyInput(event);
     }
@@ -299,7 +301,5 @@ public class InGameEventDispatcher
         if (!isInSkyblock()) return;
         
         dungeonTweaks.onFogDensitySet(event);
-        if (event.isCanceled())
-            return;
     }
 }

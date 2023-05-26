@@ -28,7 +28,7 @@ public class PacketLogger
         if (logPacket)
         {
             stop();
-            sendChat("§3[PacketLogger]§r toggled off packet log");
+            sendChat("§3[PacketLogger]§r Toggled off");
         }
         else
         {
@@ -49,11 +49,11 @@ public class PacketLogger
             }
             McUtils.getPlayer().addChatMessage(new ChatComponentTranslation("Output written to file %s",
                 McUtils.makeFileLink(file)));
-            sendChat("§3[PacketLogger]§r toggled on packet log");
+            sendChat("§3[PacketLogger]§r Toggled on");
         }
         catch (IOException e)
         {
-            sendChat("§3[PacketLogger]§r cannot create file");
+            sendChat("§3[PacketLogger]§r Cannot create file");
             logPacket = false;
         }
     }
@@ -79,19 +79,19 @@ public class PacketLogger
         if (allowedPacketClasses.contains(name))
         {
             allowedPacketClasses.remove(name);
-            sendChat("§3[PacketLogger]§r removed " + name);
+            sendChat("§3[PacketLogger]§r Removed " + name);
         }
         else
         {
             allowedPacketClasses.add(name);
-            sendChat("§3[PacketLogger]§r added " + name);
+            sendChat("§3[PacketLogger]§r Added " + name);
         }
     }
     
     public void toggleLogAll()
     {
         logAll = !logAll;
-        sendChat("§3[PacketLogger]§r toggled log all " + logAll);
+        sendChat("§3[PacketLogger]§r Toggled log all " + logAll);
     }
     
     public void logPacket(String direction, Packet<?> packet)
@@ -115,7 +115,7 @@ public class PacketLogger
                 }
                 catch (Exception | StackOverflowError e)
                 {
-                    sendChat("§3[PacketLogger]§r exception on logging packet!");
+                    sendChat("§3[PacketLogger]§r Exception on logging packet!");
                     e.printStackTrace();
                     toggle();
                 }

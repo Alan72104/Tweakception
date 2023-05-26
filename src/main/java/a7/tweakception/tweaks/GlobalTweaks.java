@@ -35,7 +35,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
-import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
@@ -60,6 +59,7 @@ import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.Display;
@@ -144,6 +144,8 @@ public class GlobalTweaks extends Tweak
         public boolean ignoreServerChunkUnloadDistance = false;
         public int clientChunkUnloadDistance = 8;
         public boolean armorColorSortingHelper = false;
+        public boolean hideMinionStorageFull = false;
+        public String fastCommand = "";
     }
     
     private final GlobalTweaksConfig c;
@@ -173,7 +175,7 @@ public class GlobalTweaks extends Tweak
     private boolean editingAreas = false;
     private int selectedAreaPointIndex = 0;
     private BlockPos[] areaPoints = null;
-    private final HashMap<String, SkyblockIsland.SubArea> playersInAreas = new HashMap<>();
+    private final List<PlayerLocation> playerLocations = new ArrayList<>();
     private long pingNanos = 0;
     private int ping = 0;
     private boolean pingingFromCommand = false;
@@ -244,6 +246,23 @@ public class GlobalTweaks extends Tweak
     private List<String> tooltipOverride = null;
     private final Set<BlockPos> blocksToHighlight = new HashSet<>();
     private final Set<String> entityTypesToHighlight = new HashSet<>();
+    
+    private static class PlayerLocation implements Comparable<PlayerLocation>
+    {
+        String name;
+        SkyblockIsland.SubArea area;
+        long joinMillis;
+        long leaveMillis;
+        
+        @Override
+        public int compareTo(PlayerLocation that)
+        {
+            int i = this.area.shortName.compareTo(that.area.shortName);
+            if (i != 0)
+                return i;
+            return this.name.compareTo(that.name);
+        }
+    }
     
     static
     {
@@ -325,21 +344,59 @@ public class GlobalTweaks extends Tweak
                 SkyblockIsland island = getCurrentIsland();
                 if (c.displayPlayersInArea)
                 {
-                    playersInAreas.clear();
                     if (island != null && ISLANDS_THAT_HAS_SUBAREAS.contains(island))
+                    {
+                        List<PlayerLocation> toRemove = new ArrayList<>(playerLocations);
+                        long millis = System.currentTimeMillis();
                         for (SkyblockIsland.SubArea area : island.areas)
                         {
-                            List<Entity> players = getWorld().getEntitiesWithinAABB(EntityOtherPlayerMP.class,
+                            List<EntityOtherPlayerMP> players = getWorld().getEntitiesWithinAABB(EntityOtherPlayerMP.class,
                                 area.box,
                                 e ->
                                 {
-                                    String skin = ((AbstractClientPlayer) e).getLocationSkin().toString();
-                                    return !npcSkins.contains(skin) && !e.isInvisible(); // Watchdog player is invisible
+                                    NetworkPlayerInfo networkPlayerInfo = getMc().getNetHandler().getPlayerInfo(e.getUniqueID());
+                                    return !npcSkins.contains(e.getLocationSkin().toString()) &&
+                                        networkPlayerInfo != null &&
+                                        networkPlayerInfo.getResponseTime() == 1; // 0 for npc, 1 for real players
                                 });
-                            for (Entity p : players)
-                                playersInAreas.put(p.getName(), area);
+                            
+                            for (EntityOtherPlayerMP player : players)
+                            {
+                                PlayerLocation oldEntry = null;
+                                for (PlayerLocation e : toRemove)
+                                    if (e.name.equals(player.getName()) && e.area == area)
+                                    {
+                                        oldEntry = e;
+                                        break;
+                                    }
+                                if (oldEntry != null)
+                                {
+                                    if (oldEntry.leaveMillis != 0)
+                                    {
+                                        oldEntry.joinMillis = millis;
+                                        oldEntry.leaveMillis = 0;
+                                    }
+                                    toRemove.remove(oldEntry);
+                                }
+                                else
+                                {
+                                    PlayerLocation newEntry = new PlayerLocation();
+                                    newEntry.name = player.getName();
+                                    newEntry.area = area;
+                                    newEntry.joinMillis = millis;
+                                    playerLocations.add(newEntry);
+                                }
+                            }
                         }
-                    Tweakception.overlayManager.setEnable(PlayersInAreasDisplayOverlay.NAME, !playersInAreas.isEmpty());
+                        for (PlayerLocation ele : toRemove)
+                        {
+                            if (ele.leaveMillis == 0)
+                                ele.leaveMillis = millis;
+                            else if (millis - ele.leaveMillis >= 5000)
+                                playerLocations.remove(ele);
+                        }
+                    }
+                    Tweakception.overlayManager.setEnable(PlayersInAreasDisplayOverlay.NAME, !playerLocations.isEmpty());
                 }
             }
             
@@ -881,31 +938,36 @@ public class GlobalTweaks extends Tweak
     
     public void onLivingSpecialRenderPre(RenderLivingEvent.Specials.Pre<?> event)
     {
-        if (c.highlightShinyPigs && getCurrentIsland() == SkyblockIsland.HUB)
+        Entity e = event.entity;
+        if (c.highlightShinyPigs && getCurrentIsland() == SkyblockIsland.HUB &&
+            e.hasCustomName() &&
+            e instanceof EntityArmorStand &&
+            McUtils.cleanColor(e.getName()).equalsIgnoreCase(c.shinyPigName))
         {
-            Entity entity = event.entity;
-            if (entity instanceof EntityArmorStand &&
-                McUtils.cleanColor(entity.getName()).equalsIgnoreCase(c.shinyPigName))
+            List<Entity> pig = getWorld().getEntitiesWithinAABB(EntityPig.class,
+                e.getEntityBoundingBox().expand(0.0, 2.5, 0.0));
+            List<EntityArmorStand> armorStands = getWorld().getEntitiesWithinAABB(EntityArmorStand.class,
+                e.getEntityBoundingBox().expand(0.2, 2.5, 0.2));
+            
+            if (pig.size() > 0)
+                RenderUtils.drawDefaultHighlightBoxForEntity(pig.get(0), RenderUtils.DEFAULT_HIGHLIGHT_COLOR, false);
+            
+            for (EntityArmorStand armorStand : armorStands)
             {
-                List<Entity> pig = getWorld().getEntitiesWithinAABB(EntityPig.class,
-                    entity.getEntityBoundingBox().expand(0.0, 2.5, 0.0));
-                List<EntityArmorStand> armorStands = getWorld().getEntitiesWithinAABB(EntityArmorStand.class,
-                    entity.getEntityBoundingBox().expand(0.2, 2.5, 0.2));
-                
-                if (pig.size() > 0)
-                    RenderUtils.drawDefaultHighlightBoxForEntity(pig.get(0), RenderUtils.DEFAULT_HIGHLIGHT_COLOR, false);
-                
-                for (EntityArmorStand armorStand : armorStands)
+                String shinyOrbTexture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODJjZGUwNjhlOTlhNGY5OGMzMWY4N2I0Y2MwNmJlMTRiMjI5YWNhNGY3MjgxYTQxNmM3ZTJmNTUzMjIzZGI3NCJ9fX0=";
+                String tex = McUtils.getArmorStandHeadTexture(armorStand);
+                if (tex != null && tex.equals(shinyOrbTexture))
                 {
-                    String shinyOrbTexture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODJjZGUwNjhlOTlhNGY5OGMzMWY4N2I0Y2MwNmJlMTRiMjI5YWNhNGY3MjgxYTQxNmM3ZTJmNTUzMjIzZGI3NCJ9fX0=";
-                    String tex = McUtils.getArmorStandHeadTexture(armorStand);
-                    if (tex != null && tex.equals(shinyOrbTexture))
-                    {
-                        RenderUtils.drawDefaultHighlightBoxUnderEntity(entity, -1, RenderUtils.DEFAULT_HIGHLIGHT_COLOR, false);
-                        break;
-                    }
+                    RenderUtils.drawDefaultHighlightBoxUnderEntity(e, -1, RenderUtils.DEFAULT_HIGHLIGHT_COLOR, false);
+                    break;
                 }
             }
+        }
+        else if (c.hideMinionStorageFull && getCurrentIsland() == SkyblockIsland.PRIVATE_ISLAND &&
+            e.hasCustomName() &&
+            e.getCustomNameTag().equals("§cMy storage is full! :("))
+        {
+            event.setCanceled(true);
         }
     }
     
@@ -937,18 +999,15 @@ public class GlobalTweaks extends Tweak
         {
             List<Slot> slots = container.inventorySlots.subList(0, inv.getSizeInventory());
             List<Slot> sorted = slots.stream()
-                .filter(slot -> slot.getHasStack() && slot.getStack().getItem() instanceof ItemArmor)
+                .filter(slot -> slot.getHasStack() &&
+                    slot.getStack().getItem() instanceof ItemArmor &&
+                    ((ItemArmor) slot.getStack().getItem()).getArmorMaterial() == ItemArmor.ArmorMaterial.LEATHER)
                 .sorted(
                     Comparator
                         .comparingInt((Slot slot) -> ((ItemArmor) slot.getStack().getItem()).armorType)
-                        .thenComparingDouble(slot ->
-                        {
-                            ItemArmor item = (ItemArmor) slot.getStack().getItem();
-                            if (item.hasColor(slot.getStack()))
-                                return Utils.getHueFromRgb(item.getColor(slot.getStack()));
-                            else
-                                return 256.0;
-                        })
+                        .thenComparingDouble(slot -> Utils.rgbToHsv(Items.leather_helmet.getColor(slot.getStack()))[0])
+                        .thenComparingDouble(slot -> Utils.rgbToHsv(Items.leather_helmet.getColor(slot.getStack()))[1])
+                        .thenComparingDouble(slot -> Utils.rgbToHsv(Items.leather_helmet.getColor(slot.getStack()))[2])
                 ).collect(Collectors.toList());
             
             AccessorGuiContainer accessor = (AccessorGuiContainer) event.gui;
@@ -1009,6 +1068,20 @@ public class GlobalTweaks extends Tweak
         }
     }
     
+    public void onKeyInput(InputEvent.KeyInputEvent event)
+    {
+        if (getMc().currentScreen == null && Keyboard.getEventKeyState())
+        {
+            int key = Keyboard.getEventKey();
+            if (key == Tweakception.keybindFastCommand.getKeyCode() &&
+                !c.fastCommand.isEmpty())
+            {
+                sendChat("FastCommand: Executing " + c.fastCommand);
+                McUtils.executeCommand("/" + c.fastCommand);
+            }
+        }
+    }
+    
     public void onItemTooltip(ItemTooltipEvent event)
     {
         final List<String> tooltip = event.toolTip;
@@ -1040,7 +1113,7 @@ public class GlobalTweaks extends Tweak
             stack.getItem() instanceof ItemArmor &&
             ((ItemArmor) stack.getItem()).getArmorMaterial() == ItemArmor.ArmorMaterial.LEATHER)
         {
-            float hue = Utils.getHueFromRgb(((ItemArmor) stack.getItem()).getColor(stack));
+            float hue = Utils.rgbToHsv(((ItemArmor) stack.getItem()).getColor(stack))[0];
             tooltip.add("Hue: " + hue * 255.0f);
         }
         
@@ -1191,6 +1264,10 @@ public class GlobalTweaks extends Tweak
     {
         lastWorldJoin = System.currentTimeMillis();
         lastWorldJoinTicks = getTicks();
+    }
+    
+    public void onWorldUnload(WorldEvent.Unload event)
+    {
         trevorQuestStartTicks = 0;
         trevorQuestCooldownNoticed = false;
         trevorQuestPendingStart = false;
@@ -1198,6 +1275,7 @@ public class GlobalTweaks extends Tweak
         snipeWarping = false;
         lastChunkUnloadPosition = new ChunkCoordIntPair(0, 0);
         pendingUnloadChunks.clear();
+        playerLocations.clear();
     }
     
     public void onChunkLoad(ChunkEvent.Load event)
@@ -1662,7 +1740,7 @@ public class GlobalTweaks extends Tweak
             return new ArrayList<>(playerList);
         
         List<NetworkPlayerInfo> list = TAB_LIST_ORDERING
-            .sortedCopy(getPlayer().sendQueue.getPlayerInfoMap());
+            .sortedCopy(getMc().getNetHandler().getPlayerInfoMap());
         playerList.clear();
         playerListUpdatedThisTick = true;
         
@@ -2008,7 +2086,7 @@ public class GlobalTweaks extends Tweak
     private class PlayersInAreasDisplayOverlay extends TextOverlay
     {
         public static final String NAME = "PlayersInAreasDisplayOverlay";
-        private final List<Map.Entry<String, SkyblockIsland.SubArea>> sorted = new ArrayList<>();
+        private final List<PlayerLocation> sorted = new ArrayList<>();
         
         public PlayersInAreasDisplayOverlay()
         {
@@ -2026,15 +2104,18 @@ public class GlobalTweaks extends Tweak
             List<String> list = new ArrayList<>();
             
             sorted.clear();
-            sorted.addAll(playersInAreas.entrySet());
-            sorted.sort((a, b) ->
+            sorted.addAll(playerLocations);
+            sorted.sort(null);
+            long millis = System.currentTimeMillis();
+            for (PlayerLocation p : sorted)
             {
-                int r = a.getValue().shortName.compareTo(b.getValue().shortName);
-                if (r == 0)
-                    return a.getKey().compareTo(b.getKey());
-                return r;
-            });
-            sorted.forEach(e -> list.add(e.getKey() + "-" + e.getValue().shortName));
+                if (p.leaveMillis != 0)
+                    list.add("§c" + p.name + "§f-" + p.area.shortName);
+                else if (millis - p.joinMillis < 5000)
+                    list.add("§a" + p.name + "§f-" + p.area.shortName);
+                else
+                    list.add(p.name + "-" + p.area.shortName);
+            }
             setContent(list);
         }
         
@@ -2560,7 +2641,7 @@ public class GlobalTweaks extends Tweak
             Tweakception.overlayManager.enable(PlayersInAreasDisplayOverlay.NAME);
         else
         {
-            playersInAreas.clear();
+            playerLocations.clear();
             Tweakception.overlayManager.disable(PlayersInAreasDisplayOverlay.NAME);
         }
     }
@@ -3181,6 +3262,28 @@ public class GlobalTweaks extends Tweak
     {
         c.armorColorSortingHelper = !c.armorColorSortingHelper;
         sendChat("ArmorColorSortingHelper: Toggled " + c.armorColorSortingHelper);
+    }
+    
+    public void toggleHideMinionStorageFull()
+    {
+        c.hideMinionStorageFull = !c.hideMinionStorageFull;
+        sendChat("HideMinionStorageFull: Toggled " + c.hideMinionStorageFull);
+    }
+    
+    public void setFastCommand(String s)
+    {
+        if (s.isEmpty())
+        {
+            c.fastCommand = "";
+            sendChat("FastCommand: Reset command");
+        }
+        else
+        {
+            while (s.startsWith("/"))
+                s = s.substring(1);
+            c.fastCommand = s;
+            sendChat("FastCommand: Set command to " + c.fastCommand);
+        }
     }
     
     // endregion Commands

@@ -3,6 +3,7 @@ package a7.tweakception.commands;
 import a7.tweakception.Tweakception;
 import a7.tweakception.mixin.AccessorGuiPlayerTabOverlay;
 import a7.tweakception.utils.Matchers;
+import a7.tweakception.utils.McUtils;
 import net.minecraft.client.network.NetHandlerPlayClient;
 
 import javax.annotation.Nonnull;
@@ -140,17 +141,7 @@ public class Command implements Comparable<Command>
      */
     public static Function<String[], List<String>> playerNameProvider()
     {
-        return args ->
-            AccessorGuiPlayerTabOverlay.getTabListOrdering()
-                .sortedCopy(getMc().getNetHandler().getPlayerInfoMap())
-                .stream()
-                .filter(info ->
-                    info.getDisplayName() == null &&
-                    info.getGameProfile() != null &&
-                    Matchers.minecraftUsername.reset(info.getGameProfile().getName()).matches() &&
-                    info.getResponseTime() == 1)
-                .map(info -> info.getGameProfile().getName())
-                .collect(Collectors.toList());
+        return args -> McUtils.getRealPlayers();
     }
     
     public static List<String> getPossibleCompletions(String arg, List<String> opts)

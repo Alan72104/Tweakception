@@ -28,11 +28,14 @@ public class ForagingTweaks extends Tweak
 {
     public static class ForagingTweaksConfig
     {
+        public boolean axeMidClickSwapRodBreak = false;
     }
     
     private final ForagingTweaksConfig c;
     private boolean enableTreeIndicator = false;
     private final boolean[] treeGrowthStates = new boolean[Constants.PARK_DARK_TREES.length];
+    private final Queue<BlockPos> treeGrowthNextPoses = new ArrayDeque<>();
+    private final Set<BlockPos> treeGrowthVisited = new HashSet<>();
     
     public ForagingTweaks(Configuration configuration)
     {
@@ -69,6 +72,12 @@ public class ForagingTweaks extends Tweak
         }
     }
     
+    public boolean isAxeMidClickSwapRodBreakOn()
+    {
+        // TODO how to left click
+        return false;
+    }
+    
     private static boolean isDarkOak(IBlockState state)
     {
         return state.getBlock() == Blocks.log2 &&
@@ -77,29 +86,29 @@ public class ForagingTweaks extends Tweak
     
     private boolean doTreeGrowthSearch(BlockPos center, int targetConnectedCount)
     {
-        Queue<BlockPos> nextPoses = new ArrayDeque<>();
-        Set<BlockPos> visited = new HashSet<>();
+        treeGrowthNextPoses.clear();
+        treeGrowthVisited.clear();
         for (BlockPos pos : BlockPos.getAllInBox(center.add(new Vec3i(-1, 0, -1)),
             center.add(new Vec3i(1, 1, 1))))
         {
             IBlockState state = getWorld().getBlockState(pos);
             int connectedCount = 0;
-            if (isDarkOak(state) && !visited.contains(pos))
+            if (isDarkOak(state) && !treeGrowthVisited.contains(pos))
             {
-                nextPoses.offer(pos);
-                visited.add(pos);
+                treeGrowthNextPoses.offer(pos);
+                treeGrowthVisited.add(pos);
                 connectedCount++;
-                while (!nextPoses.isEmpty() && connectedCount < targetConnectedCount)
+                while (!treeGrowthNextPoses.isEmpty() && connectedCount < targetConnectedCount)
                 {
-                    pos = nextPoses.poll();
+                    pos = treeGrowthNextPoses.poll();
                     for (EnumFacing face : EnumFacing.VALUES)
                     {
                         BlockPos adjPos = pos.offset(face);
                         state = getWorld().getBlockState(adjPos);
-                        if (isDarkOak(state) && !visited.contains(adjPos))
+                        if (isDarkOak(state) && !treeGrowthVisited.contains(adjPos))
                         {
-                            nextPoses.offer(adjPos);
-                            visited.add(adjPos);
+                            treeGrowthNextPoses.offer(adjPos);
+                            treeGrowthVisited.add(adjPos);
                             connectedCount++;
                         }
                     }
@@ -132,5 +141,11 @@ public class ForagingTweaks extends Tweak
             }
         }
         sendChat("TreeIndicator: No block is looked at");
+    }
+    
+    public void toggleAxeMidClickSwapRodBreak()
+    {
+        c.axeMidClickSwapRodBreak = !c.axeMidClickSwapRodBreak;
+        sendChat("AxeMidClickSwapRodBreak: Toggled " + c.axeMidClickSwapRodBreak);
     }
 }

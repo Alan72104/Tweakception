@@ -203,11 +203,7 @@ public class SlayerTweaks extends Tweak
                         !switchingSlot)
                     {
                         currentSlayer.fishingRodThrown = true;
-                        int slot = Utils.findInHotbarBy(stack ->
-                            stack != null &&
-                                stack.getItem() == Items.fishing_rod &&
-                                Utils.getSkyblockItemId(stack) != null &&
-                                !Utils.getSkyblockItemId(stack).equals("GRAPPLING_HOOK"));
+                        int slot = Utils.findFishingRodInHotbar();
                         
                         if (slot == -1)
                             sendChat("AutoThrowFishingRod: Cannot find any fishing rod in your hotbar!");

@@ -9,6 +9,8 @@ import net.minecraft.client.audio.SoundCategory;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.client.network.NetHandlerPlayClient;
+import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.event.ClickEvent;
@@ -26,6 +28,7 @@ import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.util.Constants;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
@@ -116,6 +119,29 @@ public class McUtils
         return container;
     }
     
+    /**
+     * Gets the real player names detected from {@link NetHandlerPlayClient#getPlayerInfoMap()}
+     */
+    public static List<String> getRealPlayers()
+    {
+        List<String> list = new ArrayList<>();
+        for (NetworkPlayerInfo info : getMc().getNetHandler().getPlayerInfoMap())
+        {
+            if (info.getDisplayName() == null && // Null for players
+                info.getGameProfile() != null && // Sanity check
+                info.getResponseTime() == 1 && // 1 for real players, 0 for npc
+                Matchers.minecraftUsername.reset(info.getGameProfile().getName()).matches()
+            )
+            {
+                list.add(info.getGameProfile().getName());
+            }
+        }
+        return list;
+    }
+    
+    /**
+     * Executes a command on client or server, slash needed
+     */
     public static void executeCommand(String cmd)
     {
         if (ClientCommandHandler.instance.executeCommand(getPlayer(), cmd) == 0)

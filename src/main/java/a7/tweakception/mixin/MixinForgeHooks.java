@@ -5,12 +5,15 @@ import a7.tweakception.tweaks.GlobalTweaks;
 import a7.tweakception.tweaks.SkyblockIsland;
 import a7.tweakception.utils.McUtils;
 import a7.tweakception.utils.Utils;
+import com.sun.jna.platform.win32.User32;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
+import net.minecraft.item.ItemAxe;
 import net.minecraft.item.ItemPickaxe;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
@@ -27,10 +30,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.HashMap;
 import java.util.Map;
 
+import static a7.tweakception.utils.McUtils.*;
+
 @Mixin(ForgeHooks.class)
 public class MixinForgeHooks
 {
     private static final Map<String, Integer> skyblockPicksToBreakingPower = new HashMap<>();
+    private static boolean switchingSlots = false;
     
     static
     {
@@ -161,6 +167,34 @@ public class MixinForgeHooks
                     world.setBlockToAir(pos);
                 }
             }
+            cir.setReturnValue(false);
+            cir.cancel();
+        }
+        else if (Tweakception.foragingTweaks.isAxeMidClickSwapRodBreakOn() &&
+            !switchingSlots &&
+            player.getCurrentEquippedItem() != null &&
+            player.getCurrentEquippedItem().getItem() instanceof ItemAxe)
+        {
+            int rod = Utils.findFishingRodInHotbar();
+            if (rod == -1)
+                return;
+            switchingSlots = true;
+            int lastSlot = getPlayer().inventory.currentItem;
+            getPlayer().inventory.currentItem = rod;
+            Tweakception.scheduler
+                .addDelayed(() -> ((AccessorMinecraft) getMc()).rightClickMouse(), 1)
+                .thenDelayed(() ->
+                {
+                    getPlayer().inventory.currentItem = lastSlot;
+                    ((AccessorMinecraft) getMc()).clickMouse();
+                    KeyBinding.setKeyBindState(getMc().gameSettings.keyBindAttack.getKeyCode(), true);
+                }, 2)
+                .thenDelayed(() ->
+                {
+                    getPlayer().inventory.currentItem = lastSlot;
+                    KeyBinding.setKeyBindState(getMc().gameSettings.keyBindAttack.getKeyCode(), false);
+                    switchingSlots = false;
+                }, 3);
             cir.setReturnValue(false);
             cir.cancel();
         }

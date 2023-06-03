@@ -128,6 +128,7 @@ public class GlobalTweaks extends Tweak
         public boolean afkMode = false;
         public boolean afkOnlyUnfocused = true;
         public boolean afkSkipWorldRendering = true;
+        public boolean afkAutoRightClick = false;
         public int afkFpsLimit = 60;
         public boolean sendSkyblockLevelExpGainMessage = false;
         public int snipeWarpDelayTicks = 40;
@@ -397,6 +398,14 @@ public class GlobalTweaks extends Tweak
                         }
                     }
                     Tweakception.overlayManager.setEnable(PlayersInAreasDisplayOverlay.NAME, !playerLocations.isEmpty());
+                }
+            }
+            else if (getTicks() % 1200 == 0)
+            {
+                if (c.afkAutoRightClick && getMc().currentScreen == null)
+                {
+                    sendChat("AfkMode: Right clicking");
+                    ((AccessorMinecraft) getMc()).rightClickMouse();
                 }
             }
             
@@ -1869,6 +1878,11 @@ public class GlobalTweaks extends Tweak
         return c.afkSkipWorldRendering;
     }
     
+    public void setHideFromStrangers(boolean v)
+    {
+        hideFromStrangers = v;
+    }
+    
     public boolean toggleQuickCraftWhitelist(String id)
     {
         if (c.quickCraftWhitelist.contains(id))
@@ -2943,6 +2957,12 @@ public class GlobalTweaks extends Tweak
     {
         c.afkSkipWorldRendering = !c.afkSkipWorldRendering;
         sendChat("AfkMode: Toggled skip world rendering " + c.afkSkipWorldRendering);
+    }
+    
+    public void toggleAfkAutoRightClick()
+    {
+        c.afkAutoRightClick = !c.afkAutoRightClick;
+        sendChat("AfkMode: Toggled auto right click every minute " + c.afkAutoRightClick);
     }
     
     public void toggleFakePowerScrolls()

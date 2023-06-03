@@ -55,6 +55,7 @@ public class GardenTweaks extends Tweak
         public boolean contestDataDumperDumpHeader = false;
         public boolean autoClaimContest = false;
         public boolean composterAmountNeededOverlay = false;
+        public boolean autoTurnOnHideFromStrangersWithSnapYaw = false;
     }
     private static final Map<String, Integer> FUELS = new HashMap<>();
     private static final Map<String, Integer> AGRO_SACK_ITEMS = new HashMap<>();
@@ -683,6 +684,11 @@ public class GardenTweaks extends Tweak
     {
         snapYaw = !snapYaw;
         sendChat("SnapYaw: Toggled " + snapYaw);
+        if (c.autoTurnOnHideFromStrangersWithSnapYaw)
+        {
+            sendChat("SnapYaw: Also toggling HideFromStrangers");
+            Tweakception.globalTweaks.setHideFromStrangers(snapYaw);
+        }
     }
     public void setSnapYawAngle(int angle)
     {
@@ -749,6 +755,12 @@ public class GardenTweaks extends Tweak
     {
         c.composterAmountNeededOverlay = !c.composterAmountNeededOverlay;
         sendChat("ComposterAmountNeededOverlay: Toggled " + c.composterAmountNeededOverlay);
+    }
+    
+    public void toggleAutoTurnOnHideFromStrangersWithSnapYaw()
+    {
+        c.autoTurnOnHideFromStrangersWithSnapYaw = !c.autoTurnOnHideFromStrangersWithSnapYaw;
+        sendChat("AutoTurnOnHideFromStrangersWithSnapYaw: Toggled " + c.autoTurnOnHideFromStrangersWithSnapYaw);
     }
     
     // endregion Commands

@@ -1,14 +1,12 @@
 package a7.tweakception.tweaks;
 
+import a7.tweakception.DevSettings;
 import a7.tweakception.Tweakception;
 import a7.tweakception.config.Configuration;
 import a7.tweakception.mixin.AccessorGuiContainer;
 import a7.tweakception.overlay.Anchor;
 import a7.tweakception.overlay.TextOverlay;
-import a7.tweakception.utils.McUtils;
-import a7.tweakception.utils.Pair;
-import a7.tweakception.utils.RenderUtils;
-import a7.tweakception.utils.Utils;
+import a7.tweakception.utils.*;
 import net.minecraft.block.Block;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
@@ -19,6 +17,8 @@ import net.minecraft.init.Blocks;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.Packet;
+import net.minecraft.network.play.client.C07PacketPlayerDigging;
 import net.minecraft.network.play.server.S38PacketPlayerListItem;
 import net.minecraft.util.*;
 import net.minecraftforge.client.event.GuiScreenEvent;
@@ -27,11 +27,14 @@ import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.awt.*;
-import java.io.File;
+import java.awt.Color;
+import java.io.*;
 import java.time.Instant;
 import java.util.List;
 import java.util.*;
@@ -39,6 +42,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static a7.tweakception.tweaks.GlobalTweaks.getCurrentIsland;
+import static a7.tweakception.tweaks.GlobalTweaks.getTicks;
 import static a7.tweakception.utils.McUtils.*;
 import static a7.tweakception.utils.Utils.f;
 
@@ -56,11 +60,25 @@ public class GardenTweaks extends Tweak
         public boolean autoClaimContest = false;
         public boolean composterAmountNeededOverlay = false;
         public boolean autoTurnOnHideFromStrangersWithSnapYaw = false;
+        public int speedOverlayAveragePeriodSecs = 5;
     }
     private static final Map<String, Integer> FUELS = new HashMap<>();
     private static final Map<String, Integer> AGRO_SACK_ITEMS = new HashMap<>();
+    private static final List<Block> CROP_BLOCKS = Utils.list(
+        Blocks.wheat,
+        Blocks.cocoa,
+        Blocks.cactus,
+        Blocks.carrots,
+        Blocks.potatoes,
+        Blocks.brown_mushroom,
+        Blocks.red_mushroom,
+        Blocks.reeds,
+        Blocks.melon_block,
+        Blocks.pumpkin,
+        Blocks.nether_wart);
     private final GardenTweaksConfig c;
     private final MilestoneOverlay milestoneOverlay;
+    private final SpeedOverlay speedOverlay;
     private final Map<Instant, ContestInfo> contests = new TreeMap<>();
     private final Matcher composterAmountMatcher = Pattern.compile("((?:\\d{1,3},?)+(?:\\.\\d)?)/(\\d*)k").matcher("");
     private final Matcher sackAmountMatcher = Pattern.compile("Stored: ((?:\\d+,?)+)/\\d+k").matcher("");
@@ -70,6 +88,15 @@ public class GardenTweaks extends Tweak
     private float snapPitchPrevAngle = 0.0f;
     private boolean inContestsMenu = false;
     private final List<BlockPos> invalidCrops = new ArrayList<>();
+    private boolean logCropBreaks = false;
+    private boolean logCropBreaksVerboseToConsole = false;
+    private int logCropBreaksStartTicks = 0;
+    private int logCropBreaksRollingBpsStartTicks = 0;
+    private int logCropBreaksRollingBpsLast = 0;
+    private int logCropBreaksMissedBlocks = 0;
+    private final Deque<Integer> logCropBreaksBreaks = new ArrayDeque<>();
+    // Start tick (inclusive), end tick, amount
+    private final List<TriPair<Integer, Integer, Integer>> logCropBreakBpsList = new ArrayList<>();
     
     static
     {
@@ -107,6 +134,7 @@ public class GardenTweaks extends Tweak
         super(configuration, "GardenTweaks");
         c = configuration.config.gardenTweaks;
         Tweakception.overlayManager.addOverlay(milestoneOverlay = new MilestoneOverlay());
+        Tweakception.overlayManager.addOverlay(speedOverlay = new SpeedOverlay());
     }
     
     // region Events
@@ -135,20 +163,84 @@ public class GardenTweaks extends Tweak
                 if (chest.getName().equals("Your Contests") && chest.getSizeInventory() == 54)
                     inContestsMenu = true;
                 
-                for (int i = 0; i < chest.getSizeInventory(); i++)
+                if (c.autoClaimContest)
                 {
-                    ItemStack stack = chest.getStackInSlot(i);
-                    String[] lore = McUtils.getDisplayLore(stack);
-                    if (lore != null && lore[lore.length - 1].equals("§eClick to claim reward!"))
+                    for (int i = 0; i < chest.getSizeInventory(); i++)
                     {
-                        sendChat("AutoClaimContest: Claiming slot " + i);
-                        getMc().playerController.windowClick(getPlayer().openContainer.windowId,
-                            i, 2, 3, getPlayer());
-                        getPlayer().closeScreen();
-                        return;
+                        ItemStack stack = chest.getStackInSlot(i);
+                        String[] lore = McUtils.getDisplayLore(stack);
+                        if (lore != null && lore[lore.length - 1].equals("§eClick to claim reward!"))
+                        {
+                            sendChat("AutoClaimContest: Claiming slot " + i);
+                            getMc().playerController.windowClick(getPlayer().openContainer.windowId,
+                                i, 2, 3, getPlayer());
+                            getPlayer().closeScreen();
+                            return;
+                        }
                     }
                 }
             }
+        }
+        else // Tick end
+        {
+            if (logCropBreaks)
+            {
+                int c = Utils.removeWhile(logCropBreaksBreaks, ticks -> getTicks() - ticks >= 20);
+                
+                int rollingBps = logCropBreaksBreaks.size();
+                
+                if (DevSettings.printLogCropBreaksNumber)
+                    sendChatf("%d, %d, removed %d", rollingBps, getTicks(), c);
+                if (logCropBreaksVerboseToConsole && (rollingBps < logCropBreaksRollingBpsLast || rollingBps == 0))
+                    System.out.println(f("You missed a block (%d) on tick %d",
+                        ++logCropBreaksMissedBlocks, getTicks() - logCropBreaksStartTicks));
+                else
+                    logCropBreaksMissedBlocks = 0;
+                
+                if (logCropBreaksRollingBpsLast != rollingBps)
+                {
+                    logCropBreakBpsList.add(new TriPair<>(
+                        logCropBreaksRollingBpsStartTicks,
+                        getTicks(),
+                        logCropBreaksRollingBpsLast
+                    ));
+                    logCropBreaksRollingBpsLast = rollingBps;
+                    logCropBreaksRollingBpsStartTicks = getTicks();
+                }
+            }
+        }
+    }
+    
+    public void onPacketSend(Packet<?> packet)
+    {
+        if (!logCropBreaks)
+            return;
+        if (!(packet instanceof C07PacketPlayerDigging))
+            return;
+        C07PacketPlayerDigging event = (C07PacketPlayerDigging) packet;
+        if (event.getStatus() != C07PacketPlayerDigging.Action.START_DESTROY_BLOCK)
+            return;
+        Block block = getWorld().getBlockState(event.getPosition()).getBlock();
+        if (DevSettings.printLogCropBreaksNumber)
+            sendChatf("%s, %d", block.getUnlocalizedName(), getTicks());
+        if (CROP_BLOCKS.contains(block))
+        {
+            if (logCropBreaksBreaks.size() > 0 &&
+                logCropBreaksBreaks.peekLast() == getTicks())
+            {
+                sendChatf("How did you broke 2 crops in the same tick? Tick %d",
+                    getTicks() - logCropBreaksStartTicks);
+            }
+            else
+            {
+                logCropBreaksBreaks.offer(getTicks());
+            }
+        }
+        else
+        {
+            sendChatf("You broke a non crop block %s on tick %d",
+                block.getUnlocalizedName(),
+                getTicks() - logCropBreaksStartTicks);
         }
     }
     
@@ -378,6 +470,11 @@ public class GardenTweaks extends Tweak
         }
     }
     
+    public void onWorldLoad(WorldEvent.Load event)
+    {
+        speedOverlay.reset(c.speedOverlayAveragePeriodSecs);
+    }
+    
     public void onWorldUnload(WorldEvent.Unload event)
     {
         invalidCrops.clear();
@@ -532,7 +629,8 @@ public class GardenTweaks extends Tweak
                     hasAxisX ? EnumFacing.SOUTH : EnumFacing.WEST,
                 };
         
-        List<Block> cropBlocks = new ArrayList<>(Arrays.asList(
+        // The const list but with stems
+        List<Block> cropBlocks = Utils.list(
             Blocks.wheat,
             Blocks.cocoa,
             Blocks.cactus,
@@ -543,7 +641,8 @@ public class GardenTweaks extends Tweak
             Blocks.reeds,
             Blocks.melon_stem,
             Blocks.pumpkin_stem,
-            Blocks.nether_wart));
+            Blocks.nether_wart);
+        
         // Invalid blocks in invalidCropsTemp are added to invalidCrops after a valid block is found in that line
         List<BlockPos> invalidCropsTemp = new ArrayList<>();
         WorldClient world = getWorld();
@@ -617,6 +716,191 @@ public class GardenTweaks extends Tweak
         public boolean finneganBoosted;
     }
     
+    private static class CropBreakLogExcelDumper implements Closeable
+    {
+        Workbook wb = new XSSFWorkbook();
+        Sheet sheet = wb.createSheet("new sheet");
+        Row rowTime = sheet.createRow(0);
+        Row rowBps = sheet.createRow(1);
+        Row rowMissed = sheet.createRow(2);
+        String time;
+        int bps;
+        int missed;
+        int column;
+        
+        public CropBreakLogExcelDumper()
+        {
+            sheet.setDefaultColumnWidth(2);
+        }
+        
+        public void setTime(String time)
+        {
+            this.time = time;
+        }
+        
+        public void setBps(int bps)
+        {
+            this.bps = bps;
+        }
+        
+        public void setMissed(int missed)
+        {
+            this.missed = missed;
+        }
+        
+        public void write(int column)
+        {
+            this.column = column;
+            rowTime.createCell(column).setCellValue(time);
+            rowBps.createCell(column).setCellValue(bps);
+            rowMissed.createCell(column).setCellValue(missed);
+        }
+        
+        public File dump() throws IOException
+        {
+            SheetConditionalFormatting cf = sheet.getSheetConditionalFormatting();
+            {
+                ConditionalFormattingRule rule = cf.createConditionalFormattingColorScaleRule();
+                ColorScaleFormatting cs = rule.getColorScaleFormatting();
+                cs.getThresholds()[0].setRangeType(ConditionalFormattingThreshold.RangeType.MIN);
+                cs.getThresholds()[1].setRangeType(ConditionalFormattingThreshold.RangeType.PERCENTILE);
+                cs.getThresholds()[1].setValue(50.0);
+                cs.getThresholds()[2].setRangeType(ConditionalFormattingThreshold.RangeType.MAX);
+                ((ExtendedColor) cs.getColors()[0]).setARGBHex("FFF8696B");
+                ((ExtendedColor) cs.getColors()[1]).setARGBHex("FFFFEB84");
+                ((ExtendedColor) cs.getColors()[2]).setARGBHex("FF63BE7B");
+                cf.addConditionalFormatting(new CellRangeAddress[] {new CellRangeAddress(1, 1, 0, column - 1)}, rule);
+            }
+            {
+                ConditionalFormattingRule rule = cf.createConditionalFormattingColorScaleRule();
+                ColorScaleFormatting cs = rule.getColorScaleFormatting();
+                cs.getThresholds()[0].setRangeType(ConditionalFormattingThreshold.RangeType.MAX);
+                cs.getThresholds()[1].setRangeType(ConditionalFormattingThreshold.RangeType.PERCENTILE);
+                cs.getThresholds()[1].setValue(50.0);
+                cs.getThresholds()[2].setRangeType(ConditionalFormattingThreshold.RangeType.MIN);
+                ((ExtendedColor) cs.getColors()[0]).setARGBHex("FFF8696B");
+                ((ExtendedColor) cs.getColors()[1]).setARGBHex("FFFFEB84");
+                ((ExtendedColor) cs.getColors()[2]).setARGBHex("FF63BE7B");
+                cf.addConditionalFormatting(new CellRangeAddress[] {new CellRangeAddress(2, 2, 0, column - 1)}, rule);
+            }
+            
+            
+            try
+            {
+                File file = Tweakception.configuration.createFileWithCurrentDateTime("cropbreaklog_$.xlsx");
+                try (FileOutputStream stream = new FileOutputStream(file))
+                {
+                    wb.write(stream);
+                }
+                return file;
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+                throw e;
+            }
+        }
+        
+        @Override
+        public void close() throws IOException
+        {
+            wb.close();
+        }
+    }
+    
+    private void dumpCropBreakLog()
+    {
+        StringBuilder time = new StringBuilder();
+        int lastBps = 0;
+        int missedTicks = 0;
+        boolean hasExcel = false; // Tweakception.isPoiPresent();
+        File file;
+        
+        try (CropBreakLogExcelDumper excel = hasExcel ? new CropBreakLogExcelDumper() : null;
+            PrintWriter writer = new PrintWriter(Tweakception.configuration.createWriterFor(
+                file = Tweakception.configuration.createFileWithCurrentDateTime("cropbreaklog_$.csv")
+            ))
+        )
+        {
+            int column = 0;
+            
+            for (TriPair<Integer, Integer, Integer> tri : logCropBreakBpsList)
+            {
+                for (int ticks = tri.a; ticks < tri.b; ticks++)
+                {
+                    int ticksFromStart = ticks - logCropBreaksStartTicks;
+                    int min = ticksFromStart / 1200;
+                    int sec = ticksFromStart / 20 % 60;
+                    int tick = ticksFromStart % 20;
+                    
+                    if (min < 10)
+                        time.append('0');
+                    time.append(min);
+                    time.append(':');
+                    if (sec < 10)
+                        time.append('0');
+                    time.append(sec);
+                    time.append(':');
+                    if (tick < 10)
+                        time.append('0');
+                    time.append(tick);
+                    
+                    if (hasExcel)
+                    {
+                        excel.setTime(time.toString());
+                    }
+                    else
+                    {
+                        writer.print(time);
+                        writer.print(',');
+                    }
+                    time.setLength(0);
+
+                    if (hasExcel)
+                        excel.setBps(tri.c);
+                    else
+                    {
+                        writer.print(tri.c);
+                        writer.print(',');
+                    }
+                    
+                    if (tri.c == 0 || tri.c < lastBps)
+                        missedTicks++;
+                    else
+                        missedTicks = 0;
+                    
+                    if (hasExcel)
+                    {
+                        excel.setMissed(missedTicks);
+                        excel.write(column);
+                    }
+                    else
+                    {
+                        writer.print(missedTicks);
+                        writer.println();
+                    }
+                    
+                    lastBps = tri.c;
+                    column++;
+                }
+            }
+            
+            if (hasExcel)
+            {
+                file = excel.dump();
+            }
+            
+            sendChat("Dumped cropbreaklog");
+            getPlayer().addChatMessage(new ChatComponentTranslation("Output written to file %s",
+                McUtils.makeFileLink(file)));
+        }
+        catch (IOException e)
+        {
+            sendChat("Failed to write file");
+            e.printStackTrace();
+        }
+    }
+    
     // endregion Misc
     
     // region Feature access
@@ -660,6 +944,78 @@ public class GardenTweaks extends Tweak
         {
             List<String> list = new ArrayList<>();
             list.add("Milestone: h");
+            return list;
+        }
+    }
+    
+    private class SpeedOverlay extends TextOverlay
+    {
+        public static final String NAME = "SpeedOverlay";
+        private int averagingPeriodSecs;
+        private int index;
+        private double[] bpss;
+        private double avgBps;
+        private double lastX;
+        private double lastY;
+        private double lastZ;
+        
+        public SpeedOverlay()
+        {
+            super(NAME);
+            setAnchor(Anchor.TopLeft);
+            setOrigin(Anchor.TopLeft);
+            setX(300);
+            setY(300);
+            reset(c.speedOverlayAveragePeriodSecs);
+        }
+        
+        public void reset(int secs)
+        {
+            averagingPeriodSecs = secs;
+            bpss = new double[averagingPeriodSecs * 20];
+            index = 0;
+            avgBps = 0.0;
+        }
+        
+        @Override
+        public void update()
+        {
+            super.update();
+            List<String> list = getContent();
+            list.clear();
+            double x = getPlayer().posX;
+            double y = getPlayer().posY;
+            double z = getPlayer().posZ;
+            double bps = Math.sqrt((x-lastX)*(x-lastX) + (y-lastY)*(y-lastY) + (z-lastZ)*(z-lastZ)) * 20.0;
+            lastX = x;
+            lastY = y;
+            lastZ = z;
+            
+            bpss[index] = bps;
+            if (DevSettings.copySpeedNums && getTicks() % averagingPeriodSecs * 20 == 0)
+            {
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < averagingPeriodSecs * 20; i++)
+                    sb.append(bpss[i]).append(System.lineSeparator());
+                Utils.setClipboard(sb.toString());
+                sendChatf("Copied speed numbers in the last %d secs", averagingPeriodSecs);
+            }
+            index += 1;
+            index %= averagingPeriodSecs * 20;
+            double totalBps = 0.0;
+            for (int i = 0; i < averagingPeriodSecs * 20; i++)
+                totalBps += bpss[i];
+//            avgBps = totalBps / averagingPeriodSecs;
+            avgBps = (avgBps * 0.5) + (totalBps / averagingPeriodSecs / 20 * 0.5);
+            list.add(f("Speed: %.3fm/s", avgBps));
+            setContent(list);
+        }
+        
+        @Override
+        public List<String> getDefaultContent()
+        {
+            List<String> list = new ArrayList<>();
+            list.add("bruh");
             return list;
         }
     }
@@ -761,6 +1117,49 @@ public class GardenTweaks extends Tweak
     {
         c.autoTurnOnHideFromStrangersWithSnapYaw = !c.autoTurnOnHideFromStrangersWithSnapYaw;
         sendChat("AutoTurnOnHideFromStrangersWithSnapYaw: Toggled " + c.autoTurnOnHideFromStrangersWithSnapYaw);
+    }
+    
+    public void toggleLogCropBreaks()
+    {
+        logCropBreaks = !logCropBreaks;
+        sendChat("LogCropBreaks: Toggled " + logCropBreaks);
+        if (logCropBreaks)
+        {
+            logCropBreaksStartTicks = getTicks();
+            logCropBreaksRollingBpsLast = 0;
+            logCropBreaksRollingBpsStartTicks = getTicks();
+            logCropBreaksMissedBlocks = 0;
+        }
+        else
+        {
+            logCropBreakBpsList.add(new TriPair<>(
+                logCropBreaksRollingBpsStartTicks,
+                getTicks(),
+                logCropBreaksBreaks.size()
+            ));
+            dumpCropBreakLog();
+            logCropBreakBpsList.clear();
+            logCropBreaksBreaks.clear();
+        }
+    }
+    
+    public void toggleLogCropBreaksVerboseConsole()
+    {
+        logCropBreaksVerboseToConsole = !logCropBreaksVerboseToConsole;
+        sendChat("LogCropBreaks: Toggled verbose console " + logCropBreaksVerboseToConsole);
+    }
+    
+    public void toggleSpeedOverlay()
+    {
+        boolean state = Tweakception.overlayManager.toggle(SpeedOverlay.NAME);
+        sendChat("SpeedOverlay: Toggled " + state);
+    }
+    
+    public void setSpeedOverlayAveragePeriodSecs(int secs)
+    {
+        c.speedOverlayAveragePeriodSecs = secs == -1 ? 5 : Utils.clamp(secs, 1, 60);
+        speedOverlay.reset(c.speedOverlayAveragePeriodSecs);
+        sendChat("SpeedOverlay: Set average period to " + c.speedOverlayAveragePeriodSecs + " secs");
     }
     
     // endregion Commands

@@ -3,6 +3,7 @@ package a7.tweakception.overlay;
 import a7.tweakception.utils.Utils;
 import net.minecraft.client.gui.FontRenderer;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,11 +11,18 @@ import static a7.tweakception.utils.McUtils.getMc;
 
 public class TextOverlay extends Overlay
 {
+    @Nonnull
     private List<String> list = getDefaultContent();
     
     public TextOverlay(String name)
     {
         super(name);
+    }
+    
+    @Nonnull
+    protected List<String> getContent()
+    {
+        return list;
     }
     
     protected void setContent(List<String> list)

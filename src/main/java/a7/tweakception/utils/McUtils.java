@@ -37,12 +37,12 @@ import java.util.regex.Pattern;
 
 public class McUtils
 {
+    public static boolean chestUpdatedThisTick = false;
     private static final Minecraft mc = Minecraft.getMinecraft();
     private static final Timer mcTimer = ((AccessorMinecraft) mc).getTimer();
     private static final Matcher colorMatcher = Pattern.compile("§[0-9a-fk-orA-FK-OR]").matcher("");
     private static IInventory chest = null;
     private static ContainerChest container = null;
-    public static boolean chestUpdatedThisTick = false;
     
     public static Minecraft getMc()
     {

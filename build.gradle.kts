@@ -13,6 +13,7 @@ group = "a7"
 val baseVersion = "1.0"
 
 val includeOneConfig = project.findProperty("tweakception.buildflags.oneconfig") == "true"
+val includePoi = project.findProperty("tweakception.buildflags.poi") == "true"
 val tweakClass = if (includeOneConfig)
     "cc.polyfrost.oneconfig.loader.stage0.LaunchWrapperTweaker" else "org.spongepowered.asm.launch.MixinTweaker"
 
@@ -95,6 +96,11 @@ dependencies {
 
     shadowImplementation("org.java-websocket:Java-WebSocket:1.5.3")
     shadowImplementation("org.apache.commons:commons-text:1.10.0")
+    val poi = "org.apache.poi:poi-ooxml:4.0.0"
+    if (includePoi)
+        shadowImplementation(poi)
+    else
+        compileOnly(poi)
     shadowImplementation("org.slf4j:slf4j-api:1.7.25")
     testImplementation("org.slf4j:slf4j-simple:1.7.25")
 
@@ -135,8 +141,12 @@ tasks.shadowJar {
         }
     }
 
+    minimize()
+
     // If you want to include other dependencies and shadow them, you can relocate them in here
     fun relocate(name: String) = relocate(name, "a7.tweakception.deps.$name")
+//    relocate("org.apache.commons.io")
+//    relocate("org.apache.logging.log4j")
 }
 
 tasks.assemble.get().dependsOn(tasks.remapJar)

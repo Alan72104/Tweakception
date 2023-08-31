@@ -107,9 +107,6 @@ public class LagSpikeWatcher
             .collect(Collectors.toList());
         
         lines.add(f("%-35s |%-15s |%-10s |%s", "Name", "State", "Priority", "IsDaemon"));
-        // Java stream is shit
-//        for (Thread t : list.stream().collect(ArrayList<Thread>::new, (a, e) -> a.add(e.getKey()), ArrayList::addAll))
-//            lines.add(f("%-35s |%-15s |%-10d |%s", t.getName(), t.getState(), t.getPriority(), t.isDaemon()));
         for (Map.Entry<Thread, StackTraceElement[]> e : list)
         {
             Thread t = e.getKey();

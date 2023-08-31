@@ -147,6 +147,8 @@ public class GlobalTweaks extends Tweak
         public boolean armorColorSortingHelper = false;
         public boolean hideMinionStorageFull = false;
         public String fastCommand = "";
+        public boolean autoConsumeBoosterCookie = false;
+        public boolean minionAutoClaimHopper = false;
     }
     
     private final GlobalTweaksConfig c;
@@ -247,6 +249,7 @@ public class GlobalTweaks extends Tweak
     private List<String> tooltipOverride = null;
     private final Set<BlockPos> blocksToHighlight = new HashSet<>();
     private final Set<String> entityTypesToHighlight = new HashSet<>();
+    private final Map<String, Integer> recentlyClaimedMinionHoppers = new HashMap<>();
     
     private static class PlayerLocation implements Comparable<PlayerLocation>
     {
@@ -409,7 +412,40 @@ public class GlobalTweaks extends Tweak
                 }
             }
             
-            if (minionAutoClaim && McUtils.getOpenedChest() != null)
+            recentlyClaimedMinionHoppers.entrySet().removeIf(entry -> getTicks() - entry.getValue() >= 20 * 60);
+            if (c.minionAutoClaimHopper && McUtils.getOpenedChest() != null &&
+                McUtils.getOpenedChest().getSizeInventory() == 54)
+            {
+                IInventory inv = McUtils.getOpenedChest();
+                ItemStack hopper = inv.getStackInSlot(9 * 3 + 2 - 1);
+                if (hopper != null &&
+                    ("ENCHANTED_HOPPER".equals(Utils.getSkyblockItemId(hopper)) ||
+                    "HOPPER".equals(Utils.getSkyblockItemId(hopper)))
+                )
+                {
+                    String[] lore = McUtils.getDisplayLore(hopper);
+                    for (String s : lore)
+                    {
+                        if (s.startsWith("§7Held Coins: "))
+                        {
+                            String uuid = Utils.getSkyblockItemUuid(hopper);
+                            if (uuid != null && !s.equals("§7Held Coins: §b0") &&
+                                !recentlyClaimedMinionHoppers.containsKey(uuid))
+                            {
+                                getMc().playerController.windowClick(getPlayer().openContainer.windowId,
+                                    9 * 3 + 2 - 1,
+                                    WindowClickContants.LeftRight.BTN_LEFT,
+                                    WindowClickContants.LeftRight.MODE, getPlayer());
+                                getPlayer().closeScreen();
+                                recentlyClaimedMinionHoppers.put(uuid, getTicks());
+                            }
+                            break;
+                        }
+                    }
+                }
+                
+            }
+            else if (minionAutoClaim && McUtils.getOpenedChest() != null)
             {
                 IInventory inv = McUtils.getOpenedChest();
                 String[] words = inv.getName().split(" ");
@@ -675,17 +711,17 @@ public class GlobalTweaks extends Tweak
             
             if (hideFromStrangers && getTicks() - hideFromStrangersLastWarpTicks >= 20 * 5)
             {
-                List<String> list = getPlayerListFromTabList();
-                if (list != null &&
-                    list.stream()
-                    .map(String::toLowerCase)
-                    .anyMatch(name ->
-                        !(name.equalsIgnoreCase(getPlayer().getName()) || c.strangerWhitelist.contains(name)))
-                )
+                List<String> list = McUtils.getRealPlayers();
+                for (String s : list)
                 {
-                    sendChat("HideFromStrangers: Evacuating to private island...");
-                    getPlayer().sendChatMessage("/is");
-                    hideFromStrangersLastWarpTicks = getTicks();
+                    String name = s.toLowerCase();
+                    if (!(name.equalsIgnoreCase(getPlayer().getName()) || c.strangerWhitelist.contains(name)))
+                    {
+                        sendChat("HideFromStrangers: Evacuating to private island...");
+                        getPlayer().sendChatMessage("/is");
+                        hideFromStrangersLastWarpTicks = getTicks();
+                        break;
+                    }
                 }
             }
             
@@ -786,7 +822,7 @@ public class GlobalTweaks extends Tweak
                             ItemStack stack = inv.getStackInSlot(5 * 9 + 1 + i);
                             if (stack != null && stack.getItem() == Item.getItemFromBlock(Blocks.wool))
                             {
-                                getMc().displayGuiScreen(null);
+                                getPlayer().closeScreen();
                                 sendChat("AutoHarp: Closed harp (non perfect)");
                                 break;
                             }
@@ -798,6 +834,22 @@ public class GlobalTweaks extends Tweak
                     autoHarpReplayData = null;
                     autoHarpReplayIndex = 0;
                     autoHarpReplayLastClickTicks = 0;
+                }
+            }
+            
+            if (c.autoConsumeBoosterCookie && McUtils.getOpenedChest() != null &&
+                McUtils.getOpenedChest().getName().equals("Consume Booster Cookie?"))
+            {
+                for (int i = 0; i < McUtils.getOpenedChest().getSizeInventory(); i++)
+                {
+                    ItemStack stack = McUtils.getOpenedChest().getStackInSlot(i);
+                    if (stack != null && stack.hasDisplayName() && stack.getDisplayName().equals("§eConsume Cookie"))
+                    {
+                        getMc().playerController.windowClick(getPlayer().openContainer.windowId,
+                            i, WindowClickContants.Middle.BTN, WindowClickContants.Middle.MODE, getPlayer());
+                        getPlayer().closeScreen();
+                        break;
+                    }
                 }
             }
         }
@@ -1285,6 +1337,7 @@ public class GlobalTweaks extends Tweak
         lastChunkUnloadPosition = new ChunkCoordIntPair(0, 0);
         pendingUnloadChunks.clear();
         playerLocations.clear();
+        recentlyClaimedMinionHoppers.clear();
     }
     
     public void onChunkLoad(ChunkEvent.Load event)
@@ -3304,6 +3357,18 @@ public class GlobalTweaks extends Tweak
             c.fastCommand = s;
             sendChat("FastCommand: Set command to " + c.fastCommand);
         }
+    }
+    
+    public void toggleAutoConsumeBoosterCookie()
+    {
+        c.autoConsumeBoosterCookie = !c.autoConsumeBoosterCookie;
+        sendChat("AutoConsumeBoosterCookie: Toggled " + c.autoConsumeBoosterCookie);
+    }
+    
+    public void toggleMinionAutoClaimHopper()
+    {
+        c.minionAutoClaimHopper = !c.minionAutoClaimHopper;
+        sendChat("MinionAutoClaimHopper: Toggled " + c.minionAutoClaimHopper);
     }
     
     // endregion Commands

@@ -25,6 +25,12 @@ public class Configuration
         path = folderPath;
         fileName = "config.json";
         dirFile = new File(path);
+        
+        if (!dirFile.exists())
+        {
+            boolean ignored = dirFile.mkdirs();
+        }
+        
         file = createFile(fileName);
         gson = new GsonBuilder().setPrettyPrinting().create();
     }
@@ -51,18 +57,20 @@ public class Configuration
     
     public void loadConfig() throws Exception
     {
-        BufferedReader reader = createReaderFor(file);
-        config = gson.fromJson(reader, TweakceptionConfig.class);
-        if (config == null)
-            config = new TweakceptionConfig();
-        reader.close();
+        try (BufferedReader reader = createReaderFor(file))
+        {
+            config = gson.fromJson(reader, TweakceptionConfig.class);
+            if (config == null)
+                config = new TweakceptionConfig();
+        }
     }
     
     public void writeConfig() throws Exception
     {
-        BufferedWriter writer = createWriterFor(file);
-        writer.write(gson.toJson(config));
-        writer.close();
+        try (BufferedWriter writer = createWriterFor(file))
+        {
+            writer.write(gson.toJson(config));
+        }
     }
     
     /**
@@ -70,10 +78,9 @@ public class Configuration
      */
     public BufferedReader createReaderFor(File file) throws IOException
     {
-        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(
+        return new BufferedReader(new InputStreamReader(
             Files.newInputStream(file.toPath().toAbsolutePath()),
             StandardCharsets.UTF_8));
-        return bufferedReader;
     }
     
     /**
@@ -81,30 +88,44 @@ public class Configuration
      */
     public BufferedWriter createWriterFor(File file) throws IOException
     {
-        BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(
+        return new BufferedWriter(new OutputStreamWriter(
             Files.newOutputStream(file.toPath().toAbsolutePath()),
             StandardCharsets.UTF_8));
-        return bufferedWriter;
     }
     
     /**
      * a_$_b.txt -> a_time_b.txt / a_time_b_1.txt
+     * <p>
+     * Example:
+     * <blockquote><pre>
+     *     try
+     *     {
+     *         File file = Tweakception.configuration.createWriteFileWithCurrentDateTime("name_$.txt", lines);
+     *         sendChat("Dumped name");
+     *         getPlayer().addChatMessage(new ChatComponentTranslation("Output written to file %s",
+     *             McUtils.makeFileLink(file)));
+     *         Desktop.getDesktop().open(file);
+     *     }
+     *     catch (IOException e)
+     *     {
+     *         sendChat("Failed to write or open file");
+     *     }
+     * </pre></blockquote>
      */
     public File createWriteFileWithCurrentDateTime(String name, List<String> lines) throws IOException
     {
         File file = createFileWithCurrentDateTime(name);
         
-        BufferedWriter writer = createWriterFor(file);
-        
-        for (int i = 0; i < lines.size(); i++)
+        try (BufferedWriter writer = createWriterFor(file))
         {
-            String line = lines.get(i);
-            writer.write(line);
-            if (i < lines.size() - 1)
-                writer.newLine();
+            for (int i = 0; i < lines.size(); i++)
+            {
+                String line = lines.get(i);
+                writer.write(line);
+                if (i < lines.size() - 1)
+                    writer.newLine();
+            }
         }
-        
-        writer.close();
         
         return file;
     }

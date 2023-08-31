@@ -244,6 +244,8 @@ public class TweakceptionCommand extends CommandBase
             ),
             new Command("armorColorSortingHelper",
                 args -> Tweakception.globalTweaks.toggleArmorColorSortingHelper()),
+            new Command("autoConsumeBoosterCookie",
+                args -> Tweakception.globalTweaks.toggleAutoConsumeBoosterCookie()),
             new Command("autoHarp",
                 args -> Tweakception.globalTweaks.toggleAutoHarp(),
                 new Command("autoCloseOnNonPerfect",
@@ -299,7 +301,7 @@ public class TweakceptionCommand extends CommandBase
             new Command("entertoclosesign",
                 args -> Tweakception.globalTweaks.toggleEnterToCloseNumberTypingSign()),
             new Command("fastCommand",
-                args -> Tweakception.globalTweaks.setFastCommand(getString(args, 0, ""))),
+                args -> Tweakception.globalTweaks.setFastCommand(String.join(" ", args))),
             new Command("fakepowerscrolls",
                 args -> Tweakception.globalTweaks.toggleFakePowerScrolls()),
             new Command("fakestars",
@@ -400,6 +402,8 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.globalTweaks.setMinionAutoClaimClickDelayMin(
                         args.length > 0 ? toInt(args[0]) : 0))
             ),
+            new Command("minionAutoClaimHopper",
+                args -> Tweakception.globalTweaks.toggleMinionAutoClaimHopper()),
             new Command("ranchersbootsspeednote",
                 args -> Tweakception.globalTweaks.toggleRanchersBootsTooltipSpeedNote()),
             new Command("renderinvisiblearmorstands",
@@ -540,6 +544,11 @@ public class TweakceptionCommand extends CommandBase
                 new Command("dumpHeader",
                     args -> Tweakception.gardenTweaks.toggleContestDataDumperDumpHeader())
             ),
+            new Command("logCropBreaks",
+                args -> Tweakception.gardenTweaks.toggleLogCropBreaks(),
+                new Command("verbose",
+                    args -> Tweakception.gardenTweaks.toggleLogCropBreaksVerboseConsole())
+            ),
             new Command("simulateCactusKnifeInstaBreak",
                 args -> Tweakception.gardenTweaks.toggleSimulateCactusKnifeInstaBreak()),
             new Command("snapYaw",
@@ -555,6 +564,11 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.gardenTweaks.setSnapPitchAngle(getInt(args, 0, -1))),
                 new Command("range",
                     args -> Tweakception.gardenTweaks.setSnapPitchRange(getInt(args, 0, -1)))
+            ),
+            new Command("speedOverlay",
+                args -> Tweakception.gardenTweaks.toggleSpeedOverlay(),
+                new Command("setAveragePeriodSecs",
+                    args -> Tweakception.gardenTweaks.setSpeedOverlayAveragePeriodSecs(getInt(args, 0, -1)))
             ),
             new Command("verifyCrops",
                 args -> Tweakception.gardenTweaks.verifyCrops(),

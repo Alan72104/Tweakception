@@ -23,5 +23,6 @@ public abstract class MixinNetworkManager extends SimpleChannelInboundHandler<Pa
     protected void sendPacket(Packet<?> packet, CallbackInfo ci)
     {
         Tweakception.globalTweaks.onPacketSend(packet);
+        Tweakception.gardenTweaks.onPacketSend(packet);
     }
 }

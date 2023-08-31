@@ -3,7 +3,6 @@ package a7.tweakception.overlay;
 public class OverlayConfig
 {
     public boolean enable = false;
-    // Position of the origin of the overlay
     public int x = 0;
     public int y = 0;
     // The origin of the overlay

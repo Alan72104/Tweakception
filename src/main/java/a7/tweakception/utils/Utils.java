@@ -18,6 +18,7 @@ import java.text.ParseException;
 import java.util.List;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.DoublePredicate;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,6 +36,12 @@ public class Utils
     public static <T> HashSet<T> hashSet(T... array)
     {
         return new HashSet<>(Arrays.asList(array));
+    }
+    
+    @SafeVarargs
+    public static <T> List<T> list(T... array)
+    {
+        return new ArrayList<>(Arrays.asList(array));
     }
     
     /**
@@ -260,13 +267,20 @@ public class Utils
             ms % 1_000 / 100);
     }
     
-    public static <T> void removeWhile(Iterable<T> queue, Predicate<T> predicate)
+    /**
+     * @return The count of items removed
+     */
+    public static <T> int removeWhile(Iterable<T> queue, Predicate<T> predicate)
     {
-        removeWhile(queue, predicate, null);
+        return removeWhile(queue, predicate, null);
     }
     
-    public static <T> void removeWhile(Iterable<T> queue, Predicate<T> predicate, Consumer<T> beforeRemove)
+    /**
+     * @return The count of items removed
+     */
+    public static <T> int removeWhile(Iterable<T> queue, Predicate<T> predicate, Consumer<T> beforeRemove)
     {
+        int removedCount = 0;
         Iterator<T> it2 = queue.iterator();
         while (it2.hasNext())
         {
@@ -276,10 +290,12 @@ public class Utils
                 if (beforeRemove != null)
                     beforeRemove.accept(ele);
                 it2.remove();
+                removedCount++;
             }
             else
                 break;
         }
+        return removedCount;
     }
     
     public static String f(String s, Object... args)

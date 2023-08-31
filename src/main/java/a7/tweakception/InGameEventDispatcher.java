@@ -10,6 +10,7 @@ import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
@@ -132,6 +133,12 @@ public class InGameEventDispatcher
         dungeonTweaks.onInteract(event);
     }
     
+    @SubscribeEvent
+    public void onBlockBreak(BlockEvent.BreakEvent event)
+    {
+        if (!isInSkyblock()) return;
+    }
+    
     @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
     public void onClientChatReceived(ClientChatReceivedEvent event)
     {
@@ -172,6 +179,7 @@ public class InGameEventDispatcher
     {
         globalTweaks.onWorldLoad(event);
         dungeonTweaks.onWorldLoad(event);
+        gardenTweaks.onWorldLoad(event);
     }
     
     @SubscribeEvent

@@ -30,6 +30,7 @@ public class Tweakception
     public static final String MOD_ID = "tweakception";
     public static final String MOD_NAME = "Tweakception";
     public static final String MOD_VERSION = "1.0";
+    private static Boolean isPoiPresent = null;
     @Mod.Instance(MOD_ID)
     public static Tweakception instance;
     
@@ -63,6 +64,21 @@ public class Tweakception
     public static GiftTweaks giftTweaks;
     public static DiscordGuildBridge guildBridge;
     
+    public static boolean isPoiPresent()
+    {
+        if (isPoiPresent == null)
+        {
+            isPoiPresent = false;
+            try
+            {
+                Class.forName("org.apache.poi.xssf.usermodel.XSSFWorkbook");
+                isPoiPresent = true;
+            }
+            catch (ClassNotFoundException ignored) { }
+        }
+        return isPoiPresent;
+    }
+    
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) throws Exception
     {
@@ -75,7 +91,7 @@ public class Tweakception
         Class.forName("net.minecraft.client.gui.GuiPlayerTabOverlay");
 
         inGameEventDispatcher = new InGameEventDispatcher();
-        threadPool = Executors.newFixedThreadPool(3);
+        threadPool = Executors.newFixedThreadPool(2);
         scheduler = new Scheduler();
         apiManager = new APIManager(configuration);
         overlayManager = new OverlayManager(configuration);
@@ -102,6 +118,8 @@ public class Tweakception
         ClientRegistry.registerKeyBinding(keybindToggleSnapYaw);
         ClientRegistry.registerKeyBinding(keybindToggleSnapPitch);
         ClientRegistry.registerKeyBinding(keybindFastCommand);
+        
+        LagSpikeWatcher.startWatcher();
         
         Runtime.getRuntime().addShutdownHook(new Thread(() ->
         {

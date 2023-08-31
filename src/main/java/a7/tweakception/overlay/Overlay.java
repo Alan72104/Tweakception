@@ -33,6 +33,9 @@ public class Overlay
         return config.anchor;
     }
     
+    /**
+     * Sets the relative screen position
+     */
     public void setAnchor(int a)
     {
         if (a == 0)
@@ -46,6 +49,9 @@ public class Overlay
         return config.origin;
     }
     
+    /**
+     * Sets the origin of the overlay
+     */
     public void setOrigin(int o)
     {
         if (o == 0)
@@ -105,6 +111,10 @@ public class Overlay
         return config.textAlignment;
     }
     
+    /**
+     * 0 for left to right<p>
+     * 1 for right to left
+     */
     public void setTextAlignment(int alignment)
     {
         if (!(alignment == 0 || alignment == 1))
@@ -137,8 +147,6 @@ public class Overlay
     
     public void moveOrigin(int newOrigin)
     {
-        ScaledResolution res = new ScaledResolution(getMc());
-        
         int oldOrigin = getOrigin();
         if (newOrigin != oldOrigin)
         {
@@ -153,11 +161,10 @@ public class Overlay
     
     public void moveAnchor(int newAnchor)
     {
-        ScaledResolution res = new ScaledResolution(getMc());
-        
         int oldAnchor = getAnchor();
         if (newAnchor != oldAnchor)
         {
+            ScaledResolution res = new ScaledResolution(getMc());
             int[] oldAnchorPos = Anchor.apply(0, 0, res.getScaledWidth(), res.getScaledHeight(), oldAnchor);
             int[] newAnchorPos = Anchor.apply(0, 0, res.getScaledWidth(), res.getScaledHeight(), newAnchor);
             setAnchor(newAnchor);

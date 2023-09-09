@@ -57,8 +57,7 @@ public class TweakceptionCommand extends CommandBase
     private void dungeon()
     {
         addSub(new Command("dungeon",
-            null,
-            new Command("autoclosesecretchest",
+            new Command("autoCloseSecretChest",
                 args -> Tweakception.dungeonTweaks.toggleAutoCloseSecretChest()),
             new Command("autojoinparty",
                 args -> Tweakception.dungeonTweaks.toggleAutoJoinParty(),
@@ -82,7 +81,6 @@ public class TweakceptionCommand extends CommandBase
             new Command("blockFlowerPlacement",
                 args -> Tweakception.dungeonTweaks.toggleBlockFlowerPlacement()),
             new Command("blockrightclick",
-                null,
                 new Command("list",
                     args -> Tweakception.dungeonTweaks.blockRightClickList()),
                 new Command("set",
@@ -108,8 +106,7 @@ public class TweakceptionCommand extends CommandBase
                 new Command("setfragbot",
                     args -> Tweakception.dungeonTweaks.setFragBot(getString(args, 0, ""))),
                 new Command("startsession",
-                    args -> Tweakception.dungeonTweaks.fragStartSession()),
-                new Command("stats", null)
+                    args -> Tweakception.dungeonTweaks.fragStartSession())
             ),
             new Command("gyrowandoverlay",
                 args -> Tweakception.dungeonTweaks.toggleGyroWandOverlay()),
@@ -133,7 +130,6 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.dungeonTweaks.toggleNoFogAutoToggle())
             ),
             new Command("partyfinder",
-                null,
                 new Command("blacklist",
                     args -> Tweakception.dungeonTweaks.partyFinderPlayerBlacklistSet(
                         getString(args, 0, ""),
@@ -193,11 +189,9 @@ public class TweakceptionCommand extends CommandBase
     private void gt()
     {
         addSub(new Command("gt",
-            null,
             new Command("abiphonerelayhint",
                 args -> Tweakception.globalTweaks.toggleAbiphoneRelayHint()),
             new Command("actionbar",
-                null,
                 new Command("sendbitsmessage",
                     args -> Tweakception.globalTweaks.toggleSendBitsMessage()),
                 new Command("sendskyblockexpgainmsg",
@@ -280,7 +274,6 @@ public class TweakceptionCommand extends CommandBase
             new Command("displaypersonaldeletoritems",
                 args -> Tweakception.globalTweaks.toggleDisplayPersonalDeletorItems()),
             new Command("dojo",
-                null,
                 new Command("discipline",
                     args -> Tweakception.globalTweaks.toggleDojoDisciplineHelper())),
             new Command("drawselectedentityoutline",
@@ -416,6 +409,16 @@ public class TweakceptionCommand extends CommandBase
                 args -> Tweakception.globalTweaks.toggleRenderSacksType()),
             new Command("renderpotiontier",
                 args -> Tweakception.globalTweaks.toggleRenderPotionTier()),
+            new Command("stepHeight",
+                args ->
+                {
+                    if (McUtils.getPlayer().stepHeight > 0.6f)
+                        McUtils.getPlayer().stepHeight = 0.6f;
+                    else
+                        McUtils.getPlayer().stepHeight = 1.0f;
+                    sendChat("Set player step height to " + McUtils.getPlayer().stepHeight + " blocks");
+                    sendChat("(this gets reset on lobby swap)");
+                }),
             new Command("setGlassesToStones",
                 args -> Tweakception.globalTweaks.setGlassesToStones()),
             new Command("setinvisibleentityalphapercentage",
@@ -438,7 +441,6 @@ public class TweakceptionCommand extends CommandBase
             new Command("skipworldrendering",
                 args -> Tweakception.globalTweaks.toggleSkipWorldRendering()),
             new Command("targeting",
-                null,
                 new Command("armorStandDisable",
                     args -> Tweakception.globalTweaks.toggleDisableArmorStandTargeting()),
                 new Command("batDisable",
@@ -451,7 +453,6 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.globalTweaks.resetTargeting())
             ),
             new Command("tooltip",
-                null,
                 new Command("id",
                     args -> Tweakception.globalTweaks.toggleTooltipDisplayId())
             ),
@@ -461,7 +462,6 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.globalTweaks.setTooltipOverride(true))
             ),
             new Command("trevor",
-                null,
                 new Command("autoaccept",
                     args -> Tweakception.globalTweaks.toggleTrevorQuestAutoAccept()),
                 new Command("autostart",
@@ -479,20 +479,15 @@ public class TweakceptionCommand extends CommandBase
                 new Command("overlay",
                     args -> Tweakception.globalTweaks.pingOverlay())),
             new Command("playercount",
-                null,
                 new Command("park",
                     args -> Tweakception.globalTweaks.getPlayerCountInArea(0)),
                 new Command("crimson",
-                    null,
                     new Command("stronghold",
-                        null,
                         new Command("back",
-                            null,
                             new Command("topright",
                                 args -> Tweakception.globalTweaks.getPlayerCountInArea(1))
                         ),
                         new Command("front",
-                            null,
                             new Command("topright",
                                 args -> Tweakception.globalTweaks.getPlayerCountInArea(2))
                         )
@@ -515,7 +510,6 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.globalTweaks.toggleLogPacketLogAll())
             ).setVisibility(false),
             new Command("rightctrlcopy",
-                null,
                 new Command("nbt",
                     args -> Tweakception.globalTweaks.rightCtrlCopySet("nbt")),
                 new Command("tooltip",
@@ -530,7 +524,6 @@ public class TweakceptionCommand extends CommandBase
     private void garden()
     {
         addSub(new Command("garden",
-            null,
             new Command("autoClaimContest",
                 args -> Tweakception.gardenTweaks.toggleAutoClaimContests()),
             new Command("autoTurnOnHideFromStrangersWithSnapYaw",
@@ -582,7 +575,6 @@ public class TweakceptionCommand extends CommandBase
     private void crimson()
     {
         addSub(new Command("crimson",
-            null,
             new Command("map",
                 args -> Tweakception.crimsonTweaks.toggleMap(),
                 new Command("markerscale",
@@ -605,7 +597,6 @@ public class TweakceptionCommand extends CommandBase
     private void mining()
     {
         addSub(new Command("mining",
-            null,
             new Command("highlightchests",
                 args -> Tweakception.miningTweaks.toggleHighlightChests()),
             new Command("simulateBlockHardness",
@@ -622,7 +613,6 @@ public class TweakceptionCommand extends CommandBase
     private void slayer()
     {
         addSub(new Command("slayer",
-            null,
             new Command("autohealwand",
                 args -> Tweakception.slayerTweaks.toggleAutoHealWand(),
                 new Command("setthreshold",
@@ -636,7 +626,6 @@ public class TweakceptionCommand extends CommandBase
                         args.length >= 1 ? toInt(args[0]) : 0))
             ),
             new Command("eman",
-                null,
                 new Command("highlightglyph",
                     args -> Tweakception.slayerTweaks.toggleHighlightGlyph())
             ),
@@ -651,7 +640,6 @@ public class TweakceptionCommand extends CommandBase
     private void tuning()
     {
         addSub(new Command("tuning",
-            null,
             new Command("clickdelayticks",
                 args -> Tweakception.tuningTweaks.setTuningClickDelay(
                     args.length > 0 ? toInt(args[0]) : 0)),
@@ -686,7 +674,6 @@ public class TweakceptionCommand extends CommandBase
     private void enchanting()
     {
         addSub(new Command("enchanting",
-            null,
             new Command("autosolve",
                 args -> Tweakception.enchantingTweaks.toggleAutoSolve())
         ));
@@ -713,7 +700,6 @@ public class TweakceptionCommand extends CommandBase
             new Command("setInvFeaturesMinDelay",
                 args -> Tweakception.giftTweaks.setInvFeaturesMinDelay(getInt(args, 0, -1))),
             new Command("targeting",
-                null,
                 new Command("armorStandDisable",
                     args -> Tweakception.giftTweaks.toggleDisableArmorStandTargeting()),
                 new Command("giftsOpenableOnly",
@@ -738,7 +724,6 @@ public class TweakceptionCommand extends CommandBase
     private void api()
     {
         addSub(new Command("api",
-            null,
             new Command("set",
                 args -> Tweakception.apiManager.setApiKey(getString(args, 0, ""))),
             new Command("clearcaches",
@@ -830,7 +815,6 @@ public class TweakceptionCommand extends CommandBase
     private void foraging()
     {
         addSub(new Command("foraging",
-            null,
             new Command("axeMidClickSwapRodBreak",
                 args -> Tweakception.foragingTweaks.toggleAxeMidClickSwapRodBreak()),
             new Command("tree",
@@ -845,7 +829,6 @@ public class TweakceptionCommand extends CommandBase
     private void bazaar()
     {
         addSub(new Command("bazaar",
-            null,
             new Command("printorders",
                 args -> Tweakception.bazaarTweaks.printOrders())
         ));
@@ -855,7 +838,6 @@ public class TweakceptionCommand extends CommandBase
     private void lagSpikeWatcher()
     {
         addSub(new Command("lagSpikeWatcher",
-            null,
             new Command("start",
                 args ->
                 {
@@ -1056,9 +1038,7 @@ public class TweakceptionCommand extends CommandBase
     }
     
     @Retention(RetentionPolicy.RUNTIME)
-    private @interface RunInCtor
-    {
-    }
+    private @interface RunInCtor { }
     
     @Override
     public String getCommandName()
@@ -1069,7 +1049,7 @@ public class TweakceptionCommand extends CommandBase
     @Override
     public String getCommandUsage(ICommandSender icommandsender)
     {
-        return "/tc help";
+        return "Use the tab completion or read the source code!";
     }
     
     @Override
@@ -1135,49 +1115,33 @@ public class TweakceptionCommand extends CommandBase
     
     private static String getString(String[] args, int index, String defaultWhenNoArg)
     {
-        if (index < args.length)
-            return args[index];
-        else
-            return defaultWhenNoArg;
+        return index < args.length ? args[index] : defaultWhenNoArg;
     }
     
     private static int getInt(String[] args, int index, int defaultWhenNoArg)
     {
-        if (index < args.length)
-            return toInt(args[index]);
-        else
-            return defaultWhenNoArg;
+        return index < args.length ? toInt(args[index]) : defaultWhenNoArg;
     }
     
     private static long getLong(String[] args, int index, long defaultWhenNoArg)
     {
-        if (index < args.length)
-            return toLong(args[index]);
-        else
-            return defaultWhenNoArg;
+        return index < args.length ? toLong(args[index]) : defaultWhenNoArg;
     }
     
     private static float getFloat(String[] args, int index, float defaultWhenNoArg)
     {
-        if (index < args.length)
-            return toFloat(args[index]);
-        else
-            return defaultWhenNoArg;
+        return index < args.length ? toFloat(args[index]) : defaultWhenNoArg;
     }
     
     private static double getDouble(String[] args, int index, double defaultWhenNoArg)
     {
-        if (index < args.length)
-            return toDouble(args[index]);
-        else
-            return defaultWhenNoArg;
+        return index < args.length ? toDouble(args[index]) : defaultWhenNoArg;
     }
     
     private static int toInt(String s)
     {
         return Integer.parseInt(s.replaceAll(",$", ""));
     }
-    
     
     private static long toLong(String s)
     {

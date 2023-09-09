@@ -26,7 +26,23 @@ public class Command implements Comparable<Command>
     protected boolean visible = true; // Whether this command can be used or not, override by global tracker devMode
     
     public Command(String name,
-                   @Nullable Consumer<String[]> func,
+                   Command... subs)
+    {
+        this.name = name;
+        List<Command> list = Arrays.asList(subs);
+        Collections.sort(list);
+        subCommands = Collections.unmodifiableList(list);
+    }
+    
+    public Command(String name,
+                   @Nonnull Runnable func,
+                   Command... subs)
+    {
+        this(name, args -> func.run(), subs);
+    }
+    
+    public Command(String name,
+                   @Nonnull Consumer<String[]> func,
                    Command... subs)
     {
         this.name = name;
@@ -37,16 +53,12 @@ public class Command implements Comparable<Command>
     }
     
     public Command(String name,
-                   @Nullable Consumer<String[]> func,
-                   @Nonnull Function<String[],List<String>> optionProvider,
+                   @Nonnull Consumer<String[]> func,
+                   @Nonnull Function<String[], List<String>> optionProvider,
                    Command... subs)
     {
-        this.name = name;
-        this.func = func;
+        this(name, func, subs);
         this.optionProvider = optionProvider;
-        List<Command> list = Arrays.asList(subs);
-        Collections.sort(list);
-        subCommands = Collections.unmodifiableList(list);
     }
     
     public String getName()

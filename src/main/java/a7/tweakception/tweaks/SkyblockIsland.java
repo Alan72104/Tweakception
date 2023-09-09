@@ -174,7 +174,7 @@ public enum SkyblockIsland
         new SubArea("Dark oak area", "DarkOak", "foraging",
             new AxisAlignedBB(-316, 98, -15, -374, 111, -120)),
         new SubArea("Wolf cave", "WolfCave", "slayer",
-            new AxisAlignedBB(-351, 78, -102, -399, 49, 36))
+            new AxisAlignedBB(-339, 80, -105, -400, 49, 36))
     });
     
     /**

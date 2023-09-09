@@ -248,7 +248,7 @@ public class SlayerTweaks extends Tweak
                     
                     Tweakception.scheduler.addDelayed(() ->
                     {
-                        getPlayer().inventory.currentItem = wandSlot; // Or again in the same tick
+                        getPlayer().inventory.currentItem = wandSlot; // Or again in the click tick
                         ((AccessorMinecraft) getMc()).rightClickMouse();
                     }, 2)
                     .thenDelayed(() ->

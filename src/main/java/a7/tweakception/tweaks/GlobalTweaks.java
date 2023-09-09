@@ -400,6 +400,10 @@ public class GlobalTweaks extends Tweak
                                 playerLocations.remove(ele);
                         }
                     }
+                    else
+                    {
+                        playerLocations.clear();
+                    }
                     Tweakception.overlayManager.setEnable(PlayersInAreasDisplayOverlay.NAME, !playerLocations.isEmpty());
                 }
             }
@@ -2168,8 +2172,8 @@ public class GlobalTweaks extends Tweak
         public void update()
         {
             super.update();
-            List<String> list = new ArrayList<>();
-            
+            List<String> list = getContent();
+            list.clear();
             sorted.clear();
             sorted.addAll(playerLocations);
             sorted.sort(null);

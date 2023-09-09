@@ -97,10 +97,8 @@ dependencies {
     shadowImplementation("org.java-websocket:Java-WebSocket:1.5.3")
     shadowImplementation("org.apache.commons:commons-text:1.10.0")
     val poi = "org.apache.poi:poi-ooxml:4.0.0"
-    if (includePoi)
-        shadowImplementation(poi)
-    else
-        compileOnly(poi)
+    if (includePoi) shadowImplementation(poi) else compileOnly(poi)
+//    shadowImplementation("org.xerial:sqlite-jdbc:3.43.0.0")
     shadowImplementation("org.slf4j:slf4j-api:1.7.25")
     testImplementation("org.slf4j:slf4j-simple:1.7.25")
 

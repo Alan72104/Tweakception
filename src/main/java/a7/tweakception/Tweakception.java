@@ -119,7 +119,7 @@ public class Tweakception
         ClientRegistry.registerKeyBinding(keybindToggleSnapPitch);
         ClientRegistry.registerKeyBinding(keybindFastCommand);
         
-        LagSpikeWatcher.startWatcher();
+//        LagSpikeWatcher.startWatcher();
         
         Runtime.getRuntime().addShutdownHook(new Thread(() ->
         {

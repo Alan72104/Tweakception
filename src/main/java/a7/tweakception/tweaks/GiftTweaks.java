@@ -387,7 +387,12 @@ public class GiftTweaks extends Tweak
             if (stack != null && id != null && id.equals(targetId))
             {
                 if (invFeatureIndex < 9)
-                    getMc().playerController.windowClick(getPlayer().openContainer.windowId, 54 + 27 + invFeatureIndex, 0, 1, getPlayer());
+                    getMc().playerController.windowClick(
+                        getPlayer().openContainer.windowId,
+                        54 + 27 + invFeatureIndex,
+                        WindowClickContants.ShiftLeftRight.BTN_SHIFT_LEFT,
+                        WindowClickContants.ShiftLeftRight.MODE,
+                        getPlayer());
                 else
                     getMc().playerController.windowClick(getPlayer().openContainer.windowId, 54 + invFeatureIndex - 9, 0, 1, getPlayer());
                 invFeatureLastTicks = getTicks();

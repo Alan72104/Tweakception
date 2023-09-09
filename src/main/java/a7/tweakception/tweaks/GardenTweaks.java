@@ -992,7 +992,7 @@ public class GardenTweaks extends Tweak
             lastZ = z;
             
             bpss[index] = bps;
-            if (DevSettings.copySpeedNums && getTicks() % averagingPeriodSecs * 20 == 0)
+            if (DevSettings.copySpeedNums && getTicks() % (averagingPeriodSecs * 20) == 0)
             {
                 StringBuilder sb = new StringBuilder();
                 for (int i = 0; i < averagingPeriodSecs * 20; i++)

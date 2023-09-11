@@ -10,6 +10,7 @@ public class DevSettings
     public static boolean printLocationChange = false;
     public static boolean printSchedulerUpdate = false;
     public static boolean printLogCropBreaksNumber = false;
+    public static boolean printSimMiningSpeedNums = false;
     public static boolean copySpeedNums = false;
     
     // Toggles a boolean field by their name, case-insensitive

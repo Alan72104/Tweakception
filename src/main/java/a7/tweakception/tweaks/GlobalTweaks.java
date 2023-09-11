@@ -3303,6 +3303,52 @@ public class GlobalTweaks extends Tweak
             sendChatf("HighlightBlock: %d: %d, %d, %d", ++i, pos.getX(), pos.getY(), pos.getZ());
     }
     
+    public void highlightBlockCopy()
+    {
+        if (blocksToHighlight.isEmpty())
+        {
+            sendChat("HighlightBlock: List is empty");
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        String nl = "";
+        for (BlockPos pos : blocksToHighlight)
+        {
+            sb.append(f("%s%d, %d, %d", nl, pos.getX(), pos.getY(), pos.getZ()));
+            nl = System.lineSeparator();
+        }
+        Utils.setClipboard(sb.toString());
+        sendChatf("HighlightBlock: Copied %d poses", blocksToHighlight.size());
+    }
+    
+    public void highlightBlockPaste()
+    {
+        String clip = Utils.getClipboard();
+        if (clip == null)
+        {
+            sendChat("HighlightBlock: Clipboard is empty");
+            return;
+        }
+        // -1,  23 ,4
+        Matcher matcher = Pattern.compile("^\\s*(-?\\d+)[,\\s]*(-?\\d+)[,\\s]*(-?\\d+)[,\\s]*$").matcher("");
+        int count = 0;
+        for (String line : Utils.newlinePattern.split(clip))
+        {
+            if (matcher.reset(line).matches())
+            {
+                blocksToHighlight.add(new BlockPos(
+                    Utils.parseInt(matcher.group(1)),
+                    Utils.parseInt(matcher.group(2)),
+                    Utils.parseInt(matcher.group(3))
+                ));
+                count++;
+            }
+            else if (!line.isEmpty())
+                sendChatf("HighlightBlock: Invalid line: \"%s\"", line);
+        }
+        sendChatf("HighlightBlock: Added %d poses", count);
+    }
+    
     public void highlightEntityType(String type)
     {
         type = type.toLowerCase(Locale.ROOT);

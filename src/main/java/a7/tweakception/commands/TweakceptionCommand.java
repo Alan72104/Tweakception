@@ -344,7 +344,11 @@ public class TweakceptionCommand extends CommandBase
                 new Command("removeNearest",
                     args -> Tweakception.globalTweaks.highlightBlockRemoveNearest()),
                 new Command("list",
-                    args -> Tweakception.globalTweaks.highlightBlockList())
+                    args -> Tweakception.globalTweaks.highlightBlockList()),
+                new Command("copy",
+                    args -> Tweakception.globalTweaks.highlightBlockCopy()),
+                new Command("paste",
+                    args -> Tweakception.globalTweaks.highlightBlockPaste())
             ),
             new Command("hlshinypigs",
                 args -> Tweakception.globalTweaks.toggleHighlightShinyPigs(),
@@ -597,15 +601,16 @@ public class TweakceptionCommand extends CommandBase
     private void mining()
     {
         addSub(new Command("mining",
-            new Command("highlightchests",
+            new Command("highlightChests",
                 args -> Tweakception.miningTweaks.toggleHighlightChests()),
             new Command("simulateBlockHardness",
                 args -> Tweakception.miningTweaks.toggleSimulateBlockHardness()),
-            new Command("printcachedminingspeed",
+            new Command("printCachedMiningSpeed",
                 args -> Tweakception.miningTweaks.printMiningSpeedCache()),
-            new Command("setminingspeedboostvalue",
-                args -> Tweakception.miningTweaks.setMiningSpeedBoostValue(
-                    args.length > 0 ? toInt(args[0]) : 0))
+            new Command("setMiningSpeedBoostValue",
+                args -> Tweakception.miningTweaks.setMiningSpeedBoostValue(getInt(args, 0, 0))),
+            new Command("setToolMiningSpeedOverride",
+                args -> Tweakception.miningTweaks.setToolMiningSpeedOverride(getInt(args, 0, 0)))
         ));
     }
     

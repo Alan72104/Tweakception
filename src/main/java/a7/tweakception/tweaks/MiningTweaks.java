@@ -44,6 +44,7 @@ public class MiningTweaks extends Tweak
         public boolean simulateBlockHardness = false;
         public int miningSpeedBoostValue = 3;
         public boolean treasureChestHelper = false;
+        public int toolMiningSpeedOverride = 0;
     }
     
     private static final Color CHEST_COLOR_OPENED = new Color(0, 255, 0, 48);
@@ -297,6 +298,8 @@ public class MiningTweaks extends Tweak
         String[] lore = McUtils.getDisplayLore(stack);
         if (lore == null)
             return 0.0f;
+        if (c.toolMiningSpeedOverride > 0)
+            return c.toolMiningSpeedOverride;
         for (String s : lore)
         {
             if (miningItemStatMatcher.reset(s).find())
@@ -382,5 +385,11 @@ public class MiningTweaks extends Tweak
         sendChat("Cached mining speed is " + getCachedMiningSpeed());
         sendChat("Total mining speed is " +
             ((getHeldToolMiningSpeed() + getCachedMiningSpeed()) * getMiningSpeedBoostScale()));
+    }
+    
+    public void setToolMiningSpeedOverride(int speed)
+    {
+        c.toolMiningSpeedOverride = Math.max(speed, 0);
+        sendChat("Set tool mining speed override to " + c.toolMiningSpeedOverride);
     }
 }

@@ -18,19 +18,19 @@ import java.text.ParseException;
 import java.util.List;
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.function.DoublePredicate;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static a7.tweakception.utils.McUtils.getMc;
-import static a7.tweakception.utils.McUtils.getPlayer;
+import static a7.tweakception.utils.McUtils.*;
 
 public class Utils
 {
     private static final NumberFormat NUMBER_FORMAT = NumberFormat.getInstance(Locale.US);
     public static final Matcher auctionPriceMatcher = Pattern.compile(
         "§7(?<type>Buy it now|Starting bid|Top bid): §6(?<price>(?:\\d{1,3},?)+) coins$").matcher("");
+    public static final Pattern newlinePattern = Pattern.compile(
+        "\\R");
     
     @SafeVarargs
     public static <T> HashSet<T> hashSet(T... array)
@@ -300,7 +300,7 @@ public class Utils
     
     public static String f(String s, Object... args)
     {
-        return String.format(s, args);
+        return String.format(Locale.US, s, args);
     }
     
     public static String getSkyblockItemId(ItemStack item)
@@ -472,22 +472,28 @@ public class Utils
     
     public static void setClipboard(String s)
     {
-        StringSelection ss = new StringSelection(s);
-        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(ss, ss);
+        try
+        {
+            StringSelection ss = new StringSelection(s);
+            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(ss, ss);
+        }
+        catch (IllegalStateException e)
+        {
+            sendChat("Exception occurred on copy");
+            e.printStackTrace();
+        }
     }
     
     public static String getClipboard()
     {
-        String s;
         try
         {
-            s = (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
+            return (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
         }
         catch (Exception e)
         {
             return null;
         }
-        return s;
     }
     
     public static void fileCopy(File source, File dest) throws IOException

@@ -1,11 +1,12 @@
 package a7.tweakception.mixin;
 
+import a7.tweakception.DevSettings;
 import a7.tweakception.Tweakception;
 import a7.tweakception.tweaks.GlobalTweaks;
 import a7.tweakception.tweaks.SkyblockIsland;
 import a7.tweakception.utils.McUtils;
+import a7.tweakception.utils.Stopwatch;
 import a7.tweakception.utils.Utils;
-import com.sun.jna.platform.win32.User32;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -23,6 +24,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeHooks;
 import org.lwjgl.util.vector.Vector3f;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -35,36 +37,45 @@ import static a7.tweakception.utils.McUtils.*;
 @Mixin(ForgeHooks.class)
 public class MixinForgeHooks
 {
-    private static final Map<String, Integer> skyblockPicksToBreakingPower = new HashMap<>();
-    private static boolean switchingSlots = false;
+    @Unique
+    private static final Map<String, Integer> tc$picksToBreakingPower = new HashMap<>();
+    @Unique
+    private static boolean tc$switchingSlots = false;
+    @Unique
+    private static final Stopwatch tc$printSpeedTimer = new Stopwatch(1000);
     
     static
     {
-        skyblockPicksToBreakingPower.put("REFINED_MITHRIL_PICKAXE", 5);
-        skyblockPicksToBreakingPower.put("MITHRIL_PICKAXE", 5);
-        skyblockPicksToBreakingPower.put("DIAMOND_PICKAXE", 4);
-        skyblockPicksToBreakingPower.put("BANDAGED_MITHRIL_PICKAXE", 5);
-        skyblockPicksToBreakingPower.put("FRACTURED_MITHRIL_PICKAXE", 5);
-        skyblockPicksToBreakingPower.put("PICKONIMBUS", 7);
-        skyblockPicksToBreakingPower.put("STONK", 6);
-        skyblockPicksToBreakingPower.put("JUNGLE_PICKAXE", 5);
-        skyblockPicksToBreakingPower.put("TITANIUM_PICKAXE", 6);
-        skyblockPicksToBreakingPower.put("REFINED_TITANIUM_PICKAXE", 6);
-        skyblockPicksToBreakingPower.put("GEMSTONE_GAUNTLET", 9);
-        skyblockPicksToBreakingPower.put("MITHRIL_DRILL_1", 5);
-        skyblockPicksToBreakingPower.put("MITHRIL_DRILL_2", 6);
-        skyblockPicksToBreakingPower.put("GEMSTONE_DRILL_1", 7);
-        skyblockPicksToBreakingPower.put("GEMSTONE_DRILL_2", 8);
-        skyblockPicksToBreakingPower.put("GEMSTONE_DRILL_3", 9);
-        skyblockPicksToBreakingPower.put("GEMSTONE_DRILL_4", 9);
-        skyblockPicksToBreakingPower.put("TITANIUM_DRILL_1", 7);
-        skyblockPicksToBreakingPower.put("TITANIUM_DRILL_2", 8);
-        skyblockPicksToBreakingPower.put("TITANIUM_DRILL_3", 9);
-        skyblockPicksToBreakingPower.put("TITANIUM_DRILL_4", 9);
-        skyblockPicksToBreakingPower.put("DIVAN_DRILL", 10);
+        tc$picksToBreakingPower.put("REFINED_MITHRIL_PICKAXE", 5);
+        tc$picksToBreakingPower.put("MITHRIL_PICKAXE", 5);
+        tc$picksToBreakingPower.put("DIAMOND_PICKAXE", 4);
+        tc$picksToBreakingPower.put("BANDAGED_MITHRIL_PICKAXE", 5);
+        tc$picksToBreakingPower.put("FRACTURED_MITHRIL_PICKAXE", 5);
+        tc$picksToBreakingPower.put("PICKONIMBUS", 7);
+        tc$picksToBreakingPower.put("STONK", 6);
+        tc$picksToBreakingPower.put("JUNGLE_PICKAXE", 5);
+        tc$picksToBreakingPower.put("TITANIUM_PICKAXE", 6);
+        tc$picksToBreakingPower.put("REFINED_TITANIUM_PICKAXE", 6);
+        tc$picksToBreakingPower.put("GEMSTONE_GAUNTLET", 9);
+        tc$picksToBreakingPower.put("MITHRIL_DRILL_1", 5);
+        tc$picksToBreakingPower.put("MITHRIL_DRILL_2", 6);
+        tc$picksToBreakingPower.put("GEMSTONE_DRILL_1", 7);
+        tc$picksToBreakingPower.put("GEMSTONE_DRILL_2", 8);
+        tc$picksToBreakingPower.put("GEMSTONE_DRILL_3", 9);
+        tc$picksToBreakingPower.put("GEMSTONE_DRILL_4", 9);
+        tc$picksToBreakingPower.put("TITANIUM_DRILL_1", 7);
+        tc$picksToBreakingPower.put("TITANIUM_DRILL_2", 8);
+        tc$picksToBreakingPower.put("TITANIUM_DRILL_3", 9);
+        tc$picksToBreakingPower.put("TITANIUM_DRILL_4", 9);
+        tc$picksToBreakingPower.put("DIVAN_DRILL", 10);
     }
     
-    // Gets the speed at which player can break a block as opposite to a hardness number
+    // Gets the block damage per tick
+    // Example logic
+    // mc.clickMouse()
+    // playerController.clickBlock()
+    // block.getPlayerRelativeBlockHardness()
+    // ForgeHooks.blockStrength()
     @Inject(method = "blockStrength", at = @At("HEAD"), remap = false, cancellable = true)
     private static void blockStrength(IBlockState state, EntityPlayer player, World world, BlockPos pos, CallbackInfoReturnable<Float> cir)
     {
@@ -87,7 +98,7 @@ public class MixinForgeHooks
             float blockHardness = 0.0f;
             
             // Can harvest & break speed
-            if (skyblockPicksToBreakingPower.containsKey(id))
+            if (tc$picksToBreakingPower.containsKey(id))
             {
                 pickaxeBreakSpeed = Tweakception.miningTweaks.getHeldToolMiningSpeed();
                 pickaxeBreakSpeed += Tweakception.miningTweaks.getCachedMiningSpeed();
@@ -104,14 +115,21 @@ public class MixinForgeHooks
             if (!player.onGround)
                 pickaxeBreakSpeed /= 5.0F;
             
+            boolean print = DevSettings.printSimMiningSpeedNums && tc$printSpeedTimer.checkAndResetIfElapsed();
             // Hardness
             blockHardness = Tweakception.miningTweaks.getSpecialBlockHardness(world, pos);
+            if (print)
+                sendChat("Hardness: " + blockHardness);
             if (blockHardness == 0.0f)
             {
                 return;
             }
             
-            cir.setReturnValue(pickaxeBreakSpeed / blockHardness / 30.0f);
+            float dmg = pickaxeBreakSpeed / blockHardness / 30.0f;
+            if (print)
+                sendChatf("%.1f / %.1f / 30.0f = %.3f, ticks required: %d",
+                    pickaxeBreakSpeed, blockHardness, dmg, (int) Math.ceil(1 / dmg));
+            cir.setReturnValue(dmg);
             cir.cancel();
         }
     }
@@ -171,14 +189,14 @@ public class MixinForgeHooks
             cir.cancel();
         }
         else if (Tweakception.foragingTweaks.isAxeMidClickSwapRodBreakOn() &&
-            !switchingSlots &&
+            !tc$switchingSlots &&
             player.getCurrentEquippedItem() != null &&
             player.getCurrentEquippedItem().getItem() instanceof ItemAxe)
         {
             int rod = Utils.findFishingRodInHotbar();
             if (rod == -1)
                 return;
-            switchingSlots = true;
+            tc$switchingSlots = true;
             int lastSlot = getPlayer().inventory.currentItem;
             getPlayer().inventory.currentItem = rod;
             Tweakception.scheduler
@@ -193,7 +211,7 @@ public class MixinForgeHooks
                 {
                     getPlayer().inventory.currentItem = lastSlot;
                     KeyBinding.setKeyBindState(getMc().gameSettings.keyBindAttack.getKeyCode(), false);
-                    switchingSlots = false;
+                    tc$switchingSlots = false;
                 }, 3);
             cir.setReturnValue(false);
             cir.cancel();

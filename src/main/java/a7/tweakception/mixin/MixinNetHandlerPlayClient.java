@@ -33,9 +33,14 @@ public class MixinNetHandlerPlayClient
         Tweakception.miningTweaks.onPacketMultiBlockChange(packet);
     }
     
-    @Inject(method = "handleBlockAction", at = @At(value = "RETURN"))
-    public void handleBlockAction(S24PacketBlockAction packet, CallbackInfo ci)
+    @Inject(method = "handleBlockBreakAnim", at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/client/multiplayer/WorldClient;sendBlockBreakProgress(ILnet/minecraft/util/BlockPos;I)V"),
+        cancellable = true)
+    public void handleBlockBreakAnim(S25PacketBlockBreakAnim packet, CallbackInfo ci)
     {
+        if (!isInSkyblock()) return;
+        
+        Tweakception.miningTweaks.onPacketBlockBreakAnim(packet, ci);
     }
     
     @Inject(method = "handleCollectItem", at = @At(value = "RETURN"))

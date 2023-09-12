@@ -29,11 +29,12 @@ if (versionPropsFile.canRead()) {
 
     versionProps["VERSION_CODE"] = patchVersion.toString()
     versionProps.store(versionPropsFile.bufferedWriter(), null)
+    version = "$baseVersion.$patchVersion"
+    println("Version: $version")
 } else {
     throw GradleException("Cannot read version.properties!")
 }
 
-version = "$baseVersion.$patchVersion"
 
 // Toolchains:
 java {
@@ -139,7 +140,10 @@ tasks.shadowJar {
         }
     }
 
-    minimize()
+    minimize {
+        // Exclude org.spongepowered.asm.launch.MixinTweaker from getting removed
+        exclude(dependency("org.spongepowered:.*:.*"))
+    }
 
     // If you want to include other dependencies and shadow them, you can relocate them in here
     fun relocate(name: String) = relocate(name, "a7.tweakception.deps.$name")
@@ -150,6 +154,8 @@ tasks.shadowJar {
 tasks.assemble.get().dependsOn(tasks.remapJar)
 
 tasks.processResources {
+    inputs.property("version", project.version)
+
     exclude("**/*.psd")
     filesMatching("**/*.psd") {
         println("found : $relativeSourcePath")

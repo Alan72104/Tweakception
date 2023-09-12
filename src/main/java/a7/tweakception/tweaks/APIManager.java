@@ -36,10 +36,8 @@ public class APIManager extends Tweak
     private static final Map<String, JsonObject> UUID_TO_SKYBLOCK_PLAYER_INFO = new HashMap<>();
     public static final String UUID_NOT_AVAILABLE = "null";
     public static final JsonObject INFO_NOT_AVAILABLE = new JsonObject();
-    private static final int HYPIXEL_REQUEST_COOLDOWN = 600; // ms
     private boolean debug = false;
     private final Gson gson = new Gson();
-    private long lastHypixelRequestTime = 0L;
     private boolean requestingUuid = false;
     private final Set<String> hypixelUuidsInRequest = new HashSet<>();
     private long hypixelApiLimitResetTime = 0;
@@ -265,13 +263,11 @@ public class APIManager extends Tweak
             return;
         }
         
-        lastHypixelRequestTime = System.currentTimeMillis();
-        
-        String url = makeHypixelApiUrl(apiKey, method, args);
+        String url = makeHypixelApiUrl(method, args);
         
         System.out.println(f("AM: hypixel api request started, url: %s", url));
         
-        fetchHypixelAsync(url,
+        fetchHypixelAsync(url, apiKey,
             result -> Tweakception.scheduler.add(() ->
             {
                 System.out.println(f("AM: hypixel api request completed, url: %s", url));
@@ -338,7 +334,7 @@ public class APIManager extends Tweak
     }
     
     // This executes off the main thread
-    private void fetchHypixelAsync(String url, Consumer<JsonObject> onSuccess, Runnable onError)
+    private void fetchHypixelAsync(String url, String apiKey, Consumer<JsonObject> onSuccess, Runnable onError)
     {
         Tweakception.threadPool.submit(() ->
         {
@@ -347,6 +343,8 @@ public class APIManager extends Tweak
             try
             {
                 URLConnection connection = openConnection(url);
+                connection.setRequestProperty("API-Key", apiKey);
+                connection.connect();
                 
                 String content = IOUtils.toString(connection.getInputStream(), StandardCharsets.UTF_8);
                 
@@ -397,6 +395,7 @@ public class APIManager extends Tweak
             try
             {
                 URLConnection connection = openConnection(url);
+                connection.connect();
                 
                 String content = IOUtils.toString(connection.getInputStream(), StandardCharsets.UTF_8);
                 
@@ -421,14 +420,11 @@ public class APIManager extends Tweak
         URLConnection connection = url.openConnection();
         connection.setConnectTimeout(5000);
         connection.setReadTimeout(5000);
-        connection.connect();
         return connection;
     }
     
-    private String makeHypixelApiUrl(String apiKey, String method, Map<String, String> args)
+    private String makeHypixelApiUrl(String method, Map<String, String> args)
     {
-        if (apiKey != null)
-            args.put("key", apiKey.trim());
         StringBuilder url = new StringBuilder("https://api.hypixel.net/" + method);
         boolean first = true;
         for (Map.Entry<String, String> entry : args.entrySet())

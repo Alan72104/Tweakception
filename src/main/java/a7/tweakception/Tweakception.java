@@ -156,7 +156,6 @@ public class Tweakception
         private final Collection<BlockPos> targetCollection;
         public boolean done = false;
         public boolean cancel = false;
-        public long executeNanoTime;
         
         
         public BlockSearchTask(int posX, int posY, int posZ, int range, int rangeY, World world, Block targetBlock, Collection<BlockPos> targetCollection)
@@ -187,11 +186,6 @@ public class Tweakception
         
         public void run()
         {
-//            long startNano = System.nanoTime();
-            // Wtf isn't normal loop working here?????
-//            for (int x = posX; x < toPosX; x++)
-//                for (int y = posY; y < toPosY; y++)
-//                    for (int z = posZ; z < toPosZ; z++)
             for (BlockPos pos : BlockPos.getAllInBox(new BlockPos(posX, posY, posZ), new BlockPos(toPosX, toPosY, toPosZ)))
             {
                 if (cancel)
@@ -199,12 +193,9 @@ public class Tweakception
                     done = true;
                     return;
                 }
-
-//                        BlockPos pos = new BlockPos(posX, posY, posZ);
                 if (world.getBlockState(pos).getBlock() == targetBlock)
                     targetCollection.add(pos);
             }
-//            executeNanoTime = System.nanoTime() - startNano;
             done = true;
         }
     }

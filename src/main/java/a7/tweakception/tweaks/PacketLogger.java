@@ -42,7 +42,7 @@ public class PacketLogger
         logAll = false;
         try
         {
-            File file = Tweakception.configuration.createFileWithCurrentDateTime("packets_$_.txt");
+            File file = Tweakception.configuration.createFileWithCurrentDateTime("packets_$.txt");
             synchronized (packetLogLock)
             {
                 packetLogWriter = Tweakception.configuration.createWriterFor(file);

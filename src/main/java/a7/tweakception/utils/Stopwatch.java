@@ -2,10 +2,10 @@ package a7.tweakception.utils;
 
 public class Stopwatch
 {
-    public long interval;
+    public int interval;
     public long lastTickMillis;
     
-    public Stopwatch(long interval)
+    public Stopwatch(int interval)
     {
         this.interval = interval;
         reset();

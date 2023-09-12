@@ -3,6 +3,7 @@ package a7.tweakception.mixin;
 import a7.tweakception.DevSettings;
 import a7.tweakception.Tweakception;
 import a7.tweakception.tweaks.GlobalTweaks;
+import a7.tweakception.tweaks.MiningTweaks;
 import a7.tweakception.tweaks.SkyblockIsland;
 import a7.tweakception.utils.McUtils;
 import a7.tweakception.utils.Stopwatch;
@@ -17,6 +18,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemAxe;
 import net.minecraft.item.ItemPickaxe;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
@@ -37,8 +39,8 @@ import static a7.tweakception.utils.McUtils.*;
 @Mixin(ForgeHooks.class)
 public class MixinForgeHooks
 {
-    @Unique
-    private static final Map<String, Integer> tc$picksToBreakingPower = new HashMap<>();
+//    @Unique
+//    private static final Map<String, Integer> tc$picksToBreakingPower = new HashMap<>();
     @Unique
     private static boolean tc$switchingSlots = false;
     @Unique
@@ -46,28 +48,28 @@ public class MixinForgeHooks
     
     static
     {
-        tc$picksToBreakingPower.put("REFINED_MITHRIL_PICKAXE", 5);
-        tc$picksToBreakingPower.put("MITHRIL_PICKAXE", 5);
-        tc$picksToBreakingPower.put("DIAMOND_PICKAXE", 4);
-        tc$picksToBreakingPower.put("BANDAGED_MITHRIL_PICKAXE", 5);
-        tc$picksToBreakingPower.put("FRACTURED_MITHRIL_PICKAXE", 5);
-        tc$picksToBreakingPower.put("PICKONIMBUS", 7);
-        tc$picksToBreakingPower.put("STONK", 6);
-        tc$picksToBreakingPower.put("JUNGLE_PICKAXE", 5);
-        tc$picksToBreakingPower.put("TITANIUM_PICKAXE", 6);
-        tc$picksToBreakingPower.put("REFINED_TITANIUM_PICKAXE", 6);
-        tc$picksToBreakingPower.put("GEMSTONE_GAUNTLET", 9);
-        tc$picksToBreakingPower.put("MITHRIL_DRILL_1", 5);
-        tc$picksToBreakingPower.put("MITHRIL_DRILL_2", 6);
-        tc$picksToBreakingPower.put("GEMSTONE_DRILL_1", 7);
-        tc$picksToBreakingPower.put("GEMSTONE_DRILL_2", 8);
-        tc$picksToBreakingPower.put("GEMSTONE_DRILL_3", 9);
-        tc$picksToBreakingPower.put("GEMSTONE_DRILL_4", 9);
-        tc$picksToBreakingPower.put("TITANIUM_DRILL_1", 7);
-        tc$picksToBreakingPower.put("TITANIUM_DRILL_2", 8);
-        tc$picksToBreakingPower.put("TITANIUM_DRILL_3", 9);
-        tc$picksToBreakingPower.put("TITANIUM_DRILL_4", 9);
-        tc$picksToBreakingPower.put("DIVAN_DRILL", 10);
+//        tc$picksToBreakingPower.put("REFINED_MITHRIL_PICKAXE", 5);
+//        tc$picksToBreakingPower.put("MITHRIL_PICKAXE", 5);
+//        tc$picksToBreakingPower.put("DIAMOND_PICKAXE", 4);
+//        tc$picksToBreakingPower.put("BANDAGED_MITHRIL_PICKAXE", 5);
+//        tc$picksToBreakingPower.put("FRACTURED_MITHRIL_PICKAXE", 5);
+//        tc$picksToBreakingPower.put("PICKONIMBUS", 7);
+//        tc$picksToBreakingPower.put("STONK", 6);
+//        tc$picksToBreakingPower.put("JUNGLE_PICKAXE", 5);
+//        tc$picksToBreakingPower.put("TITANIUM_PICKAXE", 6);
+//        tc$picksToBreakingPower.put("REFINED_TITANIUM_PICKAXE", 6);
+//        tc$picksToBreakingPower.put("GEMSTONE_GAUNTLET", 9);
+//        tc$picksToBreakingPower.put("MITHRIL_DRILL_1", 5);
+//        tc$picksToBreakingPower.put("MITHRIL_DRILL_2", 6);
+//        tc$picksToBreakingPower.put("GEMSTONE_DRILL_1", 7);
+//        tc$picksToBreakingPower.put("GEMSTONE_DRILL_2", 8);
+//        tc$picksToBreakingPower.put("GEMSTONE_DRILL_3", 9);
+//        tc$picksToBreakingPower.put("GEMSTONE_DRILL_4", 9);
+//        tc$picksToBreakingPower.put("TITANIUM_DRILL_1", 7);
+//        tc$picksToBreakingPower.put("TITANIUM_DRILL_2", 8);
+//        tc$picksToBreakingPower.put("TITANIUM_DRILL_3", 9);
+//        tc$picksToBreakingPower.put("TITANIUM_DRILL_4", 9);
+//        tc$picksToBreakingPower.put("DIVAN_DRILL", 10);
     }
     
     // Gets the block damage per tick
@@ -93,20 +95,18 @@ public class MixinForgeHooks
                 GlobalTweaks.getCurrentIsland() == SkyblockIsland.CRYSTAL_HOLLOWS))
         {
             ItemStack stack = player.inventory.getCurrentItem();
-            String id = Utils.getSkyblockItemId(stack);
             float pickaxeBreakSpeed = 0.0f;
-            float blockHardness = 0.0f;
+            MiningTweaks.SpecialBlock sbBlock = Tweakception.miningTweaks.getSpecialBlock(world, pos);
             
-            // Can harvest & break speed
-            if (tc$picksToBreakingPower.containsKey(id))
-            {
-                pickaxeBreakSpeed = Tweakception.miningTweaks.getHeldToolMiningSpeed();
-                pickaxeBreakSpeed += Tweakception.miningTweaks.getCachedMiningSpeed();
-                pickaxeBreakSpeed *= Tweakception.miningTweaks.getMiningSpeedBoostScale();
-            }
+            if (sbBlock == null || stack == null)
+                return;
+            else if (getBreakingPower(stack) < sbBlock.breakingPower)
+                return;
             else
             {
-                return;
+                pickaxeBreakSpeed = Tweakception.miningTweaks.getHeldToolMiningSpeed();
+                pickaxeBreakSpeed += Tweakception.miningTweaks.getBaseMiningSpeed();
+                pickaxeBreakSpeed *= Tweakception.miningTweaks.getMiningSpeedMultiplier();
             }
             
             if (player.isInsideOfMaterial(Material.water) && !EnchantmentHelper.getAquaAffinityModifier(player))
@@ -115,20 +115,26 @@ public class MixinForgeHooks
             if (!player.onGround)
                 pickaxeBreakSpeed /= 5.0F;
             
+            float blockHardness = sbBlock.hardness;
             boolean print = DevSettings.printSimMiningSpeedNums && tc$printSpeedTimer.checkAndResetIfElapsed();
-            // Hardness
-            blockHardness = Tweakception.miningTweaks.getSpecialBlockHardness(world, pos);
             if (print)
                 sendChat("Hardness: " + blockHardness);
-            if (blockHardness == 0.0f)
-            {
-                return;
-            }
             
             float dmg = pickaxeBreakSpeed / blockHardness / 30.0f;
             if (print)
                 sendChatf("%.1f / %.1f / 30.0f = %.3f, ticks required: %d",
                     pickaxeBreakSpeed, blockHardness, dmg, (int) Math.ceil(1 / dmg));
+            int extra = Tweakception.miningTweaks.getSimulateBlockHardnessExtraTicks();
+            if (Tweakception.miningTweaks.isMiningSpeedBoostActivated())
+                extra += Tweakception.miningTweaks.getSimulateBlockHardnessExtraTicksOnBoost();
+            if (extra > 0)
+            {
+                int ticks = (int) Math.ceil(1 / dmg);
+                ticks += extra;
+                dmg = 1.0f / ticks;
+                if (print)
+                    sendChatf("Overwrote dmg to %.3f, ticks required: %d", dmg, (int) Math.ceil(1 / dmg));
+            }
             cir.setReturnValue(dmg);
             cir.cancel();
         }
@@ -216,5 +222,28 @@ public class MixinForgeHooks
             cir.setReturnValue(false);
             cir.cancel();
         }
+    }
+    
+    private static int getBreakingPower(ItemStack stack)
+    {
+        NBTTagList list = McUtils.getDisplayLoreNbt(stack);
+        if (list == null)
+            return 0;
+        for (int i = 0; i < 5 && i < list.tagCount(); i++)
+        {
+            String line = list.getStringTagAt(i);
+            if (line.startsWith("§8Breaking Power "))
+            {
+                try
+                {
+                    return Integer.parseInt(line.substring("§8Breaking Power ".length()));
+                }
+                catch (Exception ignored)
+                {
+                    return 0;
+                }
+            }
+        }
+        return 0;
     }
 }

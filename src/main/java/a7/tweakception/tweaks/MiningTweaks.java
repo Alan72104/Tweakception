@@ -1,17 +1,18 @@
 package a7.tweakception.tweaks;
 
+import a7.tweakception.Tweakception;
 import a7.tweakception.config.Configuration;
-import a7.tweakception.utils.McUtils;
-import a7.tweakception.utils.RenderUtils;
-import a7.tweakception.utils.Utils;
+import a7.tweakception.utils.*;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockChest;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.S22PacketMultiBlockChange;
 import net.minecraft.network.play.server.S23PacketBlockChange;
+import net.minecraft.network.play.server.S25PacketBlockBreakAnim;
 import net.minecraft.network.play.server.S2APacketParticles;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityChest;
@@ -23,6 +24,7 @@ import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.awt.*;
 import java.util.Comparator;
@@ -42,31 +44,89 @@ public class MiningTweaks extends Tweak
     {
         public boolean highlightChests = false;
         public boolean simulateBlockHardness = false;
-        public int miningSpeedBoostValue = 3;
+        public int simulateBlockHardnessExtraTicks = 0;
+        public int simulateBlockHardnessExtraTicksOnBoost = 0;
+        public int miningSpeedBoostLevel = 2;
         public boolean treasureChestHelper = false;
         public int toolMiningSpeedOverride = 0;
+        public float baseMiningSpeed = 0.0f;
     }
     
     private static final Color CHEST_COLOR_OPENED = new Color(0, 255, 0, 48);
     private static final Color CHEST_COLOR_CLOSED = new Color(255, 0, 0, 48);
     private static final Color CHEST_COLOR_WARNING = new Color(255, 255, 0, 48);
+    private static final SpecialBlock[] SPECIAL_BLOCKS;
     private final MiningTweaksConfig c;
     private final Set<TreasureChest> treasureChests = new ConcurrentSkipListSet<>(Comparator.comparing(a -> a.pos));
-    private float miningSpeedCache = 0.0f;
     private final Matcher miningStatMatcher = Pattern.compile(
         "^ §6⸕ Mining Speed §f(\\d+(?:,\\d+)*)").matcher("");
     private final Matcher miningItemStatMatcher = Pattern.compile(
         "^§7Mining Speed: §a\\+(\\d+(?:,\\d+)*)").matcher("");
-    private int miningSpeedBoostStartTicks = 0;
+    private final StopwatchTimer miningSpeedBoostTimer;
+    private float lastBaseMiningSpeed;
     private BlockPos targetTreasureChest = null;
     private Vec3 targetParticlePos = null;
     private Vec3 targetRandomPoint = null;
     
+    public static class SpecialBlock
+    {
+        public final Block block;
+        /**
+         * Block meta, -1 for all
+         */
+        public final int meta;
+        public final int hardness;
+        public final int breakingPower;
+        /**
+         * Effective island, null for all
+         */
+        public final SkyblockIsland island;
+        public SpecialBlock(Block b, int m, int h, int bp)
+            { block = b; meta = m; hardness = h; breakingPower = bp; island = null; }
+        public SpecialBlock(Block b, int m, int h, int bp, SkyblockIsland i)
+            { block = b; meta = m; hardness = h; breakingPower = bp; island = i; }
+        public SpecialBlock(Block b, EnumDyeColor m, int h, int bp, SkyblockIsland i)
+            { block = b; meta = m.getMetadata(); hardness = h; breakingPower = bp; island = i; }
+    }
+    
+    static
+    {
+        SkyblockIsland dm = SkyblockIsland.DWARVEN_MINES;
+        SkyblockIsland ch = SkyblockIsland.CRYSTAL_HOLLOWS;
+        SPECIAL_BLOCKS = new SpecialBlock[]
+        {
+            new SpecialBlock(Blocks.stained_hardened_clay, 9, 500, 4, dm), // Gray Mithril, cyan hardened clay
+            new SpecialBlock(Blocks.wool, 7, 500, 4),                      // Gray Mithril, gray wool
+            new SpecialBlock(Blocks.wool, 3, 1500, 4),                     // Blue Mithril, light blue wool
+            new SpecialBlock(Blocks.prismarine, -1, 800, 4),               // Green Mithril, all prismarine bricks
+            new SpecialBlock(Blocks.stone, 4, 2000, 5, dm),                // Titanium, smooth diorite
+            new SpecialBlock(Blocks.gold_block, -1, 600, 3),               // Dwarven Gold, gold block
+            // Doesn't work well with insta breaking
+            // new SpecialBlock(Blocks.stone, -1, 50, 4, ch),                 // Hard Stone, all stone
+            // new SpecialBlock(Blocks.stained_hardened_clay, -1, 50, 4, ch), // Hard Stone, all hardened clay
+            new SpecialBlock(Blocks.stained_glass, EnumDyeColor.RED,             2500, 6, ch),
+            new SpecialBlock(Blocks.stained_glass_pane, EnumDyeColor.RED,        2300, 6, ch),
+            new SpecialBlock(Blocks.stained_glass, EnumDyeColor.ORANGE,          3200, 7, ch),
+            new SpecialBlock(Blocks.stained_glass_pane, EnumDyeColor.ORANGE,     3000, 7, ch),
+            new SpecialBlock(Blocks.stained_glass, EnumDyeColor.PURPLE,          3200, 7, ch),
+            new SpecialBlock(Blocks.stained_glass_pane, EnumDyeColor.PURPLE,     3000, 7, ch),
+            new SpecialBlock(Blocks.stained_glass, EnumDyeColor.LIME,            3200, 7, ch),
+            new SpecialBlock(Blocks.stained_glass_pane, EnumDyeColor.LIME,       3000, 7, ch),
+            new SpecialBlock(Blocks.stained_glass, EnumDyeColor.LIGHT_BLUE,      3200, 7, ch),
+            new SpecialBlock(Blocks.stained_glass_pane, EnumDyeColor.LIGHT_BLUE, 3000, 7, ch),
+            new SpecialBlock(Blocks.stained_glass, EnumDyeColor.YELLOW,          4000, 8, ch),
+            new SpecialBlock(Blocks.stained_glass_pane, EnumDyeColor.YELLOW,     3800, 8, ch),
+            new SpecialBlock(Blocks.stained_glass, EnumDyeColor.MAGENTA,         5000, 9, ch),
+            new SpecialBlock(Blocks.stained_glass_pane, EnumDyeColor.MAGENTA,    4800, 9, ch),
+        };
+    }
     
     public MiningTweaks(Configuration configuration)
     {
         super(configuration, "MT");
         c = configuration.config.miningTweaks;
+        miningSpeedBoostTimer = new StopwatchTimer(getMiningSpeedBoostDuration() * 1000);
+        lastBaseMiningSpeed = c.baseMiningSpeed;
     }
     
     public void onTick(TickEvent.ClientTickEvent event)
@@ -109,15 +169,16 @@ public class MiningTweaks extends Tweak
                     {
                         if (miningStatMatcher.reset(s).matches())
                         {
-                            miningSpeedCache = Utils.parseFloat(miningStatMatcher.group(1));
-                            
-                            if (getTicks() - miningSpeedBoostStartTicks <= 20 * 20)
-                                miningSpeedCache /= c.miningSpeedBoostValue + 1;
-                            
-                            float toolSpeed = getHeldToolMiningSpeed();
-                            if (toolSpeed != 0.0f)
-                                miningSpeedCache -= toolSpeed;
-                            
+                            c.baseMiningSpeed = Utils.parseFloat(miningStatMatcher.group(1));
+                            c.baseMiningSpeed /= getMiningSpeedMultiplier();
+                            float toolSpeed = getHeldToolMiningSpeedWithoutOverride();
+                            c.baseMiningSpeed -= toolSpeed;
+                            if (lastBaseMiningSpeed != c.baseMiningSpeed)
+                            {
+                                sendChat("§8Cached base mining speed of " + c.baseMiningSpeed);
+                                lastBaseMiningSpeed = c.baseMiningSpeed;
+                                Tweakception.threadPool.submit(this::saveConfig);
+                            }
                             break;
                         }
                     }
@@ -241,6 +302,17 @@ public class MiningTweaks extends Tweak
             packet.getZCoordinate() + getWorld().rand.nextGaussian() * 0.3 - 0.15);
     }
     
+    public void onPacketBlockBreakAnim(S25PacketBlockBreakAnim packet, CallbackInfo ci)
+    {
+        if ((getCurrentIsland() == SkyblockIsland.DWARVEN_MINES ||
+            getCurrentIsland() == SkyblockIsland.CRYSTAL_HOLLOWS) &&
+            packet.getBreakerId() == 0 &&
+            getSpecialBlock(getWorld(), packet.getPosition()) != null)
+        {
+            ci.cancel();
+        }
+    }
+    
     public void onChatReceived(ClientChatReceivedEvent event)
     {
         String msg = event.message.getUnformattedText();
@@ -248,11 +320,11 @@ public class MiningTweaks extends Tweak
         {
             if (msg.equals("You used your Mining Speed Boost Pickaxe Ability!"))
             {
-                miningSpeedBoostStartTicks = getTicks();
+                miningSpeedBoostTimer.start();
             }
             else if (msg.equals("Your Mining Speed Boost has expired!"))
             {
-                miningSpeedBoostStartTicks = 0;
+                miningSpeedBoostTimer.stop();
             }
         }
     }
@@ -285,12 +357,20 @@ public class MiningTweaks extends Tweak
         return c.simulateBlockHardness;
     }
     
-    public float getCachedMiningSpeed()
+    public float getBaseMiningSpeed()
     {
-        return miningSpeedCache;
+        return c.baseMiningSpeed;
     }
     
     public float getHeldToolMiningSpeed()
+    {
+        float speed = getHeldToolMiningSpeedWithoutOverride();
+        if (speed > 0 && c.toolMiningSpeedOverride > 0)
+            return c.toolMiningSpeedOverride;
+        return speed;
+    }
+    
+    public float getHeldToolMiningSpeedWithoutOverride()
     {
         ItemStack stack = getPlayer().inventory.getCurrentItem();
         if (stack == null)
@@ -298,66 +378,60 @@ public class MiningTweaks extends Tweak
         String[] lore = McUtils.getDisplayLore(stack);
         if (lore == null)
             return 0.0f;
-        if (c.toolMiningSpeedOverride > 0)
-            return c.toolMiningSpeedOverride;
         for (String s : lore)
-        {
             if (miningItemStatMatcher.reset(s).find())
-            {
                 return Utils.parseFloat(miningItemStatMatcher.group(1));
-            }
-        }
         return 0.0f;
     }
     
-    public float getMiningSpeedBoostScale()
+    public int getMiningSpeedBoostDuration()
     {
-        return getTicks() - miningSpeedBoostStartTicks <= 20 * 20 ? 1.0f + c.miningSpeedBoostValue : 1.0f;
+        return c.miningSpeedBoostLevel == 0 ? 0 : 15 + (c.miningSpeedBoostLevel - 1) * 5;
     }
     
-    public float getSpecialBlockHardness(World world, BlockPos pos)
+    public float getMiningSpeedMultiplier()
+    {
+        return isMiningSpeedBoostActivated()
+            ? 1.0f + getMiningSpeedBoost()
+            : 1.0f;
+    }
+    
+    public int getMiningSpeedBoost()
+    {
+        return c.miningSpeedBoostLevel > 0 ? 1 + c.miningSpeedBoostLevel : 0;
+    }
+    
+    public boolean isMiningSpeedBoostActivated()
+    {
+        return miningSpeedBoostTimer.isRunning() && c.miningSpeedBoostLevel > 0;
+    }
+    
+    public int getSimulateBlockHardnessExtraTicks()
+    {
+        return c.simulateBlockHardnessExtraTicks;
+    }
+    
+    public int getSimulateBlockHardnessExtraTicksOnBoost()
+    {
+        return c.simulateBlockHardnessExtraTicksOnBoost;
+    }
+    
+    public SpecialBlock getSpecialBlock(World world, BlockPos pos)
     {
         IBlockState state = world.getBlockState(pos);
         Block block = state.getBlock();
-        if (block == Blocks.stained_hardened_clay)
+        int meta = block.getMetaFromState(block.getActualState(state, world, pos));
+        SkyblockIsland island = getCurrentIsland();
+        for (SpecialBlock special : SPECIAL_BLOCKS)
         {
-            int meta = block.getMetaFromState(block.getActualState(state, world, pos));
-            if (meta == 9) // Gray Mithril, cyan hardened clay
+            if (special.block == block &&
+                (special.meta == meta || special.meta == -1) &&
+                (special.island == island || special.island == null))
             {
-                return 500;
+                return special;
             }
         }
-        else if (block == Blocks.wool)
-        {
-            int meta = block.getMetaFromState(block.getActualState(state, world, pos));
-            if (meta == 7) // Gray Mithril, gray wool
-            {
-                return 500;
-            }
-            else if (meta == 3) // Blue Mithril, light blue wool
-            {
-                return 1500;
-            }
-        }
-        else if (block == Blocks.prismarine)
-        {
-            // Green Mithril, all prismarine bricks
-            return 800;
-        }
-        else if (block == Blocks.stone)
-        {
-            int meta = block.getMetaFromState(block.getActualState(state, world, pos));
-            if (meta == 4) // Titanium, smooth diorite
-            {
-                return 2000;
-            }
-        }
-        else if (block == Blocks.gold_block)
-        {
-            // Dwarven Gold, gold block
-            return 600;
-        }
-        return 0;
+        return null;
     }
     
     public void toggleHighlightChests()
@@ -372,24 +446,43 @@ public class MiningTweaks extends Tweak
         sendChat("SimulateBlockHardness: Toggled " + c.simulateBlockHardness);
     }
     
-    public void setMiningSpeedBoostValue(int v)
+    public void setMiningSpeedBoostLevel(int v)
     {
-        v = Utils.clamp(v, 2, 4);
-        c.miningSpeedBoostValue = v;
-        sendChat("Set mining speed boost value to " + c.highlightChests);
+        v = Utils.clamp(v, 0, 3);
+        c.miningSpeedBoostLevel = v;
+        miningSpeedBoostTimer.period = getMiningSpeedBoostDuration() * 1000;
+        sendChat("Set mining speed boost level to " + c.miningSpeedBoostLevel);
     }
     
     public void printMiningSpeedCache()
     {
-        sendChat("Current tool mining speed is " + getHeldToolMiningSpeed());
-        sendChat("Cached mining speed is " + getCachedMiningSpeed());
+        boolean inBoost = isMiningSpeedBoostActivated();
+        int extra = getSimulateBlockHardnessExtraTicks();
+        int extraOnBoost = getSimulateBlockHardnessExtraTicksOnBoost();
+        sendChat("Current tool mining speed is " + getHeldToolMiningSpeed() + (c.toolMiningSpeedOverride > 0 ? " (overridden)" : ""));
+        sendChat("Base mining speed is " + getBaseMiningSpeed());
+        sendChat("Multiplier is " + getMiningSpeedMultiplier() + ", boost level is " + c.miningSpeedBoostLevel + ", on boost: " + inBoost);
         sendChat("Total mining speed is " +
-            ((getHeldToolMiningSpeed() + getCachedMiningSpeed()) * getMiningSpeedBoostScale()));
+            ((getHeldToolMiningSpeed() + getBaseMiningSpeed()) * getMiningSpeedMultiplier()));
+        sendChatf("Extra ticks is %d, on boost: %d + %d = %d", extra, extra, extraOnBoost, extra + extraOnBoost);
     }
     
     public void setToolMiningSpeedOverride(int speed)
     {
         c.toolMiningSpeedOverride = Math.max(speed, 0);
         sendChat("Set tool mining speed override to " + c.toolMiningSpeedOverride);
+    }
+    
+    public void setSimulateBlockHardnessExtraTicks(int ticks)
+    {
+        c.simulateBlockHardnessExtraTicks = Math.max(ticks, 0);
+        sendChat("SimulateBlockHardness: Set extra ticks to " + c.simulateBlockHardnessExtraTicks);
+    }
+    
+    public void setSimulateBlockHardnessExtraTicksOnBoost(int ticks)
+    {
+        c.simulateBlockHardnessExtraTicksOnBoost = Math.max(ticks, 0);
+        sendChat("SimulateBlockHardness: Set extra ticks on boost to " + c.simulateBlockHardnessExtraTicksOnBoost +
+            " (added on top of extra ticks when on boost)");
     }
 }

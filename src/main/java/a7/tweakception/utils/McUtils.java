@@ -197,13 +197,23 @@ public class McUtils
     {
         if (item == null)
             return null;
-        
         NBTTagCompound tag = item.getTagCompound();
-        if (tag != null)
-        {
-            return tag.getCompoundTag("ExtraAttributes");
-        }
-        return null;
+        if (tag == null)
+           return null;
+        return tag.getCompoundTag("ExtraAttributes");
+    }
+    
+    public static NBTTagList getDisplayLoreNbt(ItemStack item)
+    {
+        if (item == null)
+            return null;
+        NBTTagCompound tag = item.getTagCompound();
+        if (tag == null)
+            return null;
+        tag = tag.getCompoundTag("display");
+        if (tag == null)
+            return null;
+        return tag.getTagList("Lore", Constants.NBT.TAG_STRING);
     }
     
     /**

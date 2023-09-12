@@ -604,13 +604,18 @@ public class TweakceptionCommand extends CommandBase
             new Command("highlightChests",
                 args -> Tweakception.miningTweaks.toggleHighlightChests()),
             new Command("simulateBlockHardness",
-                args -> Tweakception.miningTweaks.toggleSimulateBlockHardness()),
-            new Command("printCachedMiningSpeed",
-                args -> Tweakception.miningTweaks.printMiningSpeedCache()),
-            new Command("setMiningSpeedBoostValue",
-                args -> Tweakception.miningTweaks.setMiningSpeedBoostValue(getInt(args, 0, 0))),
-            new Command("setToolMiningSpeedOverride",
-                args -> Tweakception.miningTweaks.setToolMiningSpeedOverride(getInt(args, 0, 0)))
+                args -> Tweakception.miningTweaks.toggleSimulateBlockHardness(),
+                new Command("setExtraTicks",
+                     args -> Tweakception.miningTweaks.setSimulateBlockHardnessExtraTicks(getInt(args, 0, 0))),
+                new Command("setExtraTicksOnBoost",
+                     args -> Tweakception.miningTweaks.setSimulateBlockHardnessExtraTicksOnBoost(getInt(args, 0, 0))),
+                new Command("printCachedMiningSpeed",
+                    args -> Tweakception.miningTweaks.printMiningSpeedCache()),
+                new Command("setMiningSpeedBoostLevel",
+                    args -> Tweakception.miningTweaks.setMiningSpeedBoostLevel(getInt(args, 0, 0))),
+                new Command("setToolMiningSpeedOverride",
+                    args -> Tweakception.miningTweaks.setToolMiningSpeedOverride(getInt(args, 0, 0))).setVisibility(false)
+            )
         ));
     }
     

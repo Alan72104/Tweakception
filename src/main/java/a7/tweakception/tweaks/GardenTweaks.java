@@ -54,7 +54,6 @@ import java.util.stream.Collectors;
 import static a7.tweakception.tweaks.GlobalTweaks.getCurrentIsland;
 import static a7.tweakception.tweaks.GlobalTweaks.getTicks;
 import static a7.tweakception.utils.McUtils.*;
-import static a7.tweakception.utils.McUtils.sendChat;
 import static a7.tweakception.utils.Utils.f;
 
 public class GardenTweaks extends Tweak
@@ -109,7 +108,7 @@ public class GardenTweaks extends Tweak
     // Start tick (inclusive), end tick, amount
     private final List<TriPair<Integer, Integer, Integer>> logCropBreakBpsList = new ArrayList<>();
     private boolean cropGrowRateAnalysis = false;
-    // For crops that are broken client side and replaced by air
+    // For crops that are broken client side and replaced by air instantly
     private final Long2IntOpenHashMap cropGrowthRateSpecialCropsCache = new Long2IntOpenHashMap();
     private final Long2IntOpenHashMap cropGrowthRateBreakTimes = new Long2IntOpenHashMap();
     private int cropGrowthRateCountIllegal = 0;
@@ -318,7 +317,7 @@ public class GardenTweaks extends Tweak
             int age = state.getValue(BlockCocoa.AGE);
             if (age == 0)
                 cropGrowthRateBreakTimes.put(posLong, getTicks());
-            else if (age == 3)
+            else if (age == 2)
                 onCropGrown(newBlock, pos, getTicks() - cropGrowthRateBreakTimes.get(posLong));
         }
         else if (newBlock == Blocks.nether_wart)
@@ -343,7 +342,7 @@ public class GardenTweaks extends Tweak
         else if (newBlock == Blocks.air)
         {
             Block oldBlock = getWorld().getBlockState(pos).getBlock();
-            if (oldBlock == Blocks.cactus ||
+            if (oldBlock == Blocks.cactus || // If other players are farming
                 oldBlock == Blocks.brown_mushroom ||
                 oldBlock == Blocks.red_mushroom ||
                 oldBlock == Blocks.reeds ||
@@ -364,7 +363,7 @@ public class GardenTweaks extends Tweak
         if (cropGrowthRateBreakTimes.containsKey(posLong))
         {
 //            if (ticksTaken < 200 || ticksTaken > 20 * 60 * 15)
-            if (ticksTaken > 20 * 60 * 15) // Crops like pumpkin can insta grow
+            if (ticksTaken > 20 * 60 * 30) // Crops like pumpkin can insta grow
             {
                 sendChatf("CropGrowRateAnalysis: Got an illegal growth time of %d ticks, block: %s, pos: %s",
                     ticksTaken, block.getUnlocalizedName(), pos.toString());
@@ -1049,7 +1048,9 @@ public class GardenTweaks extends Tweak
     {
         cropGrowthRateCountIllegal = 0;
         cropGrowthRateBreakTimes.clear();
+        cropGrowthRateBreakTimes.trim();
         cropGrowthRateSpecialCropsCache.clear();
+        cropGrowthRateSpecialCropsCache.trim();
         cropGrowthRateData.clear();
     }
     
@@ -1361,7 +1362,12 @@ public class GardenTweaks extends Tweak
     {
         cropGrowRateAnalysis = !cropGrowRateAnalysis;
         sendChat("CropGrowRateAnalysis: Toggled " + cropGrowRateAnalysis);
-        if (!cropGrowRateAnalysis)
+        if (cropGrowRateAnalysis)
+        {
+            sendChat("CropGrowRateAnalysis: Please keep the chunks loaded!");
+            sendChat("CropGrowRateAnalysis: For 2 blocks height crops, both are counted from the base block break time...");
+        }
+        else
             resetCropGrowRates();
     }
     

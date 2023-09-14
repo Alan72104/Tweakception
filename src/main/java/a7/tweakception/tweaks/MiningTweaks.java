@@ -222,7 +222,7 @@ public class MiningTweaks extends Tweak
         }
     }
     
-    public void onPacketMultiBlockChange(S22PacketMultiBlockChange packet)
+    public void onPacketMultiBlockChanged(S22PacketMultiBlockChange packet)
     {
         if (getCurrentIsland() != SkyblockIsland.CRYSTAL_HOLLOWS) return;
         
@@ -238,7 +238,7 @@ public class MiningTweaks extends Tweak
         }
     }
     
-    public void onPacketBlockChange(S23PacketBlockChange packet)
+    public void onPacketBlockChanged(S23PacketBlockChange packet)
     {
         if (getCurrentIsland() != SkyblockIsland.CRYSTAL_HOLLOWS) return;
         
@@ -304,7 +304,8 @@ public class MiningTweaks extends Tweak
     
     public void onPacketBlockBreakAnim(S25PacketBlockBreakAnim packet, CallbackInfo ci)
     {
-        if ((getCurrentIsland() == SkyblockIsland.DWARVEN_MINES ||
+        if (isSimulateBlockHardnessOn() &&
+            (getCurrentIsland() == SkyblockIsland.DWARVEN_MINES ||
             getCurrentIsland() == SkyblockIsland.CRYSTAL_HOLLOWS) &&
             packet.getBreakerId() == 0 &&
             getSpecialBlock(getWorld(), packet.getPosition()) != null)

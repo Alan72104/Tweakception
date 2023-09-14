@@ -17,20 +17,44 @@ import static a7.tweakception.tweaks.GlobalTweaks.isInSkyblock;
 @Mixin(NetHandlerPlayClient.class)
 public class MixinNetHandlerPlayClient
 {
-    @Inject(method = "handleBlockChange", at = @At(value = "RETURN"))
+    @Inject(method = "handleBlockChange", at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/client/multiplayer/WorldClient;invalidateRegionAndSetBlock(Lnet/minecraft/util/BlockPos;Lnet/minecraft/block/state/IBlockState;)Z"))
     public void handleBlockChange(S23PacketBlockChange packet, CallbackInfo ci)
     {
         if (!isInSkyblock()) return;
         
-        Tweakception.miningTweaks.onPacketBlockChange(packet);
+        Tweakception.gardenTweaks.onPacketBlockChange(packet.getBlockPosition(), packet.getBlockState().getBlock(), packet.getBlockState());
     }
     
-    @Inject(method = "handleMultiBlockChange", at = @At(value = "RETURN"))
-    public void handleMultiBlockChange(S22PacketMultiBlockChange packet, CallbackInfo ci)
+    @Inject(method = "handleMultiBlockChange", at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/client/multiplayer/WorldClient;invalidateRegionAndSetBlock(Lnet/minecraft/util/BlockPos;Lnet/minecraft/block/state/IBlockState;)Z"),
+        locals = LocalCapture.CAPTURE_FAILEXCEPTION)
+    public void handleMultiBlockChange(S22PacketMultiBlockChange packetIn,
+                                       CallbackInfo ci,
+                                       S22PacketMultiBlockChange.BlockUpdateData[] array,
+                                       int size,
+                                       int index,
+                                       S22PacketMultiBlockChange.BlockUpdateData data)
     {
         if (!isInSkyblock()) return;
         
-        Tweakception.miningTweaks.onPacketMultiBlockChange(packet);
+        Tweakception.gardenTweaks.onPacketBlockChange(data.getPos(), data.getBlockState().getBlock(), data.getBlockState());
+    }
+    
+    @Inject(method = "handleBlockChange", at = @At(value = "RETURN"))
+    public void handleBlockChanged(S23PacketBlockChange packet, CallbackInfo ci)
+    {
+        if (!isInSkyblock()) return;
+        
+        Tweakception.miningTweaks.onPacketBlockChanged(packet);
+    }
+    
+    @Inject(method = "handleMultiBlockChange", at = @At(value = "RETURN"))
+    public void handleMultiBlockChanged(S22PacketMultiBlockChange packet, CallbackInfo ci)
+    {
+        if (!isInSkyblock()) return;
+        
+        Tweakception.miningTweaks.onPacketMultiBlockChanged(packet);
     }
     
     @Inject(method = "handleBlockBreakAnim", at = @At(value = "INVOKE",

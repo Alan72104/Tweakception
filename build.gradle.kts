@@ -102,6 +102,7 @@ dependencies {
 //    shadowImplementation("org.xerial:sqlite-jdbc:3.43.0.0")
     shadowImplementation("org.slf4j:slf4j-api:1.7.25")
     testImplementation("org.slf4j:slf4j-simple:1.7.25")
+    shadowImplementation("it.unimi.dsi:fastutil-core:8.5.12")
 
     if (includeOneConfig) {
         compileOnly("cc.polyfrost:oneconfig-1.8.9-forge:0.2.0-alpha+")

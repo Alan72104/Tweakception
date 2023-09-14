@@ -7,7 +7,16 @@ import a7.tweakception.mixin.AccessorGuiContainer;
 import a7.tweakception.overlay.Anchor;
 import a7.tweakception.overlay.TextOverlay;
 import a7.tweakception.utils.*;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2IntMap;
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockCocoa;
+import net.minecraft.block.BlockCrops;
+import net.minecraft.block.BlockNetherWart;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -29,9 +38,9 @@ import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.awt.Color;
 import java.io.*;
@@ -40,10 +49,12 @@ import java.util.List;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static a7.tweakception.tweaks.GlobalTweaks.getCurrentIsland;
 import static a7.tweakception.tweaks.GlobalTweaks.getTicks;
 import static a7.tweakception.utils.McUtils.*;
+import static a7.tweakception.utils.McUtils.sendChat;
 import static a7.tweakception.utils.Utils.f;
 
 public class GardenTweaks extends Tweak
@@ -97,6 +108,23 @@ public class GardenTweaks extends Tweak
     private final Deque<Integer> logCropBreaksBreaks = new ArrayDeque<>();
     // Start tick (inclusive), end tick, amount
     private final List<TriPair<Integer, Integer, Integer>> logCropBreakBpsList = new ArrayList<>();
+    private boolean cropGrowRateAnalysis = false;
+    // For crops that are broken client side and replaced by air
+    private final Long2IntOpenHashMap cropGrowthRateSpecialCropsCache = new Long2IntOpenHashMap();
+    private final Long2IntOpenHashMap cropGrowthRateBreakTimes = new Long2IntOpenHashMap();
+    private int cropGrowthRateCountIllegal = 0;
+    private final Map<String, CropGrowthRateData> cropGrowthRateData = new HashMap<>();
+    private final LongArrayList tempLongs = new LongArrayList();
+    
+    private static class CropGrowthRateData
+    {
+        public final Int2IntOpenHashMap frequencyMap = new Int2IntOpenHashMap();
+        public int count = 0;
+        public long totalTicks = 0;
+        public int averageTicks = 0;
+        public int maxTicks = 0;
+        public int minTicks = Integer.MAX_VALUE;
+    }
     
     static
     {
@@ -135,6 +163,7 @@ public class GardenTweaks extends Tweak
         c = configuration.config.gardenTweaks;
         Tweakception.overlayManager.addOverlay(milestoneOverlay = new MilestoneOverlay());
         Tweakception.overlayManager.addOverlay(speedOverlay = new SpeedOverlay());
+        Tweakception.overlayManager.addOverlay(new CropGrowthRateOverlay());
     }
     
     // region Events
@@ -208,12 +237,22 @@ public class GardenTweaks extends Tweak
                     logCropBreaksRollingBpsStartTicks = getTicks();
                 }
             }
+            
+            if (cropGrowRateAnalysis)
+            {
+                for (Long2IntMap.Entry entry : cropGrowthRateSpecialCropsCache.long2IntEntrySet())
+                    if (getTicks() - entry.getIntValue() > 200)
+                        tempLongs.add(entry.getLongKey());
+                tempLongs.forEach(cropGrowthRateSpecialCropsCache::remove);
+                tempLongs.clear();
+            }
+            Tweakception.overlayManager.setEnable(CropGrowthRateOverlay.NAME, cropGrowRateAnalysis);
         }
     }
     
     public void onPacketSend(Packet<?> packet)
     {
-        if (!logCropBreaks)
+        if (!(logCropBreaks || cropGrowRateAnalysis))
             return;
         if (!(packet instanceof C07PacketPlayerDigging))
             return;
@@ -221,26 +260,130 @@ public class GardenTweaks extends Tweak
         if (event.getStatus() != C07PacketPlayerDigging.Action.START_DESTROY_BLOCK)
             return;
         Block block = getWorld().getBlockState(event.getPosition()).getBlock();
-        if (DevSettings.printLogCropBreaksNumber)
-            sendChatf("%s, %d", block.getUnlocalizedName(), getTicks());
-        if (CROP_BLOCKS.contains(block))
+        
+        if (cropGrowRateAnalysis)
         {
-            if (logCropBreaksBreaks.size() > 0 &&
-                logCropBreaksBreaks.peekLast() == getTicks())
+            if (block == Blocks.brown_mushroom ||
+                block == Blocks.red_mushroom ||
+                block == Blocks.reeds ||
+                block == Blocks.pumpkin ||
+                block == Blocks.melon_block)
             {
-                sendChatf("How did you broke 2 crops in the same tick? Tick %d",
-                    getTicks() - logCropBreaksStartTicks);
+                cropGrowthRateSpecialCropsCache.put(event.getPosition().toLong(), getTicks());
+            }
+        }
+        
+        if (logCropBreaks)
+        {
+            if (DevSettings.printLogCropBreaksNumber)
+                sendChatf("%s, %d", block.getUnlocalizedName(), getTicks());
+            if (CROP_BLOCKS.contains(block))
+            {
+                if (logCropBreaksBreaks.size() > 0 &&
+                    logCropBreaksBreaks.peekLast() == getTicks())
+                {
+                    sendChatf("How did you broke 2 crops in the same tick? Tick %d",
+                        getTicks() - logCropBreaksStartTicks);
+                }
+                else
+                {
+                    logCropBreaksBreaks.offer(getTicks());
+                }
             }
             else
             {
-                logCropBreaksBreaks.offer(getTicks());
+                sendChatf("You broke a non crop block %s on tick %d",
+                    block.getUnlocalizedName(),
+                    getTicks() - logCropBreaksStartTicks);
             }
         }
-        else
+    }
+    
+    public void onPacketBlockChange(BlockPos pos, Block newBlock, IBlockState state)
+    {
+        // Detect on server events so both break and grow have an equal delay relative to client time
+        if (!cropGrowRateAnalysis) return;
+        long posLong = pos.toLong();
+        
+        if (newBlock instanceof BlockCrops)
         {
-            sendChatf("You broke a non crop block %s on tick %d",
-                block.getUnlocalizedName(),
-                getTicks() - logCropBreaksStartTicks);
+            int age = state.getValue(BlockCrops.AGE);
+            if (age == 0)
+                cropGrowthRateBreakTimes.put(posLong, getTicks());
+            else if (age == 7)
+                onCropGrown(newBlock, pos, getTicks() - cropGrowthRateBreakTimes.get(posLong));
+        }
+        else if (newBlock == Blocks.cocoa)
+        {
+            int age = state.getValue(BlockCocoa.AGE);
+            if (age == 0)
+                cropGrowthRateBreakTimes.put(posLong, getTicks());
+            else if (age == 3)
+                onCropGrown(newBlock, pos, getTicks() - cropGrowthRateBreakTimes.get(posLong));
+        }
+        else if (newBlock == Blocks.nether_wart)
+        {
+            int age = state.getValue(BlockNetherWart.AGE);
+            if (age == 0)
+                cropGrowthRateBreakTimes.put(posLong, getTicks());
+            else if (age == 3)
+                onCropGrown(newBlock, pos, getTicks() - cropGrowthRateBreakTimes.get(posLong));
+        }
+        else if (newBlock == Blocks.cactus ||
+            newBlock == Blocks.brown_mushroom ||
+            newBlock == Blocks.red_mushroom ||
+            newBlock == Blocks.reeds ||
+            newBlock == Blocks.pumpkin ||
+            newBlock == Blocks.melon_block)
+        {
+            Block oldBlock = getWorld().getBlockState(pos).getBlock();
+            if (oldBlock == Blocks.air)
+                onCropGrown(newBlock, pos, getTicks() - cropGrowthRateBreakTimes.get(posLong));
+        }
+        else if (newBlock == Blocks.air)
+        {
+            Block oldBlock = getWorld().getBlockState(pos).getBlock();
+            if (oldBlock == Blocks.cactus ||
+                oldBlock == Blocks.brown_mushroom ||
+                oldBlock == Blocks.red_mushroom ||
+                oldBlock == Blocks.reeds ||
+                oldBlock == Blocks.pumpkin ||
+                oldBlock == Blocks.melon_block)
+                cropGrowthRateBreakTimes.put(posLong, getTicks());
+            else if (cropGrowthRateSpecialCropsCache.containsKey(posLong))
+            {
+                cropGrowthRateBreakTimes.put(posLong, getTicks());
+                cropGrowthRateSpecialCropsCache.remove(posLong);
+            }
+        }
+    }
+    
+    private void onCropGrown(Block block, BlockPos pos, int ticksTaken)
+    {
+        long posLong = pos.toLong();
+        if (cropGrowthRateBreakTimes.containsKey(posLong))
+        {
+//            if (ticksTaken < 200 || ticksTaken > 20 * 60 * 15)
+            if (ticksTaken > 20 * 60 * 15) // Crops like pumpkin can insta grow
+            {
+                sendChatf("CropGrowRateAnalysis: Got an illegal growth time of %d ticks, block: %s, pos: %s",
+                    ticksTaken, block.getUnlocalizedName(), pos.toString());
+                cropGrowthRateCountIllegal++;
+            }
+            else
+            {
+                String name = block.getUnlocalizedName();
+                CropGrowthRateData data = cropGrowthRateData.computeIfAbsent(name, key -> new CropGrowthRateData());
+                data.frequencyMap.mergeInt(ticksTaken, 1, Integer::sum);
+                if (ticksTaken < data.minTicks)
+                    data.minTicks = ticksTaken;
+                if (ticksTaken > data.maxTicks)
+                    data.maxTicks = ticksTaken;
+                data.totalTicks += ticksTaken;
+                data.count++;
+                data.averageTicks = (int) (data.totalTicks / (long) data.count);
+            }
+            cropGrowthRateBreakTimes.remove(posLong);
         }
     }
     
@@ -478,6 +621,7 @@ public class GardenTweaks extends Tweak
     public void onWorldUnload(WorldEvent.Unload event)
     {
         invalidCrops.clear();
+        resetCropGrowRates();
     }
     
     // endregion Events
@@ -901,6 +1045,14 @@ public class GardenTweaks extends Tweak
         }
     }
     
+    private void resetCropGrowRates()
+    {
+        cropGrowthRateCountIllegal = 0;
+        cropGrowthRateBreakTimes.clear();
+        cropGrowthRateSpecialCropsCache.clear();
+        cropGrowthRateData.clear();
+    }
+    
     // endregion Misc
     
     // region Feature access
@@ -1015,7 +1167,50 @@ public class GardenTweaks extends Tweak
         public List<String> getDefaultContent()
         {
             List<String> list = new ArrayList<>();
-            list.add("bruh");
+            list.add("SpeedOverlay");
+            return list;
+        }
+    }
+    
+    private class CropGrowthRateOverlay extends TextOverlay
+    {
+        public static final String NAME = "CropGrowthRateOverlay";
+        
+        public CropGrowthRateOverlay()
+        {
+            super(NAME);
+            setAnchor(Anchor.TopLeft);
+            setOrigin(Anchor.TopLeft);
+            setX(400);
+            setY(100);
+        }
+        
+        @Override
+        public void update()
+        {
+            super.update();
+            List<String> list = getContent();
+            list.clear();
+            list.add(f("Pending: %d blocks", cropGrowthRateBreakTimes.size()));
+            list.add(f("Illegal: %d blocks", cropGrowthRateCountIllegal));
+            list.add(f("Special cache: %d blocks", cropGrowthRateSpecialCropsCache.size()));
+            for (Map.Entry<String, CropGrowthRateData> entry : cropGrowthRateData.entrySet())
+            {
+                CropGrowthRateData data = entry.getValue();
+                list.add("");
+                list.add(f("%s: %d blocks", entry.getKey(), data.count));
+                list.add(f("Average: %.2fs %dt", data.averageTicks / 20.0f, data.averageTicks));
+                list.add(f("Min: %.2fs %dt", data.minTicks / 20.0f, data.minTicks));
+                list.add(f("Max: %.2fs %dt", data.maxTicks / 20.0f, data.maxTicks));
+            }
+            setContent(list);
+        }
+        
+        @Override
+        public List<String> getDefaultContent()
+        {
+            List<String> list = new ArrayList<>();
+            list.add("CropGrowthRateOverlay");
             return list;
         }
     }
@@ -1160,6 +1355,69 @@ public class GardenTweaks extends Tweak
         c.speedOverlayAveragePeriodSecs = secs == -1 ? 5 : Utils.clamp(secs, 1, 60);
         speedOverlay.reset(c.speedOverlayAveragePeriodSecs);
         sendChat("SpeedOverlay: Set average period to " + c.speedOverlayAveragePeriodSecs + " secs");
+    }
+    
+    public void toggleCropGrowthRateAnalysis()
+    {
+        cropGrowRateAnalysis = !cropGrowRateAnalysis;
+        sendChat("CropGrowRateAnalysis: Toggled " + cropGrowRateAnalysis);
+        if (!cropGrowRateAnalysis)
+            resetCropGrowRates();
+    }
+    
+    public void resetCropGrowthRateAnalysis()
+    {
+        if (!cropGrowRateAnalysis)
+        {
+            sendChat("CropGrowRateAnalysis: Feature isn't on");
+            return;
+        }
+        sendChat("CropGrowRateAnalysis: Reset");
+        resetCropGrowRates();
+    }
+    
+    public void dumpCropGrowthRateAnalysis()
+    {
+        if (!cropGrowRateAnalysis)
+        {
+            sendChat("CropGrowRateAnalysis: Feature isn't on");
+            return;
+        }
+        List<String> lines = new ArrayList<>();
+        for (Map.Entry<String, CropGrowthRateData> entry : cropGrowthRateData.entrySet())
+        {
+            lines.add("===========================================================");
+            CropGrowthRateData data = entry.getValue();
+            lines.add(f("%s", entry.getKey()));
+            lines.add(f("%d", data.count));
+            lines.add(f("Avg: %.2fs %dt", data.averageTicks / 20.0f, data.averageTicks));
+            lines.add(f("Min: %.2fs %dt", data.minTicks / 20.0f, data.minTicks));
+            lines.add(f("Max: %.2fs %dt", data.maxTicks / 20.0f, data.maxTicks));
+            lines.add("Individual data below =====================================");
+            for (Int2IntMap.Entry e : data.frequencyMap.int2IntEntrySet()
+                .stream()
+                .sorted(Comparator
+                    .comparing(Int2IntMap.Entry::getIntValue, Comparator.reverseOrder())
+                    .thenComparing(Int2IntMap.Entry::getIntKey, Comparator.reverseOrder()))
+                .collect(Collectors.toList()))
+            {
+                lines.add(e.getIntKey() + ", " + e.getIntValue());
+            }
+            lines.add("===========================================================");
+            lines.add("");
+        }
+        try
+        {
+            File file = Tweakception.configuration.createWriteFileWithCurrentDateTime("cropgrowthrates_$.txt", lines);
+            sendChat("Dumped growth rates");
+            getPlayer().addChatMessage(new ChatComponentTranslation("Output written to file %s",
+                McUtils.makeFileLink(file)));
+        }
+        catch (IOException e)
+        {
+            sendChat(e.toString());
+            e.printStackTrace();
+        }
     }
     
     // endregion Commands

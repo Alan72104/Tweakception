@@ -541,6 +541,13 @@ public class TweakceptionCommand extends CommandBase
                 new Command("dumpHeader",
                     args -> Tweakception.gardenTweaks.toggleContestDataDumperDumpHeader())
             ),
+            new Command("cropGrowthRateAnalysis",
+                args -> Tweakception.gardenTweaks.toggleCropGrowthRateAnalysis(),
+                new Command("dump",
+                    args -> Tweakception.gardenTweaks.dumpCropGrowthRateAnalysis()),
+                new Command("reset",
+                    args -> Tweakception.gardenTweaks.resetCropGrowthRateAnalysis())
+            ),
             new Command("logCropBreaks",
                 args -> Tweakception.gardenTweaks.toggleLogCropBreaks(),
                 new Command("verbose",

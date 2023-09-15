@@ -57,7 +57,6 @@ public class Tweakception
     public static CrimsonTweaks crimsonTweaks;
     public static SlayerTweaks slayerTweaks;
     public static FishingTweaks fishingTweaks;
-    public static EnchantingTweaks enchantingTweaks;
     public static BazaarTweaks bazaarTweaks;
     public static AutoRunes autoRunes;
     public static GardenTweaks gardenTweaks;
@@ -104,7 +103,6 @@ public class Tweakception
         crimsonTweaks = new CrimsonTweaks(configuration);
         slayerTweaks = new SlayerTweaks(configuration);
         fishingTweaks = new FishingTweaks(configuration);
-        enchantingTweaks = new EnchantingTweaks(configuration);
         bazaarTweaks = new BazaarTweaks(configuration);
         autoRunes = new AutoRunes(configuration);
         gardenTweaks = new GardenTweaks(configuration);

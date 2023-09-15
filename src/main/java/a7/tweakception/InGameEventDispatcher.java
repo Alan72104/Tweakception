@@ -45,7 +45,6 @@ public class InGameEventDispatcher
         tuningTweaks.onTick(event);
         foragingTweaks.onTick(event);
         fishingTweaks.onTick(event);
-        enchantingTweaks.onTick(event);
         bazaarTweaks.onTick(event);
         autoRunes.onTick(event);
         gardenTweaks.onTick(event);
@@ -221,7 +220,6 @@ public class InGameEventDispatcher
         
         globalTweaks.onGuiOpen(event);
         dungeonTweaks.onGuiOpen(event);
-        enchantingTweaks.onGuiOpen(event);
     }
     
     @SubscribeEvent
@@ -232,7 +230,6 @@ public class InGameEventDispatcher
         
         GlStateManager.disableLighting();
         
-        enchantingTweaks.onGuiDrawPost(event);
         autoRunes.onGuiDrawPost(event);
         globalTweaks.onGuiDrawPost(event);
         gardenTweaks.onGuiDrawPost(event);

@@ -1,5 +1,6 @@
 package a7.tweakception.tweaks;
 
+import a7.tweakception.DevSettings;
 import a7.tweakception.Tweakception;
 import a7.tweakception.config.Configuration;
 import a7.tweakception.overlay.Anchor;
@@ -21,6 +22,7 @@ import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.passive.EntityBat;
 import net.minecraft.entity.projectile.EntityArrow;
 import net.minecraft.event.ClickEvent;
+import net.minecraft.event.HoverEvent;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.ContainerChest;
@@ -45,6 +47,7 @@ import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import org.apache.commons.lang3.StringUtils;
 import org.lwjgl.input.Keyboard;
 
 import java.awt.*;
@@ -74,6 +77,8 @@ public class DungeonTweaks extends Tweak
     {
         public Map<String, Integer> fragDrops = FRAGS_AND_NAMES.keySet().stream().collect(Collectors.toMap(e -> e, e -> 0));
         public Map<String, Integer> salvagedEssences = ESSENCES.stream().collect(Collectors.toMap(e -> e, e -> 0));
+        public int salvagedItemCount = 0;
+        public boolean trackSalvage = true;
         public String fragBot = "";
         public boolean fragAutoReparty = true;
         public TreeMap<String, String> partyFinderPlayerBlacklist = new TreeMap<>();
@@ -82,7 +87,6 @@ public class DungeonTweaks extends Tweak
         public boolean autoCloseSecretChest = false;
         public boolean autoJoinParty = false;
         public boolean autoJoinPartyWhitelistEnable = true;
-        public boolean autoSalvage = false;
         public boolean blockOpheliaShopClicks = true;
         public boolean displayTargetMobNameTag = false;
         public boolean enableNoFog = false;
@@ -139,7 +143,7 @@ public class DungeonTweaks extends Tweak
     private final List<Entity> shadowAssassins = new LinkedList<>();
     private final LinkedList<Pair<Integer, String>> damageTags = new LinkedList<>();
     private final LinkedList<Pair<Integer, Entity>> armorStandsTemp = new LinkedList<>();
-    private final Map<String, Boolean> armorStandNameFilterCache = new WeakHashMap<>();
+    private final WeakHashMap<String, Boolean> armorStandNameFilterCache = new WeakHashMap<>();
     private final Set<Entity> starredMobs = new HashSet<>();
     private final Matcher anyDamageTagMatcher = Pattern.compile(
         "^(?:§[\\da-f][✧✯]?)?((?:(?:(?:§[\\da-f])?\\d){1,3}(?:§[\\da-f])?,?)+)(?:§[\\da-f][✧✯]?)?").matcher("");
@@ -151,11 +155,7 @@ public class DungeonTweaks extends Tweak
     // §012,345
     private final Matcher witherTagMatcher = Pattern.compile("^§0((?:\\d{1,3},?)+)$").matcher("");
     private boolean secretChestOpened = false;
-    private boolean blacksmithMenuOpened = false;
-    private boolean salvageClickSent = false;
-    private int salvageLastClickTick = 0;
-    private String salvagingEssenceType = "";
-    private int salvagingEssencegAmount = 0;
+    private boolean salvagingMessageArrived = false;
     private final Matcher essenceMatcher = Pattern.compile(
         "^ {2}§[\\da-f](\\w+) Essence §[\\da-f]x(\\d+)").matcher("");
     private final Matcher partyRequestMatcher = Pattern.compile(
@@ -585,62 +585,10 @@ public class DungeonTweaks extends Tweak
                     }
                 }
             }
-            else if (blacksmithMenuOpened && inv.getName().equals("Salvage Item"))
-            {
-                if (inv.getSizeInventory() == 54)
-                {
-                    ItemStack item = inv.getStackInSlot(9 * 2 + 5 - 1);
-                    if (item != null && !salvageClickSent && getTicks() - salvageLastClickTick >= 15)
-                    {
-                        String id = Utils.getSkyblockItemId(item);
-                        Item firstPane = inv.getStackInSlot(0).getItem();
-                        ItemStack salvageBtn = inv.getStackInSlot(9 * 3 + 5 - 1);
-                        if (id != null && TRASH_ITEMS.contains(id) &&
-                            firstPane != null && Block.getBlockFromItem(firstPane) == Blocks.stained_glass_pane &&
-                            salvageBtn != null && salvageBtn.getDisplayName().equals("§aSalvage Item"))
-                        {
-                            getMc().playerController.windowClick(getPlayer().openContainer.windowId, 9 * 3 + 5 - 1,
-                                0, 0, McUtils.getPlayer());
-                            salvageClickSent = true;
-                            salvageLastClickTick = getTicks();
-                            String[] lore = McUtils.getDisplayLore(salvageBtn);
-                            if (lore != null)
-                                for (String line : lore)
-                                {
-                                    if (essenceMatcher.reset(line).matches())
-                                    {
-                                        String ess = essenceMatcher.group(1).toLowerCase(Locale.ROOT);
-                                        if (ESSENCES.contains(ess))
-                                        {
-                                            salvagingEssenceType = ess;
-                                            salvagingEssencegAmount = Integer.parseInt(essenceMatcher.group(2));
-                                        }
-                                        else
-                                            salvagingEssenceType = "";
-                                        break;
-                                    }
-                                }
-                        }
-                    }
-                    else
-                    {
-                        if (salvageClickSent && !salvagingEssenceType.equals(""))
-                        {
-                            c.salvagedEssences.merge(salvagingEssenceType, salvagingEssencegAmount, Integer::sum);
-                            sendChatf("AutoSalvage: Salvaged %d %s essences, total: %d", salvagingEssencegAmount,
-                                salvagingEssenceType, c.salvagedEssences.get(salvagingEssenceType));
-                        }
-                        salvageClickSent = false;
-                    }
-                }
-                else
-                    blacksmithMenuOpened = false;
-            }
         }
         else
         {
             secretChestOpened = false;
-            blacksmithMenuOpened = false;
         }
         
         if (fragRunTracking)
@@ -796,6 +744,9 @@ public class DungeonTweaks extends Tweak
                 else
                     bool = false;
                 armorStandNameFilterCache.put(name, bool);
+                if (DevSettings.printArmorStandNameFilterCache)
+                    sendChatf("Cached \"%s§r\" as %s%s§r (%d in cache)", name, bool ? "§a" : "§c",
+                        bool, armorStandNameFilterCache.size());
             }
             
             if (bool)
@@ -940,14 +891,9 @@ public class DungeonTweaks extends Tweak
             ContainerChest container = (ContainerChest) chest.inventorySlots;
             String containerName = container.getLowerChestInventory().getName();
             if (getCurrentIsland() == SkyblockIsland.DUNGEON &&
-                c.autoCloseSecretChest && (containerName.equals("Chest") || containerName.equals("Large Chest")))
+                c.autoCloseSecretChest && (containerName.equals("Chest") || containerName.equals("Large Chest"))
+            )
                 secretChestOpened = true;
-            else if (c.autoSalvage && containerName.equals("Dungeon Blacksmith"))
-            {
-                blacksmithMenuOpened = true;
-                salvageClickSent = false;
-                salvagingEssenceType = "";
-            }
         }
     }
     
@@ -1045,6 +991,50 @@ public class DungeonTweaks extends Tweak
                 }
             }
         }
+        
+        detectSalvage(event);
+    }
+    
+    private void detectSalvage(ClientChatReceivedEvent event)
+    {
+        if (!c.trackSalvage)
+            return;
+        String msg = event.message.getUnformattedText();
+        // Things come in like this colored with ChatStyle
+        //§r§5§lEXTRA! §r§a§lDOUBLED SALVAGED ESSENCE:
+        //§r   §r§f30x §r§dUndead Essence§r§f!
+        //§r§aYou salvaged §r§b9 §r§aitems for:
+        //§r   §r§f120x §r§dUndead Essence§r§f!
+        //§r   §r§f5x §r§dWither Essence§r§f!
+        if (msg.startsWith("You salvaged ")) //You salvaged 2 items for:
+        {
+            Matcher p = Pattern.compile("^You salvaged (\\d+) items? for:$").matcher(msg);
+            if (p.matches())
+            {
+                int count = Integer.parseInt(p.group(1));
+                c.salvagedItemCount += count;
+                IChatComponent comp = McUtils.makeAddedByTweakceptionComponent(" §a(total: §b" + c.salvagedItemCount + "§a)");
+                event.message.appendSibling(comp);
+                salvagingMessageArrived = true;
+            }
+        }
+        else if (salvagingMessageArrived && msg.endsWith(" Essence!")) //   30x Undead Essence!
+        {
+            Matcher p = Pattern.compile("^(\\d+)x (\\w+) Essence!$").matcher(msg.trim());
+            if (p.matches())
+            {
+                int count = Integer.parseInt(p.group(1));
+                String type = p.group(2).toLowerCase(Locale.ROOT);
+                if (ESSENCES.contains(type))
+                {
+                    int countTotal = c.salvagedEssences.merge(type, count, Integer::sum);
+                    IChatComponent comp = McUtils.makeAddedByTweakceptionComponent(" §f(total: " + countTotal + ")");
+                    event.message.appendSibling(comp);
+                }
+            }
+        }
+        else
+            salvagingMessageArrived = false;
     }
     
     public void onItemTooltip(ItemTooltipEvent event)
@@ -1727,12 +1717,16 @@ public class DungeonTweaks extends Tweak
     {
         c.hideNonStarredMobsName = !c.hideNonStarredMobsName;
         sendChat("HideName: Toggled hide name " + c.hideNonStarredMobsName);
+        if (!c.hideNonStarredMobsName)
+            armorStandNameFilterCache.clear();
     }
     
     public void toggleHideDamageTags()
     {
         c.hideDamageTags = !c.hideDamageTags;
         sendChatf("HideDamageTags: Toggled " + c.hideDamageTags);
+        if (!c.hideDamageTags)
+            armorStandNameFilterCache.clear();
     }
     
     public void toggleHighlightStarredMobs()
@@ -1878,10 +1872,18 @@ public class DungeonTweaks extends Tweak
         sendChat("AutoCloseSecretChest: Toggled " + c.autoCloseSecretChest);
     }
     
-    public void toggleAutoSalvage()
+    public void toggleTrackSalvage()
     {
-        c.autoSalvage = !c.autoSalvage;
-        sendChat("AutoSalvage: Toggled " + c.autoSalvage);
+        c.trackSalvage = !c.trackSalvage;
+        sendChat("TrackSalvage: Toggled " + c.trackSalvage);
+    }
+    
+    public void printTrackSalvage()
+    {
+        if (!c.trackSalvage)
+            sendChat("TrackSalvage: Feature isn't on!");
+        for (Map.Entry<String, Integer> e : c.salvagedEssences.entrySet())
+            sendChatf("TrackSalvage: §f%dx §s Essence", e.getValue(), StringUtils.capitalize(e.getKey()));
     }
     
     public void toggleAutoJoinParty()

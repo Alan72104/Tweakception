@@ -16,7 +16,6 @@ public class TweakceptionConfig
     public CrimsonTweaks.CrimsonTweaksConfig crimsonTweaks = new CrimsonTweaks.CrimsonTweaksConfig();
     public SlayerTweaks.SlayerTweaksConfig slayerTweaks = new SlayerTweaks.SlayerTweaksConfig();
     public FishingTweaks.AutoFishConfig autoFish = new FishingTweaks.AutoFishConfig();
-    public EnchantingTweaks.EnchantingTweaksConfig enchantingTweaks = new EnchantingTweaks.EnchantingTweaksConfig();
     public BazaarTweaks.BazaarTweaksConfig bazaarTweaks = new BazaarTweaks.BazaarTweaksConfig();
     public AutoRunes.AutoRunesConfig autoRunes = new AutoRunes.AutoRunesConfig();
     public GardenTweaks.GardenTweaksConfig gardenTweaks = new GardenTweaks.GardenTweaksConfig();

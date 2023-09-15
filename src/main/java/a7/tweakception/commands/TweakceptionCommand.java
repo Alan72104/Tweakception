@@ -70,8 +70,6 @@ public class TweakceptionCommand extends CommandBase
                     new Command("togglewhitelist",
                         args -> Tweakception.dungeonTweaks.autoJoinPartyToggleWhitelist()))
             ),
-            new Command("autosalvage",
-                args -> Tweakception.dungeonTweaks.toggleAutoSalvage()),
             new Command("autoswapsceptreaote",
                 args -> Tweakception.dungeonTweaks.toggleAutoSwapSpiritSceptreAote()),
             new Command("autoswaphypeaote",
@@ -170,6 +168,11 @@ public class TweakceptionCommand extends CommandBase
                 new Command("maxlines",
                     args -> Tweakception.dungeonTweaks.setDamageHistoryOverlayMaxLines(
                         args.length > 0 ? toInt(args[0]) : 0))
+            ),
+            new Command("trackSalvage",
+                args -> Tweakception.dungeonTweaks.toggleTrackSalvage(),
+                new Command("list",
+                    args -> Tweakception.dungeonTweaks.printTrackSalvage())
             ),
             new Command("trackmask",
                 args -> Tweakception.dungeonTweaks.toggleTrackMaskUsage()),
@@ -684,15 +687,6 @@ public class TweakceptionCommand extends CommandBase
                 args -> Tweakception.fairyTracker.setNotFound()),
             new Command("toggletracking",
                 args -> Tweakception.fairyTracker.toggleTracking())
-        ));
-    }
-    
-    @RunInCtor
-    private void enchanting()
-    {
-        addSub(new Command("enchanting",
-            new Command("autosolve",
-                args -> Tweakception.enchantingTweaks.toggleAutoSolve())
         ));
     }
     

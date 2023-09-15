@@ -14,6 +14,7 @@ import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.event.ClickEvent;
+import net.minecraft.event.HoverEvent;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.IInventory;
@@ -424,5 +425,14 @@ public class McUtils
         link.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, file.getAbsolutePath()));
         link.getChatStyle().setUnderlined(true);
         return link;
+    }
+    
+    public static IChatComponent makeAddedByTweakceptionComponent(String s)
+    {
+        IChatComponent comp = new ChatComponentText(s);
+        comp.getChatStyle().setChatHoverEvent(new HoverEvent(
+            HoverEvent.Action.SHOW_TEXT,
+            new ChatComponentText("Added by Tweakception")));
+        return comp;
     }
 }

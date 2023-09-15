@@ -1,4 +1,4 @@
-package a7.tweakception.utils;
+package a7.tweakception.utils.timers;
 
 public class StopwatchTimer
 {

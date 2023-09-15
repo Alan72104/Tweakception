@@ -1,13 +1,13 @@
-package a7.tweakception.utils;
+package a7.tweakception.utils.timers;
 
 public class Stopwatch
 {
     public int interval;
     public long lastTickMillis;
     
-    public Stopwatch(int interval)
+    public Stopwatch(int intervalMs)
     {
-        this.interval = interval;
+        this.interval = intervalMs;
         reset();
     }
     

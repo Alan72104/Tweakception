@@ -6,7 +6,7 @@ import a7.tweakception.tweaks.GlobalTweaks;
 import a7.tweakception.tweaks.MiningTweaks;
 import a7.tweakception.tweaks.SkyblockIsland;
 import a7.tweakception.utils.McUtils;
-import a7.tweakception.utils.Stopwatch;
+import a7.tweakception.utils.timers.Stopwatch;
 import a7.tweakception.utils.Utils;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -30,9 +30,6 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import static a7.tweakception.utils.McUtils.*;
 

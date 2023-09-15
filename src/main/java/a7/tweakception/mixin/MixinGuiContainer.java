@@ -4,6 +4,7 @@ import a7.tweakception.Tweakception;
 import a7.tweakception.tweaks.SkyblockIsland;
 import a7.tweakception.utils.McUtils;
 import a7.tweakception.utils.Utils;
+import a7.tweakception.utils.WindowClickContants;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.GlStateManager;
@@ -89,7 +90,7 @@ public abstract class MixinGuiContainer extends GuiScreen
                 ci.cancel();
             }
         }
-        else if (Tweakception.tuningTweaks.isTemplatesEnabled() &&
+        else if (Tweakception.tuningTweaks.isTemplateEnabled() &&
             inv.getSizeInventory() == 54 &&
             name.equals("Stats Tuning") &&
             slot.getStack() != null)
@@ -97,14 +98,16 @@ public abstract class MixinGuiContainer extends GuiScreen
             int index = Tweakception.tuningTweaks.getTemplateSlotFromStack(slot.getStack());
             if (index != -1)
             {
-                if (mode == 1)
+                if (mode == WindowClickContants.ShiftLeftRight.MODE)
                 {
-                    if (button == 0)
+                    if (button == WindowClickContants.ShiftLeftRight.BTN_SHIFT_LEFT)
                         Tweakception.tuningTweaks.useTemplate(index);
-                    else if (button == 1)
+                    else if (button == WindowClickContants.ShiftLeftRight.BTN_SHIFT_RIGHT)
                         Tweakception.tuningTweaks.setTemplate(index);
                 }
-                else if (mode == 0 && button == 0 && Keyboard.isKeyDown(Keyboard.KEY_LCONTROL))
+                else if (mode == WindowClickContants.LeftRight.MODE &&
+                    button == WindowClickContants.LeftRight.BTN_LEFT &&
+                    Keyboard.isKeyDown(Keyboard.KEY_LCONTROL))
                 {
                     Tweakception.tuningTweaks.removeTemplate(index);
                 }

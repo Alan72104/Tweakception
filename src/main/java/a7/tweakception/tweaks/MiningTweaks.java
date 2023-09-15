@@ -3,6 +3,7 @@ package a7.tweakception.tweaks;
 import a7.tweakception.Tweakception;
 import a7.tweakception.config.Configuration;
 import a7.tweakception.utils.*;
+import a7.tweakception.utils.timers.StopwatchTimer;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockChest;
 import net.minecraft.block.state.IBlockState;

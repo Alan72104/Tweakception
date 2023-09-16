@@ -11,6 +11,7 @@ import a7.tweakception.mixin.AccessorMinecraft;
 import a7.tweakception.overlay.Anchor;
 import a7.tweakception.overlay.TextOverlay;
 import a7.tweakception.utils.*;
+import a7.tweakception.utils.timers.StopwatchTimer;
 import com.google.common.collect.Ordering;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
@@ -149,6 +150,7 @@ public class GlobalTweaks extends Tweak
         public String fastCommand = "";
         public boolean autoConsumeBoosterCookie = false;
         public boolean minionAutoClaimHopper = false;
+        public boolean centuryCakeCountInChat = true;
     }
     
     private final GlobalTweaksConfig c;
@@ -250,6 +252,8 @@ public class GlobalTweaks extends Tweak
     private final Set<BlockPos> blocksToHighlight = new HashSet<>();
     private final Set<String> entityTypesToHighlight = new HashSet<>();
     private final Map<String, Integer> recentlyClaimedMinionHoppers = new HashMap<>();
+    private final StopwatchTimer centuryCakeTimer = new StopwatchTimer(1000 * 60 * 10);
+    private int centuryCakeCount = 0;
     
     private static class PlayerLocation implements Comparable<PlayerLocation>
     {
@@ -1460,11 +1464,11 @@ public class GlobalTweaks extends Tweak
     
     public void onChatReceived(ClientChatReceivedEvent event)
     {
-        String msg = event.message.getUnformattedText();
+        String msg = McUtils.cleanColor(event.message.getUnformattedText());
         if (event.type == 0 || event.type == 1)
         {
             if (c.trevorHighlightAnimal &&
-                McUtils.cleanColor(msg).startsWith("[NPC] Trevor: You can find your "))
+                msg.startsWith("[NPC] Trevor: You can find your "))
             {
                 trevorQuestStartTicks = getTicks();
                 trevorQuestCooldownNoticed = false;
@@ -1491,6 +1495,18 @@ public class GlobalTweaks extends Tweak
                             break;
                         }
                     }
+                }
+            }
+            else if (msg.startsWith("Yum! You gain ") && msg.endsWith(" for 48 hours!"))
+            {
+                if (!centuryCakeTimer.isRunning())
+                    centuryCakeCount = 0;
+                centuryCakeCount++;
+                centuryCakeTimer.start();
+                if (c.centuryCakeCountInChat && centuryCakeCount < 14)
+                {
+                    IChatComponent comp = makeAddedByTweakceptionComponent(" §e(" + (14 - centuryCakeCount) + " left)");
+                    event.message.appendSibling(comp);
                 }
             }
         }
@@ -3419,6 +3435,12 @@ public class GlobalTweaks extends Tweak
     {
         c.minionAutoClaimHopper = !c.minionAutoClaimHopper;
         sendChat("MinionAutoClaimHopper: Toggled " + c.minionAutoClaimHopper);
+    }
+    
+    public void toggleCenturyCakeCountInChat()
+    {
+        c.centuryCakeCountInChat = !c.centuryCakeCountInChat;
+        sendChat("CenturyCakeCountInChat: Toggled " + c.centuryCakeCountInChat);
     }
     
     // endregion Commands

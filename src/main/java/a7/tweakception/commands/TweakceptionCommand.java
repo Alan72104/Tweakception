@@ -270,6 +270,8 @@ public class TweakceptionCommand extends CommandBase
             ),
             new Command("copylocation",
                 args -> Tweakception.globalTweaks.copyLocation()),
+            new Command("centuryCakeCountInChat",
+                args -> Tweakception.globalTweaks.toggleCenturyCakeCountInChat()),
             new Command("disabletooltips",
                 args -> Tweakception.globalTweaks.toggleDisableTooltips()),
             new Command("displaypersonalcompactoritems",

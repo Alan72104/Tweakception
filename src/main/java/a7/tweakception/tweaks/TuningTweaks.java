@@ -116,9 +116,7 @@ public class TuningTweaks extends Tweak
                         int num = (2 + i % 4) + 9 * (2 + i / 4) - 1;
                         int remaining = remainingToTune.getByIndex(i);
                         if (remaining == 0 && i == 7)
-                        {
                             remainingToTune = null;
-                        }
                         else if (remaining == 0)
                             continue;
                         else if (remaining >= 10)

@@ -151,6 +151,7 @@ public class GlobalTweaks extends Tweak
         public boolean autoConsumeBoosterCookie = false;
         public boolean minionAutoClaimHopper = false;
         public boolean centuryCakeCountInChat = true;
+        public boolean autoHarp = false;
     }
     
     private final GlobalTweaksConfig c;
@@ -240,7 +241,6 @@ public class GlobalTweaks extends Tweak
     private final Matcher petItemJsonExpMatcher = Pattern.compile(
         "\"exp\":(\\d+.?\\d*E?\\d*)").matcher("");
     private boolean dojoDisciplineHelper = false;
-    private boolean autoHarp = false;
     private final Item[] autoHarpLastChestItems = new Item[28];
     private int autoHarpReplayIndex = 0;
     private int autoHarpReplayLastClickTicks = 0;
@@ -280,6 +280,60 @@ public class GlobalTweaks extends Tweak
             if (island.areas != null)
                 ISLANDS_THAT_HAS_SUBAREAS.add(island);
         }
+        HARP_DATA.put("Hymn to the Joy",
+            "3.3.4.5.|5.4.3.2.|1.1.2.3.|3..22..|" +
+            "3.3.4.5.|5.4.3.2.|1.1.2.3.|2..11..|");
+        HARP_DATA.put("Frère Jacques",
+            "2..3..4..2..|2..3..4..2...|" +
+            "4..5..6....|4..5..6....|" +
+            "6.7.6.5.4...2...|6.7.6.5.4..2..|" +
+            "2..1..2...|2..1..2...|");
+        HARP_DATA.put("Amazing Grace",
+            "1..|3..3...5.4.3.|5...4..|3...2..|1...1..|" +
+            "3..3...5.4.3.|5...4..|6..6....|" +
+            "4..6..6...5.4.3.|5....4..|3...2.|1....1..|" +
+            "3..3...5.4.3.|5...4..|3.....|");
+        HARP_DATA.put("Brahm's Lullaby",
+            "1.1.|3...1.1.|3...1.3.|6..5..4.|4..3...1.2.|" +
+            "3..1..1.2.|3...1.3.|6.5.4..6..|7...|");
+        HARP_DATA.put("Happy Birthday to You",
+            "1.1|2..1..3..|2....1.1|2..1..4..|3....1..1.|" +
+            "6..5..4..|3.2....5.5|4..2..3..|2........|");
+        HARP_DATA.put("Greensleeves",
+            "3.|4..5.|6..76.|5..4.|3..23.|" +
+            "4..3.|3.23.|4..2.|1..3.|" +
+            "4..5.|6..76.|5..4.|2..34.|" +
+            "5..43.|2..12.|3.....|");
+        HARP_DATA.put("Geothermy?",
+            "3.|5.3.1.3.|5.3...3.|5.3.5.7|65432.2.|" +
+            "5.3.1.3.|5.3..7.|65.43.2.|1.......|");
+        HARP_DATA.put("Minuet",
+            "6.2345|6.2.2.|7.3456|7.2.2.|" +
+            "5.6543|4.5432|3.4321|2.....|");
+        HARP_DATA.put("Joy to the World",
+            "7.6.5|4..4.|3.2|1..4|" +
+            "5..5|6..6|7..7|7654.4|" +
+            "432135|7.....|");
+        HARP_DATA.put("Godly Imagination",
+            "3.7.2.|3.7.2.|3.7.2.|3.7.2..|" +
+            "1.3.5..|1.2.5..|1.3.6.7|67676.5.|" +
+            "2.3.4..|6.7.5..|4.3.2.3|23232.1|");
+        HARP_DATA.put("La Vie en Rose",
+            "6..5|4.3|2.6|5..4|3.2|1.5|4..3|2.1|2.5|4..|3...$|" +
+            "7..6|5.4|3.6|5..4|3.2|1.5|4..3|2.1|2.5|4...|3...$|" +
+            "6..5|4.3|2.6|5..4|3.2|1.5|4..3|2..$|" +
+            "1.5|5...|6.6|..5|6.6|..5|6.6|..5$|" +
+            "2...|6.6|..5|6.6|..5|6.6|..5|7.4|..6.|" +
+            "1..5|654.3|2.6|5.1|..4|3.2|1.5|4.3|4.5|6..|");
+        HARP_DATA.put("Through the Campfire",
+            "23423453|64534543|23423453|64534543|" +
+            "23423453|64534543|23423453|64534543|" +
+            "23423453|64534543|23423453|64534576|" +
+            "56545434|32321|" +
+            "3.13.131|3313.131|6.36.363|6636.363|" +
+            "5.25.252|5525.2|432321.|" +
+            "3.13.131|3313.131|6.36.363|6736.363|" +
+            "5.25.252|5525.2|432321.|27....|");
         HARP_DATA.put("Pachelbel",
             "6...4...|5...2...|3...1...|3...4...|" +
             "4.3.4.1.|1...3..|4..5..|6..6.7.|" +
@@ -734,7 +788,7 @@ public class GlobalTweaks extends Tweak
             }
             
             // Probably want to check after the whole container is updated
-            if (autoHarp && McUtils.getOpenedChest() != null)
+            if (c.autoHarp && McUtils.getOpenedChest() != null)
             {
                 IInventory inv = McUtils.getOpenedChest();
                 if (inv.getSizeInventory() == 54 && inv.getName().startsWith("Harp - "))
@@ -762,7 +816,7 @@ public class GlobalTweaks extends Tweak
                             {
                                 boolean noteAppeared = false;
                                 for (int i = 0; i < 7; i++)
-                                    if (autoHarpLastChestItems[2 * 7 + i] == Item.getItemFromBlock(Blocks.wool))
+                                    if (autoHarpLastChestItems[3 * 7 + i] == Item.getItemFromBlock(Blocks.wool))
                                         noteAppeared = true;
                                 if (noteAppeared)
                                 {
@@ -771,11 +825,15 @@ public class GlobalTweaks extends Tweak
                             }
                             else if (getTicks() - autoHarpReplayLastClickTicks >= c.autoHarpClickDelayTicks)
                             {
-                                autoHarpReplayData = HARP_DATA.get(inv.getName().substring(7));
+                                String songName = inv.getName().substring(7);
+                                autoHarpReplayData = HARP_DATA.get(songName);
                                 if (autoHarpReplayData != null)
                                     autoHarpReplayData = autoHarpReplayData.replace("|", "");
                                 else
+                                {
+                                    sendChat("AutoHarp: There is currently no replay data for " + songName + "!");
                                     autoHarpReplayData = "";
+                                }
                                 autoHarpReplayIndex = 0;
                                 autoHarpReplayLastClickTicks = getTicks() - 5;
                             }
@@ -815,7 +873,9 @@ public class GlobalTweaks extends Tweak
                                         {
                                             getMc().playerController.windowClick(getPlayer().openContainer.windowId,
                                                 4 * 9 + index + 1,
-                                                2, 3, getPlayer());
+                                                WindowClickContants.Middle.BTN,
+                                                WindowClickContants.Middle.MODE,
+                                                getPlayer());
                                         }
                                     }, c.autoHarpClickDelayTicks);
                                 }
@@ -1464,11 +1524,12 @@ public class GlobalTweaks extends Tweak
     
     public void onChatReceived(ClientChatReceivedEvent event)
     {
-        String msg = McUtils.cleanColor(event.message.getUnformattedText());
+        String msg = event.message.getUnformattedText();
+        String cleaned = McUtils.cleanColor(event.message.getUnformattedText());
         if (event.type == 0 || event.type == 1)
         {
             if (c.trevorHighlightAnimal &&
-                msg.startsWith("[NPC] Trevor: You can find your "))
+                cleaned.startsWith("[NPC] Trevor: You can find your "))
             {
                 trevorQuestStartTicks = getTicks();
                 trevorQuestCooldownNoticed = false;
@@ -1497,7 +1558,7 @@ public class GlobalTweaks extends Tweak
                     }
                 }
             }
-            else if (msg.startsWith("Yum! You gain ") && msg.endsWith(" for 48 hours!"))
+            else if (cleaned.startsWith("Yum! You gain ") && cleaned.endsWith(" for 48 hours!"))
             {
                 if (!centuryCakeTimer.isRunning())
                     centuryCakeCount = 0;
@@ -1512,7 +1573,7 @@ public class GlobalTweaks extends Tweak
         }
         else if (event.type == 2)
         {
-            if (msg.endsWith(" Bits from Cookie Buff!") && getTicks() - lastBitsMsgTicks >= 20 * 3)
+            if (c.sendBitsMessage && msg.endsWith(" Bits from Cookie Buff!") && getTicks() - lastBitsMsgTicks >= 20 * 3)
             {
                 lastBitsMsgTicks = getTicks();
                 McUtils.sendChat(msg);
@@ -3204,14 +3265,15 @@ public class GlobalTweaks extends Tweak
     
     public void toggleAutoHarp()
     {
-        autoHarp = !autoHarp;
-        sendChat("AutoHarp: Toggled " + autoHarp);
+        c.autoHarp = !c.autoHarp;
+        sendChat("AutoHarp: Toggled " + c.autoHarp);
+        sendChat("AutoHarp: Remember to set your delay using setClickDelayTicks <ticks>");
     }
     
     public void setAutoHarpClickDelayTicks(int ticks)
     {
         c.autoHarpClickDelayTicks = ticks < 0 ? new GlobalTweaksConfig().autoHarpClickDelayTicks : Utils.clamp(ticks, 0, 30);
-        sendChat("AutoHarp: Set click delay (time to wait after the the note appears on the 3rd row) to " + c.autoHarpClickDelayTicks + " ticks");
+        sendChat("AutoHarp: Set click delay (time to wait after the the note appears on the 4th row) to " + c.autoHarpClickDelayTicks + " ticks");
     }
     
     public void toggleAutoHarpAutoClose()

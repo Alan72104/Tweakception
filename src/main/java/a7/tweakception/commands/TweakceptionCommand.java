@@ -671,6 +671,23 @@ public class TweakceptionCommand extends CommandBase
     }
     
     @RunInCtor
+    private void enchanting()
+    {
+        addSub(new Command("enchanting",
+            new Command("autoSolve",
+                args -> Tweakception.enchantingTweaks.toggleAutoSolve()),
+            new Command("debugInfo",
+                args -> Tweakception.enchantingTweaks.toggleDrawDebugInfo()),
+            new Command("maxChronomatronRounds",
+                args -> Tweakception.enchantingTweaks.setMaxChronomatronRounds(getInt(args, 0, 0))),
+            new Command("maxUltrasequencerRounds",
+                args -> Tweakception.enchantingTweaks.setMaxUltrasequencerRounds(getInt(args, 0, 0))),
+            new Command("setClickDelayTicks",
+                args -> Tweakception.enchantingTweaks.setClickDelayTicks(getInt(args, 0, -1)))
+        ));
+    }
+    
+    @RunInCtor
     private void fairy()
     {
         addSub(new Command("fairy",

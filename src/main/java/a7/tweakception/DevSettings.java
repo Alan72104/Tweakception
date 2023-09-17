@@ -12,6 +12,7 @@ public class DevSettings
     public static boolean printLogCropBreaksNumber = false;
     public static boolean printSimMiningSpeedNums = false;
     public static boolean printArmorStandNameFilterCache = false;
+    public static boolean printExpTableDebug = false;
     public static boolean copySpeedNums = false;
     
     // Toggles a boolean field by their name, case-insensitive

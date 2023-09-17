@@ -49,6 +49,7 @@ public class InGameEventDispatcher
         autoRunes.onTick(event);
         gardenTweaks.onTick(event);
         giftTweaks.onTick(event);
+        enchantingTweaks.onTick(event);
         overlayManager.onTick(event);
         guildBridge.onTick(event);
     }
@@ -220,6 +221,7 @@ public class InGameEventDispatcher
         
         globalTweaks.onGuiOpen(event);
         dungeonTweaks.onGuiOpen(event);
+        enchantingTweaks.onGuiOpen(event);
     }
     
     @SubscribeEvent
@@ -233,6 +235,7 @@ public class InGameEventDispatcher
         autoRunes.onGuiDrawPost(event);
         globalTweaks.onGuiDrawPost(event);
         gardenTweaks.onGuiDrawPost(event);
+        enchantingTweaks.onGuiDrawPost(event);
     }
     
     @SubscribeEvent(priority = EventPriority.HIGHEST)

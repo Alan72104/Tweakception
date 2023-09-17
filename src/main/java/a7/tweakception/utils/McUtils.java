@@ -88,6 +88,12 @@ public class McUtils
             getPlayer().addChatMessage(new ChatComponentText(String.format(s, args)));
     }
     
+    public static IInventory getOpenedChestNow()
+    {
+        chestUpdatedThisTick = false;
+        return getOpenedChest();
+    }
+    
     public static IInventory getOpenedChest()
     {
         if (!chestUpdatedThisTick)

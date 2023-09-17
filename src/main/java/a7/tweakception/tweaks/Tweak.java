@@ -46,7 +46,7 @@ public abstract class Tweak
      * Prefixed {@link McUtils#sendChat},
      * adds {@code "§3[chatName] "} before the component
      */
-    protected void sendChat(@Nonnull IChatComponent comp)
+    public void sendChat(@Nonnull IChatComponent comp)
     {
         String prefix = "§3[" + chatName + "] ";
         McUtils.sendChat(new ChatComponentText(prefix).appendSibling(comp));
@@ -56,7 +56,7 @@ public abstract class Tweak
      * Prefixed {@link McUtils#sendChat},
      * adds {@code "§3[chatName] §r"} to the string
      */
-    protected void sendChat(String s)
+    public void sendChat(String s)
     {
         String prefix = "§3[" + chatName + "] §r";
         McUtils.sendChat(prefix + s);
@@ -66,7 +66,7 @@ public abstract class Tweak
      * Prefixed {@link McUtils#sendChatf},
      * adds {@code "§3[chatName] §r"} to the string
      */
-    protected void sendChatf(String s, Object... args)
+    public void sendChatf(String s, Object... args)
     {
         String prefix = "§3[" + chatName + "] §r";
         McUtils.sendChatf(prefix + s, args);

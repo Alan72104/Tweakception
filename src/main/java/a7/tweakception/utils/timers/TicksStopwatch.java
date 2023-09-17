@@ -1,7 +1,5 @@
 package a7.tweakception.utils.timers;
 
-import a7.tweakception.tweaks.GlobalTweaks;
-
 import static a7.tweakception.tweaks.GlobalTweaks.getTicks;
 
 public class TicksStopwatch
@@ -20,7 +18,7 @@ public class TicksStopwatch
         lastTickTicks = getTicks();
     }
     
-    public long elapsedTime()
+    public int elapsedTime()
     {
         return getTicks() - lastTickTicks;
     }

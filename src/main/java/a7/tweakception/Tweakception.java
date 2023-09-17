@@ -61,6 +61,7 @@ public class Tweakception
     public static AutoRunes autoRunes;
     public static GardenTweaks gardenTweaks;
     public static GiftTweaks giftTweaks;
+    public static EnchantingTweaks enchantingTweaks;
     public static DiscordGuildBridge guildBridge;
     
     public static boolean isPoiPresent()
@@ -107,6 +108,7 @@ public class Tweakception
         autoRunes = new AutoRunes(configuration);
         gardenTweaks = new GardenTweaks(configuration);
         giftTweaks = new GiftTweaks(configuration);
+        enchantingTweaks = new EnchantingTweaks(configuration);
         guildBridge = new DiscordGuildBridge();
         
         ClientCommandHandler.instance.registerCommand(new TweakceptionCommand());

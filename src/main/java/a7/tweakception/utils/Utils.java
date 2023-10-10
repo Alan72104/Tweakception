@@ -242,6 +242,34 @@ public class Utils
             return String.valueOf(n);
     }
     
+    /**
+     * Formats a number as
+     * 10.5B
+     * 1.5B
+     * 100M
+     * 10.5M
+     * 1.5M
+     * 100K
+     * 12,300
+     */
+    public static String formatNameTagHp(long n)
+    {
+        if (n >= 1_000_000_000)
+            return (n % 1_000_000_000 / 100_000_000 > 0)
+                ? (n / 1_000_000_000) + "." + (n % 1_000_000_000 / 100_000_000) + "B"
+                : (n / 1_000_000_000) + "B";
+        else if (n >= 100_000_000)
+            return (n / 1_000_000) + "M";
+        else if (n >= 1_000_000)
+            return (n % 1_000_000 / 100_000 > 0)
+                ? (n / 1_000_000) + "." + (n % 1_000_000 / 100_000) + "M"
+                : (n / 1_000_000) + "M";
+        else if (n >= 100_000)
+            return (n / 1_000) + "K";
+        else
+            return NUMBER_FORMAT.format(n);
+    }
+    
     public static String msToHHMMSSmmm(long ms)
     {
         return String.format("%d:%02d:%02d.%03d",

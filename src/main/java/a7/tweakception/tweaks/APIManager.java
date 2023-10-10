@@ -18,7 +18,6 @@ import java.util.*;
 import java.util.function.Consumer;
 
 import static a7.tweakception.utils.McUtils.getPlayer;
-import static a7.tweakception.utils.McUtils.sendChat;
 import static a7.tweakception.utils.Utils.f;
 
 public class APIManager extends Tweak

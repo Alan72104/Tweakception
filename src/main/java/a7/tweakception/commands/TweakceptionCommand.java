@@ -66,9 +66,9 @@ public class TweakceptionCommand extends CommandBase
                 new Command("list",
                     args -> Tweakception.dungeonTweaks.autoJoinPartyList()),
                 new Command("remove",
-                    args -> Tweakception.dungeonTweaks.autoJoinPartyRemove(getString(args, 0, "")),
-                    new Command("togglewhitelist",
-                        args -> Tweakception.dungeonTweaks.autoJoinPartyToggleWhitelist()))
+                    args -> Tweakception.dungeonTweaks.autoJoinPartyRemove(getString(args, 0, ""))),
+                new Command("togglewhitelist",
+                    args -> Tweakception.dungeonTweaks.autoJoinPartyToggleWhitelist())
             ),
             new Command("autoswapsceptreaote",
                 args -> Tweakception.dungeonTweaks.toggleAutoSwapSpiritSceptreAote()),
@@ -613,6 +613,8 @@ public class TweakceptionCommand extends CommandBase
     private void mining()
     {
         addSub(new Command("mining",
+            new Command("ghostNameTag",
+                args -> Tweakception.miningTweaks.toggleGhostNameTag()),
             new Command("highlightChests",
                 args -> Tweakception.miningTweaks.toggleHighlightChests()),
             new Command("simulateBlockHardness",

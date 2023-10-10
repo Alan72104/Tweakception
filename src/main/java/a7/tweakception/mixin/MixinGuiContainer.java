@@ -13,6 +13,7 @@ import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.input.Keyboard;
@@ -66,7 +67,7 @@ public abstract class MixinGuiContainer extends GuiScreen
         if (Tweakception.dungeonTweaks.isPartyFinderRefreshCooldownEnbaled() &&
             inv.getSizeInventory() == 54 &&
             name.equals("Party Finder") &&
-            slot.getHasStack() && slot.getStack().getItem() == Blocks.emerald_block.getItem(null, null))
+            slot.getHasStack() && slot.getStack().getItem() == Item.getItemFromBlock(Blocks.emerald_block))
         {
             long cd = Tweakception.dungeonTweaks.getPartyFinderRefreshCooldown();
             if (cd > 0L)

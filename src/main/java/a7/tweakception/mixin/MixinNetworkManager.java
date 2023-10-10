@@ -20,9 +20,17 @@ public abstract class MixinNetworkManager extends SimpleChannelInboundHandler<Pa
     }
     
     @Inject(method = "sendPacket(Lnet/minecraft/network/Packet;)V", at = @At("HEAD"))
-    protected void sendPacket(Packet<?> packet, CallbackInfo ci)
+    public void sendPacket(Packet<?> packet, CallbackInfo ci)
     {
         Tweakception.globalTweaks.onPacketSend(packet);
         Tweakception.gardenTweaks.onPacketSend(packet);
+    }
+    
+    @Inject(method = "exceptionCaught", at = @At("HEAD"))
+    public void exceptionCaught(ChannelHandlerContext context, Throwable throwable, CallbackInfo ci)
+    {
+        System.out.println("Exception caught in " + NetworkManager.class.getName());
+        System.out.println("(added by Tweakception)");
+        throwable.printStackTrace(System.out);
     }
 }

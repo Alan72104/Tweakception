@@ -51,6 +51,7 @@ public class MiningTweaks extends Tweak
         public boolean treasureChestHelper = false;
         public int toolMiningSpeedOverride = 0;
         public float baseMiningSpeed = 0.0f;
+        public boolean ghostNameTag = false;
     }
     
     private static final Color CHEST_COLOR_OPENED = new Color(0, 255, 0, 48);
@@ -436,6 +437,11 @@ public class MiningTweaks extends Tweak
         return null;
     }
     
+    public boolean isGhostNameTagOn()
+    {
+        return c.ghostNameTag;
+    }
+    
     public void toggleHighlightChests()
     {
         c.highlightChests = !c.highlightChests;
@@ -486,5 +492,11 @@ public class MiningTweaks extends Tweak
         c.simulateBlockHardnessExtraTicksOnBoost = Math.max(ticks, 0);
         sendChat("SimulateBlockHardness: Set extra ticks on boost to " + c.simulateBlockHardnessExtraTicksOnBoost +
             " (added on top of extra ticks when on boost)");
+    }
+    
+    public void toggleGhostNameTag()
+    {
+        c.ghostNameTag = !c.ghostNameTag;
+        sendChat("GhostNameTag: Toggled " + c.ghostNameTag);
     }
 }

@@ -837,7 +837,7 @@ public class DungeonTweaks extends Tweak
                     {
                         if (Keyboard.isKeyDown(Keyboard.KEY_LMENU))
                         {
-                            sendChat("BlockRightClick: Overrode block click for item (" + name + "§r)");
+                            sendChat("BlockRightClick: Overriding block click for item (" + name + "§r)");
                         }
                         else
                         {

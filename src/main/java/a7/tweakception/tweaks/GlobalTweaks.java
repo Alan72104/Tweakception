@@ -1854,7 +1854,7 @@ public class GlobalTweaks extends Tweak
                     currentLocationRaw = " §7⏣ §cThe Waste⚽§cland";
                     currentLocationRawCleaned = " ⏣ The Wasteland";
                     islandUpdatedThisTick = true;
-                    sendChat("Overrode current island with " + island.name);
+                    sendChat("Overwriting current island with " + island.name);
                     return;
                 }
             sendChat("Cannot find island in implemented island list");

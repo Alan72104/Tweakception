@@ -20,7 +20,7 @@ import static a7.tweakception.utils.McUtils.getPlayer;
 
 public class UltrasequencerSolver extends EnchantingTweaks.Solver
 {
-    // Index 1 based, slot index
+    // Click index 1 based, slot index
     private final TreeMap<Integer, Integer> order = new TreeMap<>();
     private boolean showingOrder = false;
     private int replayIndex = 0;

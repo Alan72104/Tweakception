@@ -3,7 +3,6 @@ package a7.tweakception.tweaks.enchanting;
 import a7.tweakception.Tweakception;
 import a7.tweakception.tweaks.EnchantingTweaks;
 import a7.tweakception.utils.WindowClickContants;
-import a7.tweakception.utils.timers.TicksStopwatch;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.Container;

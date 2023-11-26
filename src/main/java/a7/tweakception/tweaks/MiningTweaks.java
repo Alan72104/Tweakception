@@ -7,6 +7,9 @@ import a7.tweakception.utils.timers.StopwatchTimer;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockChest;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.monster.EntityCreeper;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.EnumDyeColor;
@@ -20,6 +23,7 @@ import net.minecraft.tileentity.TileEntityChest;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.Vec3;
+import net.minecraft.util.Vec3i;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
@@ -28,6 +32,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.awt.*;
+import java.lang.ref.WeakReference;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Set;
@@ -52,6 +57,7 @@ public class MiningTweaks extends Tweak
         public int toolMiningSpeedOverride = 0;
         public float baseMiningSpeed = 0.0f;
         public boolean ghostNameTag = false;
+        public boolean ghostAutoAttack = false;
     }
     
     private static final Color CHEST_COLOR_OPENED = new Color(0, 255, 0, 48);
@@ -69,6 +75,7 @@ public class MiningTweaks extends Tweak
     private BlockPos targetTreasureChest = null;
     private Vec3 targetParticlePos = null;
     private Vec3 targetRandomPoint = null;
+    private WeakReference<Entity> lastTargetCreeper = null;
     
     public static class SpecialBlock
     {
@@ -133,7 +140,25 @@ public class MiningTweaks extends Tweak
     
     public void onTick(TickEvent.ClientTickEvent event)
     {
-        if (event.phase == TickEvent.Phase.END) return;
+        if (event.phase != TickEvent.Phase.END)
+            return;
+        
+        if (c.ghostAutoAttack && getCurrentIsland() == SkyblockIsland.DWARVEN_MINES && getMc().currentScreen == null)
+        {
+//            Entity target = getMc().objectMouseOver.entityHit;
+//            if (target instanceof EntityCreeper &&
+//                target.isInvisible() &&
+//                ((EntityCreeper) target).getPowered() &&
+//                ((EntityCreeper) target).getEntityAttribute(SharedMonsterAttributes.maxHealth).getBaseValue() > 1024.0 &&
+//                (lastTargetCreeper == null ||
+//                target != lastTargetCreeper.get()))
+//            {
+//                lastTargetCreeper = new WeakReference<>(target);
+//                getMc().playerController.attackEntity(getPlayer(), target);
+//            }
+//            else
+//                lastTargetCreeper = null;
+        }
         
         if (getCurrentIsland() == SkyblockIsland.CRYSTAL_HOLLOWS)
         {
@@ -498,5 +523,29 @@ public class MiningTweaks extends Tweak
     {
         c.ghostNameTag = !c.ghostNameTag;
         sendChat("GhostNameTag: Toggled " + c.ghostNameTag);
+    }
+    
+    public void toggleGhostAutoAttack()
+    {
+        c.ghostAutoAttack = !c.ghostAutoAttack;
+        sendChat("GhostAutoAttack: Toggled " + c.ghostAutoAttack);
+    }
+    
+    public void setGlassFloorToStone()
+    {
+        int count = 0;
+        Vec3i radius = new Vec3i(128, 1, 128);
+        for (BlockPos pos : BlockPos.getAllInBox(
+            new BlockPos(getPlayer()).subtract(radius),
+            new BlockPos(getPlayer()).add(radius)))
+        {
+            Block theBlock = getWorld().getBlockState(pos).getBlock();
+            if (theBlock == Blocks.stained_glass || theBlock == Blocks.glass)
+            {
+                count++;
+                getWorld().setBlockState(pos, Blocks.stone.getDefaultState());
+            }
+        }
+        sendChat("Set " + count + " blocks to stone");
     }
 }

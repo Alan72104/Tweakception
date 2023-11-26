@@ -428,8 +428,6 @@ public class TweakceptionCommand extends CommandBase
                     sendChat("Set player step height to " + McUtils.getPlayer().stepHeight + " blocks");
                     sendChat("(this gets reset on lobby swap)");
                 }),
-            new Command("setGlassesToStones",
-                args -> Tweakception.globalTweaks.setGlassesToStones()),
             new Command("setinvisibleentityalphapercentage",
                 args -> Tweakception.globalTweaks.setInvisibleEntityAlphaPercentage(
                     args.length > 0 ? toInt(args[0]) : 0)),
@@ -613,8 +611,14 @@ public class TweakceptionCommand extends CommandBase
     private void mining()
     {
         addSub(new Command("mining",
-            new Command("ghostNameTag",
-                args -> Tweakception.miningTweaks.toggleGhostNameTag()),
+            new Command("ghost",
+                new Command("autoAttack",
+                    args -> Tweakception.miningTweaks.toggleGhostAutoAttack()),
+                new Command("nameTag",
+                    args -> Tweakception.miningTweaks.toggleGhostNameTag()),
+                new Command("setGlassFloorToStone",
+                    args -> Tweakception.miningTweaks.setGlassFloorToStone())
+            ),
             new Command("highlightChests",
                 args -> Tweakception.miningTweaks.toggleHighlightChests()),
             new Command("simulateBlockHardness",

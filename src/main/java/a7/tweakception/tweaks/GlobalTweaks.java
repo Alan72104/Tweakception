@@ -2303,7 +2303,8 @@ public class GlobalTweaks extends Tweak
                 pingSend();
             }
             
-            List<String> list = new ArrayList<>();
+            List<String> list = getContent();
+            list.clear();
             list.add("Ping: " + ping + " ms");
             setContent(list);
         }
@@ -2338,7 +2339,8 @@ public class GlobalTweaks extends Tweak
         public void update()
         {
             super.update();
-            List<String> list = new ArrayList<>();
+            List<String> list = getContent();
+            list.clear();
             
             ItemStack stack = getPlayer().getHeldItem();
             if (stack != null)
@@ -2347,7 +2349,7 @@ public class GlobalTweaks extends Tweak
                 String uuid = Utils.getSkyblockItemUuid(stack);
                 
                 // Increment is global, any exp gained on the held item will be added to it,
-                // overlay only shows if a champion item is held
+                // overlay only shows when a champion item is held
                 if (uuid != null && extra != null && extra.hasKey("champion_combat_xp"))
                 {
                     if (!uuid.equals(lastItemUuid))
@@ -2432,6 +2434,8 @@ public class GlobalTweaks extends Tweak
         public void update()
         {
             super.update();
+            List<String> list = getContent();
+            list.clear();
             
             String text;
             switch (c.lastOnlineStatus)
@@ -2439,7 +2443,7 @@ public class GlobalTweaks extends Tweak
                 case "online":
                     if (!c.showOnlineStatusAlreadyOn)
                     {
-                        setContent(Collections.emptyList());
+                        setContent(list);
                         return;
                     }
                     text = "§aOnline";
@@ -2458,7 +2462,8 @@ public class GlobalTweaks extends Tweak
                     break;
             }
             
-            setContent(Collections.singletonList(text));
+            list.add(text);
+            setContent(list);
         }
         
         @Override
@@ -2488,7 +2493,9 @@ public class GlobalTweaks extends Tweak
         {
             super.update();
             
-            List<String> list = new ArrayList<>();
+            List<String> list = getContent();
+            list.clear();
+            
             if (trevorQuestStartTicks != 0)
             {
                 int elapsed = (getTicks() - trevorQuestStartTicks) * 50;
@@ -3243,24 +3250,6 @@ public class GlobalTweaks extends Tweak
     {
         c.autoGuildWelcome = !c.autoGuildWelcome;
         sendChat("AutoGuildWelcome: Toggled " + c.autoGuildWelcome);
-    }
-    
-    public void setGlassesToStones()
-    {
-        int count = 0;
-        Vec3i radius = new Vec3i(128, 1, 128);
-        for (BlockPos pos : BlockPos.getAllInBox(
-            new BlockPos(getPlayer()).subtract(radius),
-            new BlockPos(getPlayer()).add(radius)))
-        {
-            Block theBlock = getWorld().getBlockState(pos).getBlock();
-            if (theBlock == Blocks.stained_glass || theBlock == Blocks.glass)
-            {
-                count++;
-                getWorld().setBlockState(pos, Blocks.stone.getDefaultState());
-            }
-        }
-        sendChat("Set " + count + " blocks to stone");
     }
     
     public void toggleAutoHarp()

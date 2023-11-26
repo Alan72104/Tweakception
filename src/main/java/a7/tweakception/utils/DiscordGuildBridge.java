@@ -89,6 +89,61 @@ public class DiscordGuildBridge
         }
     }
     
+    private void onDiscordMsgReceived(JsonObject msg)
+    {
+        if (!(msg.has("guild_id") && msg.has("member")))
+            return;
+        JsonObject user = msg.get("author").getAsJsonObject();
+        long channelId = msg.get("channel_id").getAsLong();
+        long userId = user.get("id").getAsLong();
+        boolean bot = user.has("bot");
+        boolean system = user.has("system");
+        String content = msg.get("content").getAsString();
+        // Check the correct channel, not from self, not from bot/system, content isn't empty
+        if (channelId != bridgingChannelId)
+            return;
+        if (userId == client.getClientUserId() &&
+            (content.startsWith("> ") || content.equals(SAME_MESSAGE_WARNING)))
+            return;
+        if (bot || system || content.isEmpty())
+            return;
+        
+        JsonObject member = msg.get("member").getAsJsonObject();
+        long guildId = msg.get("guild_id").getAsLong();
+        String username = user.get("username").getAsString();
+        String nick = member.has("nick") ? member.get("nick").isJsonNull() ? null : member.get("nick").getAsString() : null;
+        
+        // Final output should be: "> name: content"
+        String displayName = sanitize(nick == null ? username : nick);
+        String sanitizedContent = sanitize(content);
+        String displayContent = sanitizedContent.substring(0,
+            Math.min(100 - 2 - displayName.length() - 2, sanitizedContent.length()));
+        String normalized = displayContent.toLowerCase(Locale.ROOT);
+        boolean spam = false;
+        if (recentMsgs.containsKey(normalized))
+            spam = true;
+        else
+        {
+            for (String recentMsg : recentMsgs.keySet())
+            {
+                int dist = levenshteinDistance.apply(normalized, recentMsg);
+                if (dist <= 5)
+                {
+                    spam = true;
+                    break;
+                }
+            }
+        }
+        
+        if (spam)
+        {
+            client.createReply(channelId, SAME_MESSAGE_WARNING, guildId, msg.get("id").getAsLong());
+            return;
+        }
+        
+        Tweakception.scheduler.add(() -> sendToGuild("> "+displayName+": ",displayContent));
+    }
+    
     private void sendToGuild(String header, String msg)
     {
         if (isInHypixel() && !recentMsgs.containsKey(msg))
@@ -148,60 +203,7 @@ public class DiscordGuildBridge
             .connectWithToken(token)
             .onError(s -> Tweakception.scheduler.add(() -> sendChat("GB-error: " + s)))
             .onLog(s -> Tweakception.scheduler.add(() -> sendChat("GB-log: " + s)))
-            .onMessageCreated(msg ->
-            {
-                if (!(msg.has("guild_id") && msg.has("member")))
-                    return;
-                JsonObject user = msg.get("author").getAsJsonObject();
-                long channelId = msg.get("channel_id").getAsLong();
-                long userId = user.get("id").getAsLong();
-                boolean bot = user.has("bot");
-                boolean system = user.has("system");
-                String content = msg.get("content").getAsString();
-                // Check the correct channel, not from self, not from bot/system, content isn't empty
-                if (channelId != bridgingChannelId)
-                    return;
-                if (userId == client.getClientUserId() &&
-                    (content.startsWith("> ") || content.equals(SAME_MESSAGE_WARNING)))
-                    return;
-                if (bot || system || content.isEmpty())
-                    return;
-    
-                JsonObject member = msg.get("member").getAsJsonObject();
-                long guildId = msg.get("guild_id").getAsLong();
-                String username = user.get("username").getAsString();
-                String nick = member.has("nick") ? member.get("nick").isJsonNull() ? null : member.get("nick").getAsString() : null;
-                
-                // Final output should be: "> name: content"
-                String displayName = sanitize(nick == null ? username : nick);
-                String sanitizedContent = sanitize(content);
-                String displayContent = sanitizedContent.substring(0,
-                    Math.min(100 - 2 - displayName.length() - 2, sanitizedContent.length()));
-                String normalized = displayContent.toLowerCase(Locale.ROOT);
-                boolean spam = false;
-                if (recentMsgs.containsKey(normalized))
-                    spam = true;
-                else
-                {
-                    for (String recentMsg : recentMsgs.keySet())
-                    {
-                        int dist = levenshteinDistance.apply(normalized, recentMsg);
-                        if (dist <= 5)
-                        {
-                            spam = true;
-                            break;
-                        }
-                    }
-                }
-                
-                if (spam)
-                {
-                    client.createReply(channelId, SAME_MESSAGE_WARNING, guildId, msg.get("id").getAsLong());
-                    return;
-                }
-                
-                Tweakception.scheduler.add(() -> sendToGuild("> "+displayName+": ",displayContent));
-            });
+            .onMessageCreated(this::onDiscordMsgReceived);
     }
     
     public void disconnect()

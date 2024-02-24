@@ -86,6 +86,14 @@ public class DiscordGuildBridge
                     sendToDiscord("> "+msg);
                 }
             }
+            else if (msg.equals("You are sending commands too fast! Please slow down."))
+            {
+                sendToDiscord("> "+msg);
+            }
+            else if (msg.equals("You cannot say the same message twice!"))
+            {
+                sendToDiscord("> "+msg);
+            }
         }
     }
     
@@ -124,15 +132,18 @@ public class DiscordGuildBridge
             spam = true;
         else
         {
-            for (String recentMsg : recentMsgs.keySet())
-            {
-                int dist = levenshteinDistance.apply(normalized, recentMsg);
-                if (dist <= 5)
-                {
-                    spam = true;
-                    break;
-                }
-            }
+            if (recentMsgs.containsKey(normalized))
+                spam = true;
+            
+//            for (String recentMsg : recentMsgs.keySet())
+//            {
+//                int dist = levenshteinDistance.apply(normalized, recentMsg);
+//                if (dist <= levenshteinThreshold)
+//                {
+//                    spam = true;
+//                    break;
+//                }
+//            }
         }
         
         if (spam)

@@ -743,6 +743,8 @@ public class TweakceptionCommand extends CommandBase
             ),
             new Command("toggleRecipient",
                 args -> Tweakception.giftTweaks.toggleRecipient()),
+            new Command("toggleThrowValuable",
+                args -> Tweakception.giftTweaks.toggleThrowValuable()),
             new Command("trackWhiteGifts",
                 args -> Tweakception.giftTweaks.toggleWhiteGiftTracking())
         ));

@@ -145,6 +145,7 @@ public class MiningTweaks extends Tweak
         
         if (c.ghostAutoAttack && getCurrentIsland() == SkyblockIsland.DWARVEN_MINES && getMc().currentScreen == null)
         {
+            /*
 //            Entity target = getMc().objectMouseOver.entityHit;
 //            if (target instanceof EntityCreeper &&
 //                target.isInvisible() &&
@@ -158,6 +159,7 @@ public class MiningTweaks extends Tweak
 //            }
 //            else
 //                lastTargetCreeper = null;
+             */
         }
         
         if (getCurrentIsland() == SkyblockIsland.CRYSTAL_HOLLOWS)

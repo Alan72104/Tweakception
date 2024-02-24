@@ -42,7 +42,7 @@ public class AutoRunes extends Tweak
         NONE, PUTTING, CLICKING, SAVING
     }
     
-    private static class RuneType
+    public static class RuneType
     {
         public final String name;
         public final int level;
@@ -275,7 +275,7 @@ public class AutoRunes extends Tweak
         }
     }
     
-    private RuneType getRuneType(ItemStack stack)
+    public static RuneType getRuneType(ItemStack stack)
     {
         if (stack == null)
             return null;

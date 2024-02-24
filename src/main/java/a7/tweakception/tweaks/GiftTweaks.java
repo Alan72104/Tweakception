@@ -47,9 +47,12 @@ public class GiftTweaks extends Tweak
         public boolean autoSetTargeting = false;
         public boolean targetingDisableArmorStand = false;
         public boolean targetingOnlyOpenableGift = false;
+        public boolean throwValuableRewards = false;
     }
     private final GiftTweaksConfig c;
+    // Sb id, shit predicate
     private static final Map<String, Predicate<ItemStack>> GIFT_SHITS = new HashMap<>();
+    private static final Map<String, Predicate<ItemStack>> GIFT_SHITS_VALUABLE = new HashMap<>();
     private static final String GIFT_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTBmNTM5ODUxMGIxYTA1YWZjNWIyMDFlYWQ4YmZjNTgzZTU3ZDcyMDJmNTE5M2IwYjc2MWZjYmQwYWUyIn19fQ==";
     private InvFeature invFeature = InvFeature.None;
     private int invFeatureIndex = 0;
@@ -69,9 +72,10 @@ public class GiftTweaks extends Tweak
     
     static
     {
-        GIFT_SHITS.put("BATTLE_DISC", null);
-        GIFT_SHITS.put("WINTER_DISC", null);
-        GIFT_SHITS.put("GLASS_BOTTLE", null);
+        Predicate<ItemStack> always = s -> true;
+        GIFT_SHITS.put("BATTLE_DISC", always);
+        GIFT_SHITS.put("WINTER_DISC", always);
+        GIFT_SHITS.put("GLASS_BOTTLE", always);
         GIFT_SHITS.put("POTION", s -> McUtils.getExtraAttributes(s).getString("potion").endsWith("_xp_boost"));
         Map<String, Integer> crap = MapBuilder.stringIntHashMap()
             .put("scavenger", 4)
@@ -88,6 +92,23 @@ public class GiftTweaks extends Tweak
             }
             return false;
         });
+        GIFT_SHITS_VALUABLE.put("SNOW_GENERATOR_1", always);
+        GIFT_SHITS_VALUABLE.put("GIFT_THE_FISH", always);
+        GIFT_SHITS_VALUABLE.put("SNOW_SUIT_HELMET", always);
+        GIFT_SHITS_VALUABLE.put("SNOW_SUIT_CHESTPLATE", always);
+        GIFT_SHITS_VALUABLE.put("SNOW_SUIT_LEGGINGS", always);
+        GIFT_SHITS_VALUABLE.put("SNOW_SUIT_BOOTS", always);
+        GIFT_SHITS_VALUABLE.put("RUNE", s ->
+        {
+            AutoRunes.RuneType type = AutoRunes.getRuneType(s);
+            return type != null && type.level == 1 && type.name.equals("ICE");
+        });
+        GIFT_SHITS_VALUABLE.put("SANTA_PERSONALITY", always);
+        GIFT_SHITS_VALUABLE.put("GRINCH_PERSONALITY", always);
+        GIFT_SHITS_VALUABLE.put("GINGERBREAD_PERSONALITY", always);
+        GIFT_SHITS_VALUABLE.put("PRESENTS", always);
+        GIFT_SHITS_VALUABLE.put("NUTCRACKER", always);
+        GIFT_SHITS_VALUABLE.put("BIG_XTREE", always);
     }
     
     public GiftTweaks(Configuration configuration)
@@ -252,8 +273,6 @@ public class GiftTweaks extends Tweak
         whiteGiftsTemp.clear();
     }
     
-    
-    
     private boolean doDropGiftShit()
     {
         List<ItemStack> inv = ((GuiInventory) getMc().currentScreen).inventorySlots.getInventory();
@@ -261,18 +280,17 @@ public class GiftTweaks extends Tweak
         {
             ItemStack stack = inv.get(invFeatureIndex);
             String id = Utils.getSkyblockItemId(stack);
-            if (stack != null && id != null && GIFT_SHITS.containsKey(id))
+            if (GIFT_SHITS.containsKey(id) && GIFT_SHITS.get(id).test(stack) ||
+                c.throwValuableRewards && GIFT_SHITS_VALUABLE.containsKey(id) && GIFT_SHITS_VALUABLE.get(id).test(stack)
+            )
             {
-                Predicate<ItemStack> itemPredicate = GIFT_SHITS.get(id);
-                if (itemPredicate == null || itemPredicate.test(stack))
-                {
-                    getMc().playerController.windowClick(0, invFeatureIndex,
-                        0, 4, getPlayer());
-                    invFeatureLastTicks = getTicks();
-                    invFeatureClickDelay = c.invFeaturesMinDelay + getWorld().rand.nextInt(3);
-                    invFeatureIndex++;
-                    return true;
-                }
+                getMc().playerController.windowClick(0, invFeatureIndex,
+                    WindowClickContants.Drop.BTN_CTRL_DROP,
+                    WindowClickContants.Drop.MODE, getPlayer());
+                invFeatureLastTicks = getTicks();
+                invFeatureClickDelay = c.invFeaturesMinDelay + getWorld().rand.nextInt(3);
+                invFeatureIndex++;
+                return true;
             }
         }
         invFeatureIndex = 9;
@@ -605,5 +623,11 @@ public class GiftTweaks extends Tweak
         sendChat("Toggled white gift tracking " + trackWhiteGifts);
         whiteGifts.clear();
         whiteGiftsTemp.clear();
+    }
+    
+    public void toggleThrowValuable()
+    {
+        c.throwValuableRewards = !c.throwValuableRewards;
+        sendChat("Toggled throwing valuable rewards " + c.throwValuableRewards);
     }
 }

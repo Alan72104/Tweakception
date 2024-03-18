@@ -309,7 +309,7 @@ public class DiscordGuildBridge
             "eWFvaQp5ZWxsb3cgc2hvd2Vycwp5aWZmeQp6b29waGlsaWEK8J+WlQ==";
         byte[] decoded = Base64.getDecoder().decode(s);
         LIST = new String(decoded, StandardCharsets.UTF_8).split("\\R");
-        StringBuilder sb = StringBuilderCache.get();
+        StringBuilder sb = new StringBuilder();
         for (String e : LIST)
             sb.append(e).append('|');
         sb.deleteCharAt(sb.length() - 1);

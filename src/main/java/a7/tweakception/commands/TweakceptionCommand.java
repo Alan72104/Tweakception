@@ -5,6 +5,7 @@ import a7.tweakception.LagSpikeWatcher;
 import a7.tweakception.Tweakception;
 import a7.tweakception.tweaks.GlobalTweaks;
 import a7.tweakception.tweaks.SkyblockIsland;
+import a7.tweakception.tweaks.StringReplace;
 import a7.tweakception.utils.Constants;
 import a7.tweakception.utils.DumpUtils;
 import a7.tweakception.utils.McUtils;
@@ -27,8 +28,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static a7.tweakception.utils.McUtils.getWorld;
-import static a7.tweakception.utils.McUtils.sendChat;
+import static a7.tweakception.utils.McUtils.*;
 
 @SuppressWarnings({"unused", "SpellCheckingInspection"})
 public class TweakceptionCommand extends CommandBase
@@ -720,6 +720,10 @@ public class TweakceptionCommand extends CommandBase
     {
         addSub(new Command("gift",
             args -> Tweakception.giftTweaks.toggleGiftFeatures(),
+//            new Command("autoGiftAndRefillFromInv",
+//                args -> Tweakception.giftTweaks.toggleAutoGiftAndRefillFromInv()),
+//            new Command("setAutoGiftTarget",
+//                args -> Tweakception.giftTweaks.setAutoGiftTarget(getString(args, 0, ""))),
             new Command("autoSwitchGiftSlot",
                 args -> Tweakception.giftTweaks.toggleAutoSwitchGiftSlot()),
             new Command("autoSetTargeting",
@@ -873,6 +877,43 @@ public class TweakceptionCommand extends CommandBase
     }
     
     @RunInCtor
+    private void stringReplace()
+    {
+        addSub(new Command("stringReplace",
+            new Command("replace",
+                args ->
+                {
+                    if (args.length >= 2)
+                    {
+                        StringReplace.add(args[0], args[1]);
+                        sendChatf("Added %s -> %s", args[0], args[1]);
+                    }
+                    else if (args.length == 1)
+                    {
+                        StringReplace.remove(args[0]);
+                        sendChatf("Removed %s", args[0]);
+                    }
+                    else
+                        sendChat("Needs 2 strings");
+                }),
+            new Command("clear",
+                args ->
+                {
+                    StringReplace.clear();
+                    sendChat("Cleared");
+                }),
+            new Command("mapType",
+                new Command("array",
+                    args -> StringReplace.changeMapType("array")),
+                new Command("linked",
+                    args -> StringReplace.changeMapType("linked"))
+            ),
+            new Command("overlay",
+                args -> StringReplace.toggleOverlay())
+        ).setVisibility(false));
+    }
+    
+    @RunInCtor
     private void lagSpikeWatcher()
     {
         addSub(new Command("lagSpikeWatcher",
@@ -884,6 +925,18 @@ public class TweakceptionCommand extends CommandBase
                     else
                     {
                         LagSpikeWatcher.startWatcher();
+                        sendChat("TC: watcher turned on");
+                        sendChat("TC: it will now find the median frametime over 5 secs, times 2 as the threshold");
+                    }
+                }),
+            new Command("startNow",
+                args ->
+                {
+                    if (LagSpikeWatcher.isWatcherOn())
+                        sendChat("TC: watcher is currently on");
+                    else
+                    {
+                        LagSpikeWatcher.startWatcherWithoutThresholdDetection();
                         sendChat("TC: watcher turned on");
                     }
                 }),
@@ -898,11 +951,21 @@ public class TweakceptionCommand extends CommandBase
                     else
                         sendChat("TC: watcher is currently off");
                 }),
-            new Command("setthreshold",
+            new Command("setThreshold",
                 args ->
                 {
-                    int t = LagSpikeWatcher.setThreshold(args.length > 0 ? toInt(args[0]) : 0);
-                    sendChat("TC: set threshold to " + t);
+                    int ms = getInt(args, 0, 17);
+                    ms = Utils.clamp(ms, 1, 1000);
+                    int t = LagSpikeWatcher.setThreshold(ms);
+                    sendChatf("TC: set threshold to %d ms (%.1f fps)", ms, 1000.0 / ms);
+                }),
+            new Command("setThresholdFps",
+                args ->
+                {
+                    int fps = getInt(args, 0, 60);
+                    fps = Utils.clamp(fps, 1, 1000);
+                    int t = LagSpikeWatcher.setThreshold(1000 / fps);
+                    sendChatf("TC: set threshold to %d fps (%d ms)", fps, 1000 / fps);
                 }),
             new Command("dump",
                 args ->
@@ -919,7 +982,7 @@ public class TweakceptionCommand extends CommandBase
                     else
                         sendChat("TC: watcher is currently off");
                 }),
-            new Command("fakelag",
+            new Command("fakeLag",
                 args ->
                 {
                     try
@@ -933,13 +996,13 @@ public class TweakceptionCommand extends CommandBase
                         sendChat("TC: interrupted");
                     }
                 }),
-            new Command("keeplogging",
+            new Command("keepLogging",
                 args ->
                 {
                     boolean b = LagSpikeWatcher.toggleKeepLoggingOnLag();
                     sendChat("TC: toggled keep logging on lag " + b);
                 }),
-            new Command("dumpthreads",
+            new Command("dumpThreads",
                 args ->
                 {
                     File file = LagSpikeWatcher.dumpThreads();

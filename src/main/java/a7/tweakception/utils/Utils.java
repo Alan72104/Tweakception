@@ -391,6 +391,36 @@ public class Utils
         return -1;
     }
     
+    public static int findInInvById(String... ids)
+    {
+        return findInInvById(id ->
+        {
+            for (String target : ids)
+                if (id.equals(target))
+                    return true;
+            return false;
+        });
+    }
+    
+    public static int findInInvById(Collection<String> ids)
+    {
+        return findInInvById(ids::contains);
+    }
+    
+    public static int findInInvById(Predicate<String> predicate)
+    {
+        for (int i = 0; i < 27; i++)
+        {
+            ItemStack stack = getPlayer().inventory.getStackInSlot(i + 9);
+            String id = Utils.getSkyblockItemId(stack);
+            if (stack == null || id == null)
+                continue;
+            if (predicate.test(id))
+                return i;
+        }
+        return -1;
+    }
+    
     public static int findInHotbarBy(Predicate<ItemStack> predicate)
     {
         for (int i = 0; i < 9; i++)

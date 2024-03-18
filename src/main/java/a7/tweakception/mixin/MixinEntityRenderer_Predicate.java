@@ -41,7 +41,7 @@ public abstract class MixinEntityRenderer_Predicate
             cancel = true;
         }
         else if (Tweakception.giftTweaks.isOnlyTargetOpenableGiftOn() &&
-            (!(entity instanceof EntityArmorStand) || !(entity.getName().equals("§e§lCLICK TO OPEN"))))
+            (!(entity instanceof EntityArmorStand) || !(entity.getName().equals("§e§lCLICK TO OPEN")))) // §eFrom: §a[VIP] someone§f
         {
             cancel = true;
         }

@@ -4,6 +4,7 @@ import a7.tweakception.config.Configuration;
 import a7.tweakception.utils.*;
 import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.settings.KeyBinding;
@@ -21,6 +22,8 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import org.apache.xmlbeans.impl.xb.xsdschema.All;
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.input.Keyboard;
 
 import java.awt.*;
@@ -48,12 +51,15 @@ public class GiftTweaks extends Tweak
         public boolean targetingDisableArmorStand = false;
         public boolean targetingOnlyOpenableGift = false;
         public boolean throwValuableRewards = false;
+        public boolean autoGiftAndRefillFromInv = false;
+        public String autoGiftTarget = "";
     }
     private final GiftTweaksConfig c;
     // Sb id, shit predicate
     private static final Map<String, Predicate<ItemStack>> GIFT_SHITS = new HashMap<>();
     private static final Map<String, Predicate<ItemStack>> GIFT_SHITS_VALUABLE = new HashMap<>();
     private static final String GIFT_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTBmNTM5ODUxMGIxYTA1YWZjNWIyMDFlYWQ4YmZjNTgzZTU3ZDcyMDJmNTE5M2IwYjc2MWZjYmQwYWUyIn19fQ==";
+    private static final Set<String> ALL_GIFT_IDS = Utils.hashSet("WHITE_GIFT", "GREEN_GIFT", "RED_GIFT");
     private InvFeature invFeature = InvFeature.None;
     private int invFeatureIndex = 0;
     private int invFeatureLastTicks = 0;
@@ -64,6 +70,7 @@ public class GiftTweaks extends Tweak
     private Map<Entity, PosMark> whiteGifts = new HashMap<>();
     // Entity, detection start tick, start pos
     private Map<Entity, Pair<Integer, Vec3>> whiteGiftsTemp = new HashMap<>();
+    private boolean autoGifting = false;
     
     private enum InvFeature
     {
@@ -119,12 +126,61 @@ public class GiftTweaks extends Tweak
     
     public void onTick(TickEvent.ClientTickEvent event)
     {
-        if (event.phase != TickEvent.Phase.END || !c.giftFeatures)
+        if (event.phase == TickEvent.Phase.START)
+            onTickStart(event);
+        else
+            onTickEnd(event);
+    }
+    
+    private void onTickStart(TickEvent.ClientTickEvent event)
+    {
+        if (!c.isRecipient)
+        {
+            EntityOtherPlayerMP targetPlayer = getMc().objectMouseOver == null
+                ? null
+                : getMc().objectMouseOver.entityHit instanceof EntityOtherPlayerMP
+                    ? (EntityOtherPlayerMP) getMc().objectMouseOver.entityHit
+                    : null;
+            
+            if (isAutoGiftingOn() &&
+                (getMc().currentScreen == null || getMc().currentScreen instanceof GuiChat) &&
+                targetPlayer != null &&
+                targetPlayer.getName().equalsIgnoreCase(c.autoGiftTarget) &&
+                ALL_GIFT_IDS.contains(Utils.getSkyblockItemId(getPlayer().getCurrentEquippedItem())) &&
+                (getMc().gameSettings.keyBindUseItem.isKeyDown() || autoGifting) &&
+                !getMc().gameSettings.keyBindAttack.isKeyDown()
+            )
+            {
+                if (!autoGifting)
+                    sendChat("Auto gifting started");
+                autoGifting = true; // TODO: Handle clicking while in chat gui
+                KeyBinding.setKeyBindState(
+                    getMc().gameSettings.keyBindUseItem.getKeyCode(),
+                    true);
+            }
+            else if (autoGifting)
+            {
+                sendChat("Auto gifting ended");
+                autoGifting = false;
+                KeyBinding.setKeyBindState(
+                    getMc().gameSettings.keyBindUseItem.getKeyCode(),
+                    false);
+            }
+        }
+        else
+        {
+            // TODO: Handle gifting on recipient
+        }
+    }
+    
+    private void onTickEnd(TickEvent.ClientTickEvent event)
+    {
+        if (!c.giftFeatures)
             return;
         
         boolean isInv = getMc().currentScreen instanceof GuiInventory;
         boolean isChest = getMc().currentScreen instanceof GuiChest;
-    
+        
         if (c.invFeatures && (isInv || isChest))
         {
             if (invFeature == InvFeature.None)
@@ -151,7 +207,7 @@ public class GiftTweaks extends Tweak
                     invFeature = InvFeature.DumpItems;
                 }
             }
-        
+            
             if (getTicks() - invFeatureLastTicks >= invFeatureClickDelay)
             {
                 switch (invFeature)
@@ -161,7 +217,7 @@ public class GiftTweaks extends Tweak
                             invFeature = InvFeature.None;
                         break;
                     case MoveGift:
-                        invMoveGift();
+                        invRefillGiftToHotbar();
                         break;
                     case AutoDropGiftShit:
                         invAutoDropGiftShit();
@@ -180,7 +236,7 @@ public class GiftTweaks extends Tweak
         if (c.autoReleaseRightClick && getCurrentIsland() == SkyblockIsland.HUB)
         {
             if (getMc().gameSettings.keyBindUseItem.isKeyDown() &&
-                Utils.findInHotbarById("WHITE_GIFT", "GREEN_GIFT", "RED_GIFT") != -1)
+                Utils.findInHotbarById(ALL_GIFT_IDS) != -1)
             {
                 List<EntityPlayer> players = getWorld().playerEntities;
                 EntityPlayer closePlayer = null;
@@ -200,7 +256,9 @@ public class GiftTweaks extends Tweak
             
                 if (closePlayer != null)
                 {
-                    KeyBinding.setKeyBindState(getMc().gameSettings.keyBindUseItem.getKeyCode(),
+                    autoGifting = false;
+                    KeyBinding.setKeyBindState(
+                        getMc().gameSettings.keyBindUseItem.getKeyCode(),
                         false);
                     sendChat("Released use keybind because " + closePlayer.getName() + " came");
                 }
@@ -251,9 +309,9 @@ public class GiftTweaks extends Tweak
                             if ((entity.posX != pair.b.xCoord ||
                                 entity.posY != pair.b.yCoord ||
                                 entity.posZ != pair.b.zCoord) ||
-                                getWorld().getEntitiesWithinAABB(EntityArmorStand.class,
+                                !getWorld().getEntitiesWithinAABB(EntityArmorStand.class,
                                     entity.getEntityBoundingBox().expand(2, 5, 2),
-                                    e -> e.getName().startsWith("§eFrom: ")).size() > 0
+                                    e -> e.getName().startsWith("§eFrom: ")).isEmpty()
                             )
                             {
                                 // This entity failed the detection
@@ -297,36 +355,26 @@ public class GiftTweaks extends Tweak
         return false;
     }
     
-    private void invMoveGift()
+    private void invRefillGiftToHotbar()
     {
         List<ItemStack> inv = ((GuiInventory) getMc().currentScreen).inventorySlots.getInventory();
-        HashSet<String> gifts = Utils.hashSet("WHITE_GIFT", "GREEN_GIFT", "RED_GIFT");
         // Hotbar index
-        for (; invFeatureIndex <= 7; invFeatureIndex++)
+        for (; invFeatureIndex < 8; invFeatureIndex++)
         {
             {
                 ItemStack stack = inv.get(36 + invFeatureIndex);
                 String id = Utils.getSkyblockItemId(stack);
-                if (stack != null && id != null && gifts.contains(id))
+                if (stack != null && id != null && ALL_GIFT_IDS.contains(id))
                     continue;
             }
             
-            int invGiftSlot = 0;
-            for (int backpack = 9; backpack <= 35; backpack++)
-            {
-                ItemStack stack = inv.get(backpack);
-                String id = Utils.getSkyblockItemId(stack);
-                if (stack != null && id != null && gifts.contains(id))
-                {
-                    invGiftSlot = backpack;
-                    break;
-                }
-            }
+            int invGiftSlot = Utils.findInInvById(ALL_GIFT_IDS);
             
-            if (invGiftSlot != 0)
+            if (invGiftSlot != -1)
             {
-                getMc().playerController.windowClick(0, invGiftSlot,
-                    invFeatureIndex, 2, getPlayer());
+                getMc().playerController.windowClick(0, invGiftSlot + 9,
+                    invFeatureIndex,
+                    WindowClickContants.Number.MODE, getPlayer());
                 invFeatureLastTicks = getTicks();
                 invFeatureClickDelay = c.invFeaturesMinDelay + getWorld().rand.nextInt(3);
                 invFeatureIndex++;
@@ -487,6 +535,11 @@ public class GiftTweaks extends Tweak
         return c.giftFeatures && c.targetingOnlyOpenableGift;
     }
     
+    public boolean isAutoGiftingOn()
+    {
+        return c.giftFeatures && c.autoGiftAndRefillFromInv;
+    }
+    
     private static class PosMark extends Vec3i
     {
         public boolean isFound = false;
@@ -593,9 +646,9 @@ public class GiftTweaks extends Tweak
         }
     }
     
-    public void setAutoReleaseRightClickWhitelist(String name)
+    public void setAutoReleaseRightClickWhitelist(@NotNull String name)
     {
-        if (name == null || name.isEmpty())
+        if (name.isEmpty())
         {
             sendChat("Printing list");
             int i = 0;
@@ -629,5 +682,36 @@ public class GiftTweaks extends Tweak
     {
         c.throwValuableRewards = !c.throwValuableRewards;
         sendChat("Toggled throwing valuable rewards " + c.throwValuableRewards);
+    }
+    
+    public void toggleAutoGiftAndRefillFromInv()
+    {
+        if (c.autoGiftTarget.isEmpty())
+        {
+            sendChat("Please set the auto gift target player first");
+        }
+        else
+        {
+            c.autoGiftAndRefillFromInv = !c.autoGiftAndRefillFromInv;
+            sendChat("Toggled auto gifting " + c.autoGiftAndRefillFromInv + ", is recipient: " + c.isRecipient);
+            sendChat("Right click on the target with a gift and the keybind will remain pressed -");
+            sendChat(" while you have gifts in inv and screen is on game or chat");
+            sendChat("If you're a recipient, hovering over gifts from the target player will hold down the keybind for you, for 5 secs");
+        }
+    }
+    
+    public void setAutoGiftTarget(@NotNull String player)
+    {
+        if (player.isEmpty())
+        {
+            c.autoGiftTarget = "";
+            c.autoGiftAndRefillFromInv = false;
+            sendChat("Removed auto gift target player");
+        }
+        else
+        {
+            c.autoGiftTarget = player.toLowerCase(Locale.ROOT);
+            sendChat("Set auto gift target player to " + c.autoGiftTarget);
+        }
     }
 }

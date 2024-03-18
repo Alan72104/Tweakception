@@ -18,6 +18,7 @@
     "AccessorGuiPlayerTabOverlay",
     "AccessorMinecraft",
     "MixinEntityRenderer",
+    "MixinFontRenderer",
     "MixinGuiContainer",
     "MixinGuiEditSign",
     "MixinGuiNewChat",

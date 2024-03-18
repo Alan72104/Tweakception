@@ -111,6 +111,8 @@ public class Tweakception
         enchantingTweaks = new EnchantingTweaks(configuration);
         guildBridge = new DiscordGuildBridge();
         
+        Tweakception.overlayManager.addOverlay(new StringReplace.StringReplaceOverlay());
+        
         ClientCommandHandler.instance.registerCommand(new TweakceptionCommand());
         MinecraftForge.EVENT_BUS.register(inGameEventDispatcher);
         MinecraftForge.EVENT_BUS.register(scheduler);

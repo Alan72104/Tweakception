@@ -1,6 +1,7 @@
 package a7.tweakception;
 
 import a7.tweakception.events.IslandChangedEvent;
+import a7.tweakception.tweaks.StringReplace;
 import a7.tweakception.utils.McUtils;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;

@@ -138,9 +138,9 @@ public class Command implements Comparable<Command>
             .collect(Collectors.toList());
     }
     
-    public int compareTo(Command that)
+    public int compareTo(Command other)
     {
-        return this.name.toLowerCase(Locale.ROOT).compareTo(that.name.toLowerCase(Locale.ROOT));
+        return this.name.toLowerCase(Locale.ROOT).compareTo(other.name.toLowerCase(Locale.ROOT));
     }
     
     protected void sendCommandNotFound()

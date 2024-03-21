@@ -26,6 +26,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 import static a7.tweakception.utils.McUtils.*;
@@ -903,10 +904,20 @@ public class TweakceptionCommand extends CommandBase
                     sendChat("Cleared");
                 }),
             new Command("mapType",
-                new Command("array",
-                    args -> StringReplace.changeMapType("array")),
-                new Command("linked",
-                    args -> StringReplace.changeMapType("linked"))
+                args ->
+                {
+                    if (args.length <= 1 &&
+                        Arrays.stream(StringReplace.MapType.values())
+                        .anyMatch(type -> type.toString().equalsIgnoreCase(args[0]))
+                    )
+                        StringReplace.changeMapType(
+                            StringReplace.MapType.valueOf(args[0].toUpperCase(Locale.ROOT)));
+                    else
+                        sendChat("Invalid map type");
+                },
+                args -> Arrays.stream(StringReplace.MapType.values())
+                    .map(Enum::toString)
+                    .collect(Collectors.toList())
             ),
             new Command("overlay",
                 args -> StringReplace.toggleOverlay())

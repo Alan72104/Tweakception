@@ -1232,7 +1232,7 @@ public class GlobalTweaks extends Tweak
         if (stack == null)
             return;
         
-        String id = Utils.getSkyblockItemId(stack);
+        String id = Utils.getSkyblockItemOrPotionId(stack);
         
         if (c.tooltipDisplaySkyblockItemId)
             if (id != null && !id.isEmpty())

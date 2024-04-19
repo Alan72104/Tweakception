@@ -22,7 +22,6 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
-import org.apache.xmlbeans.impl.xb.xsdschema.All;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.input.Keyboard;
 
@@ -30,6 +29,7 @@ import java.awt.*;
 import java.util.List;
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static a7.tweakception.tweaks.GlobalTweaks.getCurrentIsland;
 import static a7.tweakception.tweaks.GlobalTweaks.getTicks;
@@ -53,6 +53,7 @@ public class GiftTweaks extends Tweak
         public boolean throwValuableRewards = false;
         public boolean autoGiftAndRefillFromInv = false;
         public String autoGiftTarget = "";
+        public TreeSet<String> giftRewardDumpBlacklist = new TreeSet<>();
     }
     private final GiftTweaksConfig c;
     // Sb id, shit predicate
@@ -83,7 +84,11 @@ public class GiftTweaks extends Tweak
         GIFT_SHITS.put("BATTLE_DISC", always);
         GIFT_SHITS.put("WINTER_DISC", always);
         GIFT_SHITS.put("GLASS_BOTTLE", always);
-        GIFT_SHITS.put("POTION", s -> McUtils.getExtraAttributes(s).getString("potion").endsWith("_xp_boost"));
+        for (String pot : Arrays.asList("COMBAT", "FARMING", "FORAGING", "FISHING", "MINING", "ALCHEMY", "ENCHANTING"))
+        {
+            for (int i = 1; i <= 3; i++)
+                GIFT_SHITS.put("POTION_"+pot+"_XP_BOOST_"+i, always);
+        }
         Map<String, Integer> crap = MapBuilder.stringIntHashMap()
             .put("scavenger", 4)
             .put("looting", 4)
@@ -337,10 +342,12 @@ public class GiftTweaks extends Tweak
         for (; invFeatureIndex <= 44; invFeatureIndex++)
         {
             ItemStack stack = inv.get(invFeatureIndex);
-            String id = Utils.getSkyblockItemId(stack);
-            if (GIFT_SHITS.containsKey(id) && GIFT_SHITS.get(id).test(stack) ||
-                c.throwValuableRewards && GIFT_SHITS_VALUABLE.containsKey(id) && GIFT_SHITS_VALUABLE.get(id).test(stack)
-            )
+            String id = Utils.getSkyblockItemOrPotionId(stack);
+            if (id == null)
+                continue;
+            boolean throwShit = GIFT_SHITS.containsKey(id) && GIFT_SHITS.get(id).test(stack);
+            boolean throwValuable = c.throwValuableRewards && GIFT_SHITS_VALUABLE.containsKey(id) && GIFT_SHITS_VALUABLE.get(id).test(stack);
+            if (!c.giftRewardDumpBlacklist.contains(id) && (throwShit || throwValuable))
             {
                 getMc().playerController.windowClick(0, invFeatureIndex,
                     WindowClickContants.Drop.BTN_CTRL_DROP,
@@ -540,6 +547,11 @@ public class GiftTweaks extends Tweak
         return c.giftFeatures && c.autoGiftAndRefillFromInv;
     }
     
+    public List<String> getRewardDumpBlacklist()
+    {
+        return new ArrayList<>(c.giftRewardDumpBlacklist);
+    }
+    
     private static class PosMark extends Vec3i
     {
         public boolean isFound = false;
@@ -682,6 +694,31 @@ public class GiftTweaks extends Tweak
     {
         c.throwValuableRewards = !c.throwValuableRewards;
         sendChat("Toggled throwing valuable rewards " + c.throwValuableRewards);
+    }
+    
+    public void toggleRewardDumpBlacklist(String id)
+    {
+        if (id.isEmpty())
+        {
+            int i = 1;
+            sendChat("Blacklist:");
+            for (String id2 : c.giftRewardDumpBlacklist)
+                sendChat(i++ + ": " + id2);
+        }
+        else
+        {
+            id = id.toUpperCase(Locale.ROOT);
+            if (c.giftRewardDumpBlacklist.contains(id))
+            {
+                c.giftRewardDumpBlacklist.remove(id);
+                sendChat("Removed " + id);
+            }
+            else
+            {
+                c.giftRewardDumpBlacklist.add(id);
+                sendChat("Added " + id);
+            }
+        }
     }
     
     public void toggleAutoGiftAndRefillFromInv()

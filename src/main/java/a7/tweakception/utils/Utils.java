@@ -2,7 +2,9 @@ package a7.tweakception.utils;
 
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagString;
 
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
@@ -331,12 +333,15 @@ public class Utils
         return String.format(Locale.US, s, args);
     }
     
-    public static String getSkyblockItemId(ItemStack item)
+    /**
+     * Returns id if present
+     */
+    public static String getSkyblockItemId(ItemStack stack)
     {
-        if (item == null)
+        if (stack == null)
             return null;
         
-        NBTTagCompound tag = item.getTagCompound();
+        NBTTagCompound tag = stack.getTagCompound();
         if (tag != null)
         {
             NBTTagCompound extra = tag.getCompoundTag("ExtraAttributes");
@@ -346,12 +351,26 @@ public class Utils
         return null;
     }
     
-    public static String getSkyblockItemUuid(ItemStack item)
+    /**
+     * Returns id or "POTION_{potion}_{potion_level}" if present
+     */
+    public static String getSkyblockItemOrPotionId(ItemStack stack)
     {
-        if (item == null)
+        String pot = getSkyblockPotionSortableId(stack);
+        if (pot != null)
+            return pot;
+        return getSkyblockItemId(stack);
+    }
+    
+    /**
+     * Returns uuid if present
+     */
+    public static String getSkyblockItemUuid(ItemStack stack)
+    {
+        if (stack == null)
             return null;
         
-        NBTTagCompound tag = item.getTagCompound();
+        NBTTagCompound tag = stack.getTagCompound();
         if (tag != null)
         {
             NBTTagCompound extra = tag.getCompoundTag("ExtraAttributes");
@@ -359,6 +378,38 @@ public class Utils
                 return extra.getString("uuid");
         }
         return null;
+    }
+    
+    /**
+     * Returns "POTION_{potion}_{potion_level}" if present
+     */
+    public static String getSkyblockPotionSortableId(ItemStack stack)
+    {
+        String id = getSkyblockItemId(stack);
+        if (!"POTION".equals(id))
+            return null;
+        NBTBase potion = McUtils.getExtraAttributes(stack, "potion");
+        NBTBase level = McUtils.getExtraAttributes(stack, "potion_level");
+        if (!(potion instanceof NBTTagString && level instanceof NBTBase.NBTPrimitive))
+            return null;
+        return f("POTION_%s_%d",
+            ((NBTTagString) potion).getString().toUpperCase(Locale.ROOT),
+            ((NBTBase.NBTPrimitive) level).getInt());
+    }
+    
+    /**
+     * Returns potion if present
+     */
+    public static String getSkyblockPotionType(ItemStack stack)
+    {
+        String id = getSkyblockItemId(stack);
+        if (!"POTION".equals(id))
+            return null;
+        NBTBase potion = McUtils.getExtraAttributes(stack, "potion");
+        NBTBase level = McUtils.getExtraAttributes(stack, "level");
+        if (!(potion instanceof NBTTagString && level instanceof NBTBase.NBTPrimitive))
+            return null;
+        return ((NBTTagString) potion).getString();
     }
     
     public static int findInHotbarById(String... ids)

@@ -737,9 +737,13 @@ public class TweakceptionCommand extends CommandBase
                     args -> Tweakception.giftTweaks.setAutoReleaseRightClickWhitelist(getString(args, 0, "")))
             ),
             new Command("invFeatures",
-                args -> Tweakception.giftTweaks.toggleInvFeatures()),
-            new Command("setInvFeaturesMinDelay",
-                args -> Tweakception.giftTweaks.setInvFeaturesMinDelay(getInt(args, 0, -1))),
+                args -> Tweakception.giftTweaks.toggleInvFeatures(),
+                new Command("setMinDelay",
+                    args -> Tweakception.giftTweaks.setInvFeaturesMinDelay(getInt(args, 0, -1))),
+                new Command("dumpBlacklist",
+                    args -> Tweakception.giftTweaks.toggleRewardDumpBlacklist(getString(args, 0, "")),
+                    args -> Tweakception.giftTweaks.getRewardDumpBlacklist())
+            ),
             new Command("targeting",
                 new Command("armorStandDisable",
                     args -> Tweakception.giftTweaks.toggleDisableArmorStandTargeting()),
